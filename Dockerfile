@@ -6,11 +6,13 @@ ENV NODE_ENV='production'
 
 COPY *.json .
 
-RUN npm ci
+RUN npm ci --production
 
 # This will re-copy json files, but oh well
 COPY . .
 
 RUN npm run build
+
+EXPOSE 3000
 
 CMD cd dist && node ./index.js

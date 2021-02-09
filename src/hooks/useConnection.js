@@ -6,8 +6,8 @@ const useConnection = () => {
   const [connection, setConnection] = useState({})
 
   useEffect(() => {
-    const conn = new Connection(endpoint)
-    setConnection(conn)
+    const cx = new Connection(endpoint)
+    setConnection(cx)
   }, [endpoint])
 
   return {

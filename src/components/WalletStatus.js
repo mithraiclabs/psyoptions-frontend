@@ -15,7 +15,7 @@ const Btn = styled(Button)`
 const WalletStatus = () => {
   const { pubKey, connect, connected } = useWallet()
 
-  const pubKeyB58 = pubKey && pubKey.toBase58 && pubKey.toBase58().slice(0,5)
+  const pubKeyB58 = pubKey && pubKey.toBase58 && pubKey.toBase58().slice(0, 5)
 
   const handleConnect = () => {
     if (!connected) {
@@ -26,7 +26,14 @@ const WalletStatus = () => {
   return (
     <Btn color="primary" onClick={handleConnect}>
       <Box pr={2}>
-        <Brightness1 style={{ fontSize: 12, color: connected ? theme.palette.success.main : theme.palette.disabled.main }} />
+        <Brightness1
+          style={{
+            fontSize: 12,
+            color: connected
+              ? theme.palette.success.main
+              : theme.palette.disabled.main,
+          }}
+        />
       </Box>
       {connected ? `Connected [${pubKeyB58}…]` : 'Connect Wallet'}
     </Btn>

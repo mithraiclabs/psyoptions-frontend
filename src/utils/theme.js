@@ -14,7 +14,7 @@ const theme = createMuiTheme({
       main: '#8BEAFF',
       dark: '#1D4DC9',
       darker: '#05044D',
-      contrastText: 'black'
+      contrastText: 'black',
     },
     secondary: {
       main: secondary,
@@ -27,7 +27,7 @@ const theme = createMuiTheme({
       dark: '#D18641',
     },
     success: {
-      main: '#51F39C'
+      main: '#51F39C',
     },
     error: {
       main: secondary,
@@ -39,7 +39,7 @@ const theme = createMuiTheme({
       main: '#686775',
     },
     disabled: {
-      main: '#373B40'
+      main: '#373B40',
     },
     // Used by `getContrastText()` to maximize the contrast between
     // the background and the text.

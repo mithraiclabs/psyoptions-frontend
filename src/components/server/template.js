@@ -12,6 +12,7 @@ const baseCss = `
   body {
     background-color: ${theme.palette.background.main};
     color: ${theme.palette.primary.main};
+    font-family: JetBrains Mono, monospace;
   }
   
   h1, h2, h3 {
@@ -28,9 +29,19 @@ const baseCss = `
   h3 {
     font-size: 2rem;
   }
+
+  button {
+    white-space: nowrap;
+  }
 `
 
-const Template = ({ children, jsBundle, title, description, cssString }) => {
+const Template = ({
+  jsBundle,
+  title,
+  description,
+  cssString,
+  htmlString = '',
+}) => {
   return (
     <html>
       <head>
@@ -49,7 +60,7 @@ const Template = ({ children, jsBundle, title, description, cssString }) => {
         <style>{cssString}</style>
       </head>
       <body>
-        <div id="app">{children}</div>
+        <div id="app" dangerouslySetInnerHTML={{ __html: htmlString }}></div>
         <script src={jsBundle || ''} />
       </body>
     </html>

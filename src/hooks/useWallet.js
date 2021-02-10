@@ -1,38 +1,37 @@
 import Wallet from '@project-serum/sol-wallet-adapter'
 import { useEffect, useState } from 'react'
 
+import { isBrowser } from '../utils/isNode'
+
 const useWallet = () => {
   const [loading, setLoading] = useState(false)
   const [url, setUrl] = useState('https://www.sollet.io')
-  const [wallet, setWallet] = useState(new Wallet(url))
+  const [wallet, setWallet] = useState()
   const [connected, setConnected] = useState(false)
   const [pubKey, setPubKey] = useState()
-  // const [publicKeyb58, setPublicKeyb58] = useState()
 
-  const connect = async (url) => {
+  const connect = async () => {
     setLoading(true)
-    // TODO: setting the url and creating new wallet instance should happen here
-    return await wallet.connect()
-  }
 
-  useEffect(() => {
+    const wallet = new Wallet(url)
+
+    setWallet(wallet)
+
+    // TODO: unbind these listeners from old wallet before creating new one
     wallet.on('connect', (key) => {
-      // console.log(pubKey)
       setLoading(false)
       setConnected(true)
       setPubKey(key)
-      // setPublicKeyb58(pubKey.toBase58())
     })
 
     wallet.on('disconnect', () => {
       setConnected(false)
       setPubKey('')
-      // setPublicKeyb58('')
       console.log('Disconnected')
     })
 
-    // connect()
-  }, [wallet])
+    return await wallet.connect()
+  }
 
   return {
     url,

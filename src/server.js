@@ -2,7 +2,7 @@ import './config'
 import express from 'express'
 import React from 'react'
 import ReactDOMServer from 'react-dom/server'
-// import { ServerStyleSheets } from '@material-ui/core/styles'
+import { ServerStyleSheets } from '@material-ui/core/styles'
 
 import App from './components/App'
 import Template from './components/server/template'
@@ -12,19 +12,18 @@ const bundleFilename = '/public/bundle.js'
 const server = express()
 
 server.get('/', (req, res, next) => {
-  // TODO: Make SSR stylesheets work
-  // const sheets = new ServerStyleSheets()
-  // const html = ReactDOMServer.renderToString(sheets.collect(<App />))
-  // const cssString = sheets.toString()
+  const sheets = new ServerStyleSheets()
+  const appHtml = ReactDOMServer.renderToString(sheets.collect(<App />))
+  const cssString = sheets.toString()
 
   const html = ReactDOMServer.renderToString(
     <Template
       jsBundle={bundleFilename}
       title="My App"
       description="My app description"
-    >
-      <App />
-    </Template>
+      cssString={cssString}
+      htmlString={appHtml}
+    />
   )
   res.send(html)
 })

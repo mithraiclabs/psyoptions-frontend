@@ -1,23 +1,28 @@
 import { createMuiTheme } from '@material-ui/core/styles'
 
+const secondary = '#DD3E76'
+
 const theme = createMuiTheme({
   glow: '0 0 0px #11FFCC, 0 0 20px #0055CC, 0 0 50px #001199',
   typography: {
     fontFamily: 'JetBrains Mono, sans-serif',
   },
   palette: {
+    type: 'dark',
     primary: {
-      // light: will be calculated from palette.primary.main,
+      light: '#E4F5FF',
       main: '#8BEAFF',
-      // contrastText: will be calculated to contrast with palette.primary.main
+      dark: '#1D4DC9',
+      darker: '#05044D',
+      contrastText: 'black',
     },
     secondary: {
-      // light: '#0066ff',
-      main: '#DD3E76',
+      main: secondary,
       dark: '#750035',
-      // contrastText: '#ffcc00',
+      darker: '#24001A',
+      contrastText: '#E4F5FF',
     },
-    info: {
+    warning: {
       main: '#FAC265',
       dark: '#D18641',
     },
@@ -25,7 +30,16 @@ const theme = createMuiTheme({
       main: '#51F39C',
     },
     error: {
-      main: '#DD3E76',
+      main: secondary,
+    },
+    background: {
+      main: '#2E2832',
+    },
+    border: {
+      main: '#686775',
+    },
+    disabled: {
+      main: '#373B40',
     },
     // Used by `getContrastText()` to maximize the contrast between
     // the background and the text.

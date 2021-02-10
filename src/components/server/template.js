@@ -10,7 +10,7 @@ const baseCss = `
   }
 
   body {
-    background-color: #000;
+    background-color: ${theme.palette.background.main};
     color: ${theme.palette.primary.main};
   }
   

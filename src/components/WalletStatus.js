@@ -18,14 +18,7 @@ const WalletStatus = () => {
   }
 
   return (
-    <Button
-      color="primary"
-      onClick={handleConnect}
-      style={{
-        border: `1px solid ${theme.palette?.primary?.main}`,
-        padding: '4px 12px',
-      }}
-    >
+    <Button color="primary" onClick={handleConnect} variant="outlined">
       <Box pr={2}>
         <Brightness1
           style={{

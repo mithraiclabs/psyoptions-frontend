@@ -29,6 +29,10 @@ const baseCss = `
   h3 {
     font-size: 2rem;
   }
+
+  button {
+    white-space: nowrap;
+  }
 `
 
 const Template = ({

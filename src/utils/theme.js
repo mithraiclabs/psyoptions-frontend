@@ -3,6 +3,9 @@ import { createMuiTheme } from '@material-ui/core/styles'
 const secondary = '#DD3E76'
 
 const theme = createMuiTheme({
+  gradients: {
+    secondaryPrimary: 'linear-gradient(90deg, #DD3E76 -0.83%, #1D4DC9 100%)',
+  },
   glow: '0 0 0px #11FFCC, 0 0 20px #0055CC, 0 0 50px #001199',
   typography: {
     fontFamily: 'JetBrains Mono, sans-serif',

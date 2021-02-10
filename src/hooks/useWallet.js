@@ -6,8 +6,8 @@ const useWallet = () => {
   const [url, setUrl] = useState('https://www.sollet.io')
   const [wallet, setWallet] = useState(new Wallet(url))
   const [connected, setConnected] = useState(false)
-  const [publicKey, setPublicKey] = useState()
-  const [publicKeyb58, setPublicKeyb58] = useState()
+  const [pubKey, setPubKey] = useState()
+  // const [publicKeyb58, setPublicKeyb58] = useState()
 
   const connect = async (url) => {
     setLoading(true)
@@ -16,17 +16,18 @@ const useWallet = () => {
   }
 
   useEffect(() => {
-    wallet.on('connect', (publicKey) => {
+    wallet.on('connect', (key) => {
+      // console.log(pubKey)
       setLoading(false)
       setConnected(true)
-      setPublicKey(publicKey)
-      setPublicKeyb58(publicKey.toBase58())
+      setPubKey(key)
+      // setPublicKeyb58(pubKey.toBase58())
     })
 
     wallet.on('disconnect', () => {
       setConnected(false)
-      setPublicKey('')
-      setPublicKeyb58('')
+      setPubKey('')
+      // setPublicKeyb58('')
       console.log('Disconnected')
     })
 
@@ -40,8 +41,7 @@ const useWallet = () => {
     connect,
     connected,
     loading,
-    publicKey,
-    publicKeyb58,
+    pubKey,
   }
 }
 

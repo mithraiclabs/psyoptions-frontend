@@ -1,6 +1,5 @@
 import React from 'react'
-import RadioButtonUnchecked from '@material-ui/icons/RadioButtonUnchecked'
-import RadioButtonChecked from '@material-ui/icons/RadioButtonChecked'
+import Brightness1 from '@material-ui/icons/Brightness1'
 import Box from '@material-ui/core/Box'
 import Button from '@material-ui/core/Button'
 import styled from 'styled-components'
@@ -9,11 +8,14 @@ import useWallet from '../hooks/useWallet'
 import theme from '../utils/theme'
 
 const Btn = styled(Button)`
-  border: 2px solid ${theme.palette?.primary?.main};
+  border: 1px solid ${theme.palette?.primary?.main};
+  padding: 4px 12px;
 `
 
 const WalletStatus = () => {
-  const { wallet, connect, connected, loading } = useWallet()
+  const { pubKey, connect, connected } = useWallet()
+
+  const pubKeyB58 = pubKey && pubKey.toBase58 && pubKey.toBase58().slice(0,5)
 
   const handleConnect = () => {
     if (!connected) {
@@ -22,18 +24,12 @@ const WalletStatus = () => {
   }
 
   return (
-    <Box px={3} py={2}>
-      <Btn color="primary" onClick={handleConnect}>
-        <Box pr={1}>
-          {connected ? (
-            <RadioButtonChecked style={{ fontSize: 18 }} />
-          ) : (
-            <RadioButtonUnchecked style={{ fontSize: 18 }} />
-          )}
-        </Box>
-        {connected ? 'Connected' : 'Connect Wallet'}
-      </Btn>
-    </Box>
+    <Btn color="primary" onClick={handleConnect}>
+      <Box pr={2}>
+        <Brightness1 style={{ fontSize: 12, color: connected ? theme.palette.success.main : theme.palette.disabled.main }} />
+      </Box>
+      {connected ? `Connected [${pubKeyB58}…]` : 'Connect Wallet'}
+    </Btn>
   )
 }
 

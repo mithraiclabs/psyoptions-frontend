@@ -11,9 +11,12 @@ const bundleFilename = '/public/bundle.js'
 
 const server = express()
 
-server.get('/', (req, res, next) => {
+server.use('/public', express.static('public'))
+
+server.use((req, res, next) => {
+  const app = <App location={{ pathname: req?.originalUrl }} />
   const sheets = new ServerStyleSheets()
-  const appHtml = ReactDOMServer.renderToString(sheets.collect(<App />))
+  const appHtml = ReactDOMServer.renderToString(sheets.collect(app))
   const cssString = sheets.toString()
 
   const html = ReactDOMServer.renderToString(
@@ -27,8 +30,6 @@ server.get('/', (req, res, next) => {
   )
   res.send(html)
 })
-
-server.use('/public', express.static('public'))
 
 const port = process.env.PORT || 3000
 

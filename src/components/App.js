@@ -1,15 +1,20 @@
 import React from 'react'
 import { ThemeProvider } from '@material-ui/core/styles'
 
-import MainPage from './pages/main'
+import Router from './Router'
 import theme from '../utils/theme'
 
-const App = () => {
+const App = ({ location, routerContext }) => {
   return (
     <ThemeProvider theme={theme}>
-      <MainPage />
+      <Router location={location} context={routerContext} />
     </ThemeProvider>
   )
+}
+
+App.defaultProps = {
+  location: { pathname: '/' },
+  routerContext: {},
 }
 
 export default App

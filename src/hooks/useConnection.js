@@ -21,8 +21,13 @@ const networks = [
   },
 ]
 
+const DEFAULT_NETWORK = networks[0]
+
 const useConnection = () => {
-  const [endpoint, setEndpoint] = useLocalStorageState('endpoint', networks[0])
+  const [endpoint, setEndpoint] = useLocalStorageState(
+    'endpoint',
+    DEFAULT_NETWORK
+  )
   const [connection, setConnection] = useState({})
 
   useEffect(() => {

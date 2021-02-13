@@ -29,7 +29,7 @@ const WalletStatus = () => {
           }}
         />
       </Box>
-      {connected ? `Connected [${pubKeyB58}…]` : 'Connect Wallet'}
+      {connected ? `Connected ${pubKeyB58}...` : 'Connect Wallet'}
     </Button>
   )
 }

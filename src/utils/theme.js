@@ -36,6 +36,7 @@ const theme = createMuiTheme({
       main: secondary,
     },
     background: {
+      light: '#686775',
       main: '#2E2832',
     },
     border: {

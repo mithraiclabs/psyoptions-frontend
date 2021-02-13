@@ -4,6 +4,7 @@ import Box from '@material-ui/core/Box'
 import Button from '@material-ui/core/Button'
 
 import WalletStatus from './WalletStatus'
+import NetworkMenu from './NetworkMenu'
 
 import theme from '../utils/theme'
 
@@ -41,8 +42,9 @@ const StatusBar = () => {
           </Button>
         </Box>
       </Box>
-      <Box>
+      <Box display="flex">
         <WalletStatus />
+        <NetworkMenu />
       </Box>
     </Box>
   )

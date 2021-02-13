@@ -1,6 +1,6 @@
 import React from 'react'
 import Box from '@material-ui/core/Box'
-// import Link from '@material-ui/core/Link'
+import { useHistory } from 'react-router-dom'
 import Button from '@material-ui/core/Button'
 
 import WalletStatus from './WalletStatus'
@@ -9,6 +9,8 @@ import NetworkMenu from './NetworkMenu'
 import theme from '../utils/theme'
 
 const StatusBar = () => {
+  const history = useHistory()
+
   return (
     <Box
       px={3}
@@ -22,18 +24,36 @@ const StatusBar = () => {
     >
       <Box display="flex">
         <Box mx={1}>
-          <Button href="#" onClick={() => {}}>
-            Buy/Sell
+          <Button
+            href="/mint"
+            onClick={(e) => {
+              e.preventDefault()
+              history.push('/mint')
+            }}
+          >
+            Mint Options
           </Button>
         </Box>
         <Box mx={1}>
-          <Button href="#" onClick={() => {}}>
+          <Button
+            href="/open-positions"
+            onClick={(e) => {
+              e.preventDefault()
+              history.push('/open-positions')
+            }}
+          >
             Open Positions
           </Button>
         </Box>
         <Box mx={1}>
-          <Button href="#" onClick={() => {}}>
-            Portfolio
+          <Button
+            href="/history"
+            onClick={(e) => {
+              e.preventDefault()
+              history.push('/history')
+            }}
+          >
+            History
           </Button>
         </Box>
         <Box mx={1}>

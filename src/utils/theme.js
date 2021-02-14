@@ -5,6 +5,7 @@ const secondary = '#DD3E76'
 const theme = createMuiTheme({
   gradients: {
     secondaryPrimary: 'linear-gradient(90deg, #DD3E76 -0.83%, #1D4DC9 100%)',
+    warningSecondary: 'linear-gradient(90deg, #FFA654 15.31%, #DC3E78 86.12%)',
   },
   glow: '0 0 0px #11FFCC, 0 0 20px #0055CC, 0 0 50px #001199',
   typography: {
@@ -26,7 +27,8 @@ const theme = createMuiTheme({
       contrastText: '#E4F5FF',
     },
     warning: {
-      main: '#FAC265',
+      light: '#FAC265',
+      main: '#FFA654',
       dark: '#D18641',
     },
     success: {

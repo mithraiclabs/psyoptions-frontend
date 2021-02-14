@@ -83,7 +83,7 @@ const StatusBar = () => {
         justifyContent="space-between"
         flexDirection="row"
         style={{
-          background: theme.gradients?.secondaryPrimary,
+          background: theme.gradients?.warningSecondary,
         }}
       >
         <Box display="flex">

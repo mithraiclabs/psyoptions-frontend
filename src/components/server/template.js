@@ -46,6 +46,7 @@ const Template = ({
     <html>
       <head>
         <title>{title || ''}</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta description={description || ''} />
         <link rel="preconnect" href="https://fonts.gstatic.com" />
         <link

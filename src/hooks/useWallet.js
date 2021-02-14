@@ -1,14 +1,20 @@
 import Wallet from '@project-serum/sol-wallet-adapter'
-import { useEffect, useState } from 'react'
-
-import { isBrowser } from '../utils/isNode'
+import { useContext } from 'react'
+import { WalletContext } from '../context/WalletContext'
 
 const useWallet = () => {
-  const [loading, setLoading] = useState(false)
-  const [url, setUrl] = useState('https://www.sollet.io')
-  const [wallet, setWallet] = useState()
-  const [connected, setConnected] = useState(false)
-  const [pubKey, setPubKey] = useState()
+  const {
+    loading,
+    setLoading,
+    url,
+    setUrl,
+    wallet,
+    setWallet,
+    connected,
+    setConnected,
+    pubKey,
+    setPubKey,
+  } = useContext(WalletContext)
 
   const connect = async () => {
     setLoading(true)

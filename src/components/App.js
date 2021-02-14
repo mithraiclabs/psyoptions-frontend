@@ -3,11 +3,14 @@ import { ThemeProvider } from '@material-ui/core/styles'
 
 import Router from './Router'
 import theme from '../utils/theme'
+import { WalletProvider } from '../context/WalletContext'
 
 const App = ({ location, routerContext }) => {
   return (
     <ThemeProvider theme={theme}>
-      <Router location={location} context={routerContext} />
+      <WalletProvider>
+        <Router location={location} context={routerContext} />
+      </WalletProvider>
     </ThemeProvider>
   )
 }

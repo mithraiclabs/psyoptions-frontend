@@ -17,4 +17,4 @@ const Page = ({ children }) => {
   )
 }
 
-export default Page
+export default React.memo(Page)

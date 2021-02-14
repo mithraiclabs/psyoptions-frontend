@@ -12,7 +12,7 @@ import NetworkMenu from './NetworkMenu'
 
 import theme from '../utils/theme'
 
-const NavOptions = () => {
+const NavOptions = React.memo(() => {
   const history = useHistory()
 
   return (
@@ -57,9 +57,9 @@ const NavOptions = () => {
       </Box>
     </>
   )
-}
+})
 
-const StatusBar = () => {
+const StatusBar = React.memo(() => {
   const [drawerOpen, setDrawerOpen] = useState(false)
 
   return (
@@ -109,6 +109,6 @@ const StatusBar = () => {
       </Box>
     </>
   )
-}
+})
 
 export default StatusBar

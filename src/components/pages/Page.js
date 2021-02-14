@@ -6,10 +6,12 @@ import Box from '@material-ui/core/Box'
 // Default page template
 const Page = ({ children }) => {
   return (
-    <Box>
+    <Box height="100%" display="flex" flexDirection="column">
       <StatusBar />
-      <Box p={[1, 1, 4]} display="flex">
-        <Box p={2}>{children}</Box>
+      <Box px={[1, 1, 4]} height="100%" display="flex" flexDirection="column">
+        <Box p={2} height="100%">
+          {children}
+        </Box>
       </Box>
     </Box>
   )

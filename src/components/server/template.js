@@ -2,6 +2,10 @@ import React from 'react'
 import theme from '../../utils/theme'
 
 const baseCss = `
+  * {
+    box-sizing: border-box;
+  }
+
   html, body {
     width: 100%;
     height: 100%;
@@ -17,17 +21,25 @@ const baseCss = `
   
   h1, h2, h3 {
     font-weight: 400;
-    color: ${theme.palette.primary.main};
     text-transform: uppercase;
     font-family: Goldman, sans-serif;
     font-size: 3.25rem;
+    color: ${theme.palette.primary.light};
     text-shadow: ${theme.glow};
   }
   h2 {
-    font-size: 2.25rem;
+    font-size: 1.5rem;
   }
   h3 {
-    font-size: 2rem;
+    font-size: 1.25rem;
+  }
+  h4, h5 {
+    color: ${theme.palette.primary.light};
+    text-transform: uppercase;
+    font-size: 1.25rem;
+  }
+  h5 {
+    font-size: 1.2rem;
   }
 
   button {

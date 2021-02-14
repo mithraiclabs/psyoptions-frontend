@@ -1,34 +1,15 @@
-import { Connection, clusterApiUrl } from '@solana/web3.js'
-import { useEffect, useState } from 'react'
-import useLocalStorageState from 'use-local-storage-state'
-
-const networks = [
-  {
-    name: 'Mainnet',
-    url: clusterApiUrl('mainnet-beta'),
-  },
-  {
-    name: 'Devnet',
-    url: clusterApiUrl('devnet'),
-  },
-  {
-    name: 'Testnet',
-    url: clusterApiUrl('testnet'),
-  },
-  {
-    name: 'localhost',
-    url: 'http://localhost:8899',
-  },
-]
-
-const DEFAULT_NETWORK = networks[0]
+import { Connection } from '@solana/web3.js'
+import { useContext, useEffect } from 'react'
+import { ConnectionContext } from '../context/ConnectionContext'
 
 const useConnection = () => {
-  const [endpoint, setEndpoint] = useLocalStorageState(
-    'endpoint',
-    DEFAULT_NETWORK
-  )
-  const [connection, setConnection] = useState({})
+  const {
+    networks,
+    connection,
+    setConnection,
+    endpoint,
+    setEndpoint,
+  } = useContext(ConnectionContext)
 
   useEffect(() => {
     const cx = new Connection(endpoint.url)

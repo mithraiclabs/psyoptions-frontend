@@ -53,12 +53,14 @@ const NetworkMenu = () => {
           inset: 'initial',
           right: 0,
           marginTop: '16px',
+          zIndex: 20,
         }}
       >
         <Card
           style={{
             background: theme.palette?.background?.light,
           }}
+          elevation={12}
         >
           <ClickAwayListener onClickAway={handleClose}>
             <MenuList

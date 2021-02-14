@@ -8,7 +8,9 @@ const Page = ({ children }) => {
   return (
     <Box>
       <StatusBar />
-      <Box p={2}>{children}</Box>
+      <Box p={[1, 1, 4]} display="flex">
+        <Box p={2}>{children}</Box>
+      </Box>
     </Box>
   )
 }

@@ -1,21 +1,24 @@
 import { Box, Paper, Button, Chip, Avatar } from '@material-ui/core'
-import React from 'react'
+import React, { useState } from 'react'
 import theme from '../../utils/theme'
 import Page from './Page'
 import useWallet from '../../hooks/useWallet'
 import Done from '@material-ui/icons/Done'
 import KeyboardArrowDown from '@material-ui/icons/KeyboardArrowDown'
 
+import SelectAsset from '../SelectAsset'
+
 const darkBorder = `1px solid ${theme.palette.background.main}`
 
 const Mint = () => {
   const { connect, connected, loading } = useWallet()
 
+  const [uAsset, setUAsset] = useState()
+  const [qAsset, setQAsset] = useState()
+
   // TBD: Should we store these user input in the component state?
   // Probably, because we aren't really using these anywhere else
-  const {
-    uAsset = '', // SPL token account address
-    qAsset = '', // SPL token account address
+  let {
     strikePrice = 123, // Int
     size = 100, // Int
   } = {}
@@ -99,25 +102,9 @@ const Mint = () => {
                 Underlying Asset:
                 <Box mt={2}>
                   {/* TODO: Move to separate "asset selector" component */}
-                  <Chip
-                    label="Choose Asset"
-                    clickable
-                    color="primary"
-                    variant="outlined"
-                    avatar={
-                      uAsset ? (
-                        <Avatar
-                          src="uasset-icon.png"
-                          alt="Uasset-name"
-                          style={{
-                            backgroundColor: theme.palette.primary.main,
-                          }}
-                        />
-                      ) : null
-                    }
-                    onClick={() => {}}
-                    onDelete={() => {}}
-                    deleteIcon={<KeyboardArrowDown />}
+                  <SelectAsset
+                    selectedAsset={uAsset}
+                    onSelectAsset={setUAsset}
                   />
                 </Box>
               </Box>
@@ -129,26 +116,9 @@ const Mint = () => {
               <Box width={'50%'} p={2}>
                 Quote Asset:
                 <Box mt={2}>
-                  {/* TODO: Move to separate "asset selector" component */}
-                  <Chip
-                    label="Choose Asset"
-                    clickable
-                    color="primary"
-                    variant="outlined"
-                    avatar={
-                      qAsset ? (
-                        <Avatar
-                          src="qasset-icon.png"
-                          alt="qasset-name"
-                          style={{
-                            backgroundColor: theme.palette.primary.main,
-                          }}
-                        />
-                      ) : null
-                    }
-                    onClick={() => {}}
-                    onDelete={() => {}}
-                    deleteIcon={<KeyboardArrowDown />}
+                  <SelectAsset
+                    selectedAsset={qAsset}
+                    onSelectAsset={setQAsset}
                   />
                 </Box>
               </Box>

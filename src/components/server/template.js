@@ -45,6 +45,21 @@ const baseCss = `
   button {
     white-space: nowrap;
   }
+
+  * {
+    scrollbar-color: ${theme.palette.border.main} transparent;
+  }
+  *::-webkit-scrollbar {
+    width: 10px;
+  }
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  *::-webkit-scrollbar-thumb {
+    background-color: ${theme.palette.border.main};
+    border: 1px solid ${theme.palette.background.main};
+    border-radius: 12px;
+  }
 `
 
 const Template = ({

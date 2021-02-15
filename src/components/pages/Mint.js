@@ -184,8 +184,7 @@ const Mint = () => {
                   <Box py={1}>
                     {marketAddress
                       ? `
-                    Mint (${size} ${uAsset?.symbol} @ ${price} ${uAsset?.symbol}/
-                    ${qAsset?.symbol})`
+                    Mint (${size} ${uAsset?.symbol} @ ${price} ${qAsset?.symbol}/${uAsset?.symbol})`
                       : `Select Parameters to Mint`}
                   </Box>
                 </Button>

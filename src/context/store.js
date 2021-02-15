@@ -1,8 +1,10 @@
-import { cloneElement } from 'react'
+import React, { cloneElement } from 'react'
 import { ConnectionProvider } from './ConnectionContext'
 import { WalletProvider } from './WalletContext'
 
-const providers = [ConnectionProvider, WalletProvider]
+const providers = [<ConnectionProvider />, <WalletProvider />]
+
+// flatten context providers for simpler app component tree
 
 const ProviderComposer = ({ providers, children }) =>
   providers.reduceRight(

@@ -3,8 +3,6 @@ import { ThemeProvider } from '@material-ui/core/styles'
 
 import Router from './Router'
 import theme from '../utils/theme'
-import { WalletProvider } from '../context/WalletContext'
-import { ConnectionProvider } from '../context/ConnectionContext'
 import Store from '../context/store'
 
 const App = ({ location, routerContext }) => {

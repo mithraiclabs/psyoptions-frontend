@@ -9,7 +9,7 @@ const trustWalletERC20Icon = (address) =>
 // We can make this pull from some API(s) later
 const assetList = [
   {
-    splAccount: 'abcdef0',
+    splAccount: 'abcdef0', // What's the account address for Sol itself? Hmm...
     symbol: 'SOL',
     name: 'Solana',
     image: trustWalletBlockchainIcon('solana'),

@@ -1,17 +1,13 @@
 import React from 'react'
-import { ThemeProvider } from '@material-ui/core/styles'
 
-import Router from './Router'
-import theme from '../utils/theme'
 import Store from '../context/store'
+import Router from './Router'
 
 const App = ({ location, routerContext }) => {
   return (
-    <ThemeProvider theme={theme}>
-      <Store>
-        <Router location={location} context={routerContext} />
-      </Store>
-    </ThemeProvider>
+    <Store>
+      <Router location={location} context={routerContext} />
+    </Store>
   )
 }
 

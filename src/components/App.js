@@ -1,20 +1,13 @@
 import React from 'react'
-import { ThemeProvider } from '@material-ui/core/styles'
 
+import Store from '../context/store'
 import Router from './Router'
-import theme from '../utils/theme'
-import { WalletProvider } from '../context/WalletContext'
-import { ConnectionProvider } from '../context/ConnectionContext'
 
 const App = ({ location, routerContext }) => {
   return (
-    <ThemeProvider theme={theme}>
-      <WalletProvider>
-        <ConnectionProvider>
-          <Router location={location} context={routerContext} />
-        </ConnectionProvider>
-      </WalletProvider>
-    </ThemeProvider>
+    <Store>
+      <Router location={location} context={routerContext} />
+    </Store>
   )
 }
 

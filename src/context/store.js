@@ -4,6 +4,7 @@ import { ThemeProvider } from '@material-ui/core/styles'
 import { ConnectionProvider } from './ConnectionContext'
 import { OwnedTokenAccountsProvider } from './OwnedTokenAccounts'
 import { WalletProvider } from './WalletContext'
+import { NotificationsProvider } from './NotificationsContext'
 import theme from '../utils/theme'
 
 const providers = [
@@ -11,6 +12,7 @@ const providers = [
   <ConnectionProvider />,
   <WalletProvider />,
   <OwnedTokenAccountsProvider />,
+  <NotificationsProvider />,
 ]
 
 // flatten context providers for simpler app component tree

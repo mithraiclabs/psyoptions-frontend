@@ -1,6 +1,7 @@
-import { Box, Paper, Button, Chip } from '@material-ui/core'
 import React, { useState } from 'react'
+import moment from 'moment'
 import Done from '@material-ui/icons/Done'
+import { Box, Paper, Button, Chip } from '@material-ui/core'
 
 import theme from '../../utils/theme'
 
@@ -79,13 +80,17 @@ const Mint = () => {
               <Box display="flex" flexWrap="wrap">
                 {dates.map((d) => {
                   const selected = d === date
+                  const label = `${moment
+                    .unix(d)
+                    .utc()
+                    .format('ll')}, 00:00 UTC`
                   const onClick = () => setDate(d)
                   return (
                     <Chip
                       key={d}
                       clickable
                       size="small"
-                      label={d}
+                      label={label}
                       color="primary"
                       onClick={onClick}
                       onDelete={selected ? onClick : undefined}

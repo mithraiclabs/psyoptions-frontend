@@ -9,37 +9,37 @@ const trustWalletERC20Icon = (address) =>
 // We can make this pull from some API(s) later
 const assetList = [
   {
-    splAccount: 'abcdef0', // What's the account address for Sol itself? Hmm...
+    splAccount: 'So11111111111111111111111111111111111111112',
     symbol: 'SOL',
     name: 'Solana',
     image: trustWalletBlockchainIcon('solana'),
   },
   {
-    splAccount: 'abcdef1',
+    splAccount: 'BQcdHdAQW1hczDbBi9hiegXAR7A98Q9jx3X3iBBBDiq4',
     symbol: 'USDT',
     name: 'Tether',
     image: trustWalletERC20Icon('0xdAC17F958D2ee523a2206206994597C13D831ec7'),
   },
   {
-    splAccount: 'abcdef2',
+    splAccount: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
     symbol: 'USDC',
     name: 'Circle',
     image: trustWalletERC20Icon('0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48'),
   },
   {
-    splAccount: 'abcdef3',
+    splAccount: '9n4nbM75f5Ui33ZbPYXn59EwSgE8CGsHtAeTH5YFeJ9E',
     symbol: 'BTC',
     name: 'Bitcoin',
     image: trustWalletBlockchainIcon('bitcoin'),
   },
   {
-    splAccount: 'abcdef4',
+    splAccount: '2FPyTwcZLUg1MDrwsyoP4D6s1tM7hAkHYRjkNb5w6Pxk',
     symbol: 'ETH',
     name: 'Ethereum',
     image: trustWalletBlockchainIcon('ethereum'),
   },
   {
-    splAccount: 'abcdef5',
+    splAccount: 'SRMuApVNdxXokk5GT7XD5cUUgXMBCoAz2LHeuAoKWRt',
     symbol: 'SRM',
     name: 'Serum',
     image: trustWalletERC20Icon('0x476c5E26a75bd202a9683ffD34359C0CC15be0fF'),

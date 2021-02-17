@@ -1,7 +1,7 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import moment from 'moment'
 
-import { Box, Paper, Button, Chip } from '@material-ui/core'
+import { Box, Paper, Button, Chip, TextField } from '@material-ui/core'
 import Done from '@material-ui/icons/Done'
 
 import theme from '../../utils/theme'
@@ -12,6 +12,9 @@ import SelectAsset from '../SelectAsset'
 import Select from '../Select'
 import ExistingMarkets from '../ExistingMarkets'
 
+import useBonfida from '../../hooks/useBonfida'
+import { generateStrikePrices } from '../../utils/generateStrikePrices'
+
 const darkBorder = `1px solid ${theme.palette.background.main}`
 
 const next3Months = [
@@ -20,61 +23,73 @@ const next3Months = [
   moment.utc().startOf('month').add(3, 'month'),
 ]
 
-console.log(next3Months.map((m) => m.unix()))
-
 const InitializeMarket = () => {
   const { connect, connected, loading } = useWallet()
-  const {
-    marketExists,
-    getMarketAddress,
-    getStrikePrices,
-  } = useOptionsMarkets()
+
+  const { marketExists } = useOptionsMarkets()
 
   const [date, setDate] = useState(next3Months[0])
   const [uAsset, setUAsset] = useState()
   const [qAsset, setQAsset] = useState()
-  const [size, setSize] = useState(100)
-  const [price, setPrice] = useState(0)
+  const [size, setSize] = useState(0)
+  const [priceInterval, setPriceInterval] = useState(0)
 
   const allParams = {
     date: date.unix(),
     uAssetSymbol: uAsset?.symbol,
     qAssetSymbol: qAsset?.symbol,
     size,
-    price,
   }
 
-  // marketStatus returns e.g. { date: true, pair: true, size: false, price: true }
+  const { currentPairPrice } = useBonfida({
+    uAssetSymbol: uAsset?.symbol,
+    qAssetSymbol: qAsset?.symbol,
+  })
+
+  let strikePrices = []
+  if (currentPairPrice && priceInterval && !isNaN(priceInterval)) {
+    strikePrices = generateStrikePrices(currentPairPrice, priceInterval)
+  }
+
   const marketStatus = marketExists(allParams)
-  const strikePrices = getStrikePrices(allParams)
-  const marketAddress = getMarketAddress(allParams)
   const assetsSelected = uAsset && qAsset
   const canInitialize = !marketStatus.size
+  const parametersValid = size && !isNaN(size) && strikePrices.length > 0
 
   const handleInitialize = () => {
     console.log('Initialize')
+    console.log('all params: ', {
+      uAsset,
+      qAsset,
+      size,
+      date: date.unix(),
+      strikePrices,
+    })
   }
 
   return (
     <Page>
       <Box
         display="flex"
-        flexDirection={['column', 'column', 'row']}
+        flexDirection={['row']}
+        justifyContent={'center'}
+        alignItems={'center'}
         minHeight="100%"
         margin="0 auto"
+        pb={5}
       >
-        <Box width={'100%'} minWidth="320px" height="100%" p={1}>
+        {/* <Box width={'100%'} minWidth="320px" height="100%" p={1}>
           <Paper>
             <ExistingMarkets date={date} />
           </Paper>
-        </Box>
+        </Box> */}
         <Box
           display="flex"
           alignItems="center"
           justifyContent="center"
           flexDirection="column"
           height="100%"
-          width={['100%', '100%', '50%']}
+          width={'500px'}
           minWidth="370px"
           p={1}
         >
@@ -135,7 +150,7 @@ const InitializeMarket = () => {
 
             <Box display="flex" borderBottom={darkBorder}>
               <Box width={'50%'} p={2} borderRight={darkBorder}>
-                <Select
+                {/* <Select
                   variant="filled"
                   label={'Contract Size'}
                   value={size}
@@ -144,12 +159,39 @@ const InitializeMarket = () => {
                   style={{
                     width: '100%',
                   }}
+                /> */}
+                <TextField
+                  label="Contract Size"
+                  variant="filled"
+                  onChange={(e) => setSize(parseInt(e.target.value))}
+                  helperText={isNaN(size) ? 'Must be a number' : null}
+                />
+              </Box>
+              <Box width={'50%'} p={2}>
+                <TextField
+                  label="Price Interval"
+                  variant="filled"
+                  onChange={(e) => setPriceInterval(parseFloat(e.target.value))}
+                  helperText={isNaN(priceInterval) ? 'Must be a number' : null}
                 />
               </Box>
             </Box>
 
+            {parametersValid ? (
+              <Box p={1}>
+                <Box p={1}>
+                  Current Price: <br />
+                  {currentPairPrice} {qAsset?.symbol}/{uAsset?.symbol}
+                </Box>
+                <Box p={1}>
+                  Strike Prices to Initialize: <br />
+                  {strikePrices.map((n) => `${n.toFixed(5)} `)}
+                </Box>
+              </Box>
+            ) : null}
+
             <Box p={2}>
-              {canInitialize && assetsSelected ? (
+              {canInitialize && assetsSelected && parametersValid ? (
                 <Button
                   fullWidth
                   variant={'outlined'}
@@ -165,9 +207,9 @@ const InitializeMarket = () => {
               ) : (
                 <Button fullWidth variant={'outlined'} color="primary" disabled>
                   <Box py={1}>
-                    {assetsSelected
+                    {assetsSelected && parametersValid
                       ? `Market Already Exists`
-                      : 'Select Assets to Initialize Market'}
+                      : 'Enter Valid Parameters to Initialize Market'}
                   </Box>
                 </Button>
               )}

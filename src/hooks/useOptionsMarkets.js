@@ -1,9 +1,8 @@
-import moment from 'moment'
-
 // TODO: we need to populate this list from the blockchain by finding all SPL tokens minted by the intialize market program and unpack the byte data.
 // Alternatively if that's too hard we can have an API that returns the list of markets that we manually create (or use a script to create) and put into a database.
+
 const markets = {
-  20210301: {
+  1614556800: {
     // This key should always be UA-QA order
     // Right now we are relying on having the correct symbol mapped to the address in "useAssetList.js"
     // In the future, if we ever allow custom SPL tokens, we might want to change this to two account addresses, instead of the symbols
@@ -34,7 +33,7 @@ const markets = {
       },
     },
   },
-  20210307: {
+  1617235200: {
     // This key can always be UA-QA order
     'SOL-USDT': {
       uAssetAaccount: 'address...',

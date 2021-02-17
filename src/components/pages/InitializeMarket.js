@@ -1,37 +1,43 @@
-import { Box, Paper, Button, Chip } from '@material-ui/core'
 import React, { useState } from 'react'
+import moment from 'moment'
+
+import { Box, Paper, Button, Chip } from '@material-ui/core'
 import Done from '@material-ui/icons/Done'
 
 import theme from '../../utils/theme'
-
 import useWallet from '../../hooks/useWallet'
 import useOptionsMarkets from '../../hooks/useOptionsMarkets'
-
-import SelectAsset from '../SelectAsset'
 import Page from './Page'
+import SelectAsset from '../SelectAsset'
 import Select from '../Select'
+import ExistingMarkets from '../ExistingMarkets'
 
 const darkBorder = `1px solid ${theme.palette.background.main}`
 
-const Mint = () => {
+const next3Months = [
+  moment.utc().startOf('month').add(1, 'month'),
+  moment.utc().startOf('month').add(2, 'month'),
+  moment.utc().startOf('month').add(3, 'month'),
+]
+
+console.log(next3Months.map((m) => m.unix()))
+
+const InitializeMarket = () => {
   const { connect, connected, loading } = useWallet()
   const {
     marketExists,
     getMarketAddress,
     getStrikePrices,
-    getDates,
   } = useOptionsMarkets()
 
-  const dates = getDates()
-
-  const [date, setDate] = useState(dates[0])
+  const [date, setDate] = useState(next3Months[0])
   const [uAsset, setUAsset] = useState()
   const [qAsset, setQAsset] = useState()
   const [size, setSize] = useState(100)
   const [price, setPrice] = useState(0)
 
   const allParams = {
-    date,
+    date: date.unix(),
     uAssetSymbol: uAsset?.symbol,
     qAssetSymbol: qAsset?.symbol,
     size,
@@ -42,50 +48,54 @@ const Mint = () => {
   const marketStatus = marketExists(allParams)
   const strikePrices = getStrikePrices(allParams)
   const marketAddress = getMarketAddress(allParams)
+  const assetsSelected = uAsset && qAsset
+  const canInitialize = !marketStatus.size
 
-  // TODO: check if connected wallet has enough of uAsset
-  // TODO: set canMint to true if all conditions are met (params set, has UA funds, etc)
-  const canMint = !!marketAddress
-
-  const handleMint = () => {
-    // TODO: make "useTransactionInstructions" hook that sends out transactions here
-    // Then call the mint one here
+  const handleInitialize = () => {
+    console.log('Initialize')
   }
 
   return (
     <Page>
       <Box
         display="flex"
-        alignItems="center"
-        justifyContent="center"
-        flexDirection="column"
-        height="100%"
-        minHeight="500px"
-        pb={4}
+        flexDirection={['column', 'column', 'row']}
+        minHeight="100%"
+        margin="0 auto"
       >
-        <Paper
-          style={{
-            width: '100%',
-            maxWidth: '500px',
-          }}
+        <Box width={'100%'} minWidth="320px" height="100%" p={1}>
+          <Paper>
+            <ExistingMarkets date={date} />
+          </Paper>
+        </Box>
+        <Box
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+          flexDirection="column"
+          height="100%"
+          width={['100%', '100%', '50%']}
+          minWidth="370px"
+          p={1}
         >
-          <Box>
+          <Paper style={{ width: '100%', height: '100%' }}>
             <Box p={2} textAlign="center">
-              <h2 style={{ margin: '10px 0 0' }}>Contract Settings</h2>
+              <h2 style={{ margin: '10px 0 0' }}>Initialize New Market</h2>
             </Box>
 
             <Box p={2} borderBottom={darkBorder}>
               Expires On:
               <Box display="flex" flexWrap="wrap">
-                {dates.map((d) => {
-                  const selected = d === date
-                  const onClick = () => setDate(d)
+                {next3Months.map((moment) => {
+                  const label = `${moment.format('ll')}, 00:00 UTC`
+                  const selected = moment === date
+                  const onClick = () => setDate(moment)
                   return (
                     <Chip
-                      key={d}
+                      key={label}
                       clickable
                       size="small"
-                      label={d}
+                      label={label}
                       color="primary"
                       onClick={onClick}
                       onDelete={selected ? onClick : undefined}
@@ -128,24 +138,9 @@ const Mint = () => {
                 <Select
                   variant="filled"
                   label={'Contract Size'}
-                  disabled={marketStatus.pair === false}
                   value={size}
                   onChange={(e) => setSize(e.target.value)}
-                  options={[1, 100]}
-                  style={{
-                    width: '100%',
-                  }}
-                />
-              </Box>
-
-              <Box width={'50%'} p={2}>
-                <Select
-                  variant="filled"
-                  label={'Strike Price'}
-                  disabled={marketStatus.size === false}
-                  value={price}
-                  onChange={(e) => setPrice(e.target.value)}
-                  options={strikePrices}
+                  options={[1, 10, 100]}
                   style={{
                     width: '100%',
                   }}
@@ -153,39 +148,35 @@ const Mint = () => {
               </Box>
             </Box>
 
-            {uAsset && qAsset && (
-              <Box p={2}>
-                {marketStatus.pair
-                  ? 'This pair can be minted'
-                  : `${uAsset.symbol}/${qAsset.symbol} Market doesn't exist yet. Creating new markets from the UI is coming soon!`}
-              </Box>
-            )}
-
             <Box p={2}>
-              {marketAddress ? (
+              {canInitialize && assetsSelected ? (
                 <Button
                   fullWidth
                   variant={'outlined'}
                   color="primary"
-                  onClick={connected ? handleMint : connect}
+                  onClick={connected ? handleInitialize : connect}
                 >
                   <Box py={1}>
                     {connected
-                      ? `Mint (${size} ${uAsset?.symbol} @ ${price} ${qAsset?.symbol}/${uAsset?.symbol})`
-                      : 'Connect Wallet To Mint'}
+                      ? 'Initialize Market'
+                      : 'Connect Wallet To Initialize'}
                   </Box>
                 </Button>
               ) : (
                 <Button fullWidth variant={'outlined'} color="primary" disabled>
-                  <Box py={1}>Select Parameters to Mint</Box>
+                  <Box py={1}>
+                    {assetsSelected
+                      ? `Market Already Exists`
+                      : 'Select Assets to Initialize Market'}
+                  </Box>
                 </Button>
               )}
             </Box>
-          </Box>
-        </Paper>
+          </Paper>
+        </Box>
       </Box>
     </Page>
   )
 }
 
-export default Mint
+export default InitializeMarket

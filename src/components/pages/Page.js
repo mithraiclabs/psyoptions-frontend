@@ -9,7 +9,7 @@ const Page = ({ children }) => {
     <Box height="100%" display="flex" flexDirection="column">
       <StatusBar />
       <Box px={[1, 1, 4]} height="100%" display="flex" flexDirection="column">
-        <Box p={2} height="100%">
+        <Box p={1} height="100%">
           {children}
         </Box>
       </Box>

@@ -4,6 +4,7 @@ import { isBrowser } from '../utils/isNode'
 
 import Main from './pages/main'
 import Mint from './pages/Mint'
+import InitializeMarket from './pages/InitializeMarket'
 import OpenPositions from './pages/OpenPositions'
 import History from './pages/History'
 
@@ -14,6 +15,9 @@ const Routes = (props) => (
     <Switch>
       <Route exact path="/">
         <Main />
+      </Route>
+      <Route exact path="/initialize-market">
+        <InitializeMarket />
       </Route>
       <Route exact path="/mint">
         <Mint />

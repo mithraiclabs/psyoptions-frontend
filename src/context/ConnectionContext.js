@@ -6,22 +6,22 @@ const networks = [
   {
     name: 'Mainnet',
     url: clusterApiUrl('mainnet-beta'),
-    programId: process.env.PROGRAM_ID_MAINNET,
+    programId: process.env.MAINNET_PROGRAM_ID,
   },
   {
     name: 'Devnet',
     url: clusterApiUrl('devnet'),
-    programId: process.env.PROGRAM_ID_DEVNET,
+    programId: process.env.DEVNET_PROGRAM_ID,
   },
   {
     name: 'Testnet',
     url: clusterApiUrl('testnet'),
-    programId: process.env.PROGRAM_ID_TESTNET,
+    programId: process.env.TESTNET_PROGRAM_ID,
   },
   {
     name: 'localhost',
     url: 'http://127.0.0.1:8899',
-    programId: '3oRDBQibfrhKzwwYVB6MchD1cbGZ7GK1ue9rVSbD3vXX',
+    programId: process.env.LOCAL_PROGRAM_ID,
   },
 ]
 

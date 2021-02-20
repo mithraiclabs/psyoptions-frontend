@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import moment from 'moment'
 
 import { Box, Paper, Button, Chip, TextField } from '@material-ui/core'
@@ -10,13 +10,12 @@ import useConnection from '../../hooks/useConnection'
 import useOptionsMarkets from '../../hooks/useOptionsMarkets'
 import Page from './Page'
 import SelectAsset from '../SelectAsset'
-import Select from '../Select'
-import ExistingMarkets from '../ExistingMarkets'
 
 import useBonfida from '../../hooks/useBonfida'
 import { generateStrikePrices } from '../../utils/generateStrikePrices'
 
 import { initializeMarket } from '@mithraic-labs/options-js-bindings'
+import useLocalStorageState from 'use-local-storage-state'
 
 const darkBorder = `1px solid ${theme.palette.background.main}`
 
@@ -37,6 +36,17 @@ const InitializeMarket = () => {
   const [qAsset, setQAsset] = useState()
   const [size, setSize] = useState(0)
   const [priceInterval, setPriceInterval] = useState(0)
+
+  const [success, setSuccess] = useState()
+  const [initializeError, setInitializeError] = useState()
+
+  // Keep initialized data accounts in local storage for user to see them later
+  // May want to store these in the backend attached to the initializer's public key
+  // So that they can be queried from a 'info' page
+  const [
+    initializedDataAccounts,
+    setInitializedDataAccounts,
+  ] = useLocalStorageState('initializedDataAccount', [])
 
   const allParams = {
     date: date.unix(),
@@ -61,38 +71,63 @@ const InitializeMarket = () => {
   const parametersValid = size && !isNaN(size) && strikePrices.length > 0
 
   const handleInitialize = async () => {
-    console.log('Initialize')
+    setInitializeError(false)
 
-    const {
-      signers,
-      transaction,
-      optionMarketDataAddress,
-    } = await initializeMarket(
-      connection,
-      { publicKey: pubKey },
-      endpoint.programId,
-      uAsset.mint,
-      qAsset.mint,
-      size,
-      strikePrices[0],
-      date.unix()
-    )
+    // TBD: Do we want to do all 9 strike prices in one go here?
+    // If we ever make this public it should be an optional to generate all of them or just one
+    try {
+      // TODO: maybe move this to a hook or helper file
+      const results = await Promise.all(
+        strikePrices.map(async (strikePrice) => {
+          const {
+            signers,
+            transaction,
+            optionMarketDataAddress,
+          } = await initializeMarket(
+            connection,
+            { publicKey: pubKey },
+            endpoint.programId,
+            uAsset.mint,
+            qAsset.mint,
+            size,
+            strikePrice,
+            date.unix()
+          )
 
-    // Next 4 lines could be moved into the initializeMarket function
-    transaction.feePayer = pubKey
-    const { blockhash } = await connection.getRecentBlockhash()
-    transaction.recentBlockhash = blockhash
-    transaction.partialSign(...signers.slice(1))
+          // Next 4 lines could be moved into the initializeMarket function
+          transaction.feePayer = pubKey
+          const { blockhash } = await connection.getRecentBlockhash()
+          transaction.recentBlockhash = blockhash
+          transaction.partialSign(...signers.slice(1))
 
-    // These have to remain in the FE app to connect to the wallet:
-    const signed = await wallet.signTransaction(transaction)
-    const txid = await connection.sendRawTransaction(signed.serialize())
+          // These have to remain in the FE app to connect to the wallet:
+          const signed = await wallet.signTransaction(transaction)
+          const txid = await connection.sendRawTransaction(signed.serialize())
 
-    console.log('Submitted transaction ' + txid + ', awaiting confirmation')
+          // TODO: push "toast notifications" here that tx started and set a loading state
+          console.log(
+            'Submitted transaction ' + txid + ', awaiting confirmation'
+          )
 
-    await connection.confirmTransaction(txid, 1)
+          await connection.confirmTransaction(txid, 1)
 
-    console.log('Confirmed')
+          // TODO: push "toast notifications" here that tx completed and set loading state to false
+          console.log('Confirmed')
+          console.log({ optionMarketDataAddress })
+
+          return optionMarketDataAddress.toString()
+        })
+      )
+
+      console.log(results)
+
+      // Don't remove previously initialized data accounts, leave them in the UI for user to see any time
+      setInitializedDataAccounts(results)
+      setSuccess(true)
+    } catch (err) {
+      setInitializeError(err)
+      setSuccess(false)
+    }
   }
 
   return (
@@ -106,11 +141,6 @@ const InitializeMarket = () => {
         margin="0 auto"
         pb={5}
       >
-        {/* <Box width={'100%'} minWidth="320px" height="100%" p={1}>
-          <Paper>
-            <ExistingMarkets date={date} />
-          </Paper>
-        </Box> */}
         <Box
           display="flex"
           alignItems="center"
@@ -178,16 +208,6 @@ const InitializeMarket = () => {
 
             <Box display="flex" borderBottom={darkBorder}>
               <Box width={'50%'} p={2} borderRight={darkBorder}>
-                {/* <Select
-                  variant="filled"
-                  label={'Contract Size'}
-                  value={size}
-                  onChange={(e) => setSize(e.target.value)}
-                  options={[1, 10, 100]}
-                  style={{
-                    width: '100%',
-                  }}
-                /> */}
                 <TextField
                   label="Contract Size"
                   variant="filled"
@@ -244,6 +264,20 @@ const InitializeMarket = () => {
             </Box>
           </Paper>
         </Box>
+        {initializedDataAccounts.length && (
+          <Box p={2}>
+            <Paper style={{ width: '100%', height: '100%' }}>
+              <Box p={1}>
+                <h2>My Initialized Markets:</h2>
+              </Box>
+              {initializedDataAccounts.map((account) => (
+                <Box p={1} borderTop={darkBorder} key={account}>
+                  {account}
+                </Box>
+              ))}
+            </Paper>
+          </Box>
+        )}
       </Box>
     </Page>
   )

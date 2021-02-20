@@ -6,6 +6,7 @@ import Done from '@material-ui/icons/Done'
 
 import theme from '../../utils/theme'
 import useWallet from '../../hooks/useWallet'
+import useConnection from '../../hooks/useConnection'
 import useOptionsMarkets from '../../hooks/useOptionsMarkets'
 import Page from './Page'
 import SelectAsset from '../SelectAsset'
@@ -14,6 +15,8 @@ import ExistingMarkets from '../ExistingMarkets'
 
 import useBonfida from '../../hooks/useBonfida'
 import { generateStrikePrices } from '../../utils/generateStrikePrices'
+
+import { initializeMarket } from '@mithraic-labs/options-js-bindings'
 
 const darkBorder = `1px solid ${theme.palette.background.main}`
 
@@ -24,7 +27,8 @@ const next3Months = [
 ]
 
 const InitializeMarket = () => {
-  const { connect, connected, loading } = useWallet()
+  const { connect, wallet, connected, pubKey, loading } = useWallet()
+  const { connection, endpoint } = useConnection()
 
   const { marketExists } = useOptionsMarkets()
 
@@ -56,15 +60,39 @@ const InitializeMarket = () => {
   const canInitialize = !marketStatus.size
   const parametersValid = size && !isNaN(size) && strikePrices.length > 0
 
-  const handleInitialize = () => {
+  const handleInitialize = async () => {
     console.log('Initialize')
-    console.log('all params: ', {
-      uAsset,
-      qAsset,
+
+    const {
+      signers,
+      transaction,
+      optionMarketDataAddress,
+    } = await initializeMarket(
+      connection,
+      { publicKey: pubKey },
+      endpoint.programId,
+      uAsset.mint,
+      qAsset.mint,
       size,
-      date: date.unix(),
-      strikePrices,
-    })
+      strikePrices[0],
+      date.unix()
+    )
+
+    // Next 4 lines could be moved into the initializeMarket function
+    transaction.feePayer = pubKey
+    const { blockhash } = await connection.getRecentBlockhash()
+    transaction.recentBlockhash = blockhash
+    transaction.partialSign(...signers.slice(1))
+
+    // These have to remain in the FE app to connect to the wallet:
+    const signed = await wallet.signTransaction(transaction)
+    const txid = await connection.sendRawTransaction(signed.serialize())
+
+    console.log('Submitted transaction ' + txid + ', awaiting confirmation')
+
+    await connection.confirmTransaction(txid, 1)
+
+    console.log('Confirmed')
   }
 
   return (

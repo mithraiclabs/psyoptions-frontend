@@ -68,7 +68,7 @@ const SelectAsset = ({ label, selectedAsset, onSelectAsset }) => {
                       setOpen(false)
                       onSelectAsset(asset)
                     }}
-                    key={asset.splAccount}
+                    key={asset.mint}
                   >
                     <ListItemAvatar>
                       <Avatar src={asset.image} />

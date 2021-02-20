@@ -99,26 +99,25 @@ const InitializeMarket = () => {
           const txid = await connection.sendRawTransaction(signed.serialize())
 
           // TODO: push "toast notifications" here that tx started and set a loading state
-          console.log(
-            'Submitted transaction ' + txid + ', awaiting confirmation'
-          )
+          console.log(`Submitted transaction ${txid}`)
 
           await connection.confirmTransaction(txid, 1)
 
           // TODO: push "toast notifications" here that tx completed and set loading state to false
-          console.log('Confirmed')
-          console.log({ optionMarketDataAddress })
+          console.log(`Confirmed ${txid}`)
 
           return optionMarketDataAddress.toString()
         })
       )
 
+      // Remove this line whenever we feel confident this is working well
       console.log(results)
 
       // Don't remove previously initialized data accounts, leave them in the UI for user to see any time
       setInitializedDataAccounts([...results, ...initializedDataAccounts])
       setSuccess(true)
     } catch (err) {
+      // TODO: display some meaningful error state to user
       console.log(err)
       setInitializeError(err)
       setSuccess(false)

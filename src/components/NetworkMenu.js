@@ -11,7 +11,13 @@ import useConnection from '../hooks/useConnection'
 import theme from '../utils/theme'
 
 const NetworkMenu = () => {
-  const { networks, connection, endpoint, setEndpoint } = useConnection()
+  const {
+    networks,
+    connection,
+    endpoint,
+    setEndpoint,
+    setProgramId,
+  } = useConnection()
 
   const [open, setOpen] = useState(false)
   const anchorRef = React.useRef(null)

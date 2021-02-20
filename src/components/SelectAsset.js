@@ -25,8 +25,8 @@ const SelectAsset = ({ label, selectedAsset, onSelectAsset }) => {
   const filteredAssetList = assetList.filter((item) => {
     const match = filterInput.toLowerCase()
     const shouldAppear =
-      item.name.toLowerCase().match(match) ||
-      item.symbol.toLowerCase().match(match)
+      item.tokenName.toLowerCase().match(match) ||
+      item.tokenSymbol.toLowerCase().match(match)
     return shouldAppear
   })
 
@@ -68,12 +68,14 @@ const SelectAsset = ({ label, selectedAsset, onSelectAsset }) => {
                       setOpen(false)
                       onSelectAsset(asset)
                     }}
-                    key={asset.mint}
+                    key={asset.mintAddress}
                   >
                     <ListItemAvatar>
-                      <Avatar src={asset.image} />
+                      <Avatar src={asset.icon} />
                     </ListItemAvatar>
-                    <ListItemText primary={`${asset.name} (${asset.symbol})`} />
+                    <ListItemText
+                      primary={`${asset.tokenName} (${asset.tokenSymbol})`}
+                    />
                   </ListItem>
                 )
               })}
@@ -82,15 +84,15 @@ const SelectAsset = ({ label, selectedAsset, onSelectAsset }) => {
         </Box>
       </Dialog>
       <Chip
-        label={selectedAsset ? selectedAsset.name : 'Choose Asset'}
+        label={selectedAsset ? selectedAsset.tokenName : 'Choose Asset'}
         clickable
         color="primary"
         variant="outlined"
         avatar={
           selectedAsset ? (
             <Avatar
-              src={selectedAsset.image}
-              alt={selectedAsset.name}
+              src={selectedAsset.icon}
+              alt={selectedAsset.tokenName}
               style={{
                 backgroundColor: theme.palette.primary.main,
               }}

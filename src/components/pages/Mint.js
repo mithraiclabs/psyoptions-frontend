@@ -33,8 +33,8 @@ const Mint = () => {
 
   const allParams = {
     date,
-    uAssetSymbol: uAsset?.symbol,
-    qAssetSymbol: qAsset?.symbol,
+    uAssetSymbol: uAsset?.tokenSymbol,
+    qAssetSymbol: qAsset?.tokenSymbol,
     size,
     price,
   }
@@ -162,7 +162,7 @@ const Mint = () => {
               <Box p={2}>
                 {marketStatus.pair
                   ? 'This pair can be minted'
-                  : `${uAsset.symbol}/${qAsset.symbol} Market doesn't exist yet. Creating new markets from the UI is coming soon!`}
+                  : `${uAsset.tokenSymbol}/${qAsset.tokenSymbol} Market doesn't exist yet. Creating new markets from the UI is coming soon!`}
               </Box>
             )}
 
@@ -176,7 +176,7 @@ const Mint = () => {
                 >
                   <Box py={1}>
                     {connected
-                      ? `Mint (${size} ${uAsset?.symbol} @ ${price} ${qAsset?.symbol}/${uAsset?.symbol})`
+                      ? `Mint (${size} ${uAsset?.tokenSymbol} @ ${price} ${qAsset?.tokenSymbol}/${uAsset?.tokenSymbol})`
                       : 'Connect Wallet To Mint'}
                   </Box>
                 </Button>

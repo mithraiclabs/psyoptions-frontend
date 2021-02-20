@@ -68,6 +68,7 @@ const Template = ({
   description,
   cssString,
   htmlString = '',
+  env = {},
 }) => {
   return (
     <html>
@@ -89,6 +90,13 @@ const Template = ({
       </head>
       <body>
         <div id="app" dangerouslySetInnerHTML={{ __html: htmlString }}></div>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.process = {
+            env: ${JSON.stringify(env)}
+          };`,
+          }}
+        ></script>
         <script src={jsBundle || ''} />
       </body>
     </html>

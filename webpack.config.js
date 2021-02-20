@@ -1,6 +1,5 @@
 const nodeExternals = require('webpack-node-externals')
 const NodePolyfillPlugin = require('node-polyfill-webpack-plugin')
-const Dotenv = require('dotenv-webpack')
 
 const watch = process.env.NODE_ENV !== 'production'
 const mode =
@@ -54,6 +53,6 @@ module.exports = [
         },
       ],
     },
-    plugins: [new NodePolyfillPlugin(), new Dotenv()],
+    plugins: [new NodePolyfillPlugin()],
   },
 ]

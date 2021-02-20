@@ -13,9 +13,13 @@ const useAssetList = () => {
     case networks[2].name:
       return TOKENS.testnet
     case networks[3].name:
-      const localnetData = require('./localnetData.json')
-      console.log('localnet data ', localnetData)
-      return localnetData
+      try {
+        const localnetData = require('../../localnetData.json')
+        return localnetData
+      } catch (err) {
+        console.error('localnet data not found at ../../localnetData.json')
+        return []
+      }
     default:
       return []
   }

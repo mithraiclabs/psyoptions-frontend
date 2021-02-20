@@ -50,14 +50,14 @@ const InitializeMarket = () => {
 
   const allParams = {
     date: date.unix(),
-    uAssetSymbol: uAsset?.symbol,
-    qAssetSymbol: qAsset?.symbol,
+    uAssetSymbol: uAsset?.tokenSymbol,
+    qAssetSymbol: qAsset?.tokenSymbol,
     size,
   }
 
   const { currentPairPrice } = useBonfida({
-    uAssetSymbol: uAsset?.symbol,
-    qAssetSymbol: qAsset?.symbol,
+    uAssetSymbol: uAsset?.tokenSymbol,
+    qAssetSymbol: qAsset?.tokenSymbol,
   })
 
   let strikePrices = []
@@ -87,8 +87,8 @@ const InitializeMarket = () => {
             connection,
             { publicKey: pubKey },
             endpoint.programId,
-            uAsset.mint,
-            qAsset.mint,
+            uAsset.mintAddress,
+            qAsset.mintAddress,
             size,
             strikePrice,
             date.unix()
@@ -223,7 +223,7 @@ const InitializeMarket = () => {
               <Box p={1}>
                 <Box p={1}>
                   Current Price: <br />
-                  {currentPairPrice} {qAsset?.symbol}/{uAsset?.symbol}
+                  {currentPairPrice} {qAsset?.tokenSymbol}/{uAsset?.tokenSymbol}
                 </Box>
                 <Box p={1}>
                   Strike Prices to Initialize: <br />

@@ -2,6 +2,8 @@ import React, { createContext, useState } from 'react'
 import { clusterApiUrl } from '@solana/web3.js'
 import useLocalStorageState from 'use-local-storage-state'
 
+// Note these network values are used for determining the asset list.
+// Be sure to update that when modifying the order of this list.
 const networks = [
   {
     name: 'Mainnet',
@@ -53,4 +55,4 @@ const ConnectionProvider = ({ children }) => {
   )
 }
 
-export { ConnectionContext, ConnectionProvider }
+export { ConnectionContext, ConnectionProvider, networks }

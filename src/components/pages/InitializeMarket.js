@@ -94,12 +94,6 @@ const InitializeMarket = () => {
             date.unix()
           )
 
-          // Next 4 lines could be moved into the initializeMarket function
-          transaction.feePayer = pubKey
-          const { blockhash } = await connection.getRecentBlockhash()
-          transaction.recentBlockhash = blockhash
-          transaction.partialSign(...signers.slice(1))
-
           // These have to remain in the FE app to connect to the wallet:
           const signed = await wallet.signTransaction(transaction)
           const txid = await connection.sendRawTransaction(signed.serialize())
@@ -122,9 +116,10 @@ const InitializeMarket = () => {
       console.log(results)
 
       // Don't remove previously initialized data accounts, leave them in the UI for user to see any time
-      setInitializedDataAccounts(results)
+      setInitializedDataAccounts([...results, ...initializedDataAccounts])
       setSuccess(true)
     } catch (err) {
+      console.log(err)
       setInitializeError(err)
       setSuccess(false)
     }
@@ -264,7 +259,7 @@ const InitializeMarket = () => {
             </Box>
           </Paper>
         </Box>
-        {initializedDataAccounts.length && (
+        {initializedDataAccounts.length ? (
           <Box p={2}>
             <Paper style={{ width: '100%', height: '100%' }}>
               <Box p={1}>
@@ -277,7 +272,7 @@ const InitializeMarket = () => {
               ))}
             </Paper>
           </Box>
-        )}
+        ) : null}
       </Box>
     </Page>
   )

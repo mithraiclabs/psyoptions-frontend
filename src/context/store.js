@@ -6,9 +6,9 @@ import { WalletProvider } from './WalletContext'
 import theme from '../utils/theme'
 
 const providers = [
+  <ThemeProvider theme={theme} children={<div />} />,
   <ConnectionProvider />,
   <WalletProvider />,
-  <ThemeProvider theme={theme} />,
 ]
 
 // flatten context providers for simpler app component tree

@@ -1,109 +1,133 @@
-// TODO: we need to populate this list from the blockchain by finding all SPL tokens minted by the intialize market program and unpack the byte data.
-// Alternatively if that's too hard we can have an API that returns the list of markets that we manually create (or use a script to create) and put into a database.
+import useLocalStorageState from 'use-local-storage-state'
+import { initializeMarket } from '@mithraic-labs/options-js-bindings'
 
-const markets = {
-  1614556800: {
-    // This key should always be UA-QA order
-    // Right now we are relying on having the correct symbol mapped to the address in "useAssetList.js"
-    // In the future, if we ever allow custom SPL tokens, we might want to change this to two account addresses, instead of the symbols
-    'SOL-USDT': {
-      uAssetAaccount: 'address...', // What is this when the UA is solana itself?
-      qAssetAccount: 'address...',
-      sizes: {
-        1: {
-          // Strike prices
-          '8.00': 'address...',
-          '8.50': 'address...',
-          '9.00': 'address...',
-          '9.50': 'address...',
-          '10.00': 'address...',
-          '10.50': 'address...',
-          '11.00': 'address...',
-        },
-        100: {
-          // Strike prices
-          '8.00': 'address...',
-          '8.50': 'address...',
-          '9.00': 'address...',
-          '9.50': 'address...',
-          '10.00': 'address...',
-          '10.50': 'address...',
-          '11.00': 'address...',
-        },
-      },
-    },
-  },
-  1617235200: {
-    // This key can always be UA-QA order
-    'SOL-USDT': {
-      uAssetAaccount: 'address...',
-      qAssetAccount: 'address...',
-      sizes: {
-        1: {
-          // Strike prices
-          '8.00': 'address...',
-          '8.50': 'address...',
-          '9.00': 'address...',
-          '9.50': 'address...',
-          '10.00': 'address...',
-          '10.50': 'address...',
-          '11.00': 'address...',
-        },
-        100: {
-          // Strike prices
-          '8.00': 'address...',
-          '8.50': 'address...',
-          '9.00': 'address...',
-          '9.50': 'address...',
-          '10.00': 'address...',
-          '10.50': 'address...',
-          '11.00': 'address...',
-        },
-      },
-    },
-  },
-}
+import useWallet from './useWallet'
+import useConnection from './useConnection'
+
+// Example of how markets data should look:
+// const markets = {
+//   '1614556800-SOL-USDC-700-14': {
+//     createdByMe: true
+//     expiration: 1614556800
+//     key: "1614556800-SOL-USDC-700-14"
+//     optionMarketDataAddress: "HtHcqroXGpRe5UATqYSAWenEgXK6wac3iMa8GWUaqA9j"
+//     optionMintAddress: "8ovRGAZKbD6VD67h4BdnPY83iQohSeA4B1YZY5LwErFu"
+//     qAssetMint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+//     qAssetSymbol: "USDC"
+//     size: 700
+//     strikePrice: 14
+//     uAssetMint: "So11111111111111111111111111111111111111112"
+//     uAssetSymbol: "SOL"
+//   },
+// }
 
 const useOptionsMarkets = () => {
-  const loaded = true // This will do something once we're pulling from an external list
+  const { wallet, pubKey } = useWallet()
+  const { connection, endpoint } = useConnection()
+  const [markets, setMarkets] = useLocalStorageState('optionsMarkets', {})
+
+  // TODO: add useEffect to update markets data from remote backend
+
+  const loaded = true
 
   const marketExists = ({ uAssetSymbol, qAssetSymbol, date, size, price }) => {
-    const pair = `${uAssetSymbol}-${qAssetSymbol}`
-    return {
-      date: !!markets[date],
-      pair: !!markets[date]?.[pair],
-      size: !!markets[date]?.[pair]?.sizes?.[size],
-      price: !!markets[date]?.[pair]?.sizes?.[size]?.[price],
-    }
+    const key = `${date}-${uAssetSymbol}-${qAssetSymbol}-${size}-${price}`
+    return !!markets[key]
   }
 
   const getStrikePrices = ({ uAssetSymbol, qAssetSymbol, date, size }) => {
-    const pair = `${uAssetSymbol}-${qAssetSymbol}`
-    return Object.keys(markets[date]?.[pair]?.sizes?.[size] || {})
+    const keyPart = `${date}-${uAssetSymbol}-${qAssetSymbol}-${size}-`
+    return Object.keys(markets)
+      .filter((key) => key.match(keyPart))
+      .map((key) => markets[key])
   }
 
-  const getMarketAddress = ({
-    uAssetSymbol,
-    qAssetSymbol,
-    date,
-    size,
-    price,
-  }) => {
-    const pair = `${uAssetSymbol}-${qAssetSymbol}`
-    return markets[date]?.[pair]?.sizes?.[size]?.[price]
+  const getMarket = ({ uAssetSymbol, qAssetSymbol, date, size, price }) => {
+    const key = `${date}-${uAssetSymbol}-${qAssetSymbol}-${size}-${price}`
+    return markets[key]
   }
 
   const getDates = () => {
-    return Object.keys(markets)
+    const dates = Object.values(markets).map((m) => m.expiration)
+    const deduped = [...new Set(dates)]
+    console.log(deduped)
+    return deduped
+  }
+
+  const initializeMarkets = async ({
+    size,
+    strikePrices,
+    uAssetSymbol,
+    qAssetSymbol,
+    uAssetMint,
+    qAssetMint,
+    expiration,
+  }) => {
+    const results = await Promise.all(
+      strikePrices.map(async (strikePrice) => {
+        const {
+          signers,
+          transaction,
+          optionMarketDataAddress,
+          optionMintAddress,
+        } = await initializeMarket(
+          connection,
+          { publicKey: pubKey },
+          endpoint.programId,
+          uAssetMint,
+          qAssetMint,
+          size,
+          strikePrice,
+          expiration
+        )
+
+        const signed = await wallet.signTransaction(transaction)
+        const txid = await connection.sendRawTransaction(signed.serialize())
+
+        // TODO: push "toast notifications" here that tx started and set a loading state
+        console.log(`Submitted transaction ${txid}`)
+        await connection.confirmTransaction(txid, 1)
+        // TODO: push "toast notifications" here that tx completed and set loading state to false
+        console.log(`Confirmed ${txid}`)
+
+        const marketData = {
+          key: `${expiration}-${uAssetSymbol}-${qAssetSymbol}-${size}-${strikePrice}`,
+          size,
+          strikePrice,
+          uAssetSymbol,
+          qAssetSymbol,
+          uAssetMint,
+          qAssetMint,
+          expiration,
+          optionMarketDataAddress: optionMarketDataAddress.toString(),
+          optionMintAddress: optionMintAddress.toString(),
+          createdByMe: true,
+        }
+
+        return marketData
+      })
+    )
+
+    const newMarkets = {}
+    results.forEach((market) => (newMarkets[market.key] = market))
+    setMarkets({ ...markets, ...newMarkets })
+
+    return results
+  }
+
+  const getMyMarkets = () => {
+    return Object.values(markets).filter((m) => m.createdByMe)
   }
 
   return {
+    initializeMarkets,
     loaded,
     markets,
     marketExists,
-    getMarketAddress,
+    getMarket,
     getStrikePrices,
     getDates,
+    getMyMarkets,
   }
 }
 

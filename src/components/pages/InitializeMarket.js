@@ -3,19 +3,14 @@ import moment from 'moment'
 
 import { Box, Paper, Button, Chip, TextField } from '@material-ui/core'
 import Done from '@material-ui/icons/Done'
-
-import theme from '../../utils/theme'
-import useWallet from '../../hooks/useWallet'
-import useConnection from '../../hooks/useConnection'
-import useOptionsMarkets from '../../hooks/useOptionsMarkets'
 import Page from './Page'
 import SelectAsset from '../SelectAsset'
+import theme from '../../utils/theme'
 
+import useWallet from '../../hooks/useWallet'
+import useOptionsMarkets from '../../hooks/useOptionsMarkets'
 import useBonfida from '../../hooks/useBonfida'
 import { generateStrikePrices } from '../../utils/generateStrikePrices'
-
-import { initializeMarket } from '@mithraic-labs/options-js-bindings'
-import useLocalStorageState from 'use-local-storage-state'
 
 const darkBorder = `1px solid ${theme.palette.background.main}`
 
@@ -26,10 +21,8 @@ const next3Months = [
 ]
 
 const InitializeMarket = () => {
-  const { connect, wallet, connected, pubKey, loading } = useWallet()
-  const { connection, endpoint } = useConnection()
-
-  const { marketExists } = useOptionsMarkets()
+  const { connect, connected } = useWallet()
+  const { getMyMarkets, marketExists, initializeMarkets } = useOptionsMarkets()
 
   const [date, setDate] = useState(next3Months[0])
   const [uAsset, setUAsset] = useState()
@@ -39,21 +32,6 @@ const InitializeMarket = () => {
 
   const [success, setSuccess] = useState()
   const [initializeError, setInitializeError] = useState()
-
-  // Keep initialized data accounts in local storage for user to see them later
-  // May want to store these in the backend attached to the initializer's public key
-  // So that they can be queried from a 'info' page
-  const [
-    initializedDataAccounts,
-    setInitializedDataAccounts,
-  ] = useLocalStorageState('initializedDataAccount', [])
-
-  const allParams = {
-    date: date.unix(),
-    uAssetSymbol: uAsset?.tokenSymbol,
-    qAssetSymbol: qAsset?.tokenSymbol,
-    size,
-  }
 
   const { currentPairPrice } = useBonfida({
     uAssetSymbol: uAsset?.tokenSymbol,
@@ -65,56 +43,30 @@ const InitializeMarket = () => {
     strikePrices = generateStrikePrices(currentPairPrice, priceInterval)
   }
 
-  const marketStatus = marketExists(allParams)
   const assetsSelected = uAsset && qAsset
-  const canInitialize = !marketStatus.size
+  const canInitialize = !marketExists({
+    date: date.unix(),
+    uAssetSymbol: uAsset?.tokenSymbol,
+    qAssetSymbol: qAsset?.tokenSymbol,
+    size,
+    price: strikePrices[0],
+  })
   const parametersValid = size && !isNaN(size) && strikePrices.length > 0
 
   const handleInitialize = async () => {
     setInitializeError(false)
-
-    // TBD: Do we want to do all 9 strike prices in one go here?
-    // If we ever make this public it should be an optional to generate all of them or just one
+    // TODO: initializing a single strike price at a time
     try {
-      // TODO: maybe move this to a hook or helper file
-      const results = await Promise.all(
-        strikePrices.map(async (strikePrice) => {
-          const {
-            signers,
-            transaction,
-            optionMarketDataAddress,
-          } = await initializeMarket(
-            connection,
-            { publicKey: pubKey },
-            endpoint.programId,
-            uAsset.mintAddress,
-            qAsset.mintAddress,
-            size,
-            strikePrice,
-            date.unix()
-          )
-
-          // These have to remain in the FE app to connect to the wallet:
-          const signed = await wallet.signTransaction(transaction)
-          const txid = await connection.sendRawTransaction(signed.serialize())
-
-          // TODO: push "toast notifications" here that tx started and set a loading state
-          console.log(`Submitted transaction ${txid}`)
-
-          await connection.confirmTransaction(txid, 1)
-
-          // TODO: push "toast notifications" here that tx completed and set loading state to false
-          console.log(`Confirmed ${txid}`)
-
-          return optionMarketDataAddress.toString()
-        })
-      )
-
-      // Remove this line whenever we feel confident this is working well
+      const results = await initializeMarkets({
+        size,
+        strikePrices,
+        uAssetSymbol: uAsset.tokenSymbol,
+        qAssetSymbol: qAsset.tokenSymbol,
+        uAssetMint: uAsset.mintAddress,
+        qAssetMint: qAsset.mintAddress,
+        expiration: date.unix(),
+      })
       console.log(results)
-
-      // Don't remove previously initialized data accounts, leave them in the UI for user to see any time
-      setInitializedDataAccounts([...results, ...initializedDataAccounts])
       setSuccess(true)
     } catch (err) {
       // TODO: display some meaningful error state to user
@@ -258,7 +210,7 @@ const InitializeMarket = () => {
             </Box>
           </Paper>
         </Box>
-        {initializedDataAccounts.length ? (
+        {/* {initializedDataAccounts.length ? (
           <Box p={2}>
             <Paper style={{ width: '100%', height: '100%' }}>
               <Box p={1}>
@@ -271,7 +223,7 @@ const InitializeMarket = () => {
               ))}
             </Paper>
           </Box>
-        ) : null}
+        ) : null} */}
       </Box>
     </Page>
   )

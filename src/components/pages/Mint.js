@@ -14,16 +14,23 @@ import Select from '../Select'
 
 const darkBorder = `1px solid ${theme.palette.background.main}`
 
+const next3Months = [
+  moment.utc().startOf('month').add(1, 'month'),
+  moment.utc().startOf('month').add(2, 'month'),
+  moment.utc().startOf('month').add(3, 'month'),
+]
+
 const Mint = () => {
   const { connect, connected, loading } = useWallet()
   const {
     marketExists,
-    getMarketAddress,
+    getMarket,
     getStrikePrices,
-    getDates,
+    // getDates,
   } = useOptionsMarkets()
 
-  const dates = getDates()
+  const dates = next3Months
+  // console.log(dates)
 
   const [date, setDate] = useState(dates[0])
   const [uAsset, setUAsset] = useState()
@@ -40,13 +47,13 @@ const Mint = () => {
   }
 
   // marketStatus returns e.g. { date: true, pair: true, size: false, price: true }
-  const marketStatus = marketExists(allParams)
+  const marketAlreadyExists = marketExists(allParams)
   const strikePrices = getStrikePrices(allParams)
-  const marketAddress = getMarketAddress(allParams)
+  const marketData = getMarket(allParams)
 
   // TODO: check if connected wallet has enough of uAsset
   // TODO: set canMint to true if all conditions are met (params set, has UA funds, etc)
-  const canMint = !!marketAddress
+  const canMint = !!marketData
 
   const handleMint = () => {
     // TODO: make "useTransactionInstructions" hook that sends out transactions here
@@ -78,16 +85,13 @@ const Mint = () => {
             <Box p={2} borderBottom={darkBorder}>
               Expires On:
               <Box display="flex" flexWrap="wrap">
-                {dates.map((d) => {
-                  const selected = d === date
-                  const label = `${moment
-                    .unix(d)
-                    .utc()
-                    .format('ll')}, 00:00 UTC`
-                  const onClick = () => setDate(d)
+                {next3Months.map((moment) => {
+                  const label = `${moment.format('ll')}, 00:00 UTC`
+                  const selected = moment === date
+                  const onClick = () => setDate(moment)
                   return (
                     <Chip
-                      key={d}
+                      key={label}
                       clickable
                       size="small"
                       label={label}
@@ -133,7 +137,6 @@ const Mint = () => {
                 <Select
                   variant="filled"
                   label={'Contract Size'}
-                  disabled={marketStatus.pair === false}
                   value={size}
                   onChange={(e) => setSize(e.target.value)}
                   options={[1, 100]}
@@ -147,7 +150,6 @@ const Mint = () => {
                 <Select
                   variant="filled"
                   label={'Strike Price'}
-                  disabled={marketStatus.size === false}
                   value={price}
                   onChange={(e) => setPrice(e.target.value)}
                   options={strikePrices}
@@ -158,16 +160,16 @@ const Mint = () => {
               </Box>
             </Box>
 
-            {uAsset && qAsset && (
+            {uAsset && qAsset && size && price && (
               <Box p={2}>
-                {marketStatus.pair
+                {marketAlreadyExists
                   ? 'This pair can be minted'
                   : `${uAsset.tokenSymbol}/${qAsset.tokenSymbol} Market doesn't exist yet. Creating new markets from the UI is coming soon!`}
               </Box>
             )}
 
             <Box p={2}>
-              {marketAddress ? (
+              {marketData ? (
                 <Button
                   fullWidth
                   variant={'outlined'}

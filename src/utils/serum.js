@@ -1,4 +1,5 @@
 import { Market, MARKETS } from '@project-serum/serum';
+import { PublicKey, Transaction } from '@solana/web3.js';
 
 
 export class SerumMarket {
@@ -37,5 +38,59 @@ export class SerumMarket {
   getPrice = async () => {
     const {bid, ask} = await this.getBidAskSpread();
     return ((ask - bid) / 2) + bid
+  }
+
+  /**
+   * @typedef PlaceOrderOptions
+   * @property {BN} clientId - (not 100% sure) The ID to collect commissions from serum
+   * @property {PublicKey | undefined} openOrdersAddressKey - This account stores the following: 
+   *   How much of the base and quote currency that user has locked in open orders or settleableA 
+   *   list of open orders for that user on that market.
+   *   This is an option because the Market#makePlaceOrderTransaction function will look up
+   *   OpenOrder accounts by owner.
+   * @property {Account | undefined} openOrdersAccount - See above as well
+   * @property {PublicKey | undefined} feeDiscountPubkey -
+   */
+
+  /**
+   * 
+   * @param {PublicKey} owner - the wallet's PublicKey 
+   * @param {PublicKey} payer - The account that will be putting up the asset. If the order side 
+   * is 'sell', this must be an account holding the Base currency. If the order side is 'buy', 
+   * this must be an account holding the Quote currency.
+   * @param {'buy'|'sell'} side - buying or selling the asset
+   * @param {number} price - price of asset relative to quote asset
+   * @param {number} size - amount of asset
+   * @param {'limit' | 'ioc' | 'postOnly' | undefined} orderType - type of order
+   * @param {PlaceOrderOptions} opts
+   * @return {{
+   *  transaction: placeOrderTx,
+   *  signers: placeOrderSigners
+   * }}
+   */
+  createPlaceOrderTx = async (
+    owner,
+    payer,
+    side,
+    price,
+    size,
+    orderType,
+    opts = {},
+  ) => {
+    const params = {
+      owner,
+      payer,
+      side,
+      price,
+      size,
+      orderType,
+      feeDiscountPubkey: opts.feeDiscountPubkey || null,
+    };
+    return market.makePlaceOrderTransaction(
+      this.connection,
+      params,
+      120_000,
+      120_000,
+    )
   }
 }

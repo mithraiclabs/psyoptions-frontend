@@ -18,11 +18,13 @@ const Sel = (props) => {
         value={value}
         onChange={onChange}
       >
-        {options.map((value) => (
-          <MenuItem key={value} value={value}>
-            {value}
-          </MenuItem>
-        ))}
+        {options
+          ? options.map((option) => (
+              <MenuItem key={option.text} value={option.value}>
+                {option.text}
+              </MenuItem>
+            ))
+          : null}
       </Select>
       {/* <FormHelperText>TODO: Error Message</FormHelperText> */}
     </FormControl>

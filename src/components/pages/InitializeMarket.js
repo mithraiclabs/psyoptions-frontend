@@ -22,7 +22,7 @@ const next3Months = [
 
 const InitializeMarket = () => {
   const { connect, connected } = useWallet()
-  const { getMyMarkets, marketExists, initializeMarkets } = useOptionsMarkets()
+  const { getMyMarkets, getMarket, initializeMarkets } = useOptionsMarkets()
 
   const [date, setDate] = useState(next3Months[0])
   const [uAsset, setUAsset] = useState()
@@ -44,7 +44,7 @@ const InitializeMarket = () => {
   }
 
   const assetsSelected = uAsset && qAsset
-  const canInitialize = !marketExists({
+  const canInitialize = !getMarket({
     date: date.unix(),
     uAssetSymbol: uAsset?.tokenSymbol,
     qAssetSymbol: qAsset?.tokenSymbol,

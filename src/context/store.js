@@ -2,6 +2,7 @@ import React, { cloneElement } from 'react'
 import { ThemeProvider } from '@material-ui/core/styles'
 
 import { ConnectionProvider } from './ConnectionContext'
+import { OwnedTokenAccountsProvider } from './OwnedTokenAccounts'
 import { WalletProvider } from './WalletContext'
 import theme from '../utils/theme'
 
@@ -9,6 +10,7 @@ const providers = [
   <ThemeProvider theme={theme} children={<div />} />,
   <ConnectionProvider />,
   <WalletProvider />,
+  <OwnedTokenAccountsProvider />,
 ]
 
 // flatten context providers for simpler app component tree

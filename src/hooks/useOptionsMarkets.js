@@ -1,8 +1,10 @@
-import useLocalStorageState from 'use-local-storage-state'
 import { initializeMarket } from '@mithraic-labs/options-js-bindings'
 
+import { useOptionsMarketsLocalStorage } from './useLocalStorage'
 import useWallet from './useWallet'
 import useConnection from './useConnection'
+import { useEffect } from 'react'
+import axios from 'axios'
 
 // Example of how markets data should look:
 // const markets = {
@@ -24,9 +26,22 @@ import useConnection from './useConnection'
 const useOptionsMarkets = () => {
   const { wallet, pubKey } = useWallet()
   const { connection, endpoint } = useConnection()
-  const [markets, setMarkets] = useLocalStorageState('optionsMarkets', {})
+  const [markets, setMarkets] = useOptionsMarketsLocalStorage()
 
-  // TODO: add useEffect to update markets data from remote backend
+  useEffect(() => {
+    ;(async () => {
+      try {
+        const res = await axios.get(`${process.env.OPTIONS_API_URL}/markets`)
+        // Not sure if we should replace the existing markets or merge them
+        setMarkets((prevMarkets) => ({
+          ...prevMarkets,
+          ...res.data,
+        }))
+      } catch (err) {
+        console.error(err)
+      }
+    })()
+  }, [])
 
   const loaded = true
 

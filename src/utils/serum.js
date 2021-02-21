@@ -5,7 +5,7 @@ import { Market, MARKETS } from '@project-serum/serum';
  * @param {Connection} connection 
  * @param {PublicKey} marketAddress 
  */
-export const getSerumMarket = (
+export const getSerumMarket = async (
   connection,
   marketAddress,
 ) => {

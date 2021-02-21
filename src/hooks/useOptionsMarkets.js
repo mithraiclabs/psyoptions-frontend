@@ -30,16 +30,21 @@ const useOptionsMarkets = () => {
 
   const loaded = true
 
-  const marketExists = ({ uAssetSymbol, qAssetSymbol, date, size, price }) => {
-    const key = `${date}-${uAssetSymbol}-${qAssetSymbol}-${size}-${price}`
-    return !!markets[key]
+  const getSizes = ({ uAssetSymbol, qAssetSymbol, date }) => {
+    const keyPart = `${date}-${uAssetSymbol}-${qAssetSymbol}-`
+
+    const sizes = Object.keys(markets)
+      .filter((key) => key.match(keyPart))
+      .map((key) => markets[key].size)
+
+    return [...new Set(sizes)]
   }
 
   const getStrikePrices = ({ uAssetSymbol, qAssetSymbol, date, size }) => {
     const keyPart = `${date}-${uAssetSymbol}-${qAssetSymbol}-${size}-`
     return Object.keys(markets)
       .filter((key) => key.match(keyPart))
-      .map((key) => markets[key])
+      .map((key) => markets[key].strikePrice)
   }
 
   const getMarket = ({ uAssetSymbol, qAssetSymbol, date, size, price }) => {
@@ -50,7 +55,6 @@ const useOptionsMarkets = () => {
   const getDates = () => {
     const dates = Object.values(markets).map((m) => m.expiration)
     const deduped = [...new Set(dates)]
-    console.log(deduped)
     return deduped
   }
 
@@ -123,9 +127,9 @@ const useOptionsMarkets = () => {
     initializeMarkets,
     loaded,
     markets,
-    marketExists,
     getMarket,
     getStrikePrices,
+    getSizes,
     getDates,
     getMyMarkets,
   }

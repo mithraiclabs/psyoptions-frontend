@@ -22,15 +22,9 @@ const next3Months = [
 
 const Mint = () => {
   const { connect, connected, loading } = useWallet()
-  const {
-    marketExists,
-    getMarket,
-    getStrikePrices,
-    // getDates,
-  } = useOptionsMarkets()
+  const { getMarket, getStrikePrices, getSizes } = useOptionsMarkets()
 
   const dates = next3Months
-  // console.log(dates)
 
   const [date, setDate] = useState(dates[0])
   const [uAsset, setUAsset] = useState()
@@ -39,21 +33,19 @@ const Mint = () => {
   const [price, setPrice] = useState(0)
 
   const allParams = {
-    date,
+    date: date.unix(),
     uAssetSymbol: uAsset?.tokenSymbol,
     qAssetSymbol: qAsset?.tokenSymbol,
     size,
     price,
   }
 
-  // marketStatus returns e.g. { date: true, pair: true, size: false, price: true }
-  const marketAlreadyExists = marketExists(allParams)
+  const contractSizes = getSizes(allParams)
   const strikePrices = getStrikePrices(allParams)
   const marketData = getMarket(allParams)
 
   // TODO: check if connected wallet has enough of uAsset
   // TODO: set canMint to true if all conditions are met (params set, has UA funds, etc)
-  const canMint = !!marketData
 
   const handleMint = () => {
     // TODO: make "useTransactionInstructions" hook that sends out transactions here
@@ -137,9 +129,13 @@ const Mint = () => {
                 <Select
                   variant="filled"
                   label={'Contract Size'}
-                  value={size}
+                  value={contractSizes.length ? size : ''}
                   onChange={(e) => setSize(e.target.value)}
-                  options={[1, 100]}
+                  disabled={contractSizes.length === 0}
+                  options={contractSizes.map((s) => ({
+                    value: s,
+                    text: `${s}`,
+                  }))}
                   style={{
                     width: '100%',
                   }}
@@ -150,9 +146,13 @@ const Mint = () => {
                 <Select
                   variant="filled"
                   label={'Strike Price'}
-                  value={price}
+                  value={strikePrices.length ? price : ''}
                   onChange={(e) => setPrice(e.target.value)}
-                  options={strikePrices}
+                  disabled={strikePrices.length === 0}
+                  options={strikePrices.map((s) => ({
+                    value: s,
+                    text: `${s} ${qAsset.tokenSymbol}/${uAsset.tokenSymbol}`,
+                  }))}
                   style={{
                     width: '100%',
                   }}
@@ -160,13 +160,15 @@ const Mint = () => {
               </Box>
             </Box>
 
-            {uAsset && qAsset && size && price && (
-              <Box p={2}>
-                {marketAlreadyExists
-                  ? 'This pair can be minted'
-                  : `${uAsset.tokenSymbol}/${qAsset.tokenSymbol} Market doesn't exist yet. Creating new markets from the UI is coming soon!`}
-              </Box>
-            )}
+            {uAsset && qAsset ? (
+              contractSizes.length && strikePrices.length ? (
+                <Box p={2}>{'This contract can be minted'}</Box>
+              ) : (
+                <Box p={2}>
+                  {`This market doesn't exist yet. Creating new markets from the UI is coming soon!`}
+                </Box>
+              )
+            ) : null}
 
             <Box p={2}>
               {marketData ? (

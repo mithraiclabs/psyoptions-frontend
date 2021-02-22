@@ -143,17 +143,17 @@ const useOptionsMarkets = () => {
 
   const mint = async ({
     marketData,
-    mintedOptionDest, // account in user's wallet to send minted option to
-    underlyingAssetSrc, // account in user's wallet to post uAsset collateral from
-    quoteAssetDest, // account in user's wallet to send qAsset to if contract is exercised
+    mintedOptionDestAccount, // account in user's wallet to send minted option to
+    underlyingAssetSrcAccount, // account in user's wallet to post uAsset collateral from
+    quoteAssetDestAccount, // account in user's wallet to send qAsset to if contract is exercised
   }) => {
     const { transaction: tx, signers } = await readMarketAndMintCoveredCall(
       connection,
       { publicKey: pubKey },
       endpoint.programId,
-      mintedOptionDest,
-      underlyingAssetSrc,
-      quoteAssetDest,
+      mintedOptionDestAccount,
+      underlyingAssetSrcAccount,
+      quoteAssetDestAccount,
       marketData.optionMarketDataAddress,
       { publicKey: pubKey } // Option writer's UA Authority account - safe to assume this is always the same as the payer when called from the FE UI
     )

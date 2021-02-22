@@ -73,15 +73,11 @@ const Mint = () => {
   }, [ownedMintedOptionAccounts])
 
   const handleMint = async () => {
-    console.log({
-      uAssetAccount,
-      qAssetAccount,
-      mintedOptionAccount,
-      marketData,
-    })
+    // TODO: push error notification if not enough uAsset available in uAssetAccount
+    // Or maybe just block the mint button
 
     try {
-      // Fallback to first oowned minted option account may not be needed, but adding it just in case
+      // Fallback to first oowned minted option account
       let mintedOptionDestAccount =
         mintedOptionAccount || ownedMintedOptionAccounts[0]
       if (!mintedOptionDestAccount) {
@@ -96,18 +92,28 @@ const Mint = () => {
         const txid = await connection.sendRawTransaction(signed.serialize())
         await connection.confirmTransaction(txid, 1)
         mintedOptionDestAccount = newAccount.publicKey.toString()
+        setMintedOptionAccount(mintedOptionDestAccount)
 
         // TODO: notification to user that the account was added to their wallet?
         // TODO: maybe we can send a name for this account in the wallet too, would be nice
         console.log('Added account: ', newAccount)
       }
 
-      console.log(mintedOptionDestAccount)
-
-      return
-      await mint({
+      console.log('Mint params: ', {
+        uAssetAccount,
+        qAssetAccount,
+        mintedOptionDestAccount,
         marketData,
       })
+
+      const results = await mint({
+        marketData,
+        mintedOptionDestAccount,
+        underlyingAssetSrcAccount: uAssetAccount,
+        quoteAssetDestAccount: qAssetAccount,
+      })
+
+      console.log(results)
     } catch (err) {
       console.log(err)
     }

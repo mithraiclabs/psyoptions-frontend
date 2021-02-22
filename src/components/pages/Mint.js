@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react'
 import moment from 'moment'
 import Done from '@material-ui/icons/Done'
-import { Box, Paper, Button, Chip, ownerDocument } from '@material-ui/core'
+import { Box, Paper, Button, Chip } from '@material-ui/core'
 
 import theme from '../../utils/theme'
+import { initializeTokenAccountTx } from '../../utils/token'
 
 import useWallet from '../../hooks/useWallet'
 import useOptionsMarkets from '../../hooks/useOptionsMarkets'
 import useOwnedTokenAccounts from '../../hooks/useOwnedTokenAccounts'
+import useConnection from '../../hooks/useConnection'
 
 import SelectAsset from '../SelectAsset'
 import Page from './Page'
@@ -22,6 +24,7 @@ const next3Months = [
 ]
 
 const Mint = () => {
+  const { connection } = useConnection()
   const { connect, connected, wallet, pubKey, loading } = useWallet()
   const { getMarket, getStrikePrices, getSizes, mint } = useOptionsMarkets()
   const ownedTokenAccounts = useOwnedTokenAccounts()
@@ -33,23 +36,9 @@ const Mint = () => {
   const [qAsset, setQAsset] = useState()
   const [size, setSize] = useState(100)
   const [price, setPrice] = useState(0)
-  // console.log(ownedTokenAccounts)
-
-  const ownedUAssetAccounts =
-    (uAsset && ownedTokenAccounts[uAsset.mintAddress]) || []
-  const ownedQAssetAccounts =
-    (qAsset && ownedTokenAccounts[qAsset.mintAddress]) || []
-
   const [uAssetAccount, setUAssetAccount] = useState('')
   const [qAssetAccount, setQAssetAccount] = useState('')
-
-  useEffect(() => {
-    setUAssetAccount(ownedUAssetAccounts[0]?.pubKey || '')
-  }, [ownedUAssetAccounts])
-
-  useEffect(() => {
-    setQAssetAccount(ownedQAssetAccounts[0]?.pubKey || '')
-  }, [ownedQAssetAccounts])
+  const [mintedOptionAccount, setMintedOptionAccount] = useState('')
 
   const allParams = {
     date: date.unix(),
@@ -63,13 +52,53 @@ const Mint = () => {
   const strikePrices = getStrikePrices(allParams)
   const marketData = getMarket(allParams)
 
+  const ownedUAssetAccounts =
+    (uAsset && ownedTokenAccounts[uAsset.mintAddress]) || []
+  const ownedQAssetAccounts =
+    (qAsset && ownedTokenAccounts[qAsset.mintAddress]) || []
+  const ownedMintedOptionAccounts =
+    (marketData && ownedTokenAccounts[qAsset.optionMintAddress]) || []
+
+  useEffect(() => {
+    setUAssetAccount(ownedUAssetAccounts[0]?.pubKey || '')
+  }, [ownedUAssetAccounts])
+
+  useEffect(() => {
+    setQAssetAccount(ownedQAssetAccounts[0]?.pubKey || '')
+  }, [ownedQAssetAccounts])
+
+  useEffect(() => {
+    setMintedOptionAccount(ownedMintedOptionAccounts[0]?.pubKey || '')
+  }, [ownedMintedOptionAccounts])
+
   const handleMint = async () => {
     console.log({
       uAssetAccount,
       qAssetAccount,
+      mintedOptionAccount,
     })
-    return
+
     try {
+      let mintedOptionDestAccount = mintedOptionAccount
+      if (!mintedOptionAccount && ownedMintedOptionAccounts.length === 0) {
+        // Create token account for minted option if the user doesn't have one yet
+        const [tx, newAccount] = await initializeTokenAccountTx({
+          connection,
+          payer: { publicKey: pubKey },
+          mintPublicKey: marketData.optionMintAddress,
+          newAccount,
+        })
+        const signed = await wallet.signTransaction(tx)
+        const txid = await connection.sendRawTransaction(signed.serialize())
+        await connection.confirmTransaction(txid, 1)
+        mintedOptionDestAccount = newAccount.publicKey.toString()
+
+        console.log('Added account: ', newAccount)
+      }
+
+      console.log(mintedOptionDestAccount)
+
+      return
       await mint({
         marketData,
       })
@@ -137,26 +166,27 @@ const Mint = () => {
                     onSelectAsset={setUAsset}
                   />
                 </Box>
-                <Select
-                  variant="filled"
-                  label={'Account'}
-                  value={uAssetAccount}
-                  onChange={(e) => setUAssetAccount(e.target.value)}
-                  disabled={ownedUAssetAccounts.length === 0}
-                  options={ownedUAssetAccounts.map((account) => ({
-                    value: account.pubKey,
-                    text: `${account.pubKey.slice(
-                      0,
-                      3
-                    )}...${account.pubKey.slice(
-                      account.pubKey.length - 3,
-                      account.pubKey.length
-                    )} (${account.amount} ${uAsset?.tokenSymbol})`,
-                  }))}
-                  style={{
-                    minWidth: '100%',
-                  }}
-                />
+                {ownedUAssetAccounts.length > 1 ? (
+                  <Select
+                    variant="filled"
+                    label={'Account'}
+                    value={uAssetAccount}
+                    onChange={(e) => setUAssetAccount(e.target.value)}
+                    options={ownedUAssetAccounts.map((account) => ({
+                      value: account.pubKey,
+                      text: `${account.pubKey.slice(
+                        0,
+                        3
+                      )}...${account.pubKey.slice(
+                        account.pubKey.length - 3,
+                        account.pubKey.length
+                      )} (${account.amount} ${uAsset?.tokenSymbol})`,
+                    }))}
+                    style={{
+                      minWidth: '100%',
+                    }}
+                  />
+                ) : null}
               </Box>
 
               <Box width={'50%'} p={2}>
@@ -167,26 +197,27 @@ const Mint = () => {
                     onSelectAsset={setQAsset}
                   />
                 </Box>
-                <Select
-                  variant="filled"
-                  label={'Account'}
-                  value={qAssetAccount}
-                  onChange={(e) => setQAssetAccount(e.target.value)}
-                  disabled={ownedQAssetAccounts.length === 0}
-                  options={ownedQAssetAccounts.map((account) => ({
-                    value: account.pubKey,
-                    text: `${account.pubKey.slice(
-                      0,
-                      3
-                    )}...${account.pubKey.slice(
-                      account.pubKey.length - 3,
-                      account.pubKey.length
-                    )} (${account.amount} ${qAsset?.tokenSymbol})`,
-                  }))}
-                  style={{
-                    minWidth: '100%',
-                  }}
-                />
+                {ownedQAssetAccounts.length > 1 ? (
+                  <Select
+                    variant="filled"
+                    label={'Account'}
+                    value={qAssetAccount}
+                    onChange={(e) => setQAssetAccount(e.target.value)}
+                    options={ownedQAssetAccounts.map((account) => ({
+                      value: account.pubKey,
+                      text: `${account.pubKey.slice(
+                        0,
+                        3
+                      )}...${account.pubKey.slice(
+                        account.pubKey.length - 3,
+                        account.pubKey.length
+                      )} (${account.amount} ${qAsset?.tokenSymbol})`,
+                    }))}
+                    style={{
+                      minWidth: '100%',
+                    }}
+                  />
+                ) : null}
               </Box>
             </Box>
 

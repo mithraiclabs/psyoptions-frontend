@@ -34,6 +34,16 @@ const Mint = () => {
   const [size, setSize] = useState(100)
   const [price, setPrice] = useState(0)
 
+  console.log(ownedTokenAccounts)
+
+  const ownedUAssetAccounts =
+    (uAsset && ownedTokenAccounts[uAsset.mintAddress]) || []
+  const ownedQAssetAccounts =
+    (qAsset && ownedTokenAccounts[qAsset.mintAddress]) || []
+
+  const [qAssetAccount, setQAssetAccount] = useState('')
+  const [uAssetAccount, setUAssetAccount] = useState('')
+
   const allParams = {
     date: date.unix(),
     uAssetSymbol: uAsset?.tokenSymbol,
@@ -114,22 +124,70 @@ const Mint = () => {
             <Box display="flex" borderBottom={darkBorder}>
               <Box width={'50%'} p={2} borderRight={darkBorder}>
                 Underlying Asset:
-                <Box mt={2}>
+                <Box my={2}>
                   <SelectAsset
                     selectedAsset={uAsset}
                     onSelectAsset={setUAsset}
                   />
                 </Box>
+                <Select
+                  variant="filled"
+                  label={'Account'}
+                  value={
+                    ownedUAssetAccounts.length
+                      ? ownedUAssetAccounts[0].pubKey
+                      : ''
+                  }
+                  onChange={(e) => setSize(e.target.value)}
+                  disabled={ownedUAssetAccounts.length === 0}
+                  options={ownedUAssetAccounts.map((account) => ({
+                    value: account.pubKey,
+                    text: `${account.pubKey.slice(
+                      0,
+                      3
+                    )}...${account.pubKey.slice(
+                      account.pubKey.length - 3,
+                      account.pubKey.length
+                    )} (${account.amount} ${uAsset?.tokenSymbol})`,
+                  }))}
+                  style={{
+                    minWidth: '100%',
+                  }}
+                />
               </Box>
 
               <Box width={'50%'} p={2}>
                 Quote Asset:
-                <Box mt={2}>
+                <Box my={2}>
                   <SelectAsset
                     selectedAsset={qAsset}
                     onSelectAsset={setQAsset}
                   />
                 </Box>
+                <Select
+                  variant="filled"
+                  label={'Account'}
+                  value={
+                    ownedQAssetAccounts.length
+                      ? ownedQAssetAccounts[0].pubKey
+                      : ''
+                  }
+                  onChange={(e) => setSize(e.target.value)}
+                  disabled={ownedQAssetAccounts.length === 0}
+                  options={ownedQAssetAccounts.map((account) => ({
+                    value: account.pubKey,
+                    text: `${account.pubKey.slice(
+                      0,
+                      3
+                    )}...${account.pubKey.slice(
+                      account.pubKey.length - 3,
+                      account.pubKey.length
+                    )} (${account.amount} ${qAsset?.tokenSymbol})`,
+                  }))}
+                  style={{
+                    minWidth: '100%',
+                  }}
+                />
               </Box>
             </Box>
 

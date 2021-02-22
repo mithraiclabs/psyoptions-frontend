@@ -6,6 +6,7 @@ import { PublicKey } from '@solana/web3.js'
 
 import theme from '../../utils/theme'
 import { initializeTokenAccountTx } from '../../utils/token'
+import { truncatePublicKey } from '../../utils/format'
 
 import useWallet from '../../hooks/useWallet'
 import useOptionsMarkets from '../../hooks/useOptionsMarkets'
@@ -60,6 +61,8 @@ const Mint = () => {
   const ownedMintedOptionAccounts =
     (marketData && ownedTokenAccounts[marketData.optionMintAddress]) || []
 
+  console.log('ownedQAssetAccounts', ownedQAssetAccounts)
+
   useEffect(() => {
     setUAssetAccount(ownedUAssetAccounts[0]?.pubKey || '')
   }, [ownedUAssetAccounts])
@@ -73,10 +76,32 @@ const Mint = () => {
   }, [ownedMintedOptionAccounts])
 
   const handleMint = async () => {
-    // TODO: push error notification if not enough uAsset available in uAssetAccount
+    // TODO: push error notification if not enough uAsset available in uAssetAccount, or wallet has no uAsset account
     // Or maybe just block the mint button
 
     try {
+      let quoteAssetDestAccount = qAssetAccount || ownedQAssetAccounts[0]
+      // If user has no quote asset account, we can create one because they don't need any quote asset to mint
+      if (!quoteAssetDestAccount) {
+        // TODO: this is not quite working once we get to the actaully mint function call
+        // Maybe just require user to have both qAssetAccount and uAssetAccount before minting for MVP
+        const [tx, newAccount] = await initializeTokenAccountTx({
+          connection,
+          payer: { publicKey: pubKey },
+          mintPublicKey: new PublicKey(marketData.qAssetMint),
+          newAccount,
+        })
+        const signed = await wallet.signTransaction(tx)
+        const txid = await connection.sendRawTransaction(signed.serialize())
+        await connection.confirmTransaction(txid, 1)
+        quoteAssetDestAccount = newAccount.publicKey.toString()
+        setQAssetAccount(quoteAssetDestAccount)
+
+        // TODO: notification to user that the account was added to their wallet?
+        // TODO: maybe we can send a name for this account in the wallet too, would be nice
+        console.log('Added account: ', newAccount)
+      }
+
       // Fallback to first oowned minted option account
       let mintedOptionDestAccount =
         mintedOptionAccount || ownedMintedOptionAccounts[0]
@@ -101,7 +126,7 @@ const Mint = () => {
 
       console.log('Mint params: ', {
         uAssetAccount,
-        qAssetAccount,
+        quoteAssetDestAccount,
         mintedOptionDestAccount,
         marketData,
       })
@@ -110,7 +135,7 @@ const Mint = () => {
         marketData,
         mintedOptionDestAccount,
         underlyingAssetSrcAccount: uAssetAccount,
-        quoteAssetDestAccount: qAssetAccount,
+        quoteAssetDestAccount,
       })
 
       console.log('Mint Successful')
@@ -184,15 +209,11 @@ const Mint = () => {
                     label={'Account'}
                     value={uAssetAccount}
                     onChange={(e) => setUAssetAccount(e.target.value)}
-                    options={ownedUAssetAccounts.map((account) => ({
-                      value: account.pubKey,
-                      text: `${account.pubKey.slice(
-                        0,
-                        3
-                      )}...${account.pubKey.slice(
-                        account.pubKey.length - 3,
-                        account.pubKey.length
-                      )} (${account.amount} ${uAsset?.tokenSymbol})`,
+                    options={ownedUAssetAccounts.map((acct) => ({
+                      value: acct.pubKey,
+                      text: `${truncatePublicKey(acct.pubKey)} (${
+                        acct.amount
+                      } ${uAsset?.tokenSymbol})`,
                     }))}
                     style={{
                       minWidth: '100%',

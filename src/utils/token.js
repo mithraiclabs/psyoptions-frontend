@@ -1,4 +1,4 @@
-import { PublicKey, SystemProgram, Transaction, Account } from '@solana/web3.js'
+import { SystemProgram, Transaction, Account } from '@solana/web3.js'
 import { initializeAccount, TOKEN_PROGRAM_ID } from './tokenInstructions'
 import * as BufferLayout from 'buffer-layout'
 

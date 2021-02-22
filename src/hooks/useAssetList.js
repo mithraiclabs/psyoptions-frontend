@@ -17,7 +17,7 @@ const useAssetList = () => {
         const localnetData = require('./localnetData.json')
         return localnetData
       } catch (err) {
-        console.error('localnet data not found at ../../localnetData.json')
+        console.error('localnet data not found at ./localnetData.json')
         return []
       }
     default:

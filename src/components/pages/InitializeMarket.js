@@ -24,6 +24,7 @@ const InitializeMarket = () => {
   const { connect, connected } = useWallet()
   const { getMyMarkets, getMarket, initializeMarkets } = useOptionsMarkets()
 
+  const [basePrice, setBasePrice] = useState(0)
   const [date, setDate] = useState(next3Months[0])
   const [uAsset, setUAsset] = useState()
   const [qAsset, setQAsset] = useState()
@@ -33,14 +34,22 @@ const InitializeMarket = () => {
   const [success, setSuccess] = useState()
   const [initializeError, setInitializeError] = useState()
 
-  const { currentPairPrice } = useBonfida({
+  const { marketPrice } = useBonfida({
     uAssetSymbol: uAsset?.tokenSymbol,
     qAssetSymbol: qAsset?.tokenSymbol,
   })
 
+  const parsedBasePrice = parseInt(basePrice)
   let strikePrices = []
-  if (currentPairPrice && priceInterval && !isNaN(priceInterval)) {
-    strikePrices = generateStrikePrices(currentPairPrice, priceInterval)
+  if (
+    (parsedBasePrice || marketPrice) &&
+    priceInterval &&
+    !isNaN(priceInterval)
+  ) {
+    strikePrices = generateStrikePrices(
+      parsedBasePrice || marketPrice,
+      priceInterval
+    )
   }
 
   const assetsSelected = uAsset && qAsset
@@ -162,6 +171,17 @@ const InitializeMarket = () => {
                 />
               </Box>
               <Box width={'50%'} p={2}>
+                <Box pb={2}>
+                  <TextField
+                    value={basePrice}
+                    label="Base Price"
+                    variant="filled"
+                    onChange={(e) => setBasePrice(e.target.value)}
+                    helperText={
+                      isNaN(priceInterval) ? 'Must be a number' : null
+                    }
+                  />
+                </Box>
                 <TextField
                   label="Price Interval"
                   variant="filled"
@@ -173,10 +193,12 @@ const InitializeMarket = () => {
 
             {parametersValid ? (
               <Box p={1}>
-                <Box p={1}>
-                  Current Price: <br />
-                  {currentPairPrice} {qAsset?.tokenSymbol}/{uAsset?.tokenSymbol}
-                </Box>
+                {marketPrice && (
+                  <Box p={1}>
+                    Current Market Price: <br />
+                    {marketPrice} {qAsset?.tokenSymbol}/{uAsset?.tokenSymbol}
+                  </Box>
+                )}
                 <Box p={1}>
                   Strike Prices to Initialize: <br />
                   {strikePrices.map((n) => `${n.toFixed(5)} `)}

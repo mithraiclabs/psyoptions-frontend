@@ -16,7 +16,6 @@ export async function initializeTokenAccountTx({
 }) {
   const newAccount = new Account()
   const transaction = new Transaction()
-  console.log(newAccount)
 
   transaction.add(
     SystemProgram.createAccount({
@@ -39,7 +38,8 @@ export async function initializeTokenAccountTx({
   )
 
   transaction.feePayer = payer.publicKey
-  transaction.recentBlockhash = await connection.getRecentBlockhash()
+  const { blockhash } = await connection.getRecentBlockhash()
+  transaction.recentBlockhash = blockhash
   transaction.partialSign(newAccount)
 
   return [transaction, newAccount]

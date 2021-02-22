@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import moment from 'moment'
 import Done from '@material-ui/icons/Done'
 import { Box, Paper, Button, Chip } from '@material-ui/core'
+import { PublicKey } from '@solana/web3.js'
 
 import theme from '../../utils/theme'
 import { initializeTokenAccountTx } from '../../utils/token'
@@ -76,16 +77,19 @@ const Mint = () => {
       uAssetAccount,
       qAssetAccount,
       mintedOptionAccount,
+      marketData,
     })
 
     try {
-      let mintedOptionDestAccount = mintedOptionAccount
-      if (!mintedOptionAccount && ownedMintedOptionAccounts.length === 0) {
+      // Fallback to first oowned minted option account may not be needed, but adding it just in case
+      let mintedOptionDestAccount =
+        mintedOptionAccount || ownedMintedOptionAccounts[0]
+      if (!mintedOptionDestAccount) {
         // Create token account for minted option if the user doesn't have one yet
         const [tx, newAccount] = await initializeTokenAccountTx({
           connection,
           payer: { publicKey: pubKey },
-          mintPublicKey: marketData.optionMintAddress,
+          mintPublicKey: new PublicKey(marketData.optionMintAddress),
           newAccount,
         })
         const signed = await wallet.signTransaction(tx)
@@ -93,6 +97,8 @@ const Mint = () => {
         await connection.confirmTransaction(txid, 1)
         mintedOptionDestAccount = newAccount.publicKey.toString()
 
+        // TODO: notification to user that the account was added to their wallet?
+        // TODO: maybe we can send a name for this account in the wallet too, would be nice
         console.log('Added account: ', newAccount)
       }
 

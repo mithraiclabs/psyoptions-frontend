@@ -34,12 +34,10 @@ const InitializeMarket = () => {
   const [success, setSuccess] = useState()
   const [initializeError, setInitializeError] = useState()
 
-  console.log('*** usingBonfida', uAsset, qAsset);
   const { marketPrice } = useBonfida({
     uAssetMint: uAsset?.mintAddress,
     qAssetMint: qAsset?.mintAddress,
   })
-  console.log('*** after usingBonfida', marketPrice);
 
   const parsedBasePrice = parseInt(basePrice)
   let strikePrices = []

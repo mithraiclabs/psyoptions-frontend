@@ -9,12 +9,9 @@ const useBonfida = ({ uAssetMint, qAssetMint }) => {
 
   const getPairPrices = async ({ uAssetMint, qAssetMint }) => {
     const serumMarketAddress = await SerumMarket.getMarketByAssetKeys(connection, new PublicKey(uAssetMint), new PublicKey(qAssetMint));
-    console.log('*** serumMarketAddress = ', serumMarketAddress);
     const serumMarket = new SerumMarket(connection, serumMarketAddress[0].publicKey);
 
-    const prices = serumMarket.getBidAskSpread();
-    console.log('** prices = ', prices);
-    return prices;
+    return serumMarket.getBidAskSpread();
   }
 
   useEffect(() => {

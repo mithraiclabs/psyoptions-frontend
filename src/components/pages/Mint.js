@@ -57,7 +57,7 @@ const Mint = () => {
   const ownedQAssetAccounts =
     (qAsset && ownedTokenAccounts[qAsset.mintAddress]) || []
   const ownedMintedOptionAccounts =
-    (marketData && ownedTokenAccounts[qAsset.optionMintAddress]) || []
+    (marketData && ownedTokenAccounts[marketData.optionMintAddress]) || []
 
   useEffect(() => {
     setUAssetAccount(ownedUAssetAccounts[0]?.pubKey || '')

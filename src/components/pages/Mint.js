@@ -1,7 +1,7 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import moment from 'moment'
 import Done from '@material-ui/icons/Done'
-import { Box, Paper, Button, Chip } from '@material-ui/core'
+import { Box, Paper, Button, Chip, ownerDocument } from '@material-ui/core'
 
 import theme from '../../utils/theme'
 
@@ -33,16 +33,23 @@ const Mint = () => {
   const [qAsset, setQAsset] = useState()
   const [size, setSize] = useState(100)
   const [price, setPrice] = useState(0)
-
-  console.log(ownedTokenAccounts)
+  // console.log(ownedTokenAccounts)
 
   const ownedUAssetAccounts =
     (uAsset && ownedTokenAccounts[uAsset.mintAddress]) || []
   const ownedQAssetAccounts =
     (qAsset && ownedTokenAccounts[qAsset.mintAddress]) || []
 
-  const [qAssetAccount, setQAssetAccount] = useState('')
   const [uAssetAccount, setUAssetAccount] = useState('')
+  const [qAssetAccount, setQAssetAccount] = useState('')
+
+  useEffect(() => {
+    setUAssetAccount(ownedUAssetAccounts[0]?.pubKey || '')
+  }, [ownedUAssetAccounts])
+
+  useEffect(() => {
+    setQAssetAccount(ownedQAssetAccounts[0]?.pubKey || '')
+  }, [ownedQAssetAccounts])
 
   const allParams = {
     date: date.unix(),
@@ -57,11 +64,11 @@ const Mint = () => {
   const marketData = getMarket(allParams)
 
   const handleMint = async () => {
-    console.log(ownedTokenAccounts)
-    // console.log(pubKey.toString())
+    console.log({
+      uAssetAccount,
+      qAssetAccount,
+    })
     return
-    // TODO: make "useTransactionInstructions" hook that sends out transactions here
-    // Then call the mint one here
     try {
       await mint({
         marketData,
@@ -133,12 +140,8 @@ const Mint = () => {
                 <Select
                   variant="filled"
                   label={'Account'}
-                  value={
-                    ownedUAssetAccounts.length
-                      ? ownedUAssetAccounts[0].pubKey
-                      : ''
-                  }
-                  onChange={(e) => setSize(e.target.value)}
+                  value={uAssetAccount}
+                  onChange={(e) => setUAssetAccount(e.target.value)}
                   disabled={ownedUAssetAccounts.length === 0}
                   options={ownedUAssetAccounts.map((account) => ({
                     value: account.pubKey,
@@ -167,12 +170,8 @@ const Mint = () => {
                 <Select
                   variant="filled"
                   label={'Account'}
-                  value={
-                    ownedQAssetAccounts.length
-                      ? ownedQAssetAccounts[0].pubKey
-                      : ''
-                  }
-                  onChange={(e) => setSize(e.target.value)}
+                  value={qAssetAccount}
+                  onChange={(e) => setQAssetAccount(e.target.value)}
                   disabled={ownedQAssetAccounts.length === 0}
                   options={ownedQAssetAccounts.map((account) => ({
                     value: account.pubKey,

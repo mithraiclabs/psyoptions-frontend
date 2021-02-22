@@ -9,7 +9,7 @@ import theme from '../../utils/theme'
 
 import useWallet from '../../hooks/useWallet'
 import useOptionsMarkets from '../../hooks/useOptionsMarkets'
-import useBonfida from '../../hooks/useBonfida'
+import useSerumMarketInfo from '../../hooks/useSerumMarketInfo'
 import { generateStrikePrices } from '../../utils/generateStrikePrices'
 
 const darkBorder = `1px solid ${theme.palette.background.main}`
@@ -33,10 +33,9 @@ const InitializeMarket = () => {
 
   const [success, setSuccess] = useState()
   const [initializeError, setInitializeError] = useState()
-
-  const { marketPrice } = useBonfida({
-    uAssetSymbol: uAsset?.tokenSymbol,
-    qAssetSymbol: qAsset?.tokenSymbol,
+  const { marketPrice } = useSerumMarketInfo({
+    uAssetMint: uAsset?.mintAddress,
+    qAssetMint: qAsset?.mintAddress,
   })
 
   const parsedBasePrice = parseInt(basePrice)

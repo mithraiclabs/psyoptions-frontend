@@ -1,13 +1,66 @@
 import { Market, MARKETS } from '@project-serum/serum';
-import { PublicKey, Transaction } from '@solana/web3.js';
+import { PublicKey } from '@solana/web3.js';
 
 
 export class SerumMarket {
 
-  constructor(connection, marketAddress) {
+  constructor (connection, marketAddress) {
     this.connection = connection;
     this.marketAddress = marketAddress;
+    this.initMarket();
+  }
+
+  async initMarket () {
     this.market = await SerumMarket.getMarket();
+  }
+
+  /**
+   * Look up a Serum market via the Base and Quote mint addresses.
+   * @param {PublicKey} baseMintAddress 
+   * @param {PublicKey} quoteMintAddress 
+   */
+  static async getMarketByAssetKeys (
+    connection,
+    baseMintAddress,
+    quoteMintAddress,
+  ) {
+    const programId = MARKETS.find(({ deprecated }) => !deprecated).programId;
+    const filters = [
+      {
+        memcmp: {
+          offset: Market.getLayout(programId).offsetOf('baseMint'),
+          bytes: baseMintAddress.toBase58(),
+        },
+      },
+      {
+        memcmp: {
+          offset: Market.getLayout(programId).offsetOf('quoteMint'),
+          bytes: quoteMintAddress.toBase58(),
+        },
+      },
+    ];
+    const resp = await connection._rpcRequest('getProgramAccounts', [
+      programId.toBase58(),
+      {
+        commitment: connection.commitment,
+        filters,
+        encoding: 'base64',
+      },
+    ]);
+    if (resp.error) {
+      throw new Error(resp.error.message);
+    }
+    return resp.result.map(
+      ({ pubkey, account: { data, executable, owner, lamports } }) => ({
+        publicKey: new PublicKey(pubkey),
+        accountInfo: {
+          data: Buffer.from(data[0], 'base64'),
+          executable,
+          owner: new PublicKey(owner),
+          lamports,
+        },
+      }),
+    );
   }
 
   /**
@@ -15,7 +68,7 @@ export class SerumMarket {
    * @param {Connection} connection 
    * @param {PublicKey} marketAddress 
    */
-  static getMarket = async () => {
+  static async getMarket () {
     const programId = MARKETS.find(({ deprecated }) => !deprecated).programId;
     return Market.load(this.connection, this.marketAddress, {}, programId);
   }
@@ -23,7 +76,7 @@ export class SerumMarket {
   /**
    * Returns the highest bid price and lowest ask price for a market
    */
-  getBidAskSpread = async () => {
+  async getBidAskSpread () {
     if (!this.market) {
       return {bid: null, ask: null}
     }
@@ -35,7 +88,7 @@ export class SerumMarket {
     return {bid: highestbid[1], ask: lowestAsk[1]};
   }
 
-  getPrice = async () => {
+  async getPrice () {
     const {bid, ask} = await this.getBidAskSpread();
     return ((ask - bid) / 2) + bid
   }
@@ -68,7 +121,7 @@ export class SerumMarket {
    *  signers: placeOrderSigners
    * }}
    */
-  createPlaceOrderTx = async (
+  async createPlaceOrderTx (
     owner,
     payer,
     side,
@@ -76,7 +129,7 @@ export class SerumMarket {
     size,
     orderType,
     opts = {},
-  ) => {
+  ) {
     const params = {
       owner,
       payer,

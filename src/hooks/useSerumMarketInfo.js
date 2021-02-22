@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { SerumMarket } from '../utils/serum'
 import useConnection from './useConnection'
 
-const useBonfida = ({ uAssetMint, qAssetMint }) => {
+const useSerumMarketInfo = ({ uAssetMint, qAssetMint }) => {
   const [currentPairPrice, setCurrentPairPrice] = useState(0)
   const { connection } = useConnection();
 
@@ -34,4 +34,4 @@ const useBonfida = ({ uAssetMint, qAssetMint }) => {
   }
 }
 
-export default useBonfida
+export default useSerumMarketInfo

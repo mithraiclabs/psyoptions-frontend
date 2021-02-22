@@ -106,14 +106,14 @@ const Mint = () => {
         marketData,
       })
 
-      const results = await mint({
+      const txid = await mint({
         marketData,
         mintedOptionDestAccount,
         underlyingAssetSrcAccount: uAssetAccount,
         quoteAssetDestAccount: qAssetAccount,
       })
 
-      console.log(results)
+      console.log('Mint Successful')
     } catch (err) {
       console.log(err)
     }

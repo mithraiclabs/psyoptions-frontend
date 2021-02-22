@@ -7,11 +7,10 @@ export class SerumMarket {
   constructor (connection, marketAddress) {
     this.connection = connection;
     this.marketAddress = marketAddress;
-    this.initMarket();
   }
 
   async initMarket () {
-    this.market = await SerumMarket.getMarket();
+    this.market = await this.getMarket();
   }
 
   /**
@@ -68,7 +67,7 @@ export class SerumMarket {
    * @param {Connection} connection 
    * @param {PublicKey} marketAddress 
    */
-  static async getMarket () {
+  async getMarket () {
     const programId = MARKETS.find(({ deprecated }) => !deprecated).programId;
     return Market.load(this.connection, this.marketAddress, {}, programId);
   }
@@ -80,12 +79,12 @@ export class SerumMarket {
     if (!this.market) {
       return {bid: null, ask: null}
     }
-    const bidOrderbook = await this.market.loadBids(connection);
-    const askOrderbook = await this.market.loadAsks(connection);
+    const bidOrderbook = await this.market.loadBids(this.connection);
+    const askOrderbook = await this.market.loadAsks(this.connection);
 
     const highestbid = bidOrderbook.getL2(1)[0];
     const lowestAsk = askOrderbook.getL2(1)[0];
-    return {bid: highestbid[1], ask: lowestAsk[1]};
+    return {bid: highestbid[0], ask: lowestAsk[0]};
   }
 
   async getPrice () {
@@ -139,7 +138,7 @@ export class SerumMarket {
       orderType,
       feeDiscountPubkey: opts.feeDiscountPubkey || null,
     };
-    return market.makePlaceOrderTransaction(
+    return this.market.makePlaceOrderTransaction(
       this.connection,
       params,
       120_000,

@@ -8,10 +8,13 @@ const useSerumMarketInfo = ({ uAssetMint, qAssetMint }) => {
   const { connection } = useConnection();
 
   const getPairPrices = async ({ uAssetMint, qAssetMint }) => {
-    const serumMarketAddress = await SerumMarket.getMarketByAssetKeys(connection, new PublicKey(uAssetMint), new PublicKey(qAssetMint));
-    const serumMarket = new SerumMarket(connection, serumMarketAddress[0].publicKey);
+    const serumMarkets = await SerumMarket.getMarketByAssetKeys(connection, new PublicKey(uAssetMint), new PublicKey(qAssetMint));
+    const serumMarketAddress = serumMarkets[0].publicKey;
+    const serumMarket = new SerumMarket(connection, serumMarketAddress);
+    await serumMarket.initMarket();
 
-    return serumMarket.getBidAskSpread();
+    const prices = await serumMarket.getBidAskSpread();
+    return prices;
   }
 
   useEffect(() => {

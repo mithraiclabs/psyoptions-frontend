@@ -7,6 +7,7 @@ import theme from '../../utils/theme'
 
 import useWallet from '../../hooks/useWallet'
 import useOptionsMarkets from '../../hooks/useOptionsMarkets'
+import useOwnedTokenAccounts from '../../hooks/useOwnedTokenAccounts'
 
 import SelectAsset from '../SelectAsset'
 import Page from './Page'
@@ -21,8 +22,9 @@ const next3Months = [
 ]
 
 const Mint = () => {
-  const { connect, connected, loading } = useWallet()
-  const { getMarket, getStrikePrices, getSizes } = useOptionsMarkets()
+  const { connect, connected, wallet, pubKey, loading } = useWallet()
+  const { getMarket, getStrikePrices, getSizes, mint } = useOptionsMarkets()
+  const ownedTokenAccounts = useOwnedTokenAccounts()
 
   const dates = next3Months
 
@@ -44,12 +46,19 @@ const Mint = () => {
   const strikePrices = getStrikePrices(allParams)
   const marketData = getMarket(allParams)
 
-  // TODO: check if connected wallet has enough of uAsset
-  // TODO: set canMint to true if all conditions are met (params set, has UA funds, etc)
-
-  const handleMint = () => {
+  const handleMint = async () => {
+    console.log(ownedTokenAccounts)
+    // console.log(pubKey.toString())
+    return
     // TODO: make "useTransactionInstructions" hook that sends out transactions here
     // Then call the mint one here
+    try {
+      await mint({
+        marketData,
+      })
+    } catch (err) {
+      console.log(err)
+    }
   }
 
   return (

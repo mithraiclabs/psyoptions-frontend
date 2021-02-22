@@ -33,7 +33,7 @@ const useOwnedTokenAccounts = () => {
 
   useEffect(() => {
     // TODO need to find the best way to update when the user adds new programs
-    if (connected) {
+    if (connected && pubKey) {
       ;(async () => {
         const filters = getOwnedTokenAccountsFilter(pubKey)
         try {

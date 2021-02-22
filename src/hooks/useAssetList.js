@@ -14,10 +14,10 @@ const useAssetList = () => {
       return TOKENS.testnet
     case networks[3].name:
       try {
-        const localnetData = require('../../localnetData.json')
+        const localnetData = require('./localnetData.json')
         return localnetData
       } catch (err) {
-        console.error('localnet data not found at ../../localnetData.json')
+        console.error('localnet data not found at ./localnetData.json')
         return []
       }
     default:

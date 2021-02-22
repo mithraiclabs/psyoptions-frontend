@@ -1,4 +1,7 @@
-import { initializeMarket } from '@mithraic-labs/options-js-bindings'
+import {
+  initializeMarket,
+  readMarketAndMintCoveredCall,
+} from '@mithraic-labs/options-js-bindings'
 
 import { useOptionsMarketsLocalStorage } from './useLocalStorage'
 import useWallet from './useWallet'
@@ -138,6 +141,26 @@ const useOptionsMarkets = () => {
     return Object.values(markets).filter((m) => m.createdByMe)
   }
 
+  const mint = async ({
+    marketData,
+    mintedOptionDest, // account in user's wallet to send minted option to
+    underlyingAssetSrc, // account in user's wallet to post uAsset collateral from
+    quoteAssetDest, // account in user's wallet to send qAsset to if contract is exercised
+  }) => {
+    const { transaction: tx, signers } = await readMarketAndMintCoveredCall(
+      connection,
+      { publicKey: pubKey },
+      endpoint.programId,
+      mintedOptionDest,
+      underlyingAssetSrc,
+      quoteAssetDest,
+      marketData.optionMarketDataAddress,
+      { publicKey: pubKey } // Option writer's UA Authority account - safe to assume this is always the same as the payer when called from the FE UI
+    )
+
+    console.log(tx)
+  }
+
   return {
     initializeMarkets,
     loaded,
@@ -147,6 +170,7 @@ const useOptionsMarkets = () => {
     getSizes,
     getDates,
     getMyMarkets,
+    mint,
   }
 }
 

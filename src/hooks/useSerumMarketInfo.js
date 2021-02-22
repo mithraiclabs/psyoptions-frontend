@@ -33,7 +33,7 @@ const useSerumMarketInfo = ({ uAssetMint, qAssetMint }) => {
   }, [uAssetMint, qAssetMint])
 
   return {
-    currentPairPrice,
+    marketPrice: currentPairPrice,
   }
 }
 

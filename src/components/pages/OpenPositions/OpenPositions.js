@@ -18,14 +18,15 @@ const darkBorder = `1px solid ${theme.palette.background.main}`
 
 // add new columns here
 const columns = [
-  { id: 'assetpair', label: 'Asset Pair', minWidth: 170 },
-  { id: 'strike', label: 'Strike', minWidth: 170 },
-  { id: 'markprice', label: 'Mark Price', minWidth: 100 },
+  { id: 'assetpair', label: 'Asset Pair', minWidth: 170, width: '20%' },
+  { id: 'strike', label: 'Strike', minWidth: 170, width: '15%' },
+  { id: 'markprice', label: 'Mark Price', minWidth: 100, width: '15%' },
   {
     id: 'size',
     label: 'Size',
     minWidth: 100,
     format: (value) => value.toLocaleString('en-US'),
+    width: '15%',
   },
   {
     id: 'expiration',
@@ -35,12 +36,14 @@ const columns = [
       const date = new Date(value)
       return date.toUTCString()
     },
+    width: '20%',
   },
   {
     id: 'action',
     label: 'Action',
     minWidth: 170,
     align: 'right',
+    width: '15%',
   },
 ]
 
@@ -106,8 +109,6 @@ const OpenPositions = () => {
     ),
     strike: markets[key].strikePrice,
   }))
-
-  console.log('rows ', positionRows)
 
   return (
     <Page>

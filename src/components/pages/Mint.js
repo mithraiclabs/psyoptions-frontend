@@ -37,7 +37,7 @@ const Mint = () => {
   const [uAsset, setUAsset] = useState()
   const [qAsset, setQAsset] = useState()
   const [size, setSize] = useState(100)
-  const [price, setPrice] = useState(0)
+  const [price, setPrice] = useState('')
   const [uAssetAccount, setUAssetAccount] = useState('')
   const [qAssetAccount, setQAssetAccount] = useState('')
   const [mintedOptionAccount, setMintedOptionAccount] = useState('')
@@ -61,7 +61,7 @@ const Mint = () => {
   const ownedMintedOptionAccounts =
     (marketData && ownedTokenAccounts[marketData.optionMintAddress]) || []
 
-  console.log('ownedQAssetAccounts', ownedQAssetAccounts)
+  // console.log('ownedQAssetAccounts', ownedQAssetAccounts)
 
   useEffect(() => {
     setUAssetAccount(ownedUAssetAccounts[0]?.pubKey || '')
@@ -172,7 +172,10 @@ const Mint = () => {
                 {next3Months.map((moment) => {
                   const label = `${moment.format('ll')}, 00:00 UTC`
                   const selected = moment === date
-                  const onClick = () => setDate(moment)
+                  const onClick = () => {
+                    setDate(moment)
+                    setPrice('')
+                  }
                   return (
                     <Chip
                       key={label}
@@ -200,7 +203,10 @@ const Mint = () => {
                 <Box my={2}>
                   <SelectAsset
                     selectedAsset={uAsset}
-                    onSelectAsset={setUAsset}
+                    onSelectAsset={(asset) => {
+                      setUAsset(asset)
+                      setPrice('')
+                    }}
                   />
                 </Box>
                 {ownedUAssetAccounts.length > 1 ? (
@@ -227,7 +233,10 @@ const Mint = () => {
                 <Box my={2}>
                   <SelectAsset
                     selectedAsset={qAsset}
-                    onSelectAsset={setQAsset}
+                    onSelectAsset={(asset) => {
+                      setQAsset(asset)
+                      setPrice('')
+                    }}
                   />
                 </Box>
                 {ownedQAssetAccounts.length > 1 ? (
@@ -260,7 +269,10 @@ const Mint = () => {
                   variant="filled"
                   label={'Contract Size'}
                   value={contractSizes.length ? size : ''}
-                  onChange={(e) => setSize(e.target.value)}
+                  onChange={(e) => {
+                    setPrice('')
+                    setSize(e.target.value)
+                  }}
                   disabled={contractSizes.length === 0}
                   options={contractSizes.map((s) => ({
                     value: s,

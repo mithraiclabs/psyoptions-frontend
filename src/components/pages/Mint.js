@@ -152,7 +152,7 @@ const Mint = () => {
         justifyContent="center"
         flexDirection="column"
         height="100%"
-        minHeight="500px"
+        minHeight="620px"
         pb={4}
       >
         <Paper

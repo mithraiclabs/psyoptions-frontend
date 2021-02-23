@@ -11,6 +11,7 @@ const {
 ;(async () => {
   const connection = new Connection('http://127.0.0.1:8899')
   const keyPairFilePath = process.argv[2];
+  const walletAddress = process.argv[3];
   let payer;
   if (!keyPairFilePath) {
     throw new Error('Missing keypair file argument');
@@ -23,7 +24,7 @@ const {
   // For each SPL Token created, create a new account owned by payer and mint 1,000 tokens
   localSPLData.forEach(async splData => {
     const token = new Token(connection, splData.mintAddress, TOKEN_PROGRAM_ID, payer);
-    const newTokenAccount = await token.createAccount(payer.publicKey);
+    const newTokenAccount = await token.createAccount(walletAddress || payer);
     // The tokens created by the seedLocalNet have 8 decimals
     token.mintTo(newTokenAccount, payer, [], 1000 * 10**8);
     console.log(`** created account ${newTokenAccount} with 1,000 ${splData.mintAddress} tokens\n`);

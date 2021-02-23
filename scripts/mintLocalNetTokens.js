@@ -19,12 +19,13 @@ const {
   payer = new Account(JSON.parse(keyBuffer));
 
   const localSPLData = JSON.parse(fs.readFileSync('./src/hooks/localnetData.json'));
-  console.log('*** localSPLData', localSPLData);
 
   // For each SPL Token created, create a new account owned by payer and mint 1,000 tokens
   localSPLData.forEach(async splData => {
     const token = new Token(connection, splData.mintAddress, TOKEN_PROGRAM_ID, payer);
     const newTokenAccount = await token.createAccount(payer.publicKey);
-    console.log(`** created account ${newTokenAccount} to hold tokens for mint ${splData.mintAddress}\n`);
+    // The tokens created by the seedLocalNet have 8 decimals
+    token.mintTo(newTokenAccount, payer, [], 1000 * 10**8);
+    console.log(`** created account ${newTokenAccount} with 1,000 ${splData.mintAddress} tokens\n`);
   });
 })();

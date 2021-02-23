@@ -4,22 +4,22 @@ const NotificationsContext = createContext()
 
 const NotificationsProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([
-    {
-      severity: 'success',
-      message: 'Success',
-    },
-    {
-      severity: 'info',
-      message: 'Info',
-    },
-    {
-      severity: 'error',
-      message: 'Error',
-    },
-    {
-      severity: 'warning',
-      message: 'Warning',
-    },
+    // {
+    //   severity: 'success',
+    //   message: 'Success',
+    // },
+    // {
+    //   severity: 'info',
+    //   message: 'Info',
+    // },
+    // {
+    //   severity: 'error',
+    //   message: 'Error',
+    // },
+    // {
+    //   severity: 'warning',
+    //   message: 'Warning',
+    // },
   ])
 
   // useCallback() and useMemo() to prevent whole page re-renders

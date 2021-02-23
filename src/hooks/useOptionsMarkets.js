@@ -128,6 +128,14 @@ const useOptionsMarkets = () => {
           createdByMe: true,
         }
 
+        try {
+          // Post the newly created market to the backend.
+          const res = await axios.post(`${process.env.OPTIONS_API_URL}/markets`, marketData);
+          console.log('*** post market res = ', res);
+        } catch (err) {
+          console.error(err)
+        }
+
         return marketData
       })
     )

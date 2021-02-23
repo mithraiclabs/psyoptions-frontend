@@ -42,7 +42,14 @@ const trustWalletERC20Icon = (address) =>
  */
 ;(async () => {
   const connection = new Connection('http://127.0.0.1:8899')
-  const payer = await createPayerWithSol(connection)
+  const keyPairFilePath = process.argv[2];
+  let payer;
+  if (keyPairFilePath) {
+    const keyBuffer = fs.readFileSync(keyPairFilePath);
+    payer = new Account(JSON.parse(keyBuffer));
+  } else {
+    payer = await createPayerWithSol(connection);
+  }
 
   const splMint1 = new Account()
   const splMint2 = new Account()

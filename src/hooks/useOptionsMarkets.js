@@ -3,6 +3,8 @@ import {
   readMarketAndMintCoveredCall,
 } from '@mithraic-labs/options-js-bindings'
 
+import { PublicKey } from '@solana/web3.js'
+
 import { useOptionsMarketsLocalStorage } from './useLocalStorage'
 import useWallet from './useWallet'
 import useConnection from './useConnection'
@@ -143,22 +145,31 @@ const useOptionsMarkets = () => {
 
   const mint = async ({
     marketData,
-    mintedOptionDest, // account in user's wallet to send minted option to
-    underlyingAssetSrc, // account in user's wallet to post uAsset collateral from
-    quoteAssetDest, // account in user's wallet to send qAsset to if contract is exercised
+    mintedOptionDestAccount, // account in user's wallet to send minted option to
+    underlyingAssetSrcAccount, // account in user's wallet to post uAsset collateral from
+    quoteAssetDestAccount, // account in user's wallet to send qAsset to if contract is exercised
   }) => {
     const { transaction: tx, signers } = await readMarketAndMintCoveredCall(
       connection,
       { publicKey: pubKey },
       endpoint.programId,
-      mintedOptionDest,
-      underlyingAssetSrc,
-      quoteAssetDest,
-      marketData.optionMarketDataAddress,
+      new PublicKey(mintedOptionDestAccount),
+      new PublicKey(underlyingAssetSrcAccount),
+      new PublicKey(quoteAssetDestAccount),
+      new PublicKey(marketData.optionMarketDataAddress),
       { publicKey: pubKey } // Option writer's UA Authority account - safe to assume this is always the same as the payer when called from the FE UI
     )
 
-    console.log(tx)
+    const signed = await wallet.signTransaction(tx)
+    const txid = await connection.sendRawTransaction(signed.serialize())
+
+    // TODO: push "toast notifications" here that tx started and set a loading state
+    console.log(`Submitted transaction ${txid}`)
+    await connection.confirmTransaction(txid, 1)
+    // TODO: push "toast notifications" here that tx completed and set loading state to false
+    console.log(`Confirmed ${txid}`)
+
+    return txid
   }
 
   return {

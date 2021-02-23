@@ -6,6 +6,7 @@
   "scripts": {
     "build": "npx webpack",
     "seed": "node ./scripts/seedLocalNet.js",
+    "seed:mintTokens": "node ./scripts/mintLocalNetTokens.js",
     "serve": "nodemon index.js",
     "start": "concurrently 'npm run build' 'npm run serve' --kill-all",
     "test": "echo \"Error: no test specified\" && exit 1",

@@ -47,29 +47,29 @@ const useOptionsMarkets = () => {
         // Transform the market data to our expectations
         const newMarkets = {};
         res.forEach(market => {
-          console.log('*** market', market);
-          // const key = `${}`;
-          // As of writing the package returns the nested PublicKeys as Buffers
-          const uAssetMint = new PublicKey(market.marketData.underlyingAssetMintAddress);
+
+          const uAssetMint = market.marketData.underlyingAssetMintAddress;
           const uAsset = assetList.filter( asset => asset.mintAddress === uAssetMint.toString())[0]
-          const qAssetMint = new PublicKey(market.marketData.quoteAssetMintAddress);
+          const qAssetMint = market.marketData.quoteAssetMintAddress;
           const qAsset = assetList.filter( asset => asset.mintAddress === qAssetMint.toString())[0]
-          console.log('*** market', uAssetMint, qAssetMint, uAsset, qAsset);
+
           const newMarket = {
+            // marketData.amountPerContract is a BigNumber
             size: market.marketData.amountPerContract,
             expiration: market.marketData.expirationUnixTimestamp,
             uAssetSymbol: uAsset.tokenSymbol,
             qAssetSymbol: qAsset.tokenSymbol,
             uAssetMint: uAsset.mintAddress,
             qAssetMint: qAsset.mintAddress,
+            // marketData.strikePrice is a BigNumber
             strikePrice: market.marketData.strikePrice,
-            mintAccount: new PublicKey(market.marketData.optionMintAddress).toString(),
+            mintAccount: market.marketData.optionMintAddress.toString(),
             dataAccount: market.pubkey.toString()
           };
           const key = `${newMarket.expiration}-${newMarket.uAssetSymbol}-${newMarket.qAssetSymbol}-${newMarket.size}-${newMarket.strikePrice}`;
           newMarkets[key] = newMarket;
         });
-        console.log('*** newMarkets', newMarkets);
+
         // Not sure if we should replace the existing markets or merge them
         setMarkets((prevMarkets) => ({
           ...prevMarkets,

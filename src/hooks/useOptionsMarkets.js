@@ -1,13 +1,15 @@
 import {
   initializeMarket,
   readMarketAndMintCoveredCall,
+  Market
 } from '@mithraic-labs/options-js-bindings'
 
-import { PublicKey } from '@solana/web3.js'
+import { Connection, PublicKey } from '@solana/web3.js'
 
 import { useOptionsMarketsLocalStorage } from './useLocalStorage'
 import useWallet from './useWallet'
 import useConnection from './useConnection'
+import useAssetList from './useAssetList';
 import { useEffect } from 'react'
 import axios from 'axios'
 
@@ -32,15 +34,46 @@ const useOptionsMarkets = () => {
   const { wallet, pubKey } = useWallet()
   const { connection, endpoint } = useConnection()
   const [markets, setMarkets] = useOptionsMarketsLocalStorage()
+  const assetList = useAssetList()
 
   useEffect(() => {
     ;(async () => {
       try {
-        const res = await axios.get(`${process.env.OPTIONS_API_URL}/markets`)
+        console.log('*** connection', connection);
+        if ( !(connection instanceof Connection) )
+          return;
+        const assets = assetList.map(asset => new PublicKey(asset.mintAddress));
+        const res = await Market.getAllMarketsBySplSupport(connection, new PublicKey(endpoint.programId), assets);
+        // Transform the market data to our expectations
+        const newMarkets = {};
+        res.forEach(market => {
+          console.log('*** market', market);
+          // const key = `${}`;
+          // As of writing the package returns the nested PublicKeys as Buffers
+          const uAssetMint = new PublicKey(market.marketData.underlyingAssetMintAddress);
+          const uAsset = assetList.filter( asset => asset.mintAddress === uAssetMint.toString())[0]
+          const qAssetMint = new PublicKey(market.marketData.quoteAssetMintAddress);
+          const qAsset = assetList.filter( asset => asset.mintAddress === qAssetMint.toString())[0]
+          console.log('*** market', uAssetMint, qAssetMint, uAsset, qAsset);
+          const newMarket = {
+            size: market.marketData.amountPerContract,
+            expiration: market.marketData.expirationUnixTimestamp,
+            uAssetSymbol: uAsset.tokenSymbol,
+            qAssetSymbol: qAsset.tokenSymbol,
+            uAssetMint: uAsset.mintAddress,
+            qAssetMint: qAsset.mintAddress,
+            strikePrice: market.marketData.strikePrice,
+            mintAccount: new PublicKey(market.marketData.optionMintAddress).toString(),
+            dataAccount: market.pubkey.toString()
+          };
+          const key = `${newMarket.expiration}-${newMarket.uAssetSymbol}-${newMarket.qAssetSymbol}-${newMarket.size}-${newMarket.strikePrice}`;
+          newMarkets[key] = newMarket;
+        });
+        console.log('*** newMarkets', newMarkets);
         // Not sure if we should replace the existing markets or merge them
         setMarkets((prevMarkets) => ({
           ...prevMarkets,
-          ...res.data,
+          ...newMarkets,
         }))
       } catch (err) {
         console.error(err)
@@ -159,6 +192,8 @@ const useOptionsMarkets = () => {
       new PublicKey(marketData.optionMarketDataAddress),
       { publicKey: pubKey } // Option writer's UA Authority account - safe to assume this is always the same as the payer when called from the FE UI
     )
+
+    console.log('*** transaction = ', transaction);
 
     const signed = await wallet.signTransaction(tx)
     const txid = await connection.sendRawTransaction(signed.serialize())

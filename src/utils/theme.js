@@ -1,10 +1,12 @@
 import { createMuiTheme } from '@material-ui/core/styles'
 
-const secondary = '#DD3E76'
-
 const theme = createMuiTheme({
   gradients: {
     secondaryPrimary: 'linear-gradient(90deg, #DD3E76 -0.83%, #1D4DC9 100%)',
+    warning: 'linear-gradient(90deg, #F9C164 0.22%, #DC3E78 99.68%)',
+    error: 'linear-gradient(90deg, #F9C164 0.22%, #DC3E78 99.68%)',
+    success: 'linear-gradient(-90deg, #51F39C 0.41%, #1D4DC9 117.22%)',
+    info: 'linear-gradient(90deg, #DC3E78 0.62%, #1D4DC9 89.59%)',
   },
   glow: '0 0 0px #11FFCC, 0 0 20px #0055CC, 0 0 50px #001199',
   typography: {
@@ -20,7 +22,7 @@ const theme = createMuiTheme({
       contrastText: '#000',
     },
     secondary: {
-      main: secondary,
+      main: '#DD3E76',
       dark: '#750035',
       darker: '#24001A',
       contrastText: '#E4F5FF',
@@ -28,12 +30,19 @@ const theme = createMuiTheme({
     warning: {
       main: '#FAC265',
       dark: '#D18641',
+      contrastText: '#E4F5FF',
     },
     success: {
       main: '#51F39C',
+      contrastText: '#E4F5FF',
     },
     error: {
-      main: secondary,
+      main: '#DD3E76',
+      contrastText: '#8BEAFF',
+    },
+    info: {
+      main: '#1D4DC9',
+      contrastText: '#E4F5FF',
     },
     background: {
       light: '#2E2832',

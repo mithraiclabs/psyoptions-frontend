@@ -7,6 +7,7 @@ import Page from './Page'
 import SelectAsset from '../SelectAsset'
 import theme from '../../utils/theme'
 
+import useNotifications from '../../hooks/useNotifications'
 import useWallet from '../../hooks/useWallet'
 import useOptionsMarkets from '../../hooks/useOptionsMarkets'
 import useSerumMarketInfo from '../../hooks/useSerumMarketInfo'
@@ -21,6 +22,7 @@ const next3Months = [
 ]
 
 const InitializeMarket = () => {
+  const { pushNotification } = useNotifications()
   const { connect, connected } = useWallet()
   const { getMyMarkets, getMarket, initializeMarkets } = useOptionsMarkets()
 
@@ -30,9 +32,6 @@ const InitializeMarket = () => {
   const [qAsset, setQAsset] = useState()
   const [size, setSize] = useState(0)
   const [priceInterval, setPriceInterval] = useState(0)
-
-  const [success, setSuccess] = useState()
-  const [initializeError, setInitializeError] = useState()
   const { marketPrice } = useSerumMarketInfo({
     uAssetMint: uAsset?.mintAddress,
     qAssetMint: qAsset?.mintAddress,
@@ -62,7 +61,6 @@ const InitializeMarket = () => {
   const parametersValid = size && !isNaN(size) && strikePrices.length > 0
 
   const handleInitialize = async () => {
-    setInitializeError(false)
     // TODO: initializing a single strike price at a time
     try {
       const results = await initializeMarkets({
@@ -75,12 +73,17 @@ const InitializeMarket = () => {
         expiration: date.unix(),
       })
       console.log(results)
-      setSuccess(true)
+      pushNotification({
+        severity: 'success',
+        message: 'Markets Initialized',
+      })
     } catch (err) {
       // TODO: display some meaningful error state to user
       console.log(err)
-      setInitializeError(err)
-      setSuccess(false)
+      pushNotification({
+        severity: 'error',
+        message: `${err}`,
+      })
     }
   }
 
@@ -192,12 +195,12 @@ const InitializeMarket = () => {
 
             {parametersValid ? (
               <Box p={1}>
-                {marketPrice && (
+                {marketPrice ? (
                   <Box p={1}>
                     Current Market Price: <br />
                     {marketPrice} {qAsset?.tokenSymbol}/{uAsset?.tokenSymbol}
                   </Box>
-                )}
+                ) : null}
                 <Box p={1}>
                   Strike Prices to Initialize: <br />
                   {strikePrices.map((n) => `${n.toFixed(5)} `)}

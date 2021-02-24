@@ -8,6 +8,7 @@ import theme from '../../utils/theme'
 import { initializeTokenAccountTx } from '../../utils/token'
 import { truncatePublicKey } from '../../utils/format'
 
+import useNotifications from '../../hooks/useNotifications'
 import useWallet from '../../hooks/useWallet'
 import useOptionsMarkets from '../../hooks/useOptionsMarkets'
 import useOwnedTokenAccounts from '../../hooks/useOwnedTokenAccounts'
@@ -26,6 +27,7 @@ const next3Months = [
 ]
 
 const Mint = () => {
+  const { pushNotification } = useNotifications()
   const { connection } = useConnection()
   const { connect, connected, wallet, pubKey, loading } = useWallet()
   const { getMarket, getStrikePrices, getSizes, mint } = useOptionsMarkets()
@@ -76,8 +78,21 @@ const Mint = () => {
   }, [ownedMintedOptionAccounts])
 
   const handleMint = async () => {
-    // TODO: push error notification if not enough uAsset available in uAssetAccount, or wallet has no uAsset account
-    // Or maybe just block the mint button
+    if (uAssetAccount) {
+      pushNotification({
+        severity: 'error',
+        message: `Error: You must have a ${marketData.uAssetSymbol} account in your wallet to mint this contract`,
+      })
+      return
+    }
+
+    if (uAssetAccount.value < marketData.size) {
+      pushNotification({
+        severity: 'error',
+        message: `Error: Underlying Asset account must have at least ${marketData.size} ${marketData.uAssetSymbol} to mint this contract`,
+      })
+      return
+    }
 
     try {
       let quoteAssetDestAccount = qAssetAccount || ownedQAssetAccounts[0]
@@ -97,9 +112,14 @@ const Mint = () => {
         quoteAssetDestAccount = newAccount.publicKey.toString()
         setQAssetAccount(quoteAssetDestAccount)
 
-        // TODO: notification to user that the account was added to their wallet?
-        // TODO: maybe we can send a name for this account in the wallet too, would be nice
+        // TODO: maybe we can send a name for this account to the wallet too, would be nice
         console.log('Added account: ', newAccount)
+        pushNotification({
+          severity: 'success',
+          message: `Added new ${marketData.qAssetSymbol} account to wallet: ${quoteAssetDestAccount}.\n Do not remove this account from your wallet.`,
+        })
+      } else {
+        console.log('Already have quote asset account')
       }
 
       // Fallback to first oowned minted option account
@@ -119,9 +139,17 @@ const Mint = () => {
         mintedOptionDestAccount = newAccount.publicKey.toString()
         setMintedOptionAccount(mintedOptionDestAccount)
 
-        // TODO: notification to user that the account was added to their wallet?
         // TODO: maybe we can send a name for this account in the wallet too, would be nice
+
         console.log('Added account: ', newAccount)
+
+        // How should we refer to this option account? For now I will put the key because it contains all the specific data, but we might want to just put the symbols of the two assets and drop the other stuff -- it will be visible on the open positions page anyway
+        pushNotification({
+          severity: 'success',
+          message: `Added new ${marketData.key} covered call token account ${mintedOptionDestAccount} to wallet.`,
+        })
+      } else {
+        console.log('Already have option account for this market')
       }
 
       console.log('Mint params: ', {
@@ -138,9 +166,18 @@ const Mint = () => {
         quoteAssetDestAccount,
       })
 
+      pushNotification({
+        severity: 'success',
+        message: `Minted 1 new ${marketData.key} covered call token to address: ${mintedOptionDestAccount}.`,
+      })
+
       console.log('Mint Successful')
     } catch (err) {
       console.log(err)
+      pushNotification({
+        severity: 'error',
+        message: `${err}`,
+      })
     }
   }
 
@@ -163,7 +200,7 @@ const Mint = () => {
         >
           <Box>
             <Box p={2} textAlign="center">
-              <h2 style={{ margin: '10px 0 0' }}>Contract Settings</h2>
+              <h2 style={{ margin: '10px 0 0' }}>Mint Covered Call</h2>
             </Box>
 
             <Box p={2} borderBottom={darkBorder}>

@@ -4,6 +4,7 @@ const NotificationsContext = createContext()
 
 const NotificationsProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([
+    // Examples of possible severity states:
     // {
     //   severity: 'success',
     //   message: 'Success',
@@ -30,12 +31,14 @@ const NotificationsProvider = ({ children }) => {
   )
 
   const closeNotification = (index) => {
-    setNotifications(notifications.filter((_, i) => i !== index))
+    setNotifications((notifications) =>
+      notifications.filter((_, i) => i !== index)
+    )
   }
 
   const value = useMemo(
     () => ({ closeNotification, pushNotification, notifications }),
-    [pushNotification, notifications]
+    [pushNotification, closeNotification, notifications]
   )
 
   return (

@@ -30,7 +30,6 @@ const Mint = () => {
   const { connect, connected, wallet, pubKey, loading } = useWallet()
   const { getMarket, getStrikePrices, getSizes, mint } = useOptionsMarkets()
   const ownedTokenAccounts = useOwnedTokenAccounts()
-  console.log('*** ownedTokenAccounts', ownedTokenAccounts);
 
   const dates = next3Months
 
@@ -61,7 +60,7 @@ const Mint = () => {
     (qAsset && ownedTokenAccounts[qAsset.mintAddress]) || []
   const ownedMintedOptionAccounts =
     (marketData && ownedTokenAccounts[marketData.optionMintAddress]) || []
-  
+
   useEffect(() => {
     setUAssetAccount(ownedUAssetAccounts[0]?.pubKey || '')
   }, [ownedUAssetAccounts])
@@ -88,11 +87,11 @@ const Mint = () => {
           connection,
           payer: { publicKey: pubKey },
           mintPublicKey: new PublicKey(marketData.qAssetMint),
-          owner: pubKey
+          owner: pubKey,
         })
         const signed = await wallet.signTransaction(tx)
         const txid = await connection.sendRawTransaction(signed.serialize())
-        await connection.confirmTransaction(txid, 1)
+        await connection.confirmTransaction(txid)
         quoteAssetDestAccount = newAccount.publicKey.toString()
         setQAssetAccount(quoteAssetDestAccount)
 
@@ -103,18 +102,18 @@ const Mint = () => {
 
       // Fallback to first oowned minted option account
       let mintedOptionDestAccount =
-        mintedOptionAccount || ownedMintedOptionAccounts[0];
+        mintedOptionAccount || ownedMintedOptionAccounts[0]
       if (!mintedOptionDestAccount) {
         // Create token account for minted option if the user doesn't have one yet
         const [tx, newAccount] = await initializeTokenAccountTx({
           connection,
           payer: { publicKey: pubKey },
           mintPublicKey: new PublicKey(marketData.optionMintAddress),
-          owner: pubKey
+          owner: pubKey,
         })
         const signed = await wallet.signTransaction(tx)
         const txid = await connection.sendRawTransaction(signed.serialize())
-        await connection.confirmTransaction(txid, 1)
+        await connection.confirmTransaction(txid)
         mintedOptionDestAccount = newAccount.publicKey.toString()
         setMintedOptionAccount(mintedOptionDestAccount)
 
@@ -139,7 +138,7 @@ const Mint = () => {
 
       console.log('Mint Successful')
     } catch (err) {
-      console.log('*** mint error');
+      console.log('*** mint error')
       console.log(err)
     }
   }

@@ -1,15 +1,16 @@
 import {
   initializeMarket,
   readMarketAndMintCoveredCall,
+  Market
 } from '@mithraic-labs/options-js-bindings'
 
-import { PublicKey } from '@solana/web3.js'
+import { Connection, PublicKey } from '@solana/web3.js'
 
 import { useOptionsMarketsLocalStorage } from './useLocalStorage'
 import useWallet from './useWallet'
 import useConnection from './useConnection'
+import useAssetList from './useAssetList';
 import { useEffect } from 'react'
-import axios from 'axios'
 
 // Example of how markets data should look:
 // const markets = {
@@ -32,15 +33,45 @@ const useOptionsMarkets = () => {
   const { wallet, pubKey } = useWallet()
   const { connection, endpoint } = useConnection()
   const [markets, setMarkets] = useOptionsMarketsLocalStorage()
+  const assetList = useAssetList()
 
   useEffect(() => {
     ;(async () => {
       try {
-        const res = await axios.get(`${process.env.OPTIONS_API_URL}/markets`)
+        if ( !(connection instanceof Connection) )
+          return;
+        const assets = assetList.map(asset => new PublicKey(asset.mintAddress));
+        const res = await Market.getAllMarketsBySplSupport(connection, new PublicKey(endpoint.programId), assets);
+        // Transform the market data to our expectations
+        const newMarkets = {};
+        res.forEach(market => {
+
+          const uAssetMint = market.marketData.underlyingAssetMintAddress;
+          const uAsset = assetList.filter( asset => asset.mintAddress === uAssetMint.toString())[0]
+          const qAssetMint = market.marketData.quoteAssetMintAddress;
+          const qAsset = assetList.filter( asset => asset.mintAddress === qAssetMint.toString())[0]
+
+          const newMarket = {
+            // marketData.amountPerContract is a BigNumber
+            size: market.marketData.amountPerContract,
+            expiration: market.marketData.expirationUnixTimestamp,
+            uAssetSymbol: uAsset.tokenSymbol,
+            qAssetSymbol: qAsset.tokenSymbol,
+            uAssetMint: uAsset.mintAddress,
+            qAssetMint: qAsset.mintAddress,
+            // marketData.strikePrice is a BigNumber
+            strikePrice: market.marketData.strikePrice,
+            mintAccount: market.marketData.optionMintAddress.toString(),
+            dataAccount: market.pubkey.toString()
+          };
+          const key = `${newMarket.expiration}-${newMarket.uAssetSymbol}-${newMarket.qAssetSymbol}-${newMarket.size}-${newMarket.strikePrice}`;
+          newMarkets[key] = newMarket;
+        });
+
         // Not sure if we should replace the existing markets or merge them
         setMarkets((prevMarkets) => ({
           ...prevMarkets,
-          ...res.data,
+          ...newMarkets,
         }))
       } catch (err) {
         console.error(err)

@@ -61,8 +61,6 @@ const Mint = () => {
   const ownedMintedOptionAccounts =
     (marketData && ownedTokenAccounts[marketData.optionMintAddress]) || []
 
-  // console.log('ownedQAssetAccounts', ownedQAssetAccounts)
-
   useEffect(() => {
     setUAssetAccount(ownedUAssetAccounts[0]?.pubKey || '')
   }, [ownedUAssetAccounts])
@@ -89,11 +87,11 @@ const Mint = () => {
           connection,
           payer: { publicKey: pubKey },
           mintPublicKey: new PublicKey(marketData.qAssetMint),
-          newAccount,
+          owner: pubKey,
         })
         const signed = await wallet.signTransaction(tx)
         const txid = await connection.sendRawTransaction(signed.serialize())
-        await connection.confirmTransaction(txid, 1)
+        await connection.confirmTransaction(txid)
         quoteAssetDestAccount = newAccount.publicKey.toString()
         setQAssetAccount(quoteAssetDestAccount)
 
@@ -111,11 +109,11 @@ const Mint = () => {
           connection,
           payer: { publicKey: pubKey },
           mintPublicKey: new PublicKey(marketData.optionMintAddress),
-          newAccount,
+          owner: pubKey,
         })
         const signed = await wallet.signTransaction(tx)
         const txid = await connection.sendRawTransaction(signed.serialize())
-        await connection.confirmTransaction(txid, 1)
+        await connection.confirmTransaction(txid)
         mintedOptionDestAccount = newAccount.publicKey.toString()
         setMintedOptionAccount(mintedOptionDestAccount)
 

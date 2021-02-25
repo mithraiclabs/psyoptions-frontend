@@ -1,7 +1,7 @@
 import {
   initializeMarket,
   readMarketAndMintCoveredCall,
-  Market
+  Market,
 } from '@mithraic-labs/options-js-bindings'
 
 import { Connection, PublicKey } from '@solana/web3.js'
@@ -9,7 +9,7 @@ import { Connection, PublicKey } from '@solana/web3.js'
 import { useOptionsMarketsLocalStorage } from './useLocalStorage'
 import useWallet from './useWallet'
 import useConnection from './useConnection'
-import useAssetList from './useAssetList';
+import useAssetList from './useAssetList'
 import { useEffect } from 'react'
 
 // Example of how markets data should look:
@@ -38,35 +38,43 @@ const useOptionsMarkets = () => {
   useEffect(() => {
     ;(async () => {
       try {
-        if ( !(connection instanceof Connection) )
-          return;
-        const assets = assetList.map(asset => new PublicKey(asset.mintAddress));
-        const res = await Market.getAllMarketsBySplSupport(connection, new PublicKey(endpoint.programId), assets);
+        if (!(connection instanceof Connection)) return
+        const assets = assetList.map(
+          (asset) => new PublicKey(asset.mintAddress)
+        )
+        const res = await Market.getAllMarketsBySplSupport(
+          connection,
+          new PublicKey(endpoint.programId),
+          assets
+        )
         // Transform the market data to our expectations
-        const newMarkets = {};
-        res.forEach(market => {
-
-          const uAssetMint = market.marketData.underlyingAssetMintAddress;
-          const uAsset = assetList.filter( asset => asset.mintAddress === uAssetMint.toString())[0]
-          const qAssetMint = market.marketData.quoteAssetMintAddress;
-          const qAsset = assetList.filter( asset => asset.mintAddress === qAssetMint.toString())[0]
+        const newMarkets = {}
+        res.forEach((market) => {
+          const uAssetMint = market.marketData.underlyingAssetMintAddress
+          const uAsset = assetList.filter(
+            (asset) => asset.mintAddress === uAssetMint.toString()
+          )[0]
+          const qAssetMint = market.marketData.quoteAssetMintAddress
+          const qAsset = assetList.filter(
+            (asset) => asset.mintAddress === qAssetMint.toString()
+          )[0]
 
           const newMarket = {
             // marketData.amountPerContract is a BigNumber
-            size: market.marketData.amountPerContract,
+            size: market.marketData.amountPerContract.toString(10),
             expiration: market.marketData.expirationUnixTimestamp,
             uAssetSymbol: uAsset.tokenSymbol,
             qAssetSymbol: qAsset.tokenSymbol,
             uAssetMint: uAsset.mintAddress,
             qAssetMint: qAsset.mintAddress,
             // marketData.strikePrice is a BigNumber
-            strikePrice: market.marketData.strikePrice,
-            mintAccount: market.marketData.optionMintAddress.toString(),
-            dataAccount: market.pubkey.toString()
-          };
-          const key = `${newMarket.expiration}-${newMarket.uAssetSymbol}-${newMarket.qAssetSymbol}-${newMarket.size}-${newMarket.strikePrice}`;
-          newMarkets[key] = newMarket;
-        });
+            strikePrice: market.marketData.strikePrice.toString(10),
+            optionMintAddress: market.marketData.optionMintAddress.toString(),
+            optionMarketDataAddress: market.pubkey.toString(),
+          }
+          const key = `${newMarket.expiration}-${newMarket.uAssetSymbol}-${newMarket.qAssetSymbol}-${newMarket.size}-${newMarket.strikePrice}`
+          newMarkets[key] = newMarket
+        })
 
         // Not sure if we should replace the existing markets or merge them
         setMarkets((prevMarkets) => ({
@@ -86,7 +94,7 @@ const useOptionsMarkets = () => {
 
     const sizes = Object.keys(markets)
       .filter((key) => key.match(keyPart))
-      .map((key) => markets[key].size)
+      .map((key) => markets[key].size.toString())
 
     return [...new Set(sizes)]
   }
@@ -141,7 +149,7 @@ const useOptionsMarkets = () => {
 
         // TODO: push "toast notifications" here that tx started and set a loading state
         console.log(`Submitted transaction ${txid}`)
-        await connection.confirmTransaction(txid, 1)
+        await connection.confirmTransaction(txid)
         // TODO: push "toast notifications" here that tx completed and set loading state to false
         console.log(`Confirmed ${txid}`)
 
@@ -196,7 +204,7 @@ const useOptionsMarkets = () => {
 
     // TODO: push "toast notifications" here that tx started and set a loading state
     console.log(`Submitted transaction ${txid}`)
-    await connection.confirmTransaction(txid, 1)
+    await connection.confirmTransaction(txid)
     // TODO: push "toast notifications" here that tx completed and set loading state to false
     console.log(`Confirmed ${txid}`)
 

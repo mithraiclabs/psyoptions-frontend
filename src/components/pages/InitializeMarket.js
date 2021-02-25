@@ -9,6 +9,7 @@ import {
   TextField,
   Switch,
   FormControlLabel,
+  CircularProgress,
 } from '@material-ui/core'
 import Done from '@material-ui/icons/Done'
 import Page from './Page'
@@ -45,6 +46,7 @@ const InitializeMarket = () => {
     uAssetMint: uAsset?.mintAddress,
     qAssetMint: qAsset?.mintAddress,
   })
+  const [loading, setLoading] = useState(false)
 
   const parsedBasePrice = parseInt(basePrice)
   let strikePrices = []
@@ -75,6 +77,7 @@ const InitializeMarket = () => {
   const handleInitialize = async () => {
     // TODO: initializing a single strike price at a time
     try {
+      setLoading(true)
       const results = await initializeMarkets({
         size,
         strikePrices,
@@ -85,11 +88,9 @@ const InitializeMarket = () => {
         expiration: date.unix(),
       })
       console.log(results)
-      pushNotification({
-        severity: 'success',
-        message: 'Markets Initialized',
-      })
+      setLoading(false)
     } catch (err) {
+      setLoading(false)
       // TODO: display some meaningful error state to user
       console.log(err)
       pushNotification({
@@ -245,7 +246,11 @@ const InitializeMarket = () => {
             ) : null}
 
             <Box p={2}>
-              {canInitialize && assetsSelected && parametersValid ? (
+              {loading ? (
+                <Box display="flex" justifyContent="center" p={1}>
+                  <CircularProgress />
+                </Box>
+              ) : canInitialize && assetsSelected && parametersValid ? (
                 <Button
                   fullWidth
                   variant={'outlined'}

@@ -38,7 +38,6 @@ const useOptionsMarkets = () => {
   useEffect(() => {
     ;(async () => {
       try {
-        console.log('*** connection', connection);
         if ( !(connection instanceof Connection) )
           return;
         const assets = assetList.map(asset => new PublicKey(asset.mintAddress));
@@ -191,8 +190,6 @@ const useOptionsMarkets = () => {
       new PublicKey(marketData.optionMarketDataAddress),
       { publicKey: pubKey } // Option writer's UA Authority account - safe to assume this is always the same as the payer when called from the FE UI
     )
-
-    console.log('*** transaction = ', transaction);
 
     const signed = await wallet.signTransaction(tx)
     const txid = await connection.sendRawTransaction(signed.serialize())

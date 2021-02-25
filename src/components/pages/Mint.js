@@ -110,14 +110,14 @@ const Mint = () => {
       // Fallback to first oowned minted option account
       let mintedOptionDestAccount =
         mintedOptionAccount || ownedMintedOptionAccounts[0]
-        console.log('mintedOptionDestAccount =', mintedOptionDestAccount, wallet, pubKey);
+        console.log('mintedOptionDestAccount =', marketData.optionMintAddress, mintedOptionDestAccount, wallet, pubKey);
       if (!mintedOptionDestAccount) {
         console.log('creating mintedOptionDestAccount account');
         // Create token account for minted option if the user doesn't have one yet
         const [tx, newAccount] = await initializeTokenAccountTx({
           connection,
           payer: { publicKey: pubKey },
-          mintPublicKey: new PublicKey(marketData.mintAccount),
+          mintPublicKey: new PublicKey(marketData.optionMintAddress),
           owner: pubKey
         })
         const signed = await wallet.signTransaction(tx)

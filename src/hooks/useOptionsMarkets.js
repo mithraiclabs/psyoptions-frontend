@@ -62,8 +62,8 @@ const useOptionsMarkets = () => {
             qAssetMint: qAsset.mintAddress,
             // marketData.strikePrice is a BigNumber
             strikePrice: market.marketData.strikePrice.toString(10),
-            mintAccount: market.marketData.optionMintAddress.toString(),
-            dataAccount: market.pubkey.toString()
+            optionMintAddress: market.marketData.optionMintAddress.toString(),
+            optionMarketDataAddress: market.pubkey.toString()
           };
           const key = `${newMarket.expiration}-${newMarket.uAssetSymbol}-${newMarket.qAssetSymbol}-${newMarket.size}-${newMarket.strikePrice}`;
           newMarkets[key] = newMarket;
@@ -181,6 +181,7 @@ const useOptionsMarkets = () => {
     underlyingAssetSrcAccount, // account in user's wallet to post uAsset collateral from
     quoteAssetDestAccount, // account in user's wallet to send qAsset to if contract is exercised
   }) => {
+    console.log('** mint...reading market and minting covered call');
     const { transaction: tx, signers } = await readMarketAndMintCoveredCall(
       connection,
       { publicKey: pubKey },

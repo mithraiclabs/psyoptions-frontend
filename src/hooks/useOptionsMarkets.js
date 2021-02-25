@@ -226,11 +226,27 @@ const useOptionsMarkets = () => {
     const signed = await wallet.signTransaction(tx)
     const txid = await connection.sendRawTransaction(signed.serialize())
 
-    // TODO: push "toast notifications" here that tx started and set a loading state
-    console.log(`Submitted transaction ${txid}`)
+    pushNotification({
+      severity: 'info',
+      message: 'Submitted Transaction: Mint Options Token',
+      link: (
+        <Link href={buildSolanaExplorerUrl(txid)} target="_new">
+          View on Solana Explorer
+        </Link>
+      ),
+    })
+
     await connection.confirmTransaction(txid)
-    // TODO: push "toast notifications" here that tx completed and set loading state to false
-    console.log(`Confirmed ${txid}`)
+
+    pushNotification({
+      severity: 'success',
+      message: 'Transaction Confirmed: Mint Options Token',
+      link: (
+        <Link href={buildSolanaExplorerUrl(txid)} target="_new">
+          View on Solana Explorer
+        </Link>
+      ),
+    })
 
     return txid
   }

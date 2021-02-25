@@ -1,7 +1,14 @@
 import React, { useEffect, useState } from 'react'
 import moment from 'moment'
 import Done from '@material-ui/icons/Done'
-import { Box, Paper, Button, Chip } from '@material-ui/core'
+import {
+  Box,
+  Paper,
+  Button,
+  Chip,
+  CircularProgress,
+  Link,
+} from '@material-ui/core'
 import { PublicKey } from '@solana/web3.js'
 
 import theme from '../../utils/theme'
@@ -12,10 +19,12 @@ import useWallet from '../../hooks/useWallet'
 import useOptionsMarkets from '../../hooks/useOptionsMarkets'
 import useOwnedTokenAccounts from '../../hooks/useOwnedTokenAccounts'
 import useConnection from '../../hooks/useConnection'
+import useNotifications from '../../hooks/useNotifications'
 
 import SelectAsset from '../SelectAsset'
 import Page from './Page'
 import Select from '../Select'
+import { buildSolanaExplorerUrl } from '../../utils/solanaExplorer'
 
 const darkBorder = `1px solid ${theme.palette.background.main}`
 
@@ -26,8 +35,9 @@ const next3Months = [
 ]
 
 const Mint = () => {
+  const { pushNotification } = useNotifications()
   const { connection } = useConnection()
-  const { connect, connected, wallet, pubKey, loading } = useWallet()
+  const { connect, connected, wallet, pubKey } = useWallet()
   const { getMarket, getStrikePrices, getSizes, mint } = useOptionsMarkets()
   const ownedTokenAccounts = useOwnedTokenAccounts()
 
@@ -41,6 +51,7 @@ const Mint = () => {
   const [uAssetAccount, setUAssetAccount] = useState('')
   const [qAssetAccount, setQAssetAccount] = useState('')
   const [mintedOptionAccount, setMintedOptionAccount] = useState('')
+  const [loading, setLoading] = useState(false)
 
   const allParams = {
     date: date.unix(),
@@ -76,6 +87,7 @@ const Mint = () => {
   const handleMint = async () => {
     // TODO: push error notification if not enough uAsset available in uAssetAccount, or wallet has no uAsset account
     // Or maybe just block the mint button
+    setLoading(true)
 
     try {
       let quoteAssetDestAccount = qAssetAccount || ownedQAssetAccounts[0]
@@ -91,13 +103,32 @@ const Mint = () => {
         })
         const signed = await wallet.signTransaction(tx)
         const txid = await connection.sendRawTransaction(signed.serialize())
+
+        pushNotification({
+          severity: 'info',
+          message: `Submitted Transaction: Create ${qAsset.tokenSymbol} Account`,
+          link: (
+            <Link href={buildSolanaExplorerUrl(txid)} target="_new">
+              View on Solana Explorer
+            </Link>
+          ),
+        })
+
         await connection.confirmTransaction(txid)
         quoteAssetDestAccount = newAccount.publicKey.toString()
         setQAssetAccount(quoteAssetDestAccount)
 
-        // TODO: notification to user that the account was added to their wallet?
         // TODO: maybe we can send a name for this account in the wallet too, would be nice
-        console.log('Added account: ', newAccount)
+
+        pushNotification({
+          severity: 'success',
+          message: `Transaction Confirmed: Create ${qAsset.tokenSymbol} Account`,
+          link: (
+            <Link href={buildSolanaExplorerUrl(txid)} target="_new">
+              View on Solana Explorer
+            </Link>
+          ),
+        })
       }
 
       // Fallback to first oowned minted option account
@@ -113,13 +144,32 @@ const Mint = () => {
         })
         const signed = await wallet.signTransaction(tx)
         const txid = await connection.sendRawTransaction(signed.serialize())
+
+        pushNotification({
+          severity: 'info',
+          message: 'Submitted Transaction: Create Options Token Account',
+          link: (
+            <Link href={buildSolanaExplorerUrl(txid)} target="_new">
+              View on Solana Explorer
+            </Link>
+          ),
+        })
+
         await connection.confirmTransaction(txid)
         mintedOptionDestAccount = newAccount.publicKey.toString()
         setMintedOptionAccount(mintedOptionDestAccount)
 
-        // TODO: notification to user that the account was added to their wallet?
         // TODO: maybe we can send a name for this account in the wallet too, would be nice
-        console.log('Added account: ', newAccount)
+
+        pushNotification({
+          severity: 'success',
+          message: 'Transaction Confirmed: Create Options Token Account',
+          link: (
+            <Link href={buildSolanaExplorerUrl(txid)} target="_new">
+              View on Solana Explorer
+            </Link>
+          ),
+        })
       }
 
       console.log('Mint params: ', {
@@ -136,9 +186,15 @@ const Mint = () => {
         quoteAssetDestAccount,
       })
 
+      setLoading(false)
       console.log('Mint Successful')
     } catch (err) {
+      setLoading(false)
       console.log(err)
+      pushNotification({
+        severity: 'error',
+        message: `${err}`,
+      })
     }
   }
 
@@ -311,7 +367,11 @@ const Mint = () => {
             ) : null}
 
             <Box p={2}>
-              {marketData ? (
+              {loading ? (
+                <Box display="flex" justifyContent="center">
+                  <CircularProgress />
+                </Box>
+              ) : marketData ? (
                 <Button
                   fullWidth
                   variant={'outlined'}

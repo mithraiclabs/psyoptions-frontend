@@ -5,7 +5,7 @@ import { ConnectionProvider } from './ConnectionContext'
 import { OwnedTokenAccountsProvider } from './OwnedTokenAccounts'
 import { WalletProvider } from './WalletContext'
 import { NotificationsProvider } from './NotificationsContext'
-import { OptionsMarketsProvider } from './OpationsMarketsContext'
+import { OptionsMarketsProvider } from './OptionsMarketsContext'
 import theme from '../utils/theme'
 
 const providers = [

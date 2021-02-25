@@ -14,7 +14,7 @@ import useWallet from './useWallet'
 import useConnection from './useConnection'
 import useAssetList from './useAssetList'
 import { useEffect } from 'react'
-import { OptionsMarketsContext } from '../context/OpationsMarketsContext'
+import { OptionsMarketsContext } from '../context/OptionsMarketsContext'
 
 // Example of how markets data should look:
 // const markets = {

@@ -1,3 +1,5 @@
+import React from 'react'
+import { Link } from '@material-ui/core'
 import {
   initializeMarket,
   readMarketAndMintCoveredCall,
@@ -7,6 +9,8 @@ import {
 import { Connection, PublicKey } from '@solana/web3.js'
 
 import { useOptionsMarketsLocalStorage } from './useLocalStorage'
+import { buildSolanaExplorerUrl } from '../utils/solanaExplorer'
+import useNotifications from './useNotifications'
 import useWallet from './useWallet'
 import useConnection from './useConnection'
 import useAssetList from './useAssetList'
@@ -30,6 +34,7 @@ import { useEffect } from 'react'
 // }
 
 const useOptionsMarkets = () => {
+  const { pushNotification } = useNotifications()
   const { wallet, pubKey } = useWallet()
   const { connection, endpoint } = useConnection()
   const [markets, setMarkets] = useOptionsMarketsLocalStorage()
@@ -147,11 +152,30 @@ const useOptionsMarkets = () => {
         const signed = await wallet.signTransaction(transaction)
         const txid = await connection.sendRawTransaction(signed.serialize())
 
-        // TODO: push "toast notifications" here that tx started and set a loading state
-        console.log(`Submitted transaction ${txid}`)
+        const explorerUrl = buildSolanaExplorerUrl(txid)
+
+        // TODO: make the "View on Solana Explorer" am <a> element instead of text
+        pushNotification({
+          severity: 'info',
+          message: `Submitted Transaction: Initialize Market`,
+          link: (
+            <Link href={explorerUrl} target="_new">
+              View on Solana Explorer
+            </Link>
+          ),
+        })
+
         await connection.confirmTransaction(txid)
-        // TODO: push "toast notifications" here that tx completed and set loading state to false
-        console.log(`Confirmed ${txid}`)
+
+        pushNotification({
+          severity: 'success',
+          message: `Transaction Confirmed: Initialize Market`,
+          link: (
+            <Link href={explorerUrl} target="_new">
+              View on Solana Explorer
+            </Link>
+          ),
+        })
 
         const marketData = {
           key: `${expiration}-${uAssetSymbol}-${qAssetSymbol}-${size}-${strikePrice}`,
@@ -202,11 +226,27 @@ const useOptionsMarkets = () => {
     const signed = await wallet.signTransaction(tx)
     const txid = await connection.sendRawTransaction(signed.serialize())
 
-    // TODO: push "toast notifications" here that tx started and set a loading state
-    console.log(`Submitted transaction ${txid}`)
+    pushNotification({
+      severity: 'info',
+      message: 'Submitted Transaction: Mint Options Token',
+      link: (
+        <Link href={buildSolanaExplorerUrl(txid)} target="_new">
+          View on Solana Explorer
+        </Link>
+      ),
+    })
+
     await connection.confirmTransaction(txid)
-    // TODO: push "toast notifications" here that tx completed and set loading state to false
-    console.log(`Confirmed ${txid}`)
+
+    pushNotification({
+      severity: 'success',
+      message: 'Transaction Confirmed: Mint Options Token',
+      link: (
+        <Link href={buildSolanaExplorerUrl(txid)} target="_new">
+          View on Solana Explorer
+        </Link>
+      ),
+    })
 
     return txid
   }

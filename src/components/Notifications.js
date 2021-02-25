@@ -10,6 +10,7 @@ import theme from '../utils/theme'
 
 const SimpleSnackbar = ({
   message = '',
+  link,
   severity = 'info',
   closeNotification,
 }) => (
@@ -38,7 +39,10 @@ const SimpleSnackbar = ({
         background: theme.gradients[severity],
       }}
     >
-      <Box fontSize="small">{message}</Box>
+      <Box>
+        <Box fontSize="small">{message}</Box>
+        {link && <Box fontSize="small">{link}</Box>}
+      </Box>
       <Box>
         <IconButton
           size="small"

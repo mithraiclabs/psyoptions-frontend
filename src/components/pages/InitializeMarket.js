@@ -62,6 +62,7 @@ const InitializeMarket = () => {
 
   const handleInitialize = async () => {
     // TODO: initializing a single strike price at a time
+    console.log('** strikePrices', strikePrices);
     try {
       const results = await initializeMarkets({
         size,

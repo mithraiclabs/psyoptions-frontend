@@ -34,6 +34,7 @@ const useOptionsMarkets = () => {
   const { connection, endpoint } = useConnection()
   const [markets, setMarkets] = useOptionsMarketsLocalStorage()
   const assetList = useAssetList()
+  console.log('*** markets', markets);
 
   useEffect(() => {
     ;(async () => {
@@ -53,14 +54,14 @@ const useOptionsMarkets = () => {
 
           const newMarket = {
             // marketData.amountPerContract is a BigNumber
-            size: market.marketData.amountPerContract,
+            size: market.marketData.amountPerContract.toString(10),
             expiration: market.marketData.expirationUnixTimestamp,
             uAssetSymbol: uAsset.tokenSymbol,
             qAssetSymbol: qAsset.tokenSymbol,
             uAssetMint: uAsset.mintAddress,
             qAssetMint: qAsset.mintAddress,
             // marketData.strikePrice is a BigNumber
-            strikePrice: market.marketData.strikePrice,
+            strikePrice: market.marketData.strikePrice.toString(10),
             mintAccount: market.marketData.optionMintAddress.toString(),
             dataAccount: market.pubkey.toString()
           };
@@ -86,7 +87,7 @@ const useOptionsMarkets = () => {
 
     const sizes = Object.keys(markets)
       .filter((key) => key.match(keyPart))
-      .map((key) => markets[key].size)
+      .map((key) => markets[key].size.toString())
 
     return [...new Set(sizes)]
   }

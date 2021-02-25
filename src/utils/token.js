@@ -1,40 +1,38 @@
 import { SystemProgram, Transaction, Account } from '@solana/web3.js'
-import { initializeAccount, TOKEN_PROGRAM_ID } from './tokenInstructions'
-import * as BufferLayout from 'buffer-layout'
-
-const ACCOUNT_LAYOUT = BufferLayout.struct([
-  BufferLayout.blob(32, 'mint'),
-  BufferLayout.blob(32, 'owner'),
-  BufferLayout.nu64('amount'),
-  BufferLayout.blob(93),
-])
+import { AccountLayout, Token } from '@solana/spl-token'
+import { TOKEN_PROGRAM_ID } from './tokenInstructions'
 
 export async function initializeTokenAccountTx({
   connection,
   payer,
   mintPublicKey,
+  owner,
 }) {
+  console.log('** initializeTokenAccountTx', payer.publicKey.toString(), mintPublicKey.toString(), owner.toString());
   const newAccount = new Account()
   const transaction = new Transaction()
+
+  const tokenAccountRentBalance = await connection.getMinimumBalanceForRentExemption(
+    AccountLayout.span
+  );
 
   transaction.add(
     SystemProgram.createAccount({
       fromPubkey: payer.publicKey,
       newAccountPubkey: newAccount.publicKey,
-      lamports: await connection.getMinimumBalanceForRentExemption(
-        ACCOUNT_LAYOUT.span
-      ),
-      space: ACCOUNT_LAYOUT.span,
+      lamports: tokenAccountRentBalance,
+      space: AccountLayout.span,
       programId: TOKEN_PROGRAM_ID,
     })
   )
 
   transaction.add(
-    initializeAccount({
-      account: newAccount.publicKey,
-      mint: mintPublicKey,
-      owner: payer.publicKey,
-    })
+    Token.createInitAccountInstruction(
+      TOKEN_PROGRAM_ID,
+      mintPublicKey,
+      newAccount.publicKey,
+      owner,
+    ),
   )
 
   transaction.feePayer = payer.publicKey

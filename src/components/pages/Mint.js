@@ -30,6 +30,7 @@ const Mint = () => {
   const { connect, connected, wallet, pubKey, loading } = useWallet()
   const { getMarket, getStrikePrices, getSizes, mint } = useOptionsMarkets()
   const ownedTokenAccounts = useOwnedTokenAccounts()
+  console.log('*** ownedTokenAccounts', ownedTokenAccounts);
 
   const dates = next3Months
 
@@ -60,6 +61,8 @@ const Mint = () => {
     (qAsset && ownedTokenAccounts[qAsset.mintAddress]) || []
   const ownedMintedOptionAccounts =
     (marketData && ownedTokenAccounts[marketData.optionMintAddress]) || []
+  
+  console.log('**** specific market accounts = ', ownedMintedOptionAccounts, ownedQAssetAccounts, ownedUAssetAccounts);
 
   // console.log('ownedQAssetAccounts', ownedQAssetAccounts)
 
@@ -81,15 +84,17 @@ const Mint = () => {
 
     try {
       let quoteAssetDestAccount = qAssetAccount || ownedQAssetAccounts[0]
+      console.log('quoteAssetDestAccount =', quoteAssetDestAccount);
       // If user has no quote asset account, we can create one because they don't need any quote asset to mint
       if (!quoteAssetDestAccount) {
+        console.log('creating quote asset destination account');
         // TODO: this is not quite working once we get to the actaully mint function call
         // Maybe just require user to have both qAssetAccount and uAssetAccount before minting for MVP
         const [tx, newAccount] = await initializeTokenAccountTx({
           connection,
           payer: { publicKey: pubKey },
           mintPublicKey: new PublicKey(marketData.qAssetMint),
-          newAccount,
+          owner: pubKey
         })
         const signed = await wallet.signTransaction(tx)
         const txid = await connection.sendRawTransaction(signed.serialize())
@@ -105,13 +110,15 @@ const Mint = () => {
       // Fallback to first oowned minted option account
       let mintedOptionDestAccount =
         mintedOptionAccount || ownedMintedOptionAccounts[0]
+        console.log('mintedOptionDestAccount =', mintedOptionDestAccount, wallet, pubKey);
       if (!mintedOptionDestAccount) {
+        console.log('creating mintedOptionDestAccount account');
         // Create token account for minted option if the user doesn't have one yet
         const [tx, newAccount] = await initializeTokenAccountTx({
           connection,
           payer: { publicKey: pubKey },
-          mintPublicKey: new PublicKey(marketData.optionMintAddress),
-          newAccount,
+          mintPublicKey: new PublicKey(marketData.mintAccount),
+          owner: pubKey
         })
         const signed = await wallet.signTransaction(tx)
         const txid = await connection.sendRawTransaction(signed.serialize())
@@ -140,6 +147,7 @@ const Mint = () => {
 
       console.log('Mint Successful')
     } catch (err) {
+      console.log('*** mint error');
       console.log(err)
     }
   }

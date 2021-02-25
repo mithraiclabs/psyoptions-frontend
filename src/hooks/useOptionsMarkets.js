@@ -40,59 +40,57 @@ const useOptionsMarkets = () => {
   const { markets, setMarkets } = useContext(OptionsMarketsContext)
   const assetList = useAssetList()
 
-  useEffect(() => {
-    const fetchMarketData = async () => {
-      try {
-        if (!(connection instanceof Connection)) return
-        const assets = assetList.map(
-          (asset) => new PublicKey(asset.mintAddress)
-        )
-        const res = await Market.getAllMarketsBySplSupport(
-          connection,
-          new PublicKey(endpoint.programId),
-          assets
-        )
-        // Transform the market data to our expectations
-        const newMarkets = {}
-        res.forEach((market) => {
-          const uAssetMint = market.marketData.underlyingAssetMintAddress
-          const uAsset = assetList.filter(
-            (asset) => asset.mintAddress === uAssetMint.toString()
-          )[0]
-          const qAssetMint = market.marketData.quoteAssetMintAddress
-          const qAsset = assetList.filter(
-            (asset) => asset.mintAddress === qAssetMint.toString()
-          )[0]
+  const fetchMarketData = async () => {
+    try {
+      if (!(connection instanceof Connection)) return
+      const assets = assetList.map((asset) => new PublicKey(asset.mintAddress))
+      const res = await Market.getAllMarketsBySplSupport(
+        connection,
+        new PublicKey(endpoint.programId),
+        assets
+      )
+      // Transform the market data to our expectations
+      const newMarkets = {}
+      res.forEach((market) => {
+        const uAssetMint = market.marketData.underlyingAssetMintAddress
+        const uAsset = assetList.filter(
+          (asset) => asset.mintAddress === uAssetMint.toString()
+        )[0]
+        const qAssetMint = market.marketData.quoteAssetMintAddress
+        const qAsset = assetList.filter(
+          (asset) => asset.mintAddress === qAssetMint.toString()
+        )[0]
 
-          const newMarket = {
-            // marketData.amountPerContract is a BigNumber
-            size: market.marketData.amountPerContract.toString(10),
-            expiration: market.marketData.expirationUnixTimestamp,
-            uAssetSymbol: uAsset.tokenSymbol,
-            qAssetSymbol: qAsset.tokenSymbol,
-            uAssetMint: uAsset.mintAddress,
-            qAssetMint: qAsset.mintAddress,
-            // marketData.strikePrice is a BigNumber
-            strikePrice: market.marketData.strikePrice.toString(10),
-            optionMintAddress: market.marketData.optionMintAddress.toString(),
-            optionMarketDataAddress: market.pubkey.toString(),
-          }
-          const key = `${newMarket.expiration}-${newMarket.uAssetSymbol}-${newMarket.qAssetSymbol}-${newMarket.size}-${newMarket.strikePrice}`
-          newMarkets[key] = newMarket
-        })
+        const newMarket = {
+          // marketData.amountPerContract is a BigNumber
+          size: market.marketData.amountPerContract.toString(10),
+          expiration: market.marketData.expirationUnixTimestamp,
+          uAssetSymbol: uAsset.tokenSymbol,
+          qAssetSymbol: qAsset.tokenSymbol,
+          uAssetMint: uAsset.mintAddress,
+          qAssetMint: qAsset.mintAddress,
+          // marketData.strikePrice is a BigNumber
+          strikePrice: market.marketData.strikePrice.toString(10),
+          optionMintAddress: market.marketData.optionMintAddress.toString(),
+          optionMarketDataAddress: market.pubkey.toString(),
+        }
+        const key = `${newMarket.expiration}-${newMarket.uAssetSymbol}-${newMarket.qAssetSymbol}-${newMarket.size}-${newMarket.strikePrice}`
+        newMarkets[key] = newMarket
+      })
 
-        // Not sure if we should replace the existing markets or merge them
-        setMarkets((prevMarkets) => ({
-          ...prevMarkets,
-          ...newMarkets,
-        }))
-      } catch (err) {
-        console.error(err)
-      }
+      // Not sure if we should replace the existing markets or merge them
+      setMarkets((prevMarkets) => ({
+        ...prevMarkets,
+        ...newMarkets,
+      }))
+    } catch (err) {
+      console.error(err)
     }
+  }
 
+  useEffect(() => {
     fetchMarketData()
-  }, [connection])
+  }, [connection, assetList])
 
   const getSizes = ({ uAssetSymbol, qAssetSymbol, date }) => {
     const keyPart = `${date}-${uAssetSymbol}-${qAssetSymbol}-`

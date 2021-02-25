@@ -1,7 +1,15 @@
 import React, { useState } from 'react'
 import moment from 'moment'
 
-import { Box, Paper, Button, Chip, TextField } from '@material-ui/core'
+import {
+  Box,
+  Paper,
+  Button,
+  Chip,
+  TextField,
+  Switch,
+  FormControlLabel,
+} from '@material-ui/core'
 import Done from '@material-ui/icons/Done'
 import Page from './Page'
 import SelectAsset from '../SelectAsset'
@@ -26,6 +34,7 @@ const InitializeMarket = () => {
   const { connect, connected } = useWallet()
   const { getMyMarkets, getMarket, initializeMarkets } = useOptionsMarkets()
 
+  const [multiple, setMultiple] = useState(false)
   const [basePrice, setBasePrice] = useState(0)
   const [date, setDate] = useState(next3Months[0])
   const [uAsset, setUAsset] = useState()
@@ -40,6 +49,7 @@ const InitializeMarket = () => {
   const parsedBasePrice = parseInt(basePrice)
   let strikePrices = []
   if (
+    multiple &&
     (parsedBasePrice || marketPrice) &&
     priceInterval &&
     !isNaN(priceInterval)
@@ -48,6 +58,8 @@ const InitializeMarket = () => {
       parsedBasePrice || marketPrice,
       priceInterval
     )
+  } else if (parsedBasePrice || marketPrice) {
+    strikePrices = [parsedBasePrice || marketPrice]
   }
 
   const assetsSelected = uAsset && qAsset
@@ -180,16 +192,40 @@ const InitializeMarket = () => {
                     variant="filled"
                     onChange={(e) => setBasePrice(e.target.value)}
                     helperText={
-                      isNaN(priceInterval) ? 'Must be a number' : null
+                      isNaN(parsedBasePrice) ? 'Must be a number' : null
                     }
                   />
                 </Box>
-                <TextField
-                  label="Price Interval"
-                  variant="filled"
-                  onChange={(e) => setPriceInterval(parseFloat(e.target.value))}
-                  helperText={isNaN(priceInterval) ? 'Must be a number' : null}
+              </Box>
+            </Box>
+
+            <Box display="flex" alignItems="center" borderBottom={darkBorder}>
+              <Box width={'50%'} p={2}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={multiple}
+                      onChange={() => setMultiple(!multiple)}
+                      name="multiple"
+                      color="secondary"
+                    />
+                  }
+                  label="Multi Strikes"
                 />
+              </Box>
+              <Box width={'50%'} p={2}>
+                {multiple ? (
+                  <TextField
+                    label="Price Interval"
+                    variant="filled"
+                    onChange={(e) =>
+                      setPriceInterval(parseFloat(e.target.value))
+                    }
+                    helperText={
+                      isNaN(priceInterval) ? 'Must be a number' : null
+                    }
+                  />
+                ) : null}
               </Box>
             </Box>
 

@@ -13,7 +13,7 @@ import useNotifications from './useNotifications'
 import useWallet from './useWallet'
 import useConnection from './useConnection'
 import useAssetList from './useAssetList'
-import { useEffect } from 'react'
+import { useEffect, useCallback } from 'react'
 import { OptionsMarketsContext } from '../context/OptionsMarketsContext'
 
 // Example of how markets data should look:
@@ -40,7 +40,7 @@ const useOptionsMarkets = () => {
   const { markets, setMarkets } = useContext(OptionsMarketsContext)
   const assetList = useAssetList()
 
-  const fetchMarketData = async () => {
+  const fetchMarketData = useCallback(async () => {
     try {
       if (!(connection instanceof Connection)) return
       const assets = assetList.map((asset) => new PublicKey(asset.mintAddress))
@@ -86,11 +86,11 @@ const useOptionsMarkets = () => {
     } catch (err) {
       console.error(err)
     }
-  }
+  }, [connection, assetList])
 
   useEffect(() => {
     fetchMarketData()
-  }, [connection, assetList])
+  }, [fetchMarketData])
 
   const getSizes = ({ uAssetSymbol, qAssetSymbol, date }) => {
     const keyPart = `${date}-${uAssetSymbol}-${qAssetSymbol}-`

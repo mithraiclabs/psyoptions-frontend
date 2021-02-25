@@ -8,13 +8,12 @@ export async function initializeTokenAccountTx({
   mintPublicKey,
   owner,
 }) {
-  console.log('** initializeTokenAccountTx', payer.publicKey.toString(), mintPublicKey.toString(), owner.toString());
   const newAccount = new Account()
   const transaction = new Transaction()
 
   const tokenAccountRentBalance = await connection.getMinimumBalanceForRentExemption(
     AccountLayout.span
-  );
+  )
 
   transaction.add(
     SystemProgram.createAccount({
@@ -31,8 +30,8 @@ export async function initializeTokenAccountTx({
       TOKEN_PROGRAM_ID,
       mintPublicKey,
       newAccount.publicKey,
-      owner,
-    ),
+      owner
+    )
   )
 
   transaction.feePayer = payer.publicKey

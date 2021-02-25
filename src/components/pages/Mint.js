@@ -138,7 +138,6 @@ const Mint = () => {
 
       console.log('Mint Successful')
     } catch (err) {
-      console.log('*** mint error')
       console.log(err)
     }
   }

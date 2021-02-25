@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import { Link } from '@material-ui/core'
 import {
   initializeMarket,
@@ -8,13 +8,13 @@ import {
 
 import { Connection, PublicKey } from '@solana/web3.js'
 
-import { useOptionsMarketsLocalStorage } from './useLocalStorage'
 import { buildSolanaExplorerUrl } from '../utils/solanaExplorer'
 import useNotifications from './useNotifications'
 import useWallet from './useWallet'
 import useConnection from './useConnection'
 import useAssetList from './useAssetList'
 import { useEffect } from 'react'
+import { OptionsMarketsContext } from '../context/OpationsMarketsContext'
 
 // Example of how markets data should look:
 // const markets = {
@@ -37,11 +37,11 @@ const useOptionsMarkets = () => {
   const { pushNotification } = useNotifications()
   const { wallet, pubKey } = useWallet()
   const { connection, endpoint } = useConnection()
-  const [markets, setMarkets] = useOptionsMarketsLocalStorage()
+  const { markets, setMarkets } = useContext(OptionsMarketsContext)
   const assetList = useAssetList()
 
   useEffect(() => {
-    ;(async () => {
+    const fetchMarketData = async () => {
       try {
         if (!(connection instanceof Connection)) return
         const assets = assetList.map(
@@ -89,10 +89,10 @@ const useOptionsMarkets = () => {
       } catch (err) {
         console.error(err)
       }
-    })()
-  }, [])
+    }
 
-  const loaded = true
+    fetchMarketData()
+  }, [connection])
 
   const getSizes = ({ uAssetSymbol, qAssetSymbol, date }) => {
     const keyPart = `${date}-${uAssetSymbol}-${qAssetSymbol}-`
@@ -253,7 +253,6 @@ const useOptionsMarkets = () => {
 
   return {
     initializeMarkets,
-    loaded,
     markets,
     getMarket,
     getStrikePrices,

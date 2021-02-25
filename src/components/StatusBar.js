@@ -11,6 +11,7 @@ import WalletStatus from './WalletStatus'
 import NetworkMenu from './NetworkMenu'
 
 import theme from '../utils/theme'
+import { NoSsr } from '@material-ui/core'
 
 const NavOptions = React.memo(() => {
   const history = useHistory()
@@ -104,7 +105,9 @@ const StatusBar = React.memo(() => {
         </Box>
         <Box display="flex">
           <WalletStatus />
-          <NetworkMenu />
+          <NoSsr>
+            <NetworkMenu />
+          </NoSsr>
         </Box>
       </Box>
     </>

@@ -13,11 +13,16 @@ module.exports = [
     mode,
     output: {
       filename: 'index.js',
+      assetModuleFilename: 'public/assets/[hash][ext][query]',
     },
     target: 'node',
     externals: [nodeExternals()],
     module: {
       rules: [
+        {
+          test: /\.png$/,
+          type: 'asset/resource',
+        },
         {
           test: /\.m?js$/,
           exclude: /(node_modules)/,
@@ -38,9 +43,14 @@ module.exports = [
     mode,
     output: {
       filename: 'public/bundle.js',
+      assetModuleFilename: 'public/assets/[hash][ext][query]',
     },
     module: {
       rules: [
+        {
+          test: /\.png$/,
+          type: 'asset/resource',
+        },
         {
           test: /\.m?js$/,
           exclude: /(node_modules)/,

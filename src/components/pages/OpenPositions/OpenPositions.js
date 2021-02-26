@@ -18,7 +18,7 @@ const darkBorder = `1px solid ${theme.palette.background.main}`
 
 // add new columns here
 const columns = [
-  { id: 'assetpair', label: 'Asset Pair', minWidth: 170, width: '20%' },
+  { id: 'assetPair', label: 'Asset Pair', minWidth: 170, width: '20%' },
   { id: 'strike', label: 'Strike', minWidth: 170, width: '15%' },
   { id: 'markprice', label: 'Mark Price', minWidth: 100, width: '15%' },
   {
@@ -95,20 +95,27 @@ const OpenPositions = () => {
   const classes = useStyles()
   const [page, setPage] = React.useState(0)
   const [rowsPerPage, setRowsPerPage] = React.useState(10)
-  const positions = useOpenPositions()
+  const { positions, exerciseOpenPosition } = useOpenPositions()
   const { markets } = useOptionsMarkets()
+
+
 
   const positionRows = Object.keys(positions).map((key) => ({
     accounts: positions[key],
-    assetPair: `${markets[key].uAssetSymbol}${markets[key].qAssetSymbol}`,
-    expiration: markets[key].expiration,
+    assetPair: `${markets[key]?.uAssetSymbol}${markets[key]?.qAssetSymbol}`,
+    expiration: markets[key]?.expiration,
     markprice: 'TODO',
-    size: positions[key].reduce(
+    size: positions[key]?.reduce(
       (acc, tokenAccount) => acc + tokenAccount.amount,
       0
     ),
-    strike: markets[key].strikePrice,
+    strike: markets[key]?.strikePrice,
+    optionMarketKey: markets[key]?.optionMarketDataAddress
   }))
+
+  
+
+  console.log('positions', positionRows)
 
   return (
     <Page>
@@ -147,7 +154,7 @@ const OpenPositions = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {rows
+                  {positionRows
                     .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                     .map((row) => (
                       <PositionRow columns={columns} row={row} />

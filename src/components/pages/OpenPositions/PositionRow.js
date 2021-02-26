@@ -6,10 +6,6 @@ import TableBody from '@material-ui/core/TableBody'
 import TableCell from '@material-ui/core/TableCell'
 import TableRow from '@material-ui/core/TableRow'
 
-const handleClosePosition = (params) => {
-  // TODO: find hook for closing contract and apply it here
-  alert('Executed (callput) of (position) @ (price)')
-}
 
 const PositionRow = ({ columns, row }) => {
   const [visible, setVisible] = useState(false)
@@ -17,6 +13,12 @@ const PositionRow = ({ columns, row }) => {
     if (row.accounts.length > 1) {
       setVisible((vis) => !vis)
     }
+  }
+  
+  const handleExercisePosition = (params) => {
+    // TODO: find hook for closing contract and apply it here
+    console.log('optionmarketkey', row.optionMarketKey)
+    alert('Executed (callput) of (position) @ (price)')
   }
 
   return (
@@ -45,7 +47,7 @@ const PositionRow = ({ columns, row }) => {
                   label="Close Position"
                   color="primary"
                   variant="outlined"
-                  onClick={handleClosePosition}
+                  onClick={handleExercisePosition}
                 />
               ) : column.format && typeof value === 'number' ? (
                 column.format(value)
@@ -88,7 +90,7 @@ const PositionRow = ({ columns, row }) => {
                               label="Close Position"
                               color="primary"
                               variant="outlined"
-                              onClick={handleClosePosition}
+                              onClick={handleExercisePosition}
                             />
                           ) : column.format && typeof value === 'number' ? (
                             column.format(value)

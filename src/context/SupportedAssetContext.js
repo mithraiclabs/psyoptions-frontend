@@ -1,19 +1,23 @@
-import React, { createContext, useEffect, useState } from 'react';
+import React, { createContext, useEffect, useState } from 'react'
 import useConnection from '../hooks/useConnection'
-import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { networks } from '../context/ConnectionContext'
-import { Connection, PublicKey } from '@solana/web3.js';
+import { Connection, PublicKey } from '@solana/web3.js'
 
-const mergeAssetsWithChainData = async (connection, assets) => {
-  const mergedAssetInfo = [];
-  await Promise.all(assets.map(async (asset) => {
-    const token = new Token(connection, new PublicKey(asset.mintAddress), TOKEN_PROGRAM_ID, null);
-    const mintInfo = await token.getMintInfo();
-    asset.decimals = mintInfo.decimals;
-    mergedAssetInfo.push(asset);
-  }));
-  return mergedAssetInfo;
-};
+const mergeAssetsWithChainData = async (connection, assets) =>
+  Promise.all(
+    assets.map(async (asset) => {
+      const token = new Token(
+        connection,
+        new PublicKey(asset.mintAddress),
+        TOKEN_PROGRAM_ID,
+        null
+      )
+      const mintInfo = await token.getMintInfo()
+      asset.decimals = mintInfo.decimals
+      return asset
+    })
+  )
 
 const getAssetsByNetwork = (name) => {
   switch (name) {
@@ -36,28 +40,31 @@ const getAssetsByNetwork = (name) => {
   }
 }
 
-const SupportedAssetContext = createContext([]);
+const SupportedAssetContext = createContext([])
 
-const SupportedAssetProvider = ({children}) => {
-  const { connection, endpoint } = useConnection();
-  const [supportedAssets, setSupportedAssets] = useState([]);
+const SupportedAssetProvider = ({ children }) => {
+  const { connection, endpoint } = useConnection()
+  const [supportedAssets, setSupportedAssets] = useState([])
 
   useEffect(() => {
-    if ( !(connection instanceof Connection)) {
-      setSupportedAssets([]);
-      return;
+    if (!(connection instanceof Connection)) {
+      setSupportedAssets([])
+      return
     }
-    const basicAssets = getAssetsByNetwork(endpoint.name);
+    const basicAssets = getAssetsByNetwork(endpoint.name)
     ;(async () => {
       try {
-        const mergedAssets = await mergeAssetsWithChainData(connection, basicAssets);
-        setSupportedAssets(mergedAssets);
+        const mergedAssets = await mergeAssetsWithChainData(
+          connection,
+          basicAssets
+        )
+        setSupportedAssets(mergedAssets)
       } catch (error) {
-        console.error(error);
-        setSupportedAssets([]);
+        console.error(error)
+        setSupportedAssets([])
       }
-    })();
-  }, [connection, endpoint.name]);
+    })()
+  }, [connection, endpoint.name])
 
   return (
     <SupportedAssetContext.Provider value={supportedAssets}>

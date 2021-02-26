@@ -1,4 +1,5 @@
 import React, { useContext } from 'react'
+import BN from 'bn.js';
 import { Link } from '@material-ui/core'
 import {
   initializeMarket,
@@ -60,10 +61,12 @@ const useOptionsMarkets = () => {
         const qAsset = assetList.filter(
           (asset) => asset.mintAddress === qAssetMint.toString()
         )[0]
+        // Remove the decimals from size
+        const size = market.marketData.amountPerContract.div(new BN(10**uAsset.decimals)).toString(10);
 
         const newMarket = {
           // marketData.amountPerContract is a BigNumber
-          size: market.marketData.amountPerContract.toString(10),
+          size,
           expiration: market.marketData.expirationUnixTimestamp,
           uAssetSymbol: uAsset.tokenSymbol,
           qAssetSymbol: qAsset.tokenSymbol,

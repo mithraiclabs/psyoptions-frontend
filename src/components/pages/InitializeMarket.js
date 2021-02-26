@@ -75,11 +75,13 @@ const InitializeMarket = () => {
   const parametersValid = size && !isNaN(size) && strikePrices.length > 0
 
   const handleInitialize = async () => {
-    // TODO: initializing a single strike price at a time
+    // The size must account for the number of decimals the underlying SPL Token has.
+    const sizeAsU64 = size * (10**uAsset.decimals);
+
     try {
       setLoading(true)
       const results = await initializeMarkets({
-        size,
+        size: sizeAsU64,
         strikePrices,
         uAssetSymbol: uAsset.tokenSymbol,
         qAssetSymbol: qAsset.tokenSymbol,

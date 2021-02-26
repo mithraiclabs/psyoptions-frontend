@@ -13,6 +13,8 @@ import NetworkMenu from './NetworkMenu'
 import theme from '../utils/theme'
 import { NoSsr } from '@material-ui/core'
 
+import logo from '../../assets/psyoptions-logo-light.png'
+
 const NavOptions = React.memo(() => {
   const history = useHistory()
 
@@ -28,11 +30,7 @@ const NavOptions = React.memo(() => {
           style={{ minWidth: 0, padding: 0 }}
         >
           <Box p={[1, 1, '2px']}>
-            <img
-              src="/public/psyoptions-logo-light.png"
-              width="32px"
-              height="32px"
-            />
+            <img src={logo} width="32px" height="32px" />
           </Box>
         </Button>
       </Box>

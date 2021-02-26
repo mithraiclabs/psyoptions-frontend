@@ -11,6 +11,17 @@ import Markets from './pages/Markets'
 import NotFound from './pages/NotFound'
 
 const Router = isBrowser ? BrowserRouter : StaticRouter
+const RouteWithStatusCode = ({ children, ...props }) => (
+  <Route
+    {...props}
+    render={({ routerContext }) => {
+      if (routerContext) {
+        routerContext.statusCode = props.statusCode
+      }
+      return <>{children}</>
+    }}
+  />
+)
 
 const Routes = (props) => (
   <Router {...props}>
@@ -33,9 +44,9 @@ const Routes = (props) => (
       <Route exact path="/history">
         <History />
       </Route>
-      <Route>
+      <RouteWithStatusCode statusCode={404}>
         <NotFound />
-      </Route>
+      </RouteWithStatusCode>
     </Switch>
   </Router>
 )

@@ -8,6 +8,7 @@ import InitializeMarket from './pages/InitializeMarket'
 import OpenPositions from './pages/OpenPositions'
 import History from './pages/History'
 import Markets from './pages/Markets'
+import NotFound from './pages/NotFound'
 
 const Router = isBrowser ? BrowserRouter : StaticRouter
 
@@ -31,6 +32,9 @@ const Routes = (props) => (
       </Route>
       <Route exact path="/history">
         <History />
+      </Route>
+      <Route>
+        <NotFound />
       </Route>
     </Switch>
   </Router>

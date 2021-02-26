@@ -95,7 +95,7 @@ const OpenPositions = () => {
   const classes = useStyles()
   const [page, setPage] = React.useState(0)
   const [rowsPerPage, setRowsPerPage] = React.useState(10)
-  const { positions, exerciseOpenPosition } = useOpenPositions()
+  const positions = useOpenPositions()
   const { markets } = useOptionsMarkets()
 
 
@@ -110,7 +110,10 @@ const OpenPositions = () => {
       0
     ),
     strike: markets[key]?.strikePrice,
-    optionMarketKey: markets[key]?.optionMarketDataAddress
+    optionMarketKey: markets[key]?.optionMarketDataAddress,
+    quoteAssetKey: markets[key]?.qAssetMint,
+    underlyingAssetKey: markets[key]?.uAssetMint,
+    optionContractTokenKey: markets[key]?.optionMintAddress
   }))
 
   

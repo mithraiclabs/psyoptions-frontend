@@ -5,21 +5,32 @@ import Table from '@material-ui/core/Table'
 import TableBody from '@material-ui/core/TableBody'
 import TableCell from '@material-ui/core/TableCell'
 import TableRow from '@material-ui/core/TableRow'
+import useExerciseOpenPosition from '../../../hooks/useExerciseOpenPosition'
+import useOwnedTokenAccounts from '../../../hooks/useOwnedTokenAccounts'
+
 
 
 const PositionRow = ({ columns, row }) => {
   const [visible, setVisible] = useState(false)
+  const ownedTokenAccounts = useOwnedTokenAccounts()
+
   const onRowClick = () => {
     if (row.accounts.length > 1) {
       setVisible((vis) => !vis)
     }
   }
+
+  const ownedQAssetKey = (ownedTokenAccounts && ownedTokenAccounts[row.quoteAssetKey][0]?.pubKey)
+  const ownedUAssetKey = (ownedTokenAccounts && ownedTokenAccounts[row.underlyingAssetKey][0]?.pubKey)
+  const ownedOAssetKey = (ownedTokenAccounts && ownedTokenAccounts[row.optionContractTokenKey][0]?.pubKey)
   
-  const handleExercisePosition = (params) => {
-    // TODO: find hook for closing contract and apply it here
-    console.log('optionmarketkey', row.optionMarketKey)
-    alert('Executed (callput) of (position) @ (price)')
-  }
+
+  const handleExercisePosition = useExerciseOpenPosition(
+    row.optionMarketKey,
+    ownedQAssetKey,
+    ownedUAssetKey,
+    ownedOAssetKey
+  )
 
   return (
     <>

@@ -1,9 +1,7 @@
 import { useMemo } from 'react'
 import useOptionsMarkets from './useOptionsMarkets'
 import useOwnedTokenAccounts from './useOwnedTokenAccounts'
-import {
-  exerciseCoveredCallWithRandomOptionWriter
-} from '@mithraic-labs/options-js-bindings'
+
 import useConnection from './useConnection'
 import useWallet from './useWallet'
 /**
@@ -18,41 +16,12 @@ const useOpenPositions = () => {
 
   const ownedTokens = useOwnedTokenAccounts()
 
-  const exerciseOpenPosition = async ({
-    optionMarketKey,
-    exerciserQuoteAssetKey,
-    exerciserUnderlyingAssetKey,
-    //exerciserQuoteAssetAuthorityAccount,
-    exerciserContractTokenKey,
-    //exerciserContractTokenAuthorityAccount,
-  }) => {
-    const { transaction: tx } = await exerciseCoveredCallWithRandomOptionWriter(
-      connection,
-      { publicKey: pubKey },
-      endpoint.programId,
-      optionMarketKey,
-      exerciserQuoteAssetKey,
-      exerciserUnderlyingAssetKey,
-      { publicKey: pubKey },
-      exerciserContractTokenKey,
-      { publicKey: pubKey }
-    )
-
-    const signed = await wallet.signTransaction(tx)
-    const txid = await connection.sendRawTransaction(signed.serialize())
-
-    // TODO: push "toast notifications" here that tx started and set a loading state
-    console.log(`Submitted transaction ${txid}`)
-    await connection.confirmTransaction(txid, 1)
-    // TODO: push "toast notifications" here that tx completed and set loading state to false
-    console.log(`Confirmed ${txid}`)
-
-    return txid
-  }
+  
 
   return useMemo(
     () => {
       console.log('markets', markets)
+      // optionMarketKey = optionMarketDataAddress
       console.log('ownedtokens', ownedTokens)
       const positions = Object.keys(markets).reduce((acc, marketKey) => {
         const accountsWithHoldings = ownedTokens[
@@ -64,10 +33,8 @@ const useOpenPositions = () => {
         return acc
       }, {})
       console.log('positions in memo', positions)
-      return ({
-        positions,
-        exerciseOpenPosition
-      })
+      return positions
+    
     },
     [markets, ownedTokens]
   )

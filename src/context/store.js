@@ -6,11 +6,13 @@ import { OwnedTokenAccountsProvider } from './OwnedTokenAccounts'
 import { WalletProvider } from './WalletContext'
 import { NotificationsProvider } from './NotificationsContext'
 import { OptionsMarketsProvider } from './OptionsMarketsContext'
+import { SupportedAssetProvider } from './SupportedAssetContext';
 import theme from '../utils/theme'
 
 const providers = [
   <ThemeProvider theme={theme} children={<div />} />,
   <ConnectionProvider />,
+  <SupportedAssetProvider />,
   <WalletProvider />,
   <OwnedTokenAccountsProvider />,
   <NotificationsProvider />,

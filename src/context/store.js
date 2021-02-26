@@ -11,11 +11,11 @@ import theme from '../utils/theme'
 
 const providers = [
   <ThemeProvider theme={theme} children={<div />} />,
+  <NotificationsProvider />,
   <ConnectionProvider />,
   <SupportedAssetProvider />,
   <WalletProvider />,
   <OwnedTokenAccountsProvider />,
-  <NotificationsProvider />,
   <OptionsMarketsProvider />,
 ]
 

@@ -1,9 +1,11 @@
 import React, { createContext, useEffect, useState } from 'react'
-import useConnection from '../hooks/useConnection'
-import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { networks } from '../context/ConnectionContext'
 import { Connection, PublicKey } from '@solana/web3.js'
+import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import useConnection from '../hooks/useConnection'
+import { networks } from '../context/ConnectionContext'
+import useNotifications from '../hooks/useNotifications'
 
+// TODO see if we can query many accounts at once
 const mergeAssetsWithChainData = async (connection, assets) =>
   Promise.all(
     assets.map(async (asset) => {
@@ -45,6 +47,7 @@ const SupportedAssetContext = createContext([])
 const SupportedAssetProvider = ({ children }) => {
   const { connection, endpoint } = useConnection()
   const [supportedAssets, setSupportedAssets] = useState([])
+  const { pushNotification } = useNotifications()
 
   useEffect(() => {
     if (!(connection instanceof Connection)) {
@@ -60,6 +63,10 @@ const SupportedAssetProvider = ({ children }) => {
         )
         setSupportedAssets(mergedAssets)
       } catch (error) {
+        pushNotification({
+          severity: 'error',
+          message: `${err}`
+        })
         console.error(error)
         setSupportedAssets([])
       }

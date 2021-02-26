@@ -1,4 +1,5 @@
 import React, { createContext, useEffect, useState } from 'react'
+import { TOKENS } from '@project-serum/tokens'
 import { Connection, PublicKey } from '@solana/web3.js'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import useConnection from '../hooks/useConnection'
@@ -65,7 +66,7 @@ const SupportedAssetProvider = ({ children }) => {
       } catch (error) {
         pushNotification({
           severity: 'error',
-          message: `${err}`
+          message: `${err}`,
         })
         console.error(error)
         setSupportedAssets([])

@@ -9,6 +9,7 @@ const mergeAssetsWithChainData = async (connection, assets) => {
   await Promise.all(assets.map(async (asset) => {
     const token = new Token(connection, new PublicKey(asset.mintAddress), TOKEN_PROGRAM_ID, null);
     const mintInfo = await token.getMintInfo();
+    asset.decimals = mintInfo.decimals;
     mergedAssetInfo.push(asset);
   }));
   return mergedAssetInfo;

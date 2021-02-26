@@ -20,6 +20,35 @@ const NavOptions = React.memo(() => {
     <>
       <Box mx={2}>
         <Button
+          href="/"
+          onClick={(e) => {
+            e.preventDefault()
+            history.push('/')
+          }}
+          style={{ minWidth: 0, padding: 0 }}
+        >
+          <Box p={[1, 1, '2px']}>
+            <img
+              src="/public/psyoptions-logo-light.png"
+              width="32px"
+              height="32px"
+            />
+          </Box>
+        </Button>
+      </Box>
+      <Box mx={2}>
+        <Button
+          href="/markets"
+          onClick={(e) => {
+            e.preventDefault()
+            history.push('/markets')
+          }}
+        >
+          Markets
+        </Button>
+      </Box>
+      <Box mx={2}>
+        <Button
           href="/mint"
           onClick={(e) => {
             e.preventDefault()
@@ -38,17 +67,6 @@ const NavOptions = React.memo(() => {
           }}
         >
           Open Positions
-        </Button>
-      </Box>
-      <Box mx={2}>
-        <Button
-          href="/history"
-          onClick={(e) => {
-            e.preventDefault()
-            history.push('/history')
-          }}
-        >
-          History
         </Button>
       </Box>
       <Box mx={2}>
@@ -78,7 +96,7 @@ const StatusBar = React.memo(() => {
         </SwipeableDrawer>
       </Hidden>
       <Box
-        px={3}
+        px={[2, 2, 3]}
         py={1}
         display="flex"
         justifyContent="space-between"

@@ -30,8 +30,8 @@ server.use((req, res, next) => {
   const html = ReactDOMServer.renderToString(
     <Template
       jsBundle={bundleFilename}
-      title="My App"
-      description="My app description"
+      title="PsyOptions"
+      description="Defi options trading protocol built on Solana"
       cssString={cssString}
       htmlString={appHtml}
       env={{

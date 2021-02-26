@@ -7,6 +7,7 @@ import Mint from './pages/Mint'
 import InitializeMarket from './pages/InitializeMarket'
 import OpenPositions from './pages/OpenPositions'
 import History from './pages/History'
+import Markets from './pages/Markets'
 
 const Router = isBrowser ? BrowserRouter : StaticRouter
 
@@ -15,6 +16,9 @@ const Routes = (props) => (
     <Switch>
       <Route exact path="/">
         <Main />
+      </Route>
+      <Route exact path="/markets">
+        <Markets />
       </Route>
       <Route exact path="/initialize-market">
         <InitializeMarket />

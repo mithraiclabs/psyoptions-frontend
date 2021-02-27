@@ -56,7 +56,7 @@ const createData = (
   markprice,
   size,
   expiration,
-  accounts
+  accounts,
 ) => ({ accounts, assetpair, strike, markprice, size, expiration })
 // pair name, strike, mark price, size count, expiry
 // need to get the open positions from the api and then
@@ -96,8 +96,6 @@ const OpenPositions = () => {
   const positions = useOpenPositions()
   const { markets } = useOptionsMarkets()
 
-
-
   const positionRows = Object.keys(positions).map((key) => ({
     accounts: positions[key],
     assetPair: `${markets[key]?.uAssetSymbol}${markets[key]?.qAssetSymbol}`,
@@ -105,18 +103,14 @@ const OpenPositions = () => {
     markprice: 'TODO',
     size: positions[key]?.reduce(
       (acc, tokenAccount) => acc + tokenAccount.amount,
-      0
+      0,
     ),
     strike: markets[key]?.strikePrice,
     optionMarketKey: markets[key]?.optionMarketDataAddress,
     quoteAssetKey: markets[key]?.qAssetMint,
     underlyingAssetKey: markets[key]?.uAssetMint,
-    optionContractTokenKey: markets[key]?.optionMintAddress
+    optionContractTokenKey: markets[key]?.optionMintAddress,
   }))
-
-  
-
-  console.log('positions', positionRows)
 
   return (
     <Page>

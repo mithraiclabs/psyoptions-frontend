@@ -17,6 +17,7 @@
   "rules": {
     "import/prefer-default-export": "off",
     "react-hooks/exhaustive-deps": "error",
+    "react/prop-types": "warn",
     "react/jsx-filename-extension": [1, { "extensions": [".js", ".jsx"] }],
     "semi": "off"
   }

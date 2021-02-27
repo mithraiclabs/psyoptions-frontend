@@ -25,14 +25,11 @@ import SelectAsset from '../SelectAsset'
 import Page from './Page'
 import Select from '../Select'
 import { buildSolanaExplorerUrl } from '../../utils/solanaExplorer'
+import { getNext3Months } from '../../utils/dates'
 
 const darkBorder = `1px solid ${theme.palette.background.main}`
 
-const next3Months = [
-  moment.utc().startOf('month').add(1, 'month'),
-  moment.utc().startOf('month').add(2, 'month'),
-  moment.utc().startOf('month').add(3, 'month'),
-]
+const next3Months = getNext3Months()
 
 const Mint = () => {
   const { pushNotification } = useNotifications()
@@ -216,7 +213,7 @@ const Mint = () => {
         >
           <Box>
             <Box p={2} textAlign="center">
-              <h2 style={{ margin: '10px 0 0' }}>Contract Settings</h2>
+              <h2 style={{ margin: '10px 0 0' }}>Mint Options Contract</h2>
             </Box>
 
             <Box p={2} borderBottom={darkBorder}>

@@ -21,14 +21,11 @@ import useWallet from '../../hooks/useWallet'
 import useOptionsMarkets from '../../hooks/useOptionsMarkets'
 import useSerumMarketInfo from '../../hooks/useSerumMarketInfo'
 import { generateStrikePrices } from '../../utils/generateStrikePrices'
+import { getNext3Months } from '../../utils/dates'
 
 const darkBorder = `1px solid ${theme.palette.background.main}`
 
-const next3Months = [
-  moment.utc().startOf('month').add(1, 'month'),
-  moment.utc().startOf('month').add(2, 'month'),
-  moment.utc().startOf('month').add(3, 'month'),
-]
+const next3Months = getNext3Months()
 
 const InitializeMarket = () => {
   const { pushNotification } = useNotifications()

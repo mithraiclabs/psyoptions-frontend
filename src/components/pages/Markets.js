@@ -10,11 +10,11 @@ import TableHead from '@material-ui/core/TableHead'
 import TableRow from '@material-ui/core/TableRow'
 import Button from '@material-ui/core/Button'
 import { withStyles } from '@material-ui/core/styles'
-
 import Select from '../Select'
 import SelectAsset from '../SelectAsset'
-
 import { getNext3Months } from '../../utils/dates'
+
+const darkBorder = `1px solid ${theme.palette.background.main}`
 
 const TCell = withStyles({
   root: {
@@ -25,32 +25,29 @@ const TCell = withStyles({
   },
 })(TableCell)
 
-const darkBorder = `1px solid ${theme.palette.background.main}`
+const emptyRow = {
+  strike: '--',
+  call: {
+    itm: true,
+    key: '',
+    bid: '--',
+    ask: '--',
+    change: '--',
+    volume: '--',
+    openInterest: '--',
+  },
+  put: {
+    key: '',
+    bid: '--',
+    ask: '--',
+    change: '--',
+    volume: '--',
+    openInterest: '--',
+  },
+}
 
 const next3Months = getNext3Months()
-
-const emptyRows = Array(9)
-  .fill({})
-  .map((item) => ({
-    strike: '--',
-    call: {
-      itm: true,
-      key: '',
-      lastPrice: '--',
-      change: '--',
-      pctChange: '--',
-      volume: '--',
-      openInterest: '--',
-    },
-    put: {
-      key: '',
-      lastPrice: '--',
-      change: '--',
-      pctChange: '--',
-      volume: '--',
-      openInterest: '--',
-    },
-  }))
+const emptyRows = Array(9).fill(emptyRow)
 
 const Markets = () => {
   const [date, setDate] = useState(next3Months[0])
@@ -145,17 +142,17 @@ const Markets = () => {
                 </TableRow>
                 <TableRow>
                   <TCell align="left">Action</TCell>
-                  <TCell align="left">Last Price</TCell>
+                  <TCell align="left">Bid</TCell>
+                  <TCell align="left">Ask</TCell>
                   <TCell align="left">Change</TCell>
-                  <TCell align="left">% Change</TCell>
                   <TCell align="left">Volume</TCell>
                   <TCell align="left">Open Interest</TCell>
 
                   <TCell align="center">Strike</TCell>
 
-                  <TCell align="right">Last Price</TCell>
+                  <TCell align="right">Bid</TCell>
+                  <TCell align="right">Ask</TCell>
                   <TCell align="right">Change</TCell>
-                  <TCell align="right">% Change</TCell>
                   <TCell align="right">Volume</TCell>
                   <TCell align="right">Open Interest</TCell>
                   <TCell align="right">Action</TCell>
@@ -181,9 +178,9 @@ const Markets = () => {
                           </Button>
                         )}
                       </TCell>
-                      <TCell align="left">{row.call?.lastPrice}</TCell>
+                      <TCell align="left">{row.call?.bid}</TCell>
+                      <TCell align="left">{row.call?.ask}</TCell>
                       <TCell align="left">{row.call?.change}</TCell>
-                      <TCell align="left">{row.call?.pctChange}</TCell>
                       <TCell align="left">{row.call?.volume}</TCell>
                       <TCell align="left">{row.call?.openInterest}</TCell>
 
@@ -198,9 +195,9 @@ const Markets = () => {
                         {row.strike}
                       </TCell>
 
-                      <TCell align="right">{row.put?.lastPrice}</TCell>
+                      <TCell align="right">{row.put?.bid}</TCell>
+                      <TCell align="right">{row.put?.ask}</TCell>
                       <TCell align="right">{row.put?.change}</TCell>
-                      <TCell align="right">{row.put?.pctChange}</TCell>
                       <TCell align="right">{row.put?.volume}</TCell>
                       <TCell align="right">{row.put?.openInterest}</TCell>
                       <TCell align="right">

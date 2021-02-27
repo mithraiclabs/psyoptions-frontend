@@ -205,9 +205,8 @@ const Mint = () => {
         alignItems="center"
         justifyContent="center"
         flexDirection="column"
-        height="100%"
-        minHeight="620px"
-        pb={4}
+        minHeight="100%"
+        pb={[0, 0, 4]}
       >
         <Paper
           style={{

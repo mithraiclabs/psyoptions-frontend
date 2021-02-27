@@ -8,8 +8,21 @@ import InitializeMarket from './pages/InitializeMarket'
 import OpenPositions from './pages/OpenPositions'
 import History from './pages/History'
 import Markets from './pages/Markets'
+import NotFound from './pages/NotFound'
 
 const Router = isBrowser ? BrowserRouter : StaticRouter
+
+const RouteWithStatusCode = ({ children, ...props }) => (
+  <Route
+    {...props}
+    render={({ staticContext }) => {
+      if (staticContext) {
+        staticContext.statusCode = props.statusCode
+      }
+      return <>{children}</>
+    }}
+  />
+)
 
 const Routes = (props) => (
   <Router {...props}>
@@ -32,6 +45,9 @@ const Routes = (props) => (
       <Route exact path="/history">
         <History />
       </Route>
+      <RouteWithStatusCode statusCode={404}>
+        <NotFound />
+      </RouteWithStatusCode>
     </Switch>
   </Router>
 )

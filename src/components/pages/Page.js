@@ -11,8 +11,8 @@ const Page = ({ children }) => {
       <Notifications />
       <Box height="100%" display="flex" flexDirection="column">
         <StatusBar />
-        <Box px={[1, 1, 4]} height="100%" display="flex" flexDirection="column">
-          <Box p={1} height="100%">
+        <Box px={[0, 0, 4]} height="100%" display="flex" flexDirection="column">
+          <Box p={[0, 0, 1]} height="100%">
             {children}
           </Box>
         </Box>

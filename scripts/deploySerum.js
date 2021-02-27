@@ -1,47 +1,24 @@
 const fs = require('fs');
-const yaml = require('js-yaml');
-const os = require('os');
 const SolWeb3 = require('@solana/web3.js')
 const util = require('util');
 const exec = util.promisify(require('child_process').exec);
 const argv = require('minimist')(process.argv.slice(2));
+const ScriptHelpers = require('./helpers');
+const SerumJs = require('@project-serum/serum');
+
+const { MARKETS } = SerumJs;
 
 const {
   Account,
   Connection,
   LAMPORTS_PER_SOL,
-  Transaction,
-  sendAndConfirmTransaction,
-  SystemProgram,
 } = SolWeb3;
 
 // Read the default key file
-const HOME = os.homedir()
-const configYml = fs.readFileSync(`${HOME}/.config/solana/cli/config.yml`, 'utf-8');
-const solanaConfig = yaml.load(configYml);
-// Exit if the user is not pointing to local net
-if (!solanaConfig.json_rpc_url.match(/127\.0\.0\.1|localhost/)) {
-  console.log("It looks like you're Solana configuration file is not pointed to localnet. Please make sure you are using the correct network and keypair.");
-  process.exit(1);
-}
+const solanaConfig = ScriptHelpers.getSolanaConfig();
 
-const requestAndWaitForAirdrop = async (connection, amount, account) => {
-  const priorBalance = await connection.getBalance(account.publicKey);
-  await connection.requestAirdrop(account.publicKey, amount)
-  let retries = 60
-  for (;;) {
-    // sleep half a second
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    const balance = await connection.getBalance(account.publicKey)
-    console.log('account balance ', balance)
-    if (amount === balance - priorBalance) {
-      return account
-    }
-    if (--retries <= 0) {
-      throw new Error('Failed to airdrop SOL to payer for seed')
-    }
-  }
-}
+// Validate the user is on localnet
+ScriptHelpers.validateLocalnet(solanaConfig);
 
 ;(async () => {
   // Get the default keypair and airdrop some tokens
@@ -55,7 +32,7 @@ const requestAndWaitForAirdrop = async (connection, amount, account) => {
   }
 
   // check that a program key file exists
-  const serumDexKeypairPath = './serum/dex/serum_dex-keypair.json';
+  const serumDexKeypairPath = ScriptHelpers.serumDexProgramKeypair;
   const localDexProgramKeyFileExists = fs.existsSync(serumDexKeypairPath);
   console.log('localDexProgramKeyFileExists', localDexProgramKeyFileExists);
   if (!localDexProgramKeyFileExists) {
@@ -64,11 +41,32 @@ const requestAndWaitForAirdrop = async (connection, amount, account) => {
     console.log('stdout:', stdout);
     console.log('stderr:', stderr);
   }
+  
+  const serumDexBinaryExists = fs.existsSync(ScriptHelpers.serumDexBinaryPath);
+  if (!serumDexBinaryExists || !!argv.pullDex) {
+    const dexProgramId = MARKETS.find(({ deprecated }) => !deprecated).programId;
+    // TODO need to specify this should run on mainnet
+    const { stdout1, stderr1 } = await exec(`solana config set --url https://api.mainnet-beta.solana.com`)
+    console.log('stdout:', stdout1);
+    console.log('stderr:', stderr1);
+
+    const { stdout4, stderr4 } = await exec(`solana config get`)
+    console.log('stdout:', stdout4);
+    console.log('stderr:', stderr4);
+
+    const { stdout2, stderr2 } = await exec(`solana program dump ${dexProgramId} ${ScriptHelpers.serumDexBinaryPath}`)
+    console.log('stdout:', stdout2);
+    console.log('stderr:', stderr2);
+
+    const { stdout3, stderr3 } = await exec(`solana config set --url ${solanaConfig.json_rpc_url}`)
+    console.log('stdout:', stdout3);
+    console.log('stderr:', stderr3);
+  }
 
   // Use the upgradable deployer to deploy the program.
   // TODO use output stream so there is more user feedback that the program is deploying.
   console.log('\nDeploying the Serum dex...\n');
-  const { stdout, stderr } = await exec(`solana program deploy --program-id ${serumDexKeypairPath} ./serum/dex/serum_dex.so`)
+  const { stdout, stderr } = await exec(`solana program deploy --program-id ${serumDexKeypairPath} ${ScriptHelpers.serumDexBinaryPath}`)
   console.log('stdout:', stdout);
   console.log('stderr:', stderr);
 

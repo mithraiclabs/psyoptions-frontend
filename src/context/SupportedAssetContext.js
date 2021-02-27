@@ -3,7 +3,7 @@ import { TOKENS } from '@project-serum/tokens'
 import { Connection, PublicKey } from '@solana/web3.js'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import useConnection from '../hooks/useConnection'
-import { networks } from '../context/ConnectionContext'
+import { networks } from "./ConnectionContext"
 import useNotifications from '../hooks/useNotifications'
 
 // TODO see if we can query many accounts at once

@@ -7,11 +7,11 @@ import IconButton from '@material-ui/core/IconButton'
 import Menu from '@material-ui/icons/Menu'
 import SwipeableDrawer from '@material-ui/core/SwipeableDrawer'
 
+import { NoSsr } from '@material-ui/core'
 import WalletStatus from './WalletStatus'
 import NetworkMenu from './NetworkMenu'
 
 import theme from '../utils/theme'
-import { NoSsr } from '@material-ui/core'
 
 import logo from '../../assets/psyoptions-logo-light.png'
 
@@ -83,7 +83,7 @@ const StatusBar = React.memo(() => {
     <>
       <Hidden mdUp>
         <SwipeableDrawer
-          anchor={'left'}
+          anchor="left"
           open={drawerOpen}
           onClose={() => setDrawerOpen(false)}
           onOpen={() => setDrawerOpen(true)}

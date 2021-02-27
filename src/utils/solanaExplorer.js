@@ -1,5 +1,3 @@
-export const buildSolanaExplorerUrl = (txid, endpoint) => {
-  return `https://explorer.solana.com/tx/${txid}${
+export const buildSolanaExplorerUrl = (txid, endpoint) => `https://explorer.solana.com/tx/${txid}${
     endpoint ? `?cluster=custom&customUrl=${endpoint}` : ''
   }`
-}

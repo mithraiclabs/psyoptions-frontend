@@ -148,14 +148,14 @@ const InitializeMarket = () => {
           </Box>
 
           <Box display="flex" borderBottom={darkBorder}>
-            <Box width={'50%'} p={2} borderRight={darkBorder}>
+            <Box width="50%" p={2} borderRight={darkBorder}>
               Underlying Asset:
               <Box mt={2}>
                 <SelectAsset selectedAsset={uAsset} onSelectAsset={setUAsset} />
               </Box>
             </Box>
 
-            <Box width={'50%'} p={2}>
+            <Box width="50%" p={2}>
               Quote Asset:
               <Box mt={2}>
                 <SelectAsset selectedAsset={qAsset} onSelectAsset={setQAsset} />
@@ -164,7 +164,7 @@ const InitializeMarket = () => {
           </Box>
 
           <Box display="flex" borderBottom={darkBorder}>
-            <Box width={'50%'} p={2} borderRight={darkBorder}>
+            <Box width="50%" p={2} borderRight={darkBorder}>
               <TextField
                 label="Contract Size"
                 variant="filled"
@@ -172,7 +172,7 @@ const InitializeMarket = () => {
                 helperText={isNaN(size) ? 'Must be a number' : null}
               />
             </Box>
-            <Box width={'50%'} p={2}>
+            <Box width="50%" p={2}>
               <Box pb={2}>
                 <TextField
                   value={basePrice}
@@ -188,7 +188,7 @@ const InitializeMarket = () => {
           </Box>
 
           <Box display="flex" alignItems="center" borderBottom={darkBorder}>
-            <Box width={'50%'} p={2}>
+            <Box width="50%" p={2}>
               <FormControlLabel
                 control={
                   <Switch
@@ -201,7 +201,7 @@ const InitializeMarket = () => {
                 label="Multi Strikes"
               />
             </Box>
-            <Box width={'50%'} p={2}>
+            <Box width="50%" p={2}>
               {multiple ? (
                 <TextField
                   label="Price Interval"
@@ -236,7 +236,7 @@ const InitializeMarket = () => {
             ) : canInitialize && assetsSelected && parametersValid ? (
               <Button
                 fullWidth
-                variant={'outlined'}
+                variant="outlined"
                 color="primary"
                 onClick={connected ? handleInitialize : connect}
               >
@@ -247,7 +247,7 @@ const InitializeMarket = () => {
                 </Box>
               </Button>
             ) : (
-              <Button fullWidth variant={'outlined'} color="primary" disabled>
+              <Button fullWidth variant="outlined" color="primary" disabled>
                 <Box py={1}>
                   {assetsSelected && parametersValid
                     ? `Market Already Exists`

@@ -1,3 +1,9 @@
+const roundTo = (num, factor = 1) => {
+  const quotient = num / factor
+  const res = Math.round(quotient) * factor
+  return res
+}
+
 const generateStrikePrices = (currentPrice, n) => {
   if (isNaN(n) || n === 0) return []
 
@@ -13,12 +19,6 @@ const generateStrikePrices = (currentPrice, n) => {
   ]
 
   return prices.sort((a, b) => a - b).filter((n) => n >= 0)
-}
-
-const roundTo = (num, factor = 1) => {
-  const quotient = num / factor
-  const res = Math.round(quotient) * factor
-  return res
 }
 
 export { roundTo, generateStrikePrices }

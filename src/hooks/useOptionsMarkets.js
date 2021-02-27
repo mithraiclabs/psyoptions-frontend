@@ -1,4 +1,4 @@
-import React, { useContext } from 'react'
+import React, { useContext , useEffect, useCallback } from 'react'
 import BN from 'bn.js';
 import { Link } from '@material-ui/core'
 import {
@@ -14,7 +14,7 @@ import useNotifications from './useNotifications'
 import useWallet from './useWallet'
 import useConnection from './useConnection'
 import useAssetList from './useAssetList'
-import { useEffect, useCallback } from 'react'
+
 import { OptionsMarketsContext } from '../context/OptionsMarketsContext'
 
 // Example of how markets data should look:
@@ -203,9 +203,7 @@ const useOptionsMarkets = () => {
     return results
   }
 
-  const getMyMarkets = () => {
-    return Object.values(markets).filter((m) => m.createdByMe)
-  }
+  const getMyMarkets = () => Object.values(markets).filter((m) => m.createdByMe)
 
   const mint = async ({
     marketData,

@@ -22,7 +22,10 @@ const {
 } = process.env
 
 server.use((req, res, next) => {
-  const app = <App location={{ pathname: req?.originalUrl }} />
+  const routerCtx = { statusCode: 200 }
+  const app = (
+    <App location={{ pathname: req?.originalUrl }} routerContext={routerCtx} />
+  )
   const sheets = new ServerStyleSheets()
   const appHtml = ReactDOMServer.renderToString(sheets.collect(app))
   const cssString = sheets.toString()
@@ -43,6 +46,7 @@ server.use((req, res, next) => {
       }}
     />
   )
+  res.status(routerCtx.statusCode)
   res.send(html)
 })
 

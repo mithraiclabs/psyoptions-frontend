@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useCallback } from 'react'
-// import BN from 'bn.js'
+import BN from 'bn.js'
 import { Link } from '@material-ui/core'
 import {
   initializeMarket,
@@ -64,7 +64,7 @@ const useOptionsMarkets = () => {
 
         // Remove the decimals from size
         const size = market.marketData.amountPerContract
-          // .div(new BN(10 ** uAsset.decimals))
+          .div(new BN(10 ** uAsset.decimals))
           .toString(10)
 
         const newMarket = {

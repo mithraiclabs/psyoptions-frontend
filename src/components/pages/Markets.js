@@ -1,5 +1,5 @@
 import { Box, Paper } from '@material-ui/core'
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import Table from '@material-ui/core/Table'
 import TableBody from '@material-ui/core/TableBody'
 import TableCell from '@material-ui/core/TableCell'
@@ -24,34 +24,43 @@ const TCell = withStyles({
     whiteSpace: 'nowrap',
     fontSize: '11px',
     border: 'none',
+    height: '52px',
   },
 })(TableCell)
 
-const emptyRow = {
+const rowTemplate = {
   strike: '--',
-  size: '100',
+  size: '--',
   call: {
     key: '',
-    size: '100',
+    size: '--',
     bid: '--',
     ask: '--',
     change: '--',
     volume: '--',
     openInterest: '--',
+    emptyRow: true,
   },
   put: {
     key: '',
-    size: '100',
+    size: '--',
     bid: '--',
     ask: '--',
     change: '--',
     volume: '--',
     openInterest: '--',
+    emptyRow: true,
   },
 }
 
+const formatStrike = (sp) => {
+  if (sp === '--') return sp
+  const str = `${sp}`
+  return str.match(/\..{2,}/) ? str : parseFloat(sp).toFixed(2)
+}
+
 const next3Months = getNext3Months()
-const emptyRows = Array(9).fill(emptyRow)
+const emptyRows = Array(9).fill(rowTemplate)
 
 const Markets = () => {
   const [date, setDate] = useState(next3Months[0])
@@ -60,21 +69,22 @@ const Markets = () => {
   const [uAsset, setUAsset] = useState()
   const [qAsset, setQAsset] = useState()
 
-  const [rows, setRows] = useState(emptyRows)
+  // const [rows, setRows] = useState(emptyRows)
 
-  const { markets, getOptionsChain } = useOptionsMarkets()
+  const { getOptionsChain } = useOptionsMarkets()
 
-  useEffect(() => {
-    if (uAsset?.tokenSymbol && qAsset?.tokenSymbol) {
-      setRows(
-        getOptionsChain({
-          uAssetSymbol: uAsset.tokenSymbol,
-          qAssetSymbol: qAsset.tokenSymbol,
-          date: date.unix(),
-        }),
-      )
+  let rows = emptyRows
+  if (uAsset?.tokenSymbol && qAsset?.tokenSymbol && date) {
+    const optionsChain = getOptionsChain({
+      uAssetSymbol: uAsset.tokenSymbol,
+      qAssetSymbol: qAsset.tokenSymbol,
+      date: date.unix(),
+    })
+    rows = optionsChain.length ? optionsChain : emptyRows
+    if (rows.length < 9) {
+      rows = [...rows, ...emptyRows.slice(rows.length)]
     }
-  }, [uAsset, qAsset, date, markets, getOptionsChain])
+  }
 
   return (
     <Page>
@@ -179,15 +189,17 @@ const Markets = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {rows.map((row) => (
+                {rows.map((row, i) => (
                   <TableRow
                     hover
                     role="checkbox"
                     tabIndex={-1}
-                    key={`${row.strike}`}
+                    key={`${row.strike}-${i}`}
                   >
                     <TCell align="left">
-                      {row.call?.initialized ? (
+                      {row.call?.emptyRow ? (
+                        '--'
+                      ) : row.call?.initialized ? (
                         <Button variant="outlined" color="primary" p="8px">
                           Mint
                         </Button>
@@ -212,7 +224,7 @@ const Markets = () => {
                         background: theme.palette.background.main,
                       }}
                     >
-                      {row.strike}
+                      <h3 style={{ margin: 0 }}>{formatStrike(row.strike)}</h3>
                     </TCell>
 
                     <TCell align="right">{row.put?.size}</TCell>
@@ -222,7 +234,9 @@ const Markets = () => {
                     <TCell align="right">{row.put?.volume}</TCell>
                     <TCell align="right">{row.put?.openInterest}</TCell>
                     <TCell align="right">
-                      {row.put?.initialized ? (
+                      {row.call?.emptyRow ? (
+                        '--'
+                      ) : row.put?.initialized ? (
                         <Button variant="outlined" color="primary" p="8px">
                           Mint
                         </Button>

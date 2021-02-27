@@ -1,4 +1,4 @@
-import { Box, Chip, Paper } from '@material-ui/core'
+import { Box, Paper } from '@material-ui/core'
 import React from 'react'
 import Table from '@material-ui/core/Table'
 import TableBody from '@material-ui/core/TableBody'
@@ -47,39 +47,6 @@ const columns = [
   },
 ]
 
-// A place to manipulate data params to create an addition column to display
-// i.e. size * mark price to generate value of position
-// and subsequently a column and an addition item into the returned object
-const createData = (
-  assetpair,
-  strike,
-  markprice,
-  size,
-  expiration,
-  accounts,
-) => ({ accounts, assetpair, strike, markprice, size, expiration })
-// pair name, strike, mark price, size count, expiry
-// need to get the open positions from the api and then
-// need a function to take in data to return out the rows below
-const rows = [
-  createData('SOLUSDT', 12, 11.5, 10, 1616716800000, [
-    { amount: 1, mint: 'mint', pubKey: 'publicKey' },
-  ]),
-  createData('SOLBTC', 0.0001, 0.0001889, 3, 1616716800000, [
-    { amount: 1, mint: 'mint', pubKey: 'publicKey' },
-    { amount: 2, mint: 'mint', pubKey: 'publicKey' },
-  ]),
-  createData('SRMUSDT', 5, 4.7, 4, 1616716800000, [
-    { amount: 1, mint: 'mint', pubKey: 'publicKey' },
-  ]),
-  createData('SRMBTC', 0.0008, 0.00008184, 5, 1616716800000, [
-    { amount: 1, mint: 'mint', pubKey: 'publicKey' },
-  ]),
-  createData('BTCUSDT', 64000, 57789.5, 1, 1616716800000, [
-    { amount: 1, mint: 'mint', pubKey: 'publicKey' },
-  ]),
-]
-
 const useStyles = makeStyles({
   root: {
     width: '100%',
@@ -91,8 +58,8 @@ const useStyles = makeStyles({
 
 const OpenPositions = () => {
   const classes = useStyles()
-  const [page, setPage] = React.useState(0)
-  const [rowsPerPage, setRowsPerPage] = React.useState(10)
+  const [page] = React.useState(0)
+  const [rowsPerPage] = React.useState(10)
   const positions = useOpenPositions()
   const { markets } = useOptionsMarkets()
 

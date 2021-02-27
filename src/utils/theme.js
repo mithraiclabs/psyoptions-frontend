@@ -2,6 +2,7 @@ import { createMuiTheme } from '@material-ui/core/styles'
 
 const theme = createMuiTheme({
   gradients: {
+    secondary: 'linear-gradient(90deg, #24001A 0%, #790068 50%, #D18641 100%)',
     secondaryPrimary: 'linear-gradient(90deg, #DD3E76 -0.83%, #1D4DC9 100%)',
     warning: 'linear-gradient(90deg, #F9C164 0.22%, #DC3E78 99.68%)',
     error: 'linear-gradient(90deg, #F9C164 0.22%, #DC3E78 99.68%)',

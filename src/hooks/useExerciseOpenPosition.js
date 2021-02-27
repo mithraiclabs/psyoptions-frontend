@@ -1,8 +1,11 @@
-import { useCallback } from 'react'
+import React, { useCallback } from 'react'
 import { PublicKey } from '@solana/web3.js'
+import { Link } from '@material-ui/core'
 import { exerciseCoveredCallWithRandomOptionWriter } from '@mithraic-labs/options-js-bindings'
 import useConnection from './useConnection'
 import useWallet from './useWallet'
+import useNotifications from './useNotifications'
+import { buildSolanaExplorerUrl } from '../utils/solanaExplorer'
 
 const useExerciseOpenPosition = (
   optionMarketKey,
@@ -10,6 +13,7 @@ const useExerciseOpenPosition = (
   exerciserUnderlyingAssetKey,
   exerciserContractTokenKey,
 ) => {
+  const { pushNotification } = useNotifications()
   const { connection, endpoint } = useConnection()
   const { wallet, pubKey } = useWallet()
 
@@ -31,11 +35,26 @@ const useExerciseOpenPosition = (
     const signed = await wallet.signTransaction(tx)
     const txid = await connection.sendRawTransaction(signed.serialize())
 
-    // TODO: push "toast notifications" here that tx started and set a loading state
-    console.log(`Submitted transaction ${txid}`)
+    // TODO add the Asset Pair to the push note
+    pushNotification({
+      severity: 'info',
+      message: `Submitted Transaction: Exercise Option`,
+      link: (
+        <Link href={buildSolanaExplorerUrl(txid)} target="_new">
+          View on Solana Explorer
+        </Link>
+      ),
+    })
     await connection.confirmTransaction(txid)
-    // TODO: push "toast notifications" here that tx completed and set loading state to false
-    console.log(`Confirmed ${txid}`)
+    pushNotification({
+      severity: 'success',
+      message: `Transaction Confirmed: Exercise Option`,
+      link: (
+        <Link href={buildSolanaExplorerUrl(txid)} target="_new">
+          View on Solana Explorer
+        </Link>
+      ),
+    })
 
     return txid
   }, [
@@ -47,6 +66,7 @@ const useExerciseOpenPosition = (
     exerciserUnderlyingAssetKey,
     exerciserContractTokenKey,
     wallet,
+    pushNotification,
   ])
 }
 

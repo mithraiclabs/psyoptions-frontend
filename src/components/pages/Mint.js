@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react'
-import moment from 'moment'
+import React, { useEffect, useState, useMemo } from 'react'
+// import moment from 'moment'
 import Done from '@material-ui/icons/Done'
 import {
   Box,
@@ -59,15 +59,22 @@ const Mint = () => {
   }
 
   const contractSizes = getSizes(allParams)
-  const strikePrices = getStrikePrices(allParams)
+  const strikePrices = getStrikePrices(allParams).sort((a, b) => a - b)
   const marketData = getMarket(allParams)
 
-  const ownedUAssetAccounts =
-    (uAsset && ownedTokenAccounts[uAsset.mintAddress]) || []
-  const ownedQAssetAccounts =
-    (qAsset && ownedTokenAccounts[qAsset.mintAddress]) || []
-  const ownedMintedOptionAccounts =
-    (marketData && ownedTokenAccounts[marketData.optionMintAddress]) || []
+  const ownedUAssetAccounts = useMemo(
+    () => (uAsset && ownedTokenAccounts[uAsset.mintAddress]) || [],
+    [uAsset, ownedTokenAccounts],
+  )
+  const ownedQAssetAccounts = useMemo(
+    () => (qAsset && ownedTokenAccounts[qAsset.mintAddress]) || [],
+    [qAsset, ownedTokenAccounts],
+  )
+  const ownedMintedOptionAccounts = useMemo(
+    () =>
+      (marketData && ownedTokenAccounts[marketData.optionMintAddress]) || [],
+    [marketData, ownedTokenAccounts],
+  )
 
   useEffect(() => {
     setUAssetAccount(ownedUAssetAccounts[0]?.pubKey || '')
@@ -176,7 +183,7 @@ const Mint = () => {
         marketData,
       })
 
-      const txid = await mint({
+      await mint({
         marketData,
         mintedOptionDestAccount,
         underlyingAssetSrcAccount: uAssetAccount,
@@ -254,6 +261,9 @@ const Mint = () => {
                   <SelectAsset
                     selectedAsset={uAsset}
                     onSelectAsset={(asset) => {
+                      if (asset === qAsset) {
+                        setQAsset(uAsset)
+                      }
                       setUAsset(asset)
                       setPrice('')
                     }}
@@ -284,6 +294,9 @@ const Mint = () => {
                   <SelectAsset
                     selectedAsset={qAsset}
                     onSelectAsset={(asset) => {
+                      if (asset === uAsset) {
+                        setUAsset(qAsset)
+                      }
                       setQAsset(asset)
                       setPrice('')
                     }}
@@ -299,10 +312,10 @@ const Mint = () => {
                       value: account.pubKey,
                       text: `${account.pubKey.slice(
                         0,
-                        3
+                        3,
                       )}...${account.pubKey.slice(
                         account.pubKey.length - 3,
-                        account.pubKey.length
+                        account.pubKey.length,
                       )} (${account.amount} ${qAsset?.tokenSymbol})`,
                     }))}
                     style={{
@@ -357,7 +370,8 @@ const Mint = () => {
                 <Box p={2}>This contract can be minted</Box>
               ) : (
                 <Box p={2}>
-                  This market doesn't exist yet. Creating new markets from the UI is coming soon!
+                  This market doesn&apos;t exist yet. Creating new markets from
+                  the UI is coming soon!
                 </Box>
               )
             ) : null}

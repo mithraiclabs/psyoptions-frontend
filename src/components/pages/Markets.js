@@ -33,7 +33,6 @@ const rowTemplate = {
   size: '--',
   call: {
     key: '',
-    size: '--',
     bid: '--',
     ask: '--',
     change: '--',
@@ -43,7 +42,6 @@ const rowTemplate = {
   },
   put: {
     key: '',
-    size: '--',
     bid: '--',
     ask: '--',
     change: '--',
@@ -130,7 +128,15 @@ const Markets = () => {
           >
             <Box px={1}>
               <Box>
-                <SelectAsset selectedAsset={uAsset} onSelectAsset={setUAsset} />
+                <SelectAsset
+                  selectedAsset={uAsset}
+                  onSelectAsset={(asset) => {
+                    if (asset === qAsset) {
+                      setQAsset(uAsset)
+                    }
+                    setUAsset(asset)
+                  }}
+                />
               </Box>
             </Box>
             <Box>
@@ -138,7 +144,15 @@ const Markets = () => {
             </Box>
             <Box px={1}>
               <Box>
-                <SelectAsset selectedAsset={qAsset} onSelectAsset={setQAsset} />
+                <SelectAsset
+                  selectedAsset={qAsset}
+                  onSelectAsset={(asset) => {
+                    if (asset === uAsset) {
+                      setUAsset(qAsset)
+                    }
+                    setQAsset(asset)
+                  }}
+                />
               </Box>
             </Box>
           </Box>
@@ -209,7 +223,7 @@ const Markets = () => {
                         </Button>
                       )}
                     </TCell>
-                    <TCell align="left">{row.call?.size}</TCell>
+                    <TCell align="left">{row.size}</TCell>
                     <TCell align="left">{row.call?.bid}</TCell>
                     <TCell align="left">{row.call?.ask}</TCell>
                     <TCell align="left">{row.call?.change}</TCell>
@@ -227,7 +241,7 @@ const Markets = () => {
                       <h3 style={{ margin: 0 }}>{formatStrike(row.strike)}</h3>
                     </TCell>
 
-                    <TCell align="right">{row.put?.size}</TCell>
+                    <TCell align="right">{row.size}</TCell>
                     <TCell align="right">{row.put?.bid}</TCell>
                     <TCell align="right">{row.put?.ask}</TCell>
                     <TCell align="right">{row.put?.change}</TCell>

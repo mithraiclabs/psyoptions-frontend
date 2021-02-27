@@ -1,5 +1,4 @@
 import React, { useState } from 'react'
-import moment from 'moment'
 
 import {
   Box,
@@ -30,7 +29,7 @@ const next3Months = getNext3Months()
 const InitializeMarket = () => {
   const { pushNotification } = useNotifications()
   const { connect, connected } = useWallet()
-  const { getMyMarkets, getMarket, initializeMarkets } = useOptionsMarkets()
+  const { getMarket, initializeMarkets } = useOptionsMarkets()
 
   const [multiple, setMultiple] = useState(false)
   const [basePrice, setBasePrice] = useState(0)
@@ -45,17 +44,17 @@ const InitializeMarket = () => {
   })
   const [loading, setLoading] = useState(false)
 
-  const parsedBasePrice = parseInt(basePrice)
+  const parsedBasePrice = parseInt(basePrice, 10)
   let strikePrices = []
   if (
     multiple &&
     (parsedBasePrice || marketPrice) &&
     priceInterval &&
-    !isNaN(priceInterval)
+    !Number.isNaN(priceInterval)
   ) {
     strikePrices = generateStrikePrices(
       parsedBasePrice || marketPrice,
-      priceInterval
+      priceInterval,
     )
   } else if (parsedBasePrice || marketPrice) {
     strikePrices = [parsedBasePrice || marketPrice]
@@ -69,7 +68,7 @@ const InitializeMarket = () => {
     size,
     price: strikePrices[0],
   })
-  const parametersValid = size && !isNaN(size) && strikePrices.length > 0
+  const parametersValid = size && !Number.isNaN(size) && strikePrices.length > 0
 
   const handleInitialize = async () => {
     // The size must account for the number of decimals the underlying SPL Token has.
@@ -151,14 +150,30 @@ const InitializeMarket = () => {
             <Box width="50%" p={2} borderRight={darkBorder}>
               Underlying Asset:
               <Box mt={2}>
-                <SelectAsset selectedAsset={uAsset} onSelectAsset={setUAsset} />
+                <SelectAsset
+                  selectedAsset={uAsset}
+                  onSelectAsset={(asset) => {
+                    if (asset === qAsset) {
+                      setQAsset(uAsset)
+                    }
+                    setUAsset(asset)
+                  }}
+                />
               </Box>
             </Box>
 
             <Box width="50%" p={2}>
               Quote Asset:
               <Box mt={2}>
-                <SelectAsset selectedAsset={qAsset} onSelectAsset={setQAsset} />
+                <SelectAsset
+                  selectedAsset={qAsset}
+                  onSelectAsset={(asset) => {
+                    if (asset === uAsset) {
+                      setUAsset(qAsset)
+                    }
+                    setQAsset(asset)
+                  }}
+                />
               </Box>
             </Box>
           </Box>
@@ -168,8 +183,8 @@ const InitializeMarket = () => {
               <TextField
                 label="Contract Size"
                 variant="filled"
-                onChange={(e) => setSize(parseInt(e.target.value))}
-                helperText={isNaN(size) ? 'Must be a number' : null}
+                onChange={(e) => setSize(parseInt(e.target.value, 10))}
+                helperText={Number.isNaN(size) ? 'Must be a number' : null}
               />
             </Box>
             <Box width="50%" p={2}>
@@ -180,7 +195,7 @@ const InitializeMarket = () => {
                   variant="filled"
                   onChange={(e) => setBasePrice(e.target.value)}
                   helperText={
-                    isNaN(parsedBasePrice) ? 'Must be a number' : null
+                    Number.isNaN(parsedBasePrice) ? 'Must be a number' : null
                   }
                 />
               </Box>
@@ -207,7 +222,9 @@ const InitializeMarket = () => {
                   label="Price Interval"
                   variant="filled"
                   onChange={(e) => setPriceInterval(parseFloat(e.target.value))}
-                  helperText={isNaN(priceInterval) ? 'Must be a number' : null}
+                  helperText={
+                    Number.isNaN(priceInterval) ? 'Must be a number' : null
+                  }
                 />
               ) : null}
             </Box>

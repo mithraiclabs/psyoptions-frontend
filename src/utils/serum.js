@@ -1,6 +1,7 @@
 import { Market, MARKETS } from '@project-serum/serum';
 import { PublicKey } from '@solana/web3.js';
 
+// To initialize a new market, use the initializeSerumMarket from the options protocol bindings package
 
 export class SerumMarket {
 

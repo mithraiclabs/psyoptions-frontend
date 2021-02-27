@@ -21,6 +21,7 @@
     "react/prop-types": "warn",
     "react/jsx-filename-extension": [1, { "extensions": [".js", ".jsx"] }],
     "semi": "off",
+    "global-require": "off"
     "react/no-array-index-key": "warn",
     "no-nested-ternary": "off"
   }

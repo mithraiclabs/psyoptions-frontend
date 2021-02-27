@@ -3,23 +3,24 @@ import { TOKENS } from '@project-serum/tokens'
 import { Connection, PublicKey } from '@solana/web3.js'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import useConnection from '../hooks/useConnection'
-import { networks } from "./ConnectionContext"
+import { networks } from './ConnectionContext'
 import useNotifications from '../hooks/useNotifications'
 
 // TODO see if we can query many accounts at once
 const mergeAssetsWithChainData = async (connection, assets) =>
-  Promise.all(
-    assets.map(async (asset) => {
+  Promise.allSettled(
+    assets.map(async (a) => {
+      const asset = a
       const token = new Token(
         connection,
-        new PublicKey(asset.mintAddress),
+        new PublicKey(a.mintAddress),
         TOKEN_PROGRAM_ID,
-        null
+        null,
       )
       const mintInfo = await token.getMintInfo()
       asset.decimals = mintInfo.decimals
       return asset
-    })
+    }),
   )
 
 const getAssetsByNetwork = (name) => {
@@ -60,19 +61,30 @@ const SupportedAssetProvider = ({ children }) => {
       try {
         const mergedAssets = await mergeAssetsWithChainData(
           connection,
-          basicAssets
+          basicAssets,
         )
-        setSupportedAssets(mergedAssets)
+        setSupportedAssets(
+          mergedAssets
+            .filter((res) => {
+              if (res.status === 'rejected') {
+                // We could put a notificatiomn here but it would really fill up the screen if there were multiple failures
+                console.error(res.reason)
+                return false
+              }
+              return true
+            })
+            .map((res) => res.value),
+        )
       } catch (error) {
         pushNotification({
           severity: 'error',
-          message: `${err}`,
+          message: `${error}`,
         })
         console.error(error)
         setSupportedAssets([])
       }
     })()
-  }, [connection, endpoint.name])
+  }, [connection, endpoint.name, pushNotification])
 
   return (
     <SupportedAssetContext.Provider value={supportedAssets}>

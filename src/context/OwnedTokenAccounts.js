@@ -1,10 +1,9 @@
-import React, { createContext, useEffect } from 'react'
+import React, { createContext, useEffect, useState } from 'react'
 import { AccountLayout, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { PublicKey } from '@solana/web3.js'
 import { Buffer } from 'buffer'
 import bs58 from 'bs58'
 import useConnection from '../hooks/useConnection'
-import { useOwnedTokenAccountsLocalStorage } from '../hooks/useLocalStorage'
 import useWallet from '../hooks/useWallet'
 
 const OwnedTokenAccountsContext = createContext({})
@@ -24,10 +23,7 @@ const getOwnedTokenAccountsFilter = (publicKey) => [
 const OwnedTokenAccountsProvider = ({ children }) => {
   const { connection } = useConnection()
   const { connected, pubKey } = useWallet()
-  const [
-    ownedTokenAccounts,
-    setOwnedTokenAccounts,
-  ] = useOwnedTokenAccountsLocalStorage()
+  const [ownedTokenAccounts, setOwnedTokenAccounts] = useState({})
 
   useEffect(() => {
     // TODO need to find the best way to update when the user adds new programs
@@ -42,10 +38,10 @@ const OwnedTokenAccountsProvider = ({ children }) => {
               filters,
             },
           ])
-          const ownedTokenAccounts = resp.result?.reduce(
+          const _ownedTokenAccounts = resp.result?.reduce(
             (acc, { account, pubkey }) => {
               const accountInfo = AccountLayout.decode(
-                bs58.decode(account.data)
+                bs58.decode(account.data),
               )
               const amountBuffer = Buffer.from(accountInfo.amount)
               const amount = amountBuffer.readUintLE(0, 8)
@@ -60,16 +56,16 @@ const OwnedTokenAccountsProvider = ({ children }) => {
               ]
               return acc
             },
-            {}
+            {},
           )
-          setOwnedTokenAccounts(ownedTokenAccounts)
+          setOwnedTokenAccounts(_ownedTokenAccounts)
         } catch (err) {
           // TODO add toast or something for better error handling
           console.error(err)
         }
       })()
     }
-  }, [connected, pubKey])
+  }, [connected, connection, pubKey])
 
   return (
     <OwnedTokenAccountsContext.Provider value={ownedTokenAccounts}>

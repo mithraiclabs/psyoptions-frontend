@@ -5,10 +5,9 @@ import Table from '@material-ui/core/Table'
 import TableBody from '@material-ui/core/TableBody'
 import TableCell from '@material-ui/core/TableCell'
 import TableRow from '@material-ui/core/TableRow'
+import PropTypes from 'prop-types'
 import useExerciseOpenPosition from '../../../hooks/useExerciseOpenPosition'
 import useOwnedTokenAccounts from '../../../hooks/useOwnedTokenAccounts'
-
-
 
 const PositionRow = ({ columns, row }) => {
   const [visible, setVisible] = useState(false)
@@ -20,16 +19,19 @@ const PositionRow = ({ columns, row }) => {
     }
   }
 
-  const ownedQAssetKey = (ownedTokenAccounts && ownedTokenAccounts[row.quoteAssetKey][0]?.pubKey)
-  const ownedUAssetKey = (ownedTokenAccounts && ownedTokenAccounts[row.underlyingAssetKey][0]?.pubKey)
-  const ownedOAssetKey = (ownedTokenAccounts && ownedTokenAccounts[row.optionContractTokenKey][0]?.pubKey)
-  
+  const ownedQAssetKey =
+    ownedTokenAccounts && ownedTokenAccounts[row.quoteAssetKey][0]?.pubKey
+  const ownedUAssetKey =
+    ownedTokenAccounts && ownedTokenAccounts[row.underlyingAssetKey][0]?.pubKey
+  const ownedOAssetKey =
+    ownedTokenAccounts &&
+    ownedTokenAccounts[row.optionContractTokenKey][0]?.pubKey
 
   const handleExercisePosition = useExerciseOpenPosition(
     row.optionMarketKey,
     ownedQAssetKey,
     ownedUAssetKey,
-    ownedOAssetKey
+    ownedOAssetKey,
   )
 
   return (
@@ -39,7 +41,7 @@ const PositionRow = ({ columns, row }) => {
         onClick={onRowClick}
         role="checkbox"
         tabIndex={-1}
-        key={row.code}
+        key={row.optionContractTokenKey}
       >
         {columns.map((column) => {
           const value = row[column.id]
@@ -55,7 +57,7 @@ const PositionRow = ({ columns, row }) => {
                   key={row[column.id] + row.code}
                   clickable
                   size="small"
-                  label="Close Position"
+                  label="Exercise"
                   color="primary"
                   variant="outlined"
                   onClick={handleExercisePosition}
@@ -69,7 +71,7 @@ const PositionRow = ({ columns, row }) => {
           )
         })}
       </TableRow>
-      <TableRow key={`${row.code}Collapsible`}>
+      <TableRow key={`${row.optionContractTokenKey}Collapsible`}>
         <TableCell
           style={{ borderWidth: 0, padding: 0, margin: 0 }}
           colSpan={columns.length}
@@ -98,7 +100,7 @@ const PositionRow = ({ columns, row }) => {
                               key={row[column.id] + row.code}
                               clickable
                               size="small"
-                              label="Close Position"
+                              label="Exercise"
                               color="primary"
                               variant="outlined"
                               onClick={handleExercisePosition}
@@ -120,6 +122,17 @@ const PositionRow = ({ columns, row }) => {
       </TableRow>
     </>
   )
+}
+
+PositionRow.propTypes = {
+  columns: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+  row: PropTypes.shape({
+    accounts: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+    optionContractTokenKey: PropTypes.string.isRequired,
+    optionMarketKey: PropTypes.string.isRequired,
+    quoteAssetKey: PropTypes.string.isRequired,
+    underlyingAssetKey: PropTypes.string.isRequired,
+  }).isRequired,
 }
 
 export default PositionRow

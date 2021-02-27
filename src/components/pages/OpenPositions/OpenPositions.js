@@ -119,7 +119,11 @@ const OpenPositions = () => {
                   {positionRows
                     .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                     .map((row) => (
-                      <PositionRow columns={columns} row={row} />
+                      <PositionRow
+                        key={row.optionContractTokenKey}
+                        columns={columns}
+                        row={row}
+                      />
                     ))}
                 </TableBody>
               </Table>

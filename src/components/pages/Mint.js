@@ -261,6 +261,9 @@ const Mint = () => {
                   <SelectAsset
                     selectedAsset={uAsset}
                     onSelectAsset={(asset) => {
+                      if (asset === qAsset) {
+                        setQAsset(uAsset)
+                      }
                       setUAsset(asset)
                       setPrice('')
                     }}
@@ -291,6 +294,9 @@ const Mint = () => {
                   <SelectAsset
                     selectedAsset={qAsset}
                     onSelectAsset={(asset) => {
+                      if (asset === uAsset) {
+                        setUAsset(qAsset)
+                      }
                       setQAsset(asset)
                       setPrice('')
                     }}

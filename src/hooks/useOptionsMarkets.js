@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useCallback } from 'react'
-import BN from 'bn.js'
+// import BN from 'bn.js'
 import { Link } from '@material-ui/core'
 import {
   initializeMarket,
@@ -61,9 +61,10 @@ const useOptionsMarkets = () => {
         const qAsset = assetList.filter(
           (asset) => asset.mintAddress === qAssetMint.toString(),
         )[0]
+
         // Remove the decimals from size
         const size = market.marketData.amountPerContract
-          .div(new BN(10 ** uAsset.decimals))
+          // .div(new BN(10 ** uAsset.decimals))
           .toString(10)
 
         const newMarket = {
@@ -102,7 +103,7 @@ const useOptionsMarkets = () => {
 
     const sizes = Object.keys(markets)
       .filter((key) => key.match(keyPart))
-      .map((key) => markets[key].size.toString())
+      .map((key) => markets[key].size)
 
     return [...new Set(sizes)]
   }
@@ -230,7 +231,6 @@ const useOptionsMarkets = () => {
 
     const template = {
       key: '',
-      size: '100',
       bid: '--',
       ask: '--',
       change: '--',
@@ -262,12 +262,11 @@ const useOptionsMarkets = () => {
       Array.from(sizes).forEach((size) => {
         let call = matchingCalls.find((c) => c.size === size)
         let put = matchingPuts.find((p) => p.size === size)
-        // console.log(matchingPuts)
 
         if (call) {
           call = {
-            ...call,
             ...template,
+            ...call,
             initialized: true,
           }
         } else {
@@ -276,8 +275,8 @@ const useOptionsMarkets = () => {
 
         if (put) {
           put = {
-            ...put,
             ...template,
+            ...put,
             initialized: true,
           }
         } else {
@@ -287,8 +286,6 @@ const useOptionsMarkets = () => {
         rows.push({ strike, size, call, put })
       })
     })
-
-    // console.log(rows)
 
     return rows.sort((a, b) => a.strike - b.strike)
   }

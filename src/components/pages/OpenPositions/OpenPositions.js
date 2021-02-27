@@ -33,7 +33,7 @@ const columns = [
     label: 'Expiration',
     minWidth: 170,
     format: (value) => {
-      const date = new Date(value)
+      const date = new Date(value * 1000)
       return date.toUTCString()
     },
     width: '20%',
@@ -119,7 +119,11 @@ const OpenPositions = () => {
                   {positionRows
                     .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                     .map((row) => (
-                      <PositionRow columns={columns} row={row} />
+                      <PositionRow
+                        key={row.optionContractTokenKey}
+                        columns={columns}
+                        row={row}
+                      />
                     ))}
                 </TableBody>
               </Table>

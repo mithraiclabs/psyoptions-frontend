@@ -64,9 +64,8 @@ const SelectAsset = ({ label, selectedAsset, onSelectAsset }) => {
                 }}
               />
             </Box>
-            <Box my={3} height="300px" overflow={'auto'}>
-              {filteredAssetList.map((asset) => {
-                return (
+            <Box my={3} height="300px" overflow="auto">
+              {filteredAssetList.map((asset) => (
                   <ListItem
                     button
                     onClick={() => {
@@ -82,8 +81,7 @@ const SelectAsset = ({ label, selectedAsset, onSelectAsset }) => {
                       primary={`${asset.tokenName} (${asset.tokenSymbol})`}
                     />
                   </ListItem>
-                )
-              })}
+                ))}
             </Box>
           </Box>
         </Box>

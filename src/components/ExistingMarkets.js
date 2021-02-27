@@ -1,10 +1,10 @@
 import React, { useState } from 'react'
 import { Box, Paper, Button, Chip } from '@material-ui/core'
 import Done from '@material-ui/icons/Done'
+import { AddBoxRounded } from '@material-ui/icons'
 import theme from '../utils/theme'
 import useOptionsMarkets from '../hooks/useOptionsMarkets'
 import Select from './Select'
-import { AddBoxRounded } from '@material-ui/icons'
 
 const darkBorder = `1px solid ${theme.palette.background.main}`
 

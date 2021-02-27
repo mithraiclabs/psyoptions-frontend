@@ -1,15 +1,14 @@
 import React from 'react'
-import Page from './Page'
 import { Box } from '@material-ui/core'
+import Page from './Page'
 
-const NotFound = () => {
-  return (
+const NotFound = () => (
     <Page>
       <Box
         display="flex"
         flexDirection="column"
-        justifyContent={'center'}
-        alignItems={'center'}
+        justifyContent="center"
+        alignItems="center"
         minHeight="100%"
         margin="0 auto"
         pb={5}
@@ -19,6 +18,5 @@ const NotFound = () => {
       </Box>
     </Page>
   )
-}
 
 export default NotFound

@@ -5,6 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "npx webpack",
+    "lint": "npx eslint .",
     "seed": "node ./scripts/seedLocalNet.js",
     "seed:mintTokens": "node ./scripts/mintLocalNetTokens.js",
     "serve": "nodemon index.js",
@@ -17,6 +18,13 @@
   "license": "ISC",
   "devDependencies": {
     "concurrently": "^5.3.0",
+    "eslint": "^7.20.0",
+    "eslint-config-airbnb": "^18.2.1",
+    "eslint-config-prettier": "^8.1.0",
+    "eslint-plugin-import": "^2.22.1",
+    "eslint-plugin-jsx-a11y": "^6.4.1",
+    "eslint-plugin-react": "^7.22.0",
+    "eslint-plugin-react-hooks": "^4.2.0",
     "jest": "^26.6.3",
     "nodemon": "^2.0.7"
   },
@@ -37,6 +45,7 @@
     "bn.js": "^4.12.0",
     "bs58": "^4.0.1",
     "buffer": "^6.0.3",
+    "buffer-layout": "^1.2.0",
     "dotenv": "^8.2.0",
     "dotenv-webpack": "^6.0.0",
     "express": "^4.17.1",

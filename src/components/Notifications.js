@@ -4,8 +4,8 @@ import Snackbar from '@material-ui/core/Snackbar'
 import IconButton from '@material-ui/core/IconButton'
 import CloseIcon from '@material-ui/icons/Close'
 
-import useNotifications from '../hooks/useNotifications'
 import { Box } from '@material-ui/core'
+import useNotifications from '../hooks/useNotifications'
 import theme from '../utils/theme'
 
 const SimpleSnackbar = ({
@@ -29,11 +29,11 @@ const SimpleSnackbar = ({
     <Box
       px={2}
       py={1}
-      width={'100%'}
-      alignItems={'center'}
+      width="100%"
+      alignItems="center"
       borderRadius={3}
-      display={'flex'}
-      justifyContent={'space-between'}
+      display="flex"
+      justifyContent="space-between"
       color={theme.palette[severity].contrastText}
       style={{
         background: theme.gradients[severity],

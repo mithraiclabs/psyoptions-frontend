@@ -34,7 +34,7 @@ const ConnectionContext = createContext({})
 const ConnectionProvider = ({ children }) => {
   const [endpoint, setEndpoint] = useLocalStorageState(
     'endpoint',
-    DEFAULT_NETWORK
+    DEFAULT_NETWORK,
   )
   const [connection, setConnection] = useState({})
 

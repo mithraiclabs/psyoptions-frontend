@@ -39,13 +39,13 @@ const instructionMaxSpan = Math.max(
 )
 
 function encodeTokenInstructionData(instruction) {
-  let b = Buffer.alloc(instructionMaxSpan)
-  let span = LAYOUT.encode(instruction, b)
+  const b = Buffer.alloc(instructionMaxSpan)
+  const span = LAYOUT.encode(instruction, b)
   return b.slice(0, span)
 }
 
 export function initializeAccount({ account, mint, owner }) {
-  let keys = [
+  const keys = [
     { pubkey: account, isSigner: false, isWritable: true },
     { pubkey: mint, isSigner: false, isWritable: false },
     { pubkey: owner, isSigner: false, isWritable: false },

@@ -1,12 +1,11 @@
 import React from 'react'
+import Box from '@material-ui/core/Box'
 import StatusBar from '../StatusBar'
 import Notifications from '../Notifications'
 
-import Box from '@material-ui/core/Box'
 
 // Default page template
-const Page = ({ children }) => {
-  return (
+const Page = ({ children }) => (
     <>
       <Notifications />
       <Box height="100%" display="flex" flexDirection="column">
@@ -17,6 +16,5 @@ const Page = ({ children }) => {
       </Box>
     </>
   )
-}
 
 export default React.memo(Page)

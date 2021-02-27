@@ -248,7 +248,7 @@ const Mint = () => {
             </Box>
 
             <Box display="flex" borderBottom={darkBorder}>
-              <Box width={'50%'} p={2} borderRight={darkBorder}>
+              <Box width="50%" p={2} borderRight={darkBorder}>
                 Underlying Asset:
                 <Box my={2}>
                   <SelectAsset
@@ -262,7 +262,7 @@ const Mint = () => {
                 {ownedUAssetAccounts.length > 1 ? (
                   <Select
                     variant="filled"
-                    label={'Account'}
+                    label="Account"
                     value={uAssetAccount}
                     onChange={(e) => setUAssetAccount(e.target.value)}
                     options={ownedUAssetAccounts.map((acct) => ({
@@ -278,7 +278,7 @@ const Mint = () => {
                 ) : null}
               </Box>
 
-              <Box width={'50%'} p={2}>
+              <Box width="50%" p={2}>
                 Quote Asset:
                 <Box my={2}>
                   <SelectAsset
@@ -292,7 +292,7 @@ const Mint = () => {
                 {ownedQAssetAccounts.length > 1 ? (
                   <Select
                     variant="filled"
-                    label={'Account'}
+                    label="Account"
                     value={qAssetAccount}
                     onChange={(e) => setQAssetAccount(e.target.value)}
                     options={ownedQAssetAccounts.map((account) => ({
@@ -314,10 +314,10 @@ const Mint = () => {
             </Box>
 
             <Box display="flex" borderBottom={darkBorder}>
-              <Box width={'50%'} p={2} borderRight={darkBorder}>
+              <Box width="50%" p={2} borderRight={darkBorder}>
                 <Select
                   variant="filled"
-                  label={'Contract Size'}
+                  label="Contract Size"
                   value={contractSizes.length ? size : ''}
                   onChange={(e) => {
                     setPrice('')
@@ -334,10 +334,10 @@ const Mint = () => {
                 />
               </Box>
 
-              <Box width={'50%'} p={2}>
+              <Box width="50%" p={2}>
                 <Select
                   variant="filled"
-                  label={'Strike Price'}
+                  label="Strike Price"
                   value={strikePrices.length ? price : ''}
                   onChange={(e) => setPrice(e.target.value)}
                   disabled={strikePrices.length === 0}
@@ -354,10 +354,10 @@ const Mint = () => {
 
             {uAsset && qAsset ? (
               contractSizes.length && strikePrices.length ? (
-                <Box p={2}>{'This contract can be minted'}</Box>
+                <Box p={2}>This contract can be minted</Box>
               ) : (
                 <Box p={2}>
-                  {`This market doesn't exist yet. Creating new markets from the UI is coming soon!`}
+                  This market doesn't exist yet. Creating new markets from the UI is coming soon!
                 </Box>
               )
             ) : null}
@@ -370,7 +370,7 @@ const Mint = () => {
               ) : marketData ? (
                 <Button
                   fullWidth
-                  variant={'outlined'}
+                  variant="outlined"
                   color="primary"
                   onClick={connected ? handleMint : connect}
                 >
@@ -381,7 +381,7 @@ const Mint = () => {
                   </Box>
                 </Button>
               ) : (
-                <Button fullWidth variant={'outlined'} color="primary" disabled>
+                <Button fullWidth variant="outlined" color="primary" disabled>
                   <Box py={1}>Select Parameters to Mint</Box>
                 </Button>
               )}

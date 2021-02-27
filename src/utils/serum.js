@@ -23,7 +23,7 @@ export class SerumMarket {
     baseMintAddress,
     quoteMintAddress,
   ) {
-    const programId = MARKETS.find(({ deprecated }) => !deprecated).programId;
+    const {programId} = MARKETS.find(({ deprecated }) => !deprecated);
     const filters = [
       {
         memcmp: {
@@ -68,7 +68,7 @@ export class SerumMarket {
    * @param {PublicKey} marketAddress 
    */
   async getMarket () {
-    const programId = MARKETS.find(({ deprecated }) => !deprecated).programId;
+    const {programId} = MARKETS.find(({ deprecated }) => !deprecated);
     return Market.load(this.connection, this.marketAddress, {}, programId);
   }
 

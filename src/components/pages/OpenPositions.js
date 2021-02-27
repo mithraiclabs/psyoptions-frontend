@@ -1,7 +1,5 @@
 import { Box, Chip, Paper } from '@material-ui/core'
 import React from 'react'
-import Page from './Page'
-import theme from '../../utils/theme'
 import Table from '@material-ui/core/Table'
 import TableBody from '@material-ui/core/TableBody'
 import TableCell from '@material-ui/core/TableCell'
@@ -9,6 +7,8 @@ import TableContainer from '@material-ui/core/TableContainer'
 import TableHead from '@material-ui/core/TableHead'
 import TableRow from '@material-ui/core/TableRow'
 import { makeStyles } from '@material-ui/core/styles'
+import theme from '../../utils/theme'
+import Page from './Page'
 
 const darkBorder = `1px solid ${theme.palette.background.main}`
 
@@ -43,9 +43,7 @@ const columns = [
 // A place to manipulate data params to create an addition column to display
 // i.e. size * mark price to generate value of position
 // and subsequently a column and an addition item into the returned object
-const createData = (assetpair, strike, markprice, size, expiration) => {
-  return { assetpair, strike, markprice, size, expiration }
-}
+const createData = (assetpair, strike, markprice, size, expiration) => ({ assetpair, strike, markprice, size, expiration })
 // pair name, strike, mark price, size count, expiry
 // need to get the open positions from the api and then
 // need a function to take in data to return out the rows below
@@ -114,8 +112,7 @@ const OpenPositions = () => {
                 <TableBody>
                   {rows
                     .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                    .map((row) => {
-                      return (
+                    .map((row) => (
                         <TableRow
                           hover
                           role="checkbox"
@@ -147,8 +144,7 @@ const OpenPositions = () => {
                             )
                           })}
                         </TableRow>
-                      )
-                    })}
+                      ))}
                 </TableBody>
               </Table>
             </TableContainer>

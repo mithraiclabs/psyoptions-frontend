@@ -1,7 +1,5 @@
 import { Box, Chip, Hidden, Paper } from '@material-ui/core'
 import React, { useState } from 'react'
-import Page from './Page'
-import theme from '../../utils/theme'
 import Table from '@material-ui/core/Table'
 import TableBody from '@material-ui/core/TableBody'
 import TableCell from '@material-ui/core/TableCell'
@@ -10,6 +8,8 @@ import TableHead from '@material-ui/core/TableHead'
 import TableRow from '@material-ui/core/TableRow'
 import Button from '@material-ui/core/Button'
 import { withStyles } from '@material-ui/core/styles'
+import theme from '../../utils/theme'
+import Page from './Page'
 import Select from '../Select'
 import SelectAsset from '../SelectAsset'
 import { getNext3Months } from '../../utils/dates'
@@ -72,7 +72,7 @@ const Markets = () => {
           display="flex"
           flexDirection={['column', 'column', 'row']}
           alignItems="center"
-          justifyContent={'space-between'}
+          justifyContent="space-between"
           style={{
             background: `${theme.gradients.secondary}`,
           }}
@@ -80,7 +80,7 @@ const Markets = () => {
           <Box px={0} py={0} width={['100%', '100%', '300px']}>
             <Select
               variant="filled"
-              label={'Expiration Date'}
+              label="Expiration Date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
               options={next3Months.map((date) => ({
@@ -96,7 +96,7 @@ const Markets = () => {
             px={1}
             py={[2, 2, 1]}
             width={['100%', '100%', 'auto']}
-            fontSize={'12px'}
+            fontSize="12px"
             display="flex"
             alignItems="center"
           >
@@ -129,7 +129,7 @@ const Markets = () => {
                       }`}
                     </h3>
                   </TableCell>
-                  <TableCell colSpan={1}></TableCell>
+                  <TableCell colSpan={1} />
                   <TableCell colSpan={6}>
                     <h3 style={{ margin: 0 }}>
                       {`Puts${
@@ -159,8 +159,7 @@ const Markets = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {rows.map((row, i) => {
-                  return (
+                {rows.map((row, i) => (
                     <TableRow
                       hover
                       role="checkbox"
@@ -169,11 +168,11 @@ const Markets = () => {
                     >
                       <TCell align="left">
                         {row.call?.initialized ? (
-                          <Button variant="outlined" color="primary" p={'8px'}>
+                          <Button variant="outlined" color="primary" p="8px">
                             Mint
                           </Button>
                         ) : (
-                          <Button variant="outlined" color="primary" p={'8px'}>
+                          <Button variant="outlined" color="primary" p="8px">
                             Initialize
                           </Button>
                         )}
@@ -202,18 +201,17 @@ const Markets = () => {
                       <TCell align="right">{row.put?.openInterest}</TCell>
                       <TCell align="right">
                         {row.call?.initialized ? (
-                          <Button variant="outlined" color="primary" p={'8px'}>
+                          <Button variant="outlined" color="primary" p="8px">
                             Mint
                           </Button>
                         ) : (
-                          <Button variant="outlined" color="primary" p={'8px'}>
+                          <Button variant="outlined" color="primary" p="8px">
                             Initialize
                           </Button>
                         )}
                       </TCell>
                     </TableRow>
-                  )
-                })}
+                  ))}
               </TableBody>
             </Table>
           </TableContainer>

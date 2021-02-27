@@ -1,7 +1,5 @@
 import { Box, Chip, Paper } from '@material-ui/core'
 import React from 'react'
-import Page from '../Page'
-import theme from '../../../utils/theme'
 import Table from '@material-ui/core/Table'
 import TableBody from '@material-ui/core/TableBody'
 import TableCell from '@material-ui/core/TableCell'
@@ -9,6 +7,8 @@ import TableContainer from '@material-ui/core/TableContainer'
 import TableHead from '@material-ui/core/TableHead'
 import TableRow from '@material-ui/core/TableRow'
 import { makeStyles } from '@material-ui/core/styles'
+import theme from '../../../utils/theme'
+import Page from '../Page'
 
 import PositionRow from './PositionRow'
 import useOpenPositions from '../../../hooks/useOpenPositions'
@@ -57,9 +57,7 @@ const createData = (
   size,
   expiration,
   accounts
-) => {
-  return { accounts, assetpair, strike, markprice, size, expiration }
-}
+) => ({ accounts, assetpair, strike, markprice, size, expiration })
 // pair name, strike, mark price, size count, expiry
 // need to get the open positions from the api and then
 // need a function to take in data to return out the rows below

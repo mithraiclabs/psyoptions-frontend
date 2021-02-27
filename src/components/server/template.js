@@ -42,10 +42,6 @@ const baseCss = `
     font-size: 1.2rem;
   }
 
-  button {
-    white-space: nowrap;
-  }
-
   * {
     scrollbar-color: ${theme.palette.border.main} transparent;
   }

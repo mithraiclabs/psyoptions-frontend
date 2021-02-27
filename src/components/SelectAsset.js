@@ -48,7 +48,12 @@ const SelectAsset = ({ label, selectedAsset, onSelectAsset }) => {
       >
         <Box px={3}>
           <h2>{label}</h2>
-          <Box width="350px" display="flex" flexDirection="column">
+          <Box
+            width="350px"
+            maxWidth="100%"
+            display="flex"
+            flexDirection="column"
+          >
             <Box>
               <TextField
                 label="Search"

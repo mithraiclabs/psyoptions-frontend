@@ -18,7 +18,12 @@ const WalletStatus = () => {
   }
 
   return (
-    <Button color="primary" onClick={handleConnect} variant="outlined">
+    <Button
+      color="primary"
+      onClick={handleConnect}
+      variant="outlined"
+      style={{ whiteSpace: 'nowrap' }}
+    >
       <Box pr={2}>
         <Brightness1
           style={{

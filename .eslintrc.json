@@ -19,6 +19,7 @@
     "react-hooks/exhaustive-deps": "error",
     "react/prop-types": "warn",
     "react/jsx-filename-extension": [1, { "extensions": [".js", ".jsx"] }],
-    "semi": "off"
+    "semi": "off",
+    "global-require": "off"
   }
 }

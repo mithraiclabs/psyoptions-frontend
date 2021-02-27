@@ -1,4 +1,4 @@
-import { Box, Chip, Hidden, Paper } from '@material-ui/core'
+import { Box, Paper } from '@material-ui/core'
 import React, { useState } from 'react'
 import Table from '@material-ui/core/Table'
 import TableBody from '@material-ui/core/TableBody'
@@ -14,6 +14,8 @@ import Select from '../Select'
 import SelectAsset from '../SelectAsset'
 import { getNext3Months } from '../../utils/dates'
 
+import useOptionsMarkets from '../../hooks/useOptionsMarkets'
+
 const darkBorder = `1px solid ${theme.palette.background.main}`
 
 const TCell = withStyles({
@@ -22,32 +24,43 @@ const TCell = withStyles({
     whiteSpace: 'nowrap',
     fontSize: '11px',
     border: 'none',
+    height: '52px',
   },
 })(TableCell)
 
-const emptyRow = {
+const rowTemplate = {
   strike: '--',
+  size: '--',
   call: {
-    itm: true,
     key: '',
+    size: '--',
     bid: '--',
     ask: '--',
     change: '--',
     volume: '--',
     openInterest: '--',
+    emptyRow: true,
   },
   put: {
     key: '',
+    size: '--',
     bid: '--',
     ask: '--',
     change: '--',
     volume: '--',
     openInterest: '--',
+    emptyRow: true,
   },
 }
 
+const formatStrike = (sp) => {
+  if (sp === '--') return sp
+  const str = `${sp}`
+  return str.match(/\..{2,}/) ? str : parseFloat(sp).toFixed(2)
+}
+
 const next3Months = getNext3Months()
-const emptyRows = Array(9).fill(emptyRow)
+const emptyRows = Array(9).fill(rowTemplate)
 
 const Markets = () => {
   const [date, setDate] = useState(next3Months[0])
@@ -56,7 +69,22 @@ const Markets = () => {
   const [uAsset, setUAsset] = useState()
   const [qAsset, setQAsset] = useState()
 
-  const [rows, setRows] = useState(emptyRows)
+  // const [rows, setRows] = useState(emptyRows)
+
+  const { getOptionsChain } = useOptionsMarkets()
+
+  let rows = emptyRows
+  if (uAsset?.tokenSymbol && qAsset?.tokenSymbol && date) {
+    const optionsChain = getOptionsChain({
+      uAssetSymbol: uAsset.tokenSymbol,
+      qAssetSymbol: qAsset.tokenSymbol,
+      date: date.unix(),
+    })
+    rows = optionsChain.length ? optionsChain : emptyRows
+    if (rows.length < 9) {
+      rows = [...rows, ...emptyRows.slice(rows.length)]
+    }
+  }
 
   return (
     <Page>
@@ -83,9 +111,9 @@ const Markets = () => {
               label="Expiration Date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              options={next3Months.map((date) => ({
-                value: date,
-                text: `${date.format('ll')}, 00:00 UTC`,
+              options={next3Months.map((d) => ({
+                value: d,
+                text: `${d.format('ll')}, 00:00 UTC`,
               }))}
               style={{
                 minWidth: '100%',
@@ -120,7 +148,7 @@ const Markets = () => {
             <Table stickyHeader aria-label="sticky table">
               <TableHead>
                 <TableRow>
-                  <TableCell colSpan={6}>
+                  <TableCell colSpan={7}>
                     <h3 style={{ margin: 0 }}>
                       {`Calls${
                         uAsset && qAsset
@@ -130,7 +158,7 @@ const Markets = () => {
                     </h3>
                   </TableCell>
                   <TableCell colSpan={1} />
-                  <TableCell colSpan={6}>
+                  <TableCell colSpan={7}>
                     <h3 style={{ margin: 0 }}>
                       {`Puts${
                         uAsset && qAsset
@@ -142,6 +170,7 @@ const Markets = () => {
                 </TableRow>
                 <TableRow>
                   <TCell align="left">Action</TCell>
+                  <TCell align="left">Size</TCell>
                   <TCell align="left">Bid</TCell>
                   <TCell align="left">Ask</TCell>
                   <TCell align="left">Change</TCell>
@@ -150,6 +179,7 @@ const Markets = () => {
 
                   <TCell align="center">Strike</TCell>
 
+                  <TCell align="right">Size</TCell>
                   <TCell align="right">Bid</TCell>
                   <TCell align="right">Ask</TCell>
                   <TCell align="right">Change</TCell>
@@ -160,58 +190,64 @@ const Markets = () => {
               </TableHead>
               <TableBody>
                 {rows.map((row, i) => (
-                    <TableRow
-                      hover
-                      role="checkbox"
-                      tabIndex={-1}
-                      key={`${row.strike}-${row.i}`}
+                  <TableRow
+                    hover
+                    role="checkbox"
+                    tabIndex={-1}
+                    key={`${row.strike}-${i}`}
+                  >
+                    <TCell align="left">
+                      {row.call?.emptyRow ? (
+                        '--'
+                      ) : row.call?.initialized ? (
+                        <Button variant="outlined" color="primary" p="8px">
+                          Mint
+                        </Button>
+                      ) : (
+                        <Button variant="outlined" color="primary" p="8px">
+                          Initialize
+                        </Button>
+                      )}
+                    </TCell>
+                    <TCell align="left">{row.call?.size}</TCell>
+                    <TCell align="left">{row.call?.bid}</TCell>
+                    <TCell align="left">{row.call?.ask}</TCell>
+                    <TCell align="left">{row.call?.change}</TCell>
+                    <TCell align="left">{row.call?.volume}</TCell>
+                    <TCell align="left">{row.call?.openInterest}</TCell>
+
+                    <TCell
+                      align="center"
+                      style={{
+                        borderLeft: darkBorder,
+                        borderRight: darkBorder,
+                        background: theme.palette.background.main,
+                      }}
                     >
-                      <TCell align="left">
-                        {row.call?.initialized ? (
-                          <Button variant="outlined" color="primary" p="8px">
-                            Mint
-                          </Button>
-                        ) : (
-                          <Button variant="outlined" color="primary" p="8px">
-                            Initialize
-                          </Button>
-                        )}
-                      </TCell>
-                      <TCell align="left">{row.call?.bid}</TCell>
-                      <TCell align="left">{row.call?.ask}</TCell>
-                      <TCell align="left">{row.call?.change}</TCell>
-                      <TCell align="left">{row.call?.volume}</TCell>
-                      <TCell align="left">{row.call?.openInterest}</TCell>
+                      <h3 style={{ margin: 0 }}>{formatStrike(row.strike)}</h3>
+                    </TCell>
 
-                      <TCell
-                        align="center"
-                        style={{
-                          borderLeft: darkBorder,
-                          borderRight: darkBorder,
-                          background: theme.palette.background.main,
-                        }}
-                      >
-                        {row.strike}
-                      </TCell>
-
-                      <TCell align="right">{row.put?.bid}</TCell>
-                      <TCell align="right">{row.put?.ask}</TCell>
-                      <TCell align="right">{row.put?.change}</TCell>
-                      <TCell align="right">{row.put?.volume}</TCell>
-                      <TCell align="right">{row.put?.openInterest}</TCell>
-                      <TCell align="right">
-                        {row.call?.initialized ? (
-                          <Button variant="outlined" color="primary" p="8px">
-                            Mint
-                          </Button>
-                        ) : (
-                          <Button variant="outlined" color="primary" p="8px">
-                            Initialize
-                          </Button>
-                        )}
-                      </TCell>
-                    </TableRow>
-                  ))}
+                    <TCell align="right">{row.put?.size}</TCell>
+                    <TCell align="right">{row.put?.bid}</TCell>
+                    <TCell align="right">{row.put?.ask}</TCell>
+                    <TCell align="right">{row.put?.change}</TCell>
+                    <TCell align="right">{row.put?.volume}</TCell>
+                    <TCell align="right">{row.put?.openInterest}</TCell>
+                    <TCell align="right">
+                      {row.call?.emptyRow ? (
+                        '--'
+                      ) : row.put?.initialized ? (
+                        <Button variant="outlined" color="primary" p="8px">
+                          Mint
+                        </Button>
+                      ) : (
+                        <Button variant="outlined" color="primary" p="8px">
+                          Initialize
+                        </Button>
+                      )}
+                    </TCell>
+                  </TableRow>
+                ))}
               </TableBody>
             </Table>
           </TableContainer>

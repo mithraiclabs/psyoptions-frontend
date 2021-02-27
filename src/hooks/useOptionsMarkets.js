@@ -1,5 +1,5 @@
-import React, { useContext , useEffect, useCallback } from 'react'
-import BN from 'bn.js';
+import React, { useContext, useEffect, useCallback } from 'react'
+import BN from 'bn.js'
 import { Link } from '@material-ui/core'
 import {
   initializeMarket,
@@ -48,21 +48,23 @@ const useOptionsMarkets = () => {
       const res = await Market.getAllMarketsBySplSupport(
         connection,
         new PublicKey(endpoint.programId),
-        assets
+        assets,
       )
       // Transform the market data to our expectations
       const newMarkets = {}
       res.forEach((market) => {
         const uAssetMint = market.marketData.underlyingAssetMintAddress
         const uAsset = assetList.filter(
-          (asset) => asset.mintAddress === uAssetMint.toString()
+          (asset) => asset.mintAddress === uAssetMint.toString(),
         )[0]
         const qAssetMint = market.marketData.quoteAssetMintAddress
         const qAsset = assetList.filter(
-          (asset) => asset.mintAddress === qAssetMint.toString()
+          (asset) => asset.mintAddress === qAssetMint.toString(),
         )[0]
         // Remove the decimals from size
-        const size = market.marketData.amountPerContract.div(new BN(10**uAsset.decimals)).toString(10);
+        const size = market.marketData.amountPerContract
+          .div(new BN(10 ** uAsset.decimals))
+          .toString(10)
 
         const newMarket = {
           // marketData.amountPerContract is a BigNumber
@@ -89,7 +91,7 @@ const useOptionsMarkets = () => {
     } catch (err) {
       console.error(err)
     }
-  }, [connection, assetList])
+  }, [connection, assetList, endpoint, setMarkets])
 
   useEffect(() => {
     fetchMarketData()
@@ -135,7 +137,7 @@ const useOptionsMarkets = () => {
     const results = await Promise.all(
       strikePrices.map(async (strikePrice) => {
         const {
-          signers,
+          // signers,
           transaction,
           optionMarketDataAddress,
           optionMintAddress,
@@ -147,7 +149,7 @@ const useOptionsMarkets = () => {
           qAssetMint,
           size,
           strikePrice,
-          expiration
+          expiration,
         )
 
         const signed = await wallet.signTransaction(transaction)
@@ -193,11 +195,14 @@ const useOptionsMarkets = () => {
         }
 
         return marketData
-      })
+      }),
     )
 
     const newMarkets = {}
-    results.forEach((market) => (newMarkets[market.key] = market))
+    results.forEach((market) => {
+      newMarkets[market.key] = market
+      return market
+    })
     setMarkets({ ...markets, ...newMarkets })
 
     return results
@@ -205,13 +210,96 @@ const useOptionsMarkets = () => {
 
   const getMyMarkets = () => Object.values(markets).filter((m) => m.createdByMe)
 
+  const getOptionsChain = ({ uAssetSymbol, qAssetSymbol, date }) => {
+    const callKeyPart = `${date}-${uAssetSymbol}-${qAssetSymbol}`
+    const putKeyPart = `${date}-${qAssetSymbol}-${uAssetSymbol}`
+
+    const calls = Object.keys(markets)
+      .filter((k) => k.match(callKeyPart))
+      .map((k) => markets[k])
+    const puts = Object.keys(markets)
+      .filter((k) => k.match(putKeyPart))
+      .map((k) => markets[k])
+
+    const strikes = Array.from(
+      new Set([
+        ...calls.map((m) => m.strikePrice),
+        ...puts.map((m) => m.strikePrice),
+      ]),
+    )
+
+    const template = {
+      key: '',
+      size: '100',
+      bid: '--',
+      ask: '--',
+      change: '--',
+      volume: '--',
+      openInterest: '--',
+    }
+
+    const rows = []
+
+    strikes.forEach((strike) => {
+      const sizes = new Set()
+
+      const matchingCalls = calls.filter((c) => {
+        if (c.strikePrice === strike) {
+          sizes.add(c.size)
+          return true
+        }
+        return false
+      })
+
+      const matchingPuts = puts.filter((p) => {
+        if (p.strikePrice === strike) {
+          sizes.add(p.size)
+          return true
+        }
+        return false
+      })
+
+      Array.from(sizes).forEach((size) => {
+        let call = matchingCalls.find((c) => c.size === size)
+        let put = matchingPuts.find((p) => p.size === size)
+        // console.log(matchingPuts)
+
+        if (call) {
+          call = {
+            ...call,
+            ...template,
+            initialized: true,
+          }
+        } else {
+          call = template
+        }
+
+        if (put) {
+          put = {
+            ...put,
+            ...template,
+            initialized: true,
+          }
+        } else {
+          put = template
+        }
+
+        rows.push({ strike, size, call, put })
+      })
+    })
+
+    // console.log(rows)
+
+    return rows.sort((a, b) => a.strike - b.strike)
+  }
+
   const mint = async ({
     marketData,
     mintedOptionDestAccount, // account in user's wallet to send minted option to
     underlyingAssetSrcAccount, // account in user's wallet to post uAsset collateral from
     quoteAssetDestAccount, // account in user's wallet to send qAsset to if contract is exercised
   }) => {
-    const { transaction: tx, signers } = await readMarketAndMintCoveredCall(
+    const { transaction: tx } = await readMarketAndMintCoveredCall(
       connection,
       { publicKey: pubKey },
       endpoint.programId,
@@ -219,7 +307,7 @@ const useOptionsMarkets = () => {
       new PublicKey(underlyingAssetSrcAccount),
       new PublicKey(quoteAssetDestAccount),
       new PublicKey(marketData.optionMarketDataAddress),
-      { publicKey: pubKey } // Option writer's UA Authority account - safe to assume this is always the same as the payer when called from the FE UI
+      { publicKey: pubKey }, // Option writer's UA Authority account - safe to assume this is always the same as the payer when called from the FE UI
     )
 
     const signed = await wallet.signTransaction(tx)
@@ -258,6 +346,7 @@ const useOptionsMarkets = () => {
     getSizes,
     getDates,
     getMyMarkets,
+    getOptionsChain,
     mint,
   }
 }

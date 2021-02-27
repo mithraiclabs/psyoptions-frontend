@@ -11,12 +11,13 @@ import Markets from './pages/Markets'
 import NotFound from './pages/NotFound'
 
 const Router = isBrowser ? BrowserRouter : StaticRouter
+
 const RouteWithStatusCode = ({ children, ...props }) => (
   <Route
     {...props}
-    render={({ routerContext }) => {
-      if (routerContext) {
-        routerContext.statusCode = props.statusCode
+    render={({ staticContext }) => {
+      if (staticContext) {
+        staticContext.statusCode = props.statusCode
       }
       return <>{children}</>
     }}

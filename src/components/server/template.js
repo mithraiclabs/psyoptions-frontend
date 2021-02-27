@@ -1,5 +1,6 @@
 import React from 'react'
 import theme from '../../utils/theme'
+import favicon from '../../../assets/psyoptions-logo-secondary.png'
 
 const baseCss = `
   * {
@@ -72,6 +73,7 @@ const Template = ({
         <title>{title || ''}</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta description={description || ''} />
+        <link rel="icon" type="image/png" href={favicon} />
         <link rel="preconnect" href="https://fonts.gstatic.com" />
         <link
           href="https://fonts.googleapis.com/css2?family=Goldman:wght@400;700&display=swap"

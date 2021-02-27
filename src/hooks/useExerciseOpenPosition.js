@@ -14,17 +14,6 @@ const useExerciseOpenPosition = (
   const { wallet, pubKey } = useWallet()
 
   return useCallback(async () => {
-    console.log(
-      'ARGS ',
-      { publicKey: pubKey },
-      endpoint.programId,
-      new PublicKey(optionMarketKey),
-      new PublicKey(exerciserQuoteAssetKey),
-      new PublicKey(exerciserUnderlyingAssetKey),
-      { publicKey: pubKey },
-      new PublicKey(exerciserContractTokenKey),
-      { publicKey: pubKey },
-    )
     const {
       transaction: tx,
     } = await exerciseCoveredCallWithRandomOptionWriter(

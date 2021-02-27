@@ -33,7 +33,7 @@ const columns = [
     label: 'Expiration',
     minWidth: 170,
     format: (value) => {
-      const date = new Date(value)
+      const date = new Date(value * 1000)
       return date.toUTCString()
     },
     width: '20%',

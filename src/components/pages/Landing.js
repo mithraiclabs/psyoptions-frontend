@@ -58,7 +58,7 @@ const LandingCard = ({ title = '', text = '', button = '' } = {}) => {
         alignItems="center"
       >
         <h1 style={{ margin: '0', fontSize: '60px' }}>{title}</h1>
-        <Box style={{ fontSize: '24px' }} textAlign="center">
+        <Box style={{ fontSize: '22px' }} textAlign="center">
           {text || '0'}
         </Box>
       </Box>
@@ -152,7 +152,7 @@ const Landing = () => {
             />
             <LandingCard
               title={numberOfTokens || '0'}
-              text="options contracts minted"
+              text="options contracts in circulation"
               button={
                 <Button
                   color="primary"

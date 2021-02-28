@@ -91,7 +91,6 @@ const Markets = () => {
         justifyContent="center"
         flexDirection="column"
         minHeight="100%"
-        pb={4}
       >
         <Box
           py={0}

@@ -13,3 +13,4 @@ Set your `solana` configs appropriately. Then run the deployer with `node script
 | Option Flags | Description |
 | ------------ | ----------- |
 | --airdrop | An integer value that determines how much SOL to airdrop to the keypair before running the deployer |
+| --pullDex | A truthy value to indicate the script should download the latest dex binary from mainnet |

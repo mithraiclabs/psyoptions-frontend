@@ -45,22 +45,11 @@ ScriptHelpers.validateLocalnet(solanaConfig);
   const serumDexBinaryExists = fs.existsSync(ScriptHelpers.serumDexBinaryPath);
   if (!serumDexBinaryExists || !!argv.pullDex) {
     const dexProgramId = MARKETS.find(({ deprecated }) => !deprecated).programId;
+    console.log('*** dexProgramId', dexProgramId);
     // TODO need to specify this should run on mainnet
-    const { stdout1, stderr1 } = await exec(`solana config set --url https://api.mainnet-beta.solana.com`)
-    console.log('stdout:', stdout1);
-    console.log('stderr:', stderr1);
-
-    const { stdout4, stderr4 } = await exec(`solana config get`)
-    console.log('stdout:', stdout4);
-    console.log('stderr:', stderr4);
-
-    const { stdout2, stderr2 } = await exec(`solana program dump ${dexProgramId} ${ScriptHelpers.serumDexBinaryPath}`)
-    console.log('stdout:', stdout2);
-    console.log('stderr:', stderr2);
-
-    const { stdout3, stderr3 } = await exec(`solana config set --url ${solanaConfig.json_rpc_url}`)
-    console.log('stdout:', stdout3);
-    console.log('stderr:', stderr3);
+    const mainnetConnection = new Connection('https://api.mainnet-beta.solana.com');
+    let account = await mainnetConnection.getAccountInfo(dexProgramId);
+    fs.writeFileSync(ScriptHelpers.serumDexBinaryPath, account.data)
   }
 
   // Use the upgradable deployer to deploy the program.

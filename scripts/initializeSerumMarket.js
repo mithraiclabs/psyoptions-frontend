@@ -3,6 +3,9 @@ const ScriptHelpers = require('./helpers');
 const SolWeb3 = require('@solana/web3.js');
 const Serum = require('@project-serum/serum');
 const BN = require('bn.js');
+const SerumTokens = require('@project-serum/tokens');
+
+const { TOKENS } = SerumTokens;
 
 const {
   Account,
@@ -18,6 +21,38 @@ const {
   MARKETS,
   TokenInstructions 
 } = Serum;
+
+const programIds = (networkName) => {
+  switch (networkName) {
+    case 'Mainnet':
+      return {
+        dexProgramPubkey: MARKETS.find(({ deprecated }) => !deprecated).programId,
+        tokenProgramPubkey: new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA')
+      }
+    case 'Devnet':
+      return {
+        dexProgramPubkey: new PublicKey('9MVDeYQnJmN2Dt7H44Z8cob4bET2ysdNu2uFJcatDJno'),
+        tokenProgramPubkey: new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA')
+      }
+    case 'Testnet':
+      return {
+        // Looks like there was no address on the [Serum repo](https://github.com/project-serum/serum-dex#program-deployments)
+        dexProgramPubkey: undefined,
+        tokenProgramPubkey: new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA')
+      }
+    case 'localhost': 
+    const serumDexKeyBuffer = fs.readFileSync(ScriptHelpers.serumDexProgramKeypair);
+    const dexProgramAccount = new Account(JSON.parse(serumDexKeyBuffer));
+    const dexProgramId = dexProgramAccount.publicKey;
+     return {
+       dexProgramPubkey: dexProgramId,
+      tokenProgramPubkey: new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA')
+     }
+    default:
+      throw new Error('Unknown network name')
+  }
+
+}
 
 /**
  * pulled from https://github.com/project-serum/serum-dex-ui/blob/c6d0da0fc645492800f48a62b3314ebb5eaf2401/src/utils/send.tsx#L473
@@ -58,6 +93,16 @@ const initializeSerumMarket = async (
     }
   }
   const [vaultOwner, vaultSignerNonce] = await getVaultOwnerAndNonce();
+
+  console.log('*** TX 1 params',{
+    account: baseVault.publicKey.toString(),
+    mint: baseMint.toString(),
+    owner: vaultOwner.toString(),
+  }, {
+    account: quoteVault.publicKey.toString(),
+    mint: quoteMint.toString(),
+    owner: vaultOwner.toString(),
+  });
 
   const tx1 = new Transaction();
   tx1.add(
@@ -136,8 +181,8 @@ const initializeSerumMarket = async (
       quoteVault: quoteVault.publicKey,
       baseMint: baseMint,
       quoteMint: quoteMint,
-      baseLotSize: new BN(baseLotSize),
-      quoteLotSize: new BN(quoteLotSize),
+      baseLotSize: baseLotSize,
+      quoteLotSize: quoteLotSize,
       feeRateBps,
       vaultSignerNonce,
       quoteDustThreshold,
@@ -162,25 +207,28 @@ const initializeSerumMarket = async (
   const keyBuffer = fs.readFileSync(solanaConfig.keypair_path);
   const payer = new Account(JSON.parse(keyBuffer));
 
-  const connection = new Connection('http://127.0.0.1:8899')
+  const connection = new Connection('https://devnet.solana.com')
 
   // Get the mints from the local data.
-  const localSPLData = JSON.parse(
-    fs.readFileSync('./src/hooks/localnetData.json')
-  )
+  // const splData = JSON.parse(
+  //   fs.readFileSync('./src/hooks/localnetData.json')
+  // )
+  const splData = TOKENS.devnet;
   const serumDexKeyBuffer = fs.readFileSync(ScriptHelpers.serumDexProgramKeypair);
-  const dexProgramAccount = new Account(JSON.parse(serumDexKeyBuffer));
-  const dexProgramId = dexProgramAccount.publicKey;
+  // const dexProgramAccount = new Account(JSON.parse(serumDexKeyBuffer));
+  // const dexProgramId = dexProgramAccount.publicKey;
+  const dexProgramId = new PublicKey('9MVDeYQnJmN2Dt7H44Z8cob4bET2ysdNu2uFJcatDJno');
   console.log(`\nLocated the Serum dex at ${dexProgramId}\n`);
+  console.log(`\nCreating market for\n${splData[0].tokenSymbol} ${splData[0].mintAddress}\n\n${splData[1].tokenSymbol} ${splData[1].mintAddress}\n`);
 
   const {tx1, signers1, tx2, signers2, market } = await initializeSerumMarket(
     connection,
     payer,
-    new PublicKey(localSPLData[0].mintAddress),
-    new PublicKey(localSPLData[1].mintAddress),
+    new PublicKey(splData[0].mintAddress),
+    new PublicKey(splData[1].mintAddress),
     // TODO figure out what the hell baseLotSize and quoteLotSize mean
-    10**5,
-    10**5,
+    new BN('100000'),
+    new BN('100000'),
     dexProgramId,
   );
 

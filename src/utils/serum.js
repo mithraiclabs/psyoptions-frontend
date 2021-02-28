@@ -1,12 +1,39 @@
-import { Market, MARKETS } from '@project-serum/serum';
-import { PublicKey } from '@solana/web3.js';
+import { 
+  DexInstructions,
+  Market, 
+  _MARKET_STATE_LAYOUT_V2,
+  OpenOrders,
+} from '@project-serum/serum';
+import { 
+  Account,
+  PublicKey, 
+  Transaction, 
+  SystemProgram, 
+  LAMPORTS_PER_SOL,
+  sendAndConfirmTransaction,
+} from '@solana/web3.js';
+import BN from 'bn.js';
+import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 
+const SOL_MINT = new PublicKey(
+  'So11111111111111111111111111111111111111112',
+);
+
+// To initialize a new market, use the initializeSerumMarket from the options protocol bindings package
 
 export class SerumMarket {
 
-  constructor (connection, marketAddress) {
+  /**
+   * 
+   * @param {Connection} connection 
+   * @param {PublicKey} marketAddress 
+   * @param {PublicKey} dexProgramKey 
+   */
+  constructor (connection, marketAddress, dexProgramKey) {
+    this.MARKET_LAYOUT = _MARKET_STATE_LAYOUT_V2;
     this.connection = connection;
     this.marketAddress = marketAddress;
+    this.dexProgramKey = dexProgramKey;
   }
 
   async initMarket () {
@@ -23,23 +50,22 @@ export class SerumMarket {
     baseMintAddress,
     quoteMintAddress,
   ) {
-    const {programId} = MARKETS.find(({ deprecated }) => !deprecated);
     const filters = [
       {
         memcmp: {
-          offset: Market.getLayout(programId).offsetOf('baseMint'),
+          offset: this.MARKET_LAYOUT.offsetOf('baseMint'),
           bytes: baseMintAddress.toBase58(),
         },
       },
       {
         memcmp: {
-          offset: Market.getLayout(programId).offsetOf('quoteMint'),
+          offset: this.MARKET_LAYOUT.offsetOf('quoteMint'),
           bytes: quoteMintAddress.toBase58(),
         },
       },
     ];
     const resp = await connection._rpcRequest('getProgramAccounts', [
-      programId.toBase58(),
+      this.dexProgramKey.toBase58(),
       {
         commitment: connection.commitment,
         filters,
@@ -68,8 +94,7 @@ export class SerumMarket {
    * @param {PublicKey} marketAddress 
    */
   async getMarket () {
-    const {programId} = MARKETS.find(({ deprecated }) => !deprecated);
-    return Market.load(this.connection, this.marketAddress, {}, programId);
+    return Market.load(this.connection, this.marketAddress, {}, this.dexProgramKey);
   }
 
   /**
@@ -144,5 +169,252 @@ export class SerumMarket {
       120_000,
       120_000,
     )
+  }
+
+  async placeOrder(
+    connection,
+    {
+      owner,
+      payer,
+      side,
+      price,
+      size,
+      orderType = 'limit',
+      clientId,
+      openOrdersAddressKey,
+      openOrdersAccount,
+      feeDiscountPubkey,
+    },
+  ) {
+    const {
+      transaction,
+      signers,
+    } = await this.makePlaceOrderTransaction(connection, {
+      owner,
+      payer,
+      side,
+      price,
+      size,
+      orderType,
+      clientId,
+      openOrdersAddressKey,
+      openOrdersAccount,
+      feeDiscountPubkey,
+    });
+
+    await sendAndConfirmTransaction(connection, transaction, [owner, ...signers], {
+      skipPreflight: false,
+      commitment: 'max',
+      preflightCommitment: 'recent',
+    });
+    // return this.market._sendTransaction(connection, transaction, [
+    //   owner,
+    //   ...signers,
+    // ]);
+  }
+
+  async makePlaceOrderTransaction(
+    connection,
+    {
+      owner,
+      payer,
+      side,
+      price,
+      size,
+      orderType = 'limit',
+      clientId,
+      openOrdersAddressKey,
+      openOrdersAccount,
+    },
+    cacheDurationMs = 0,
+  ) {
+    // @ts-ignore
+    const ownerAddress = owner.publicKey ?? owner;
+    const openOrdersAccounts = await this.market.findOpenOrdersAccountsForOwner(
+      connection,
+      ownerAddress,
+      cacheDurationMs,
+    );
+    const transaction = new Transaction();
+    const signers = [];
+
+    // Fetch an SRM fee discount key if the market supports discounts and it is not supplied
+    // let useFeeDiscountPubkey;
+    // if (feeDiscountPubkey) {
+    //   useFeeDiscountPubkey = feeDiscountPubkey;
+    // } else if (
+    //   feeDiscountPubkey === undefined &&
+    //   this.market.supportsSrmFeeDiscounts
+    // ) {
+    //   useFeeDiscountPubkey = (
+    //     await this.findBestFeeDiscountKey(
+    //       connection,
+    //       ownerAddress,
+    //       feeDiscountPubkeyCacheDurationMs,
+    //     )
+    //   ).pubkey;
+    // } else {
+    const useFeeDiscountPubkey = null;
+    // }
+
+    let openOrdersAddress;
+    if (openOrdersAccounts.length === 0) {
+      let account;
+      if (openOrdersAccount) {
+        account = openOrdersAccount;
+      } else {
+        account = new Account();
+      }
+      transaction.add(
+        await OpenOrders.makeCreateAccountTransaction(
+          connection,
+          this.market.address,
+          ownerAddress,
+          account.publicKey,
+          this.market._programId,
+        ),
+      );
+      openOrdersAddress = account.publicKey;
+      signers.push(account);
+      // refresh the cache of open order accounts on next fetch
+      this.market._openOrdersAccountsCache[ownerAddress.toBase58()].ts = 0;
+    } else if (openOrdersAccount) {
+      openOrdersAddress = openOrdersAccount.publicKey;
+    } else if (openOrdersAddressKey) {
+      openOrdersAddress = openOrdersAddressKey;
+    } else {
+      openOrdersAddress = openOrdersAccounts[0].address;
+    }
+
+    let wrappedSolAccount = null;
+    if (payer.equals(ownerAddress)) {
+      if (
+        (side === 'buy' && this.market.quoteMintAddress.equals(SOL_MINT)) ||
+        (side === 'sell' && this.market.baseMintAddress.equals(SOL_MINT))
+      ) {
+        wrappedSolAccount = new Account();
+        let lamports;
+        if (side === 'buy') {
+          lamports = Math.round(price * size * 1.01 * LAMPORTS_PER_SOL);
+          if (openOrdersAccounts.length > 0) {
+            lamports -= openOrdersAccounts[0].quoteTokenFree.toNumber();
+          }
+        } else {
+          lamports = Math.round(size * LAMPORTS_PER_SOL);
+          if (openOrdersAccounts.length > 0) {
+            lamports -= openOrdersAccounts[0].baseTokenFree.toNumber();
+          }
+        }
+        lamports = Math.max(lamports, 0) + 1e7;
+        transaction.add(
+          SystemProgram.createAccount({
+            fromPubkey: ownerAddress,
+            newAccountPubkey: wrappedSolAccount.publicKey,
+            lamports,
+            space: 165,
+            programId: TOKEN_PROGRAM_ID,
+          }),
+        );
+        transaction.add(
+          Token.createInitAccountInstruction(
+            TOKEN_PROGRAM_ID,
+            SOL_MINT,
+            wrappedSolAccount.publicKey,
+            ownerAddress,
+          ),
+        );
+        signers.push(wrappedSolAccount);
+      } else {
+        throw new Error('Invalid payer account');
+      }
+    }
+
+    const placeOrderInstruction = this.makePlaceOrderInstruction(connection, {
+      owner,
+      payer: wrappedSolAccount?.publicKey ?? payer,
+      side,
+      price,
+      size,
+      orderType,
+      clientId,
+      openOrdersAddressKey: openOrdersAddress,
+      feeDiscountPubkey: useFeeDiscountPubkey,
+    });
+    transaction.add(placeOrderInstruction);
+
+    if (wrappedSolAccount) {
+      transaction.add(
+        Token.closeAccount(
+          wrappedSolAccount.publicKey,
+          ownerAddress,
+          ownerAddress,
+        ),
+      );
+    }
+
+    return { transaction, signers, payer: owner };
+  }
+
+  makePlaceOrderInstruction(
+    connection,
+    {
+      owner,
+      payer,
+      side,
+      price,
+      size,
+      orderType = 'limit',
+      clientId,
+      openOrdersAddressKey,
+      openOrdersAccount,
+      feeDiscountPubkey = null,
+    },
+  ){
+    // @ts-ignore
+    const ownerAddress = owner.publicKey ?? owner;
+    if (this.market.baseSizeNumberToLots(size).lte(new BN(0))) {
+      throw new Error('size too small');
+    }
+    if (this.market.priceNumberToLots(price).lte(new BN(0))) {
+      throw new Error('invalid price');
+    }
+
+    console.log('Using openOrdersAddress', openOrdersAccount
+    ? openOrdersAccount.publicKey.toString()
+    : openOrdersAddressKey.toString())
+    return DexInstructions.newOrder({
+      market: this.market.address,
+      requestQueue: this.market._decoded.requestQueue,
+      baseVault: this.market._decoded.baseVault,
+      quoteVault: this.market._decoded.quoteVault,
+      openOrders: openOrdersAccount
+        ? openOrdersAccount.publicKey
+        : openOrdersAddressKey,
+      owner: ownerAddress,
+      payer,
+      side,
+      limitPrice: this.market.priceNumberToLots(price),
+      maxQuantity: this.market.baseSizeNumberToLots(size),
+      orderType,
+      clientId,
+      programId: this.market._programId,
+      feeDiscountPubkey,
+    });
+  }
+
+  async consumeEvents(wallet, openOrdersAccounts, limit, programId) {
+    const tx = DexInstructions.consumeEvents({
+      market: this.market._decoded.ownAddress,
+      eventQueue: this.market._decoded.eventQueue,
+      openOrdersAccounts,
+      limit,
+      programId
+    });
+
+    return sendAndConfirmTransaction(this.connection, tx, [wallet], {
+      skipPreflight: false,
+      commitment: 'max',
+      preflightCommitment: 'recent',
+    })
   }
 }

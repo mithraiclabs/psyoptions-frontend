@@ -77,7 +77,7 @@ const openOrdersAddress = new PublicKey('fTVWuKfcAQg7aHhSprXKFucXB2AQuUCY5u8xzoT
     feeDiscountPubkey: undefined
   })
 
-  console.log('\n!!!nTurning the crank!!!!\n')
+  console.log('\n!!!Turning the crank!!!!\n')
   await market.market.matchOrders(connection, wallet, 10);
   await market.consumeEvents(wallet, [openOrdersAddress], 10, dexProgramKey);
 
@@ -89,7 +89,5 @@ const openOrdersAddress = new PublicKey('fTVWuKfcAQg7aHhSprXKFucXB2AQuUCY5u8xzoT
   const walletOrders = await market.market.loadOrdersForOwner(connection, wallet.publicKey, 0);
   console.log('*** walletOrders', walletOrders)
 
-
-  // TODO turn the crank for the market ... also figure out how the above placed orders move through the system when the crank is turned
 })();
 

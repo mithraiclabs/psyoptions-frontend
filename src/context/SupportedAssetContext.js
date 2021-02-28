@@ -1,10 +1,10 @@
 import React, { createContext, useEffect, useState } from 'react'
-import { TOKENS } from '@project-serum/tokens'
 import { Connection, PublicKey } from '@solana/web3.js'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import useConnection from '../hooks/useConnection'
 import { networks } from './ConnectionContext'
 import useNotifications from '../hooks/useNotifications'
+import { getAssetsByNetwork } from '../utils/networkInfo';
 
 // TODO see if we can query many accounts at once
 const mergeAssetsWithChainData = async (connection, assets) =>
@@ -23,27 +23,6 @@ const mergeAssetsWithChainData = async (connection, assets) =>
     }),
   )
 
-const getAssetsByNetwork = (name) => {
-  switch (name) {
-    case networks[0].name:
-      return TOKENS.mainnet
-    case networks[1].name:
-      return TOKENS.devnet
-    case networks[2].name:
-      return TOKENS.testnet
-    case networks[3].name:
-      try {
-        const localnetData = require('../hooks/localnetData.json')
-        return [TOKENS.mainnet[0], ...localnetData]
-      } catch (err) {
-        console.error('localnet data not found at ./localnetData.json')
-        return []
-      }
-    default:
-      return []
-  }
-}
-
 const SupportedAssetContext = createContext([])
 
 const SupportedAssetProvider = ({ children }) => {
@@ -56,7 +35,7 @@ const SupportedAssetProvider = ({ children }) => {
       setSupportedAssets([])
       return
     }
-    const basicAssets = getAssetsByNetwork(endpoint.name)
+    const basicAssets = getAssetsByNetwork(networks, endpoint.name)
     ;(async () => {
       try {
         const mergedAssets = await mergeAssetsWithChainData(

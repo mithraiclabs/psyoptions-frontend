@@ -6,9 +6,11 @@ const BN = require('bn.js');
 const SerumTokens = require('@project-serum/tokens');
 const SplToken = require('@solana/spl-token');
 
-const { AccountLayout, MintLayout, Token } = SplToken;
+const NetworkInfo = require('../src/utils/networkInfo');
 
-const { TOKENS } = SerumTokens;
+
+const { networks, getAssetsByNetwork } = NetworkInfo;
+const { AccountLayout, MintLayout, Token } = SplToken;
 
 const {
   Account,
@@ -219,8 +221,10 @@ const initializeSerumMarket = async (
   // const splData = JSON.parse(
   //   fs.readFileSync('./src/hooks/localnetData.json')
   // )
-  const splData = TOKENS.devnet;
-  const serumDexKeyBuffer = fs.readFileSync(ScriptHelpers.serumDexProgramKeypair);
+  const splData = getAssetsByNetwork(networks, 'Devnet');
+  console.log('*** SPL Data = ', splData);
+  process.exit(1);
+  // const serumDexKeyBuffer = fs.readFileSync(ScriptHelpers.serumDexProgramKeypair);
   // const dexProgramAccount = new Account(JSON.parse(serumDexKeyBuffer));
   // const dexProgramId = dexProgramAccount.publicKey;
   const dexProgramId = new PublicKey('9MVDeYQnJmN2Dt7H44Z8cob4bET2ysdNu2uFJcatDJno');

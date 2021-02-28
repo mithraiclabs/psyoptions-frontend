@@ -34,6 +34,8 @@ import { OptionsMarketsContext } from '../context/OptionsMarketsContext'
 //   },
 // }
 
+const EMPTY_PUBLIC_KEY = new PublicKey(0)
+
 const useOptionsMarkets = () => {
   const { pushNotification } = useNotifications()
   const { wallet, pubKey } = useWallet()
@@ -80,6 +82,13 @@ const useOptionsMarkets = () => {
           strikePrice: market.marketData.strikePrice.toString(10),
           optionMintAddress: market.marketData.optionMintAddress.toString(),
           optionMarketDataAddress: market.pubkey.toString(),
+          optionWriterRegistry: market.marketData.optionWriterRegistry?.filter(
+            (writerAccounts) =>
+              // filter all "Option Writers" that are placeholders
+              !writerAccounts.underlyingAssetAcctAddress.equals(
+                EMPTY_PUBLIC_KEY,
+              ),
+          ),
         }
         const key = `${newMarket.expiration}-${newMarket.uAssetSymbol}-${newMarket.qAssetSymbol}-${newMarket.size}-${newMarket.strikePrice}`
         newMarkets[key] = newMarket

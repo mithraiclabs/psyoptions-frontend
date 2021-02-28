@@ -1,4 +1,5 @@
-import React, { useState, useCallback, useMemo, createContext } from 'react'
+import React, { useState, createContext } from 'react'
+import PropTypes from 'prop-types'
 
 const OptionsMarketsContext = createContext()
 
@@ -10,6 +11,14 @@ const OptionsMarketsProvider = ({ children }) => {
       {children}
     </OptionsMarketsContext.Provider>
   )
+}
+
+OptionsMarketsProvider.propTypes = {
+  children: PropTypes.node,
+}
+
+OptionsMarketsProvider.defaultProps = {
+  children: null,
 }
 
 export { OptionsMarketsContext, OptionsMarketsProvider }

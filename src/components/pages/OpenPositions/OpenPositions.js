@@ -7,45 +7,13 @@ import TableContainer from '@material-ui/core/TableContainer'
 import TableHead from '@material-ui/core/TableHead'
 import TableRow from '@material-ui/core/TableRow'
 import { makeStyles } from '@material-ui/core/styles'
-import theme from '../../../utils/theme'
 import Page from '../Page'
 
 import PositionRow from './PositionRow'
 import useOpenPositions from '../../../hooks/useOpenPositions'
 import useOptionsMarkets from '../../../hooks/useOptionsMarkets'
-
-const darkBorder = `1px solid ${theme.palette.background.main}`
-
-// add new columns here
-const columns = [
-  { id: 'assetPair', label: 'Asset Pair', minWidth: 170, width: '20%' },
-  { id: 'strike', label: 'Strike', minWidth: 170, width: '15%' },
-  { id: 'markprice', label: 'Mark Price', minWidth: 100, width: '15%' },
-  {
-    id: 'size',
-    label: 'Size',
-    minWidth: 100,
-    format: (value) => value.toLocaleString('en-US'),
-    width: '15%',
-  },
-  {
-    id: 'expiration',
-    label: 'Expiration',
-    minWidth: 170,
-    format: (value) => {
-      const date = new Date(value * 1000)
-      return date.toUTCString()
-    },
-    width: '20%',
-  },
-  {
-    id: 'action',
-    label: 'Action',
-    minWidth: 170,
-    align: 'right',
-    width: '15%',
-  },
-]
+import { WrittenOptionsTable } from './WrittenOptionsTable'
+import { Heading } from './Heading'
 
 const useStyles = makeStyles({
   root: {
@@ -92,43 +60,35 @@ const OpenPositions = () => {
         <Paper
           style={{
             width: '100%',
-            // maxWidth: '500px',
           }}
         >
-          <Box>
-            <Box p={2} textAlign="center" borderBottom={darkBorder}>
-              <h2 style={{ margin: '10px 0 0' }}>Open Positions</h2>
-            </Box>
-
-            <TableContainer className={classes.container}>
-              <Table stickyHeader aria-label="sticky table">
-                <TableHead>
-                  <TableRow>
-                    {columns.map((column) => (
-                      <TableCell
-                        key={column.id}
-                        align={column.align}
-                        style={{ minWidth: column.minWidth }}
-                      >
-                        {column.label}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {positionRows
-                    .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                    .map((row) => (
-                      <PositionRow
-                        key={row.optionContractTokenKey}
-                        columns={columns}
-                        row={row}
-                      />
-                    ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Box>
+          <Heading>Open Positions</Heading>
+          <TableContainer className={classes.container}>
+            <Table stickyHeader aria-label="sticky table">
+              <TableHead>
+                <TableRow>
+                  <TableCell width="20%">Asset Pair</TableCell>
+                  <TableCell width="15%">Strike</TableCell>
+                  <TableCell width="15%">Market Price</TableCell>
+                  <TableCell width="15%">Size</TableCell>
+                  <TableCell width="20%">Expiration</TableCell>
+                  <TableCell align="right" width="15%">
+                    Action
+                  </TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {positionRows
+                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                  .map((row) => (
+                    <PositionRow key={row.optionContractTokenKey} row={row} />
+                  ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Paper>
+        <Paper style={{ marginTop: 24 }}>
+          <WrittenOptionsTable />
         </Paper>
       </Box>
     </Page>

@@ -60,12 +60,12 @@ const trustWalletERC20Icon = (address) =>
     splMint1.publicKey.toString(),
     splMint2.publicKey.toString(),
     splMint3.publicKey.toString(),
-    splMint4.publicKey.toString()
+    splMint4.publicKey.toString(),
   )
 
   const transaction = new Transaction()
   const mintBalance = await connection.getMinimumBalanceForRentExemption(
-    MintLayout.span
+    MintLayout.span,
   )
 
   transaction.add(
@@ -81,7 +81,7 @@ const trustWalletERC20Icon = (address) =>
       splMint1.publicKey,
       8,
       payer.publicKey,
-      null
+      null,
     ),
     SystemProgram.createAccount({
       fromPubkey: payer.publicKey,
@@ -95,7 +95,7 @@ const trustWalletERC20Icon = (address) =>
       splMint2.publicKey,
       8,
       payer.publicKey,
-      null
+      null,
     ),
     SystemProgram.createAccount({
       fromPubkey: payer.publicKey,
@@ -109,7 +109,7 @@ const trustWalletERC20Icon = (address) =>
       splMint3.publicKey,
       8,
       payer.publicKey,
-      null
+      null,
     ),
     SystemProgram.createAccount({
       fromPubkey: payer.publicKey,
@@ -123,8 +123,8 @@ const trustWalletERC20Icon = (address) =>
       splMint4.publicKey,
       8,
       payer.publicKey,
-      null
-    )
+      null,
+    ),
   )
   const signers = [payer, splMint1, splMint2, splMint3, splMint4]
   await sendAndConfirmTransaction(connection, transaction, signers, {
@@ -135,32 +135,36 @@ const trustWalletERC20Icon = (address) =>
   // Generate sample assets from local net data and random logos
   const localSPLData = [
     {
-      mintAddress: splMint1.publicKey.toString(),
-      tokenSymbol: 'SPL1',
-      tokenName: 'SPL 1',
-      icon: trustWalletERC20Icon('0xdAC17F958D2ee523a2206206994597C13D831ec7'),
+      mintAddress: splMint4.publicKey.toString(),
+      tokenSymbol: 'BTC',
+      tokenName: 'Bitcoin',
+      icon:
+        'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/bitcoin/info/logo.png',
     },
     {
-      mintAddress: splMint2.publicKey.toString(),
-      tokenSymbol: 'SPL2',
-      tokenName: 'SPL 2',
-      icon: trustWalletERC20Icon('0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48'),
+      mintAddress: splMint1.publicKey.toString(),
+      tokenSymbol: 'SRM',
+      tokenName: 'Serum',
+      icon:
+        'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0x476c5E26a75bd202a9683ffD34359C0CC15be0fF/logo.png',
     },
     {
       mintAddress: splMint3.publicKey.toString(),
-      tokenSymbol: 'SPL3',
-      tokenName: 'SPL 3',
-      icon: trustWalletERC20Icon('0x476c5E26a75bd202a9683ffD34359C0CC15be0fF'),
+      tokenSymbol: 'ETH',
+      tokenName: 'Ethereum',
+      icon:
+        'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2/logo.png',
     },
     {
-      mintAddress: splMint4.publicKey.toString(),
-      tokenSymbol: 'SPL4',
-      tokenName: 'SPL 4',
-      icon: trustWalletERC20Icon('0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48'),
+      mintAddress: splMint2.publicKey.toString(),
+      tokenSymbol: 'USDC',
+      tokenName: 'USDC',
+      icon:
+        'https://raw.githubusercontent.com/trustwallet/assets/f3ffd0b9ae2165336279ce2f8db1981a55ce30f8/blockchains/ethereum/assets/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48/logo.png',
     },
   ]
   fs.writeFileSync(
     './src/hooks/localnetData.json',
-    JSON.stringify(localSPLData)
+    JSON.stringify(localSPLData),
   )
 })()

@@ -381,6 +381,9 @@ export class SerumMarket {
       throw new Error('invalid price');
     }
 
+    console.log('Using openOrdersAddress', openOrdersAccount
+    ? openOrdersAccount.publicKey.toString()
+    : openOrdersAddressKey.toString())
     return DexInstructions.newOrder({
       market: this.market.address,
       requestQueue: this.market._decoded.requestQueue,
@@ -399,5 +402,21 @@ export class SerumMarket {
       programId: this.market._programId,
       feeDiscountPubkey,
     });
+  }
+
+  async consumeEvents(wallet, openOrdersAccounts, limit, programId) {
+    const tx = DexInstructions.consumeEvents({
+      market: this.market._decoded.ownAddress,
+      eventQueue: this.market._decoded.eventQueue,
+      openOrdersAccounts,
+      limit,
+      programId
+    });
+
+    return sendAndConfirmTransaction(this.connection, tx, [wallet], {
+      skipPreflight: false,
+      commitment: 'max',
+      preflightCommitment: 'recent',
+    })
   }
 }

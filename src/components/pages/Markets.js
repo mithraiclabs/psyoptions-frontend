@@ -1,4 +1,4 @@
-import { Box, Paper } from '@material-ui/core'
+import { Box, CircularProgress, Paper } from '@material-ui/core'
 import React, { useState, useEffect } from 'react'
 import Table from '@material-ui/core/Table'
 import TableBody from '@material-ui/core/TableBody'
@@ -17,6 +17,8 @@ import { getNext3Months } from '../../utils/dates'
 import useOptionsMarkets from '../../hooks/useOptionsMarkets'
 import useConnection from '../../hooks/useConnection'
 import useAssetList from '../../hooks/useAssetList'
+import useWallet from '../../hooks/useWallet'
+import useNotifications from '../../hooks/useNotifications'
 
 const defaultAssetPairsByNetworkName = {
   Mainnet: {
@@ -60,6 +62,7 @@ const rowTemplate = {
     volume: '--',
     openInterest: '--',
     emptyRow: true,
+    actionInProgress: false,
   },
   put: {
     key: '',
@@ -69,6 +72,7 @@ const rowTemplate = {
     volume: '--',
     openInterest: '--',
     emptyRow: true,
+    actionInProgress: false,
   },
 }
 
@@ -83,10 +87,16 @@ const emptyRows = Array(9).fill(rowTemplate)
 
 const Markets = () => {
   const { endpoint } = useConnection()
+  const { connect, connected } = useWallet()
+  const { pushNotification } = useNotifications()
+
   const supportedAssets = useAssetList()
   const [date, setDate] = useState(next3Months[0])
   const [uAsset, setUAsset] = useState()
   const [qAsset, setQAsset] = useState()
+  const [rows, setRows] = useState(emptyRows)
+
+  const { getOptionsChain, initializeMarkets } = useOptionsMarkets()
 
   useEffect(() => {
     if (supportedAssets && supportedAssets.length > 0) {
@@ -109,18 +119,89 @@ const Markets = () => {
     }
   }, [endpoint, supportedAssets])
 
-  const { getOptionsChain } = useOptionsMarkets()
-  let rows = emptyRows
-  if (uAsset?.tokenSymbol && qAsset?.tokenSymbol && date) {
-    const optionsChain = getOptionsChain({
-      uAssetSymbol: uAsset.tokenSymbol,
-      qAssetSymbol: qAsset.tokenSymbol,
-      date: date.unix(),
-    })
-    rows = optionsChain.length ? optionsChain : emptyRows
-    if (rows.length < 9) {
-      rows = [...rows, ...emptyRows.slice(rows.length)]
+  useEffect(() => {
+    console.log('hmmm')
+    if (uAsset?.tokenSymbol && qAsset?.tokenSymbol && date) {
+      console.log('hmmm2')
+      const optionsChain = getOptionsChain({
+        uAssetSymbol: uAsset.tokenSymbol,
+        qAssetSymbol: qAsset.tokenSymbol,
+        date: date.unix(),
+      })
+
+      let newRows = optionsChain.length ? optionsChain : emptyRows
+
+      if (newRows.length < 9) {
+        newRows = [...newRows, ...emptyRows.slice(newRows.length)]
+      }
+
+      setRows(newRows)
     }
+  }, [uAsset, qAsset, date]) // eslint-disable-line
+
+  const setRowloading = ({ index, type, actionInProgress }) => {
+    // Set the row to loading state
+    setRows(
+      rows.map((row, i) => {
+        if (index === i) {
+          return {
+            ...row,
+            [type]: {
+              ...row[type],
+              actionInProgress,
+            },
+          }
+        }
+        return row
+      }),
+    )
+  }
+
+  const handleInitialize = async ({ index, type }) => {
+    setRowloading({ index, type, actionInProgress: true })
+    try {
+      const ua = type === 'call' ? uAsset : qAsset
+      const qa = type === 'call' ? qAsset : uAsset
+      const row = rows[index]
+      const sizeAsU64 = row.size * 10 ** ua.decimals
+
+      await initializeMarkets({
+        size: sizeAsU64,
+        strikePrices: [row.strike],
+        uAssetSymbol: ua.tokenSymbol,
+        qAssetSymbol: qa.tokenSymbol,
+        uAssetMint: ua.mintAddress,
+        qAssetMint: qa.mintAddress,
+        expiration: date.unix(),
+      })
+
+      const newRows = rows.map((_row, i) => {
+        if (index === i) {
+          return {
+            ..._row,
+            [type]: {
+              ..._row[type],
+              initialized: true,
+              actionInProgress: false,
+            },
+          }
+        }
+        return _row
+      })
+
+      setRows(newRows)
+    } catch (err) {
+      console.log(err)
+      pushNotification({
+        severity: 'error',
+        message: `${err}`,
+      })
+      setRowloading({ index, type, actionInProgress: false })
+    }
+  }
+
+  const handleMint = ({ index, type }) => {
+    setRowloading({ index, type, actionInProgress: true })
   }
 
   return (
@@ -251,12 +332,43 @@ const Markets = () => {
                     <TCell align="left">
                       {row.call?.emptyRow ? (
                         '--'
+                      ) : row.call?.actionInProgress ? (
+                        <CircularProgress size={32} />
+                      ) : !connected ? (
+                        <Button
+                          variant="outlined"
+                          color="primary"
+                          p="8px"
+                          onClick={connect}
+                        >
+                          Connect
+                        </Button>
                       ) : row.call?.initialized ? (
-                        <Button variant="outlined" color="primary" p="8px">
+                        <Button
+                          variant="outlined"
+                          color="primary"
+                          p="8px"
+                          onClick={() =>
+                            handleMint({
+                              index: i,
+                              type: 'call',
+                            })
+                          }
+                        >
                           Mint
                         </Button>
                       ) : (
-                        <Button variant="outlined" color="primary" p="8px">
+                        <Button
+                          variant="outlined"
+                          color="primary"
+                          p="8px"
+                          onClick={() =>
+                            handleInitialize({
+                              index: i,
+                              type: 'call',
+                            })
+                          }
+                        >
                           Initialize
                         </Button>
                       )}
@@ -286,14 +398,45 @@ const Markets = () => {
                     <TCell align="right">{row.put?.volume}</TCell>
                     <TCell align="right">{row.put?.openInterest}</TCell>
                     <TCell align="right">
-                      {row.call?.emptyRow ? (
+                      {row.put?.emptyRow ? (
                         '--'
+                      ) : row.put?.actionInProgress ? (
+                        <CircularProgress size={32} />
+                      ) : !connected ? (
+                        <Button
+                          variant="outlined"
+                          color="primary"
+                          p="8px"
+                          onClick={connect}
+                        >
+                          Connect
+                        </Button>
                       ) : row.put?.initialized ? (
-                        <Button variant="outlined" color="primary" p="8px">
+                        <Button
+                          variant="outlined"
+                          color="primary"
+                          p="8px"
+                          onClick={() =>
+                            handleMint({
+                              index: i,
+                              type: 'put',
+                            })
+                          }
+                        >
                           Mint
                         </Button>
                       ) : (
-                        <Button variant="outlined" color="primary" p="8px">
+                        <Button
+                          variant="outlined"
+                          color="primary"
+                          p="8px"
+                          onClick={() =>
+                            handleInitialize({
+                              index: i,
+                              type: 'put',
+                            })
+                          }
+                        >
                           Initialize
                         </Button>
                       )}

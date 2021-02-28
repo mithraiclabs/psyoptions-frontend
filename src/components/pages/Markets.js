@@ -1,5 +1,5 @@
 import { Box, Paper } from '@material-ui/core'
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Table from '@material-ui/core/Table'
 import TableBody from '@material-ui/core/TableBody'
 import TableCell from '@material-ui/core/TableCell'
@@ -15,6 +15,27 @@ import SelectAsset from '../SelectAsset'
 import { getNext3Months } from '../../utils/dates'
 
 import useOptionsMarkets from '../../hooks/useOptionsMarkets'
+import useConnection from '../../hooks/useConnection'
+import useAssetList from '../../hooks/useAssetList'
+
+const defaultAssetPairsByNetworkName = {
+  Mainnet: {
+    uAssetSymbol: 'SOL',
+    qAssetSymbol: 'USDC',
+  },
+  Devnet: {
+    uAssetSymbol: 'SOL',
+    qAssetSymbol: '', // TODO add this
+  },
+  Testnet: {
+    uAssetSymbol: 'SOL',
+    qAssetSymbol: 'ABC',
+  },
+  localhost: {
+    uAssetSymbol: 'SOL',
+    qAssetSymbol: 'SPL1',
+  },
+}
 
 const darkBorder = `1px solid ${theme.palette.background.main}`
 
@@ -61,16 +82,34 @@ const next3Months = getNext3Months()
 const emptyRows = Array(9).fill(rowTemplate)
 
 const Markets = () => {
+  const { endpoint } = useConnection()
+  const supportedAssets = useAssetList()
   const [date, setDate] = useState(next3Months[0])
-
-  // TODO -- set default assets, e.g. SOL/USDC
   const [uAsset, setUAsset] = useState()
   const [qAsset, setQAsset] = useState()
 
-  // const [rows, setRows] = useState(emptyRows)
+  useEffect(() => {
+    if (supportedAssets && supportedAssets.length > 0) {
+      const defaultAssetPair =
+        defaultAssetPairsByNetworkName[endpoint.name] || {}
+      let defaultUAsset
+      let defaultQAsset
+      supportedAssets.forEach((asset) => {
+        if (asset.tokenSymbol === defaultAssetPair.uAssetSymbol) {
+          defaultUAsset = asset
+        }
+        if (asset.tokenSymbol === defaultAssetPair.qAssetSymbol) {
+          defaultQAsset = asset
+        }
+      })
+      if (defaultUAsset && defaultQAsset) {
+        setUAsset(defaultUAsset)
+        setQAsset(defaultQAsset)
+      }
+    }
+  }, [endpoint, supportedAssets])
 
   const { getOptionsChain } = useOptionsMarkets()
-
   let rows = emptyRows
   if (uAsset?.tokenSymbol && qAsset?.tokenSymbol && date) {
     const optionsChain = getOptionsChain({

@@ -34,7 +34,7 @@ const getAssetsByNetwork = (name) => {
     case networks[3].name:
       try {
         const localnetData = require('../hooks/localnetData.json')
-        return localnetData
+        return [TOKENS.mainnet[0], ...localnetData]
       } catch (err) {
         console.error('localnet data not found at ./localnetData.json')
         return []

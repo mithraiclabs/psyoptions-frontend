@@ -11,13 +11,7 @@ import useConnection from '../hooks/useConnection'
 import theme from '../utils/theme'
 
 const NetworkMenu = () => {
-  const {
-    networks,
-    connection,
-    endpoint,
-    setEndpoint,
-    setProgramId,
-  } = useConnection()
+  const { networks, endpoint, setEndpoint } = useConnection()
 
   const [open, setOpen] = useState(false)
   const anchorRef = React.useRef(null)
@@ -74,20 +68,22 @@ const NetworkMenu = () => {
               id="menu-list-grow"
               onKeyDown={handleListKeyDown}
             >
-              {networks.map((item) => (
-                <MenuItem
-                  onClick={(event) => {
-                    setEndpoint(item)
-                    handleClose(event)
-                  }}
-                  key={item.url}
-                >
-                  <Box>
-                    <Box>{item.name}</Box>
-                    <Box fontSize={10}>{item.url}</Box>
-                  </Box>
-                </MenuItem>
-              ))}
+              {networks
+                .filter((n) => n.programId !== undefined)
+                .map((item) => (
+                  <MenuItem
+                    onClick={(event) => {
+                      setEndpoint(item)
+                      handleClose(event)
+                    }}
+                    key={item.url}
+                  >
+                    <Box>
+                      <Box>{item.name}</Box>
+                      <Box fontSize={10}>{item.url}</Box>
+                    </Box>
+                  </MenuItem>
+                ))}
             </MenuList>
           </ClickAwayListener>
         </Card>

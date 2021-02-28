@@ -27,7 +27,10 @@ const networks = [
   },
 ]
 
-const DEFAULT_NETWORK = networks[0]
+// Default to first network that has a defined program id
+const DEFAULT_NETWORK = networks.find(
+  (network) => network.programId !== undefined,
+)
 
 const ConnectionContext = createContext({})
 

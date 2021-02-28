@@ -4,6 +4,9 @@ const SolWeb3 = require('@solana/web3.js');
 const Serum = require('@project-serum/serum');
 const BN = require('bn.js');
 const SerumTokens = require('@project-serum/tokens');
+const SplToken = require('@solana/spl-token');
+
+const { AccountLayout, MintLayout, Token } = SplToken;
 
 const { TOKENS } = SerumTokens;
 
@@ -105,6 +108,7 @@ const initializeSerumMarket = async (
   });
 
   const tx1 = new Transaction();
+  // Create an initialize the pool accounts to hold the base and the quote assess
   tx1.add(
     SystemProgram.createAccount({
       fromPubkey: payer.publicKey,
@@ -120,16 +124,18 @@ const initializeSerumMarket = async (
       space: 165,
       programId: TokenInstructions.TOKEN_PROGRAM_ID,
     }),
-    TokenInstructions.initializeAccount({
-      account: baseVault.publicKey,
-      mint: baseMint,
-      owner: vaultOwner,
-    }),
-    TokenInstructions.initializeAccount({
-      account: quoteVault.publicKey,
-      mint: quoteMint,
-      owner: vaultOwner,
-    }),
+    Token.createInitAccountInstruction(
+      TokenInstructions.TOKEN_PROGRAM_ID,
+      baseMint,
+      baseVault.publicKey,
+      vaultOwner,
+    ),
+    Token.createInitAccountInstruction(
+      TokenInstructions.TOKEN_PROGRAM_ID,
+      quoteMint,
+      quoteVault.publicKey,
+      vaultOwner,
+    ),
   );
 
   const tx2 = new Transaction();

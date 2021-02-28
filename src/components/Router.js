@@ -2,7 +2,7 @@ import React from 'react'
 import { Switch, Route, BrowserRouter, StaticRouter } from 'react-router-dom'
 import { isBrowser } from '../utils/isNode'
 
-import Main from './pages/main'
+import Landing from './pages/Landing'
 import Mint from './pages/Mint'
 import InitializeMarket from './pages/InitializeMarket'
 import OpenPositions from './pages/OpenPositions'
@@ -28,7 +28,7 @@ const Routes = (props) => (
   <Router {...props}>
     <Switch>
       <Route exact path="/">
-        <Main />
+        <Landing />
       </Route>
       <Route exact path="/markets">
         <Markets />

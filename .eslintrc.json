@@ -23,6 +23,7 @@
     "semi": "off",
     "global-require": "off",
     "react/no-array-index-key": "warn",
-    "no-nested-ternary": "off"
+    "no-nested-ternary": "off",
+    "react/jsx-props-no-spreading": "off"
   }
 }

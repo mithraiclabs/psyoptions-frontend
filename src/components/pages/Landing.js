@@ -1,7 +1,8 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { useHistory } from 'react-router-dom'
 import { Box, Button } from '@material-ui/core'
 import { makeStyles } from '@material-ui/core/styles'
+import { PublicKey } from '@solana/web3.js'
 
 import Page from './Page'
 
@@ -10,6 +11,7 @@ import theme from '../../utils/theme'
 import useOptionsMarkets from '../../hooks/useOptionsMarkets'
 import useOpenPositions from '../../hooks/useOpenPositions'
 import WalletStatus from '../WalletStatus'
+import useConnection from '../../hooks/useConnection'
 
 const useStyles = makeStyles({
   logoH1: {
@@ -56,7 +58,7 @@ const LandingCard = ({ title = '', text = '', button = '' } = {}) => {
         alignItems="center"
       >
         <h1 style={{ margin: '0', fontSize: '60px' }}>{title}</h1>
-        <Box style={{ fontSize: '24px' }} textAlign="center">
+        <Box style={{ fontSize: '22px' }} textAlign="center">
           {text || '0'}
         </Box>
       </Box>
@@ -65,14 +67,40 @@ const LandingCard = ({ title = '', text = '', button = '' } = {}) => {
   )
 }
 
-const Main = () => {
-  const { logoH1 } = useStyles()
-  const { landingCard } = useStyles()
+const Landing = () => {
+  const history = useHistory()
+  const { connection } = useConnection()
   const { markets } = useOptionsMarkets()
   const positions = useOpenPositions()
-  const history = useHistory()
+  const { logoH1 } = useStyles()
+  const { landingCard } = useStyles()
 
-  const numberOfTokens = '1,204'
+  const [numberOfTokens, setNumberOfTokens] = useState()
+
+  const getNumberOfTokensMinted = async () => {
+    if (!numberOfTokens ?? Object.keys(markets).length > 0) {
+      const results = await Promise.allSettled(
+        Object.values(markets).map(async (market) => {
+          const result = await connection.getTokenSupply(
+            new PublicKey(market.optionMintAddress),
+          )
+          return result.value
+        }),
+      )
+
+      const tokenSupply = results
+        .filter((res) => res.status !== 'rejected')
+        .reduce((sum, res) => sum + (res.value?.uiAmount || 0), 0)
+
+      if (tokenSupply > 0) {
+        setNumberOfTokens(`${tokenSupply.toFixed(0)}`)
+      }
+    }
+  }
+
+  useEffect(() => {
+    getNumberOfTokensMinted()
+  }, [markets]) // eslint-disable-line
 
   return (
     <Page background={pageBg}>
@@ -106,7 +134,9 @@ const Main = () => {
           <Box display="flex" flexDirection={['column', 'row', 'row']}>
             <LandingCard
               title={`${Object.keys(markets).length}`}
-              text="options markets created"
+              text={`options market${
+                Object.keys(markets).length === 1 ? '' : 's'
+              } created`}
               button={
                 <Button
                   color="primary"
@@ -123,8 +153,10 @@ const Main = () => {
               }
             />
             <LandingCard
-              title={numberOfTokens}
-              text="options contracts minted"
+              title={numberOfTokens || '0'}
+              text={`options contract${
+                numberOfTokens === 1 ? '' : 's'
+              } in circulation`}
               button={
                 <Button
                   color="primary"
@@ -144,7 +176,9 @@ const Main = () => {
           <Box display="flex" flexDirection={['column', 'row', 'row']}>
             <LandingCard
               title={`${Object.keys(positions).length}`}
-              text="open positions in wallet"
+              text={`open position${
+                Object.keys(positions).length === 1 ? '' : 's'
+              } in wallet`}
               button={<WalletStatus />}
             />
             <Box
@@ -191,4 +225,4 @@ const Main = () => {
   )
 }
 
-export default Main
+export default Landing

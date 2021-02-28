@@ -1,18 +1,19 @@
-const fs = require('fs');
-const yaml = require('js-yaml');
-const os = require('os');
+import fs from 'fs';
+import yaml from 'js-yaml';
+import os from 'os';
+import {} from '@project-serum/serum';
 
-module.exports.serumDexProgramKeypair = './serum/dex/serum_dex-keypair.json';
-module.exports.serumDexBinaryPath = './serum/dex/serum_dex.so';
+export const serumDexProgramKeypair = './serum/dex/serum_dex-keypair.json';
+export const serumDexBinaryPath = './serum/dex/serum_dex.so';
 
-module.exports.getSolanaConfig = () => {
+export const getSolanaConfig = () => {
   // Read the default key file
   const HOME = os.homedir()
   const configYml = fs.readFileSync(`${HOME}/.config/solana/cli/config.yml`, 'utf-8');
   return yaml.load(configYml);
 }
 
-module.exports.validateLocalnet = (solanaConfig) => {
+export const validateLocalnet = (solanaConfig) => {
   // Exit if the user is not pointing to local net
   if (!solanaConfig.json_rpc_url.match(/127\.0\.0\.1|localhost/)) {
     console.log("It looks like you're Solana configuration file is not pointed to localnet. Please make sure you are using the correct network and keypair.");
@@ -20,7 +21,7 @@ module.exports.validateLocalnet = (solanaConfig) => {
   }
 } 
 
-module.exports.requestAndWaitForAirdrop = async (connection, amount, account) => {
+export const requestAndWaitForAirdrop = async (connection, amount, account) => {
   const priorBalance = await connection.getBalance(account.publicKey);
   await connection.requestAirdrop(account.publicKey, amount)
   let retries = 60
@@ -36,4 +37,11 @@ module.exports.requestAndWaitForAirdrop = async (connection, amount, account) =>
       throw new Error('Failed to airdrop SOL to payer for seed')
     }
   }
+}
+
+
+const seedSerumMarket = (
+  marketAddress
+) => {
+
 }

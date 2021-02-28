@@ -44,6 +44,7 @@ const useOptionsMarkets = () => {
   const fetchMarketData = useCallback(async () => {
     try {
       if (!(connection instanceof Connection)) return
+      if (!endpoint.programId) return
       const assets = assetList.map((asset) => new PublicKey(asset.mintAddress))
       const res = await Market.getAllMarketsBySplSupport(
         connection,

@@ -1,5 +1,5 @@
 import React from 'react'
-
+import { useHistory } from 'react-router-dom'
 import { Box, Button } from '@material-ui/core'
 import { makeStyles } from '@material-ui/core/styles'
 
@@ -70,6 +70,7 @@ const Main = () => {
   const { landingCard } = useStyles()
   const { markets } = useOptionsMarkets()
   const positions = useOpenPositions()
+  const history = useHistory()
 
   const numberOfTokens = '1,204'
 
@@ -111,6 +112,11 @@ const Main = () => {
                   color="primary"
                   variant="outlined"
                   style={{ whiteSpace: 'nowrap' }}
+                  href="/markets"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    history.push('/markets')
+                  }}
                 >
                   View Markets
                 </Button>
@@ -124,6 +130,11 @@ const Main = () => {
                   color="primary"
                   variant="outlined"
                   style={{ whiteSpace: 'nowrap' }}
+                  href="/markets"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    history.push('/mint')
+                  }}
                 >
                   Mint Options
                 </Button>

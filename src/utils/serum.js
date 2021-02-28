@@ -1,7 +1,6 @@
 import { 
   DexInstructions,
   Market, 
-  _MARKET_STATE_LAYOUT_V2,
   OpenOrders,
 } from '@project-serum/serum';
 import { 
@@ -19,7 +18,167 @@ const SOL_MINT = new PublicKey(
   'So11111111111111111111111111111111111111112',
 );
 
-// To initialize a new market, use the initializeSerumMarket from the options protocol bindings package
+/**
+ * Generate the TX to initialize a new market.
+ * pulled from https://github.com/project-serum/serum-dex-ui/blob/c6d0da0fc645492800f48a62b3314ebb5eaf2401/src/utils/send.tsx#L473
+ * 
+ * @param {Connection} connection 
+ * @param {Account} payer 
+ * @param {PublicKey} baseMint 
+ * @param {PublicKey} quoteMint 
+ * @param {BN} baseLotSize
+ * @param {BN} quoteLotSize 
+ * @param {PublicKey} dexProgramId 
+ * @param {PublicKey} tokenProgramId 
+ */
+export const createInitializeMarketTx = async (
+ connection,
+ payer,
+ baseMint,
+ quoteMint,
+ baseLotSize,
+ quoteLotSize,
+ dexProgramId,
+ tokenProgramId,
+) => {
+ const market = new Account()
+ const requestQueue = new Account()
+ const eventQueue = new Account()
+ const bids = new Account()
+ const asks = new Account()
+ const baseVault = new Account()
+ const quoteVault = new Account()
+ const feeRateBps = 0
+ const quoteDustThreshold = new BN(100)
+
+ async function getVaultOwnerAndNonce() {
+   const nonce = new BN(0)
+   // eslint-disable-next-line no-constant-condition
+   while (true) {
+     try {
+       // eslint-disable-next-line no-await-in-loop
+       const vaultOwner = await PublicKey.createProgramAddress(
+         [market.publicKey.toBuffer(), nonce.toArrayLike(Buffer, 'le', 8)],
+         dexProgramId
+       )
+       return [vaultOwner, nonce]
+     } catch (e) {
+       nonce.iaddn(1)
+     }
+   }
+ }
+ const [vaultOwner, vaultSignerNonce] = await getVaultOwnerAndNonce()
+
+ const tx1 = new Transaction()
+ // Create an initialize the pool accounts to hold the base and the quote assess
+ const poolSize = 165
+ const poolCostLamports = await connection.getMinimumBalanceForRentExemption(
+   poolSize
+ )
+ tx1.add(
+   SystemProgram.createAccount({
+     fromPubkey: payer.publicKey,
+     newAccountPubkey: baseVault.publicKey,
+     lamports: poolCostLamports,
+     space: poolSize,
+     programId: tokenProgramId,
+   }),
+   SystemProgram.createAccount({
+     fromPubkey: payer.publicKey,
+     newAccountPubkey: quoteVault.publicKey,
+     lamports: poolCostLamports,
+     space: poolSize,
+     programId: tokenProgramId,
+   }),
+   Token.createInitAccountInstruction(
+    tokenProgramId,
+     baseMint,
+     baseVault.publicKey,
+     vaultOwner
+   ),
+   Token.createInitAccountInstruction(
+    tokenProgramId,
+     quoteMint,
+     quoteVault.publicKey,
+     vaultOwner
+   )
+ )
+
+ const tx2 = new Transaction()
+ tx2.add(
+   SystemProgram.createAccount({
+     fromPubkey: payer.publicKey,
+     newAccountPubkey: market.publicKey,
+     lamports: await connection.getMinimumBalanceForRentExemption(
+       Market.getLayout(dexProgramId).span
+     ),
+     space: Market.getLayout(dexProgramId).span,
+     programId: dexProgramId,
+   }),
+   SystemProgram.createAccount({
+     fromPubkey: payer.publicKey,
+     newAccountPubkey: requestQueue.publicKey,
+     lamports: await connection.getMinimumBalanceForRentExemption(5120 + 12),
+     space: 5120 + 12,
+     programId: dexProgramId,
+   }),
+   SystemProgram.createAccount({
+     fromPubkey: payer.publicKey,
+     newAccountPubkey: eventQueue.publicKey,
+     lamports: await connection.getMinimumBalanceForRentExemption(262144 + 12),
+     space: 262144 + 12,
+     programId: dexProgramId,
+   }),
+   SystemProgram.createAccount({
+     fromPubkey: payer.publicKey,
+     newAccountPubkey: bids.publicKey,
+     lamports: await connection.getMinimumBalanceForRentExemption(65536 + 12),
+     space: 65536 + 12,
+     programId: dexProgramId,
+   }),
+   SystemProgram.createAccount({
+     fromPubkey: payer.publicKey,
+     newAccountPubkey: asks.publicKey,
+     lamports: await connection.getMinimumBalanceForRentExemption(65536 + 12),
+     space: 65536 + 12,
+     programId: dexProgramId,
+   }),
+   DexInstructions.initializeMarket({
+     market: market.publicKey,
+     requestQueue: requestQueue.publicKey,
+     eventQueue: eventQueue.publicKey,
+     bids: bids.publicKey,
+     asks: asks.publicKey,
+     baseVault: baseVault.publicKey,
+     quoteVault: quoteVault.publicKey,
+     baseMint,
+     quoteMint,
+     baseLotSize,
+     quoteLotSize,
+     feeRateBps,
+     vaultSignerNonce,
+     quoteDustThreshold,
+     programId: dexProgramId,
+   })
+ )
+
+ const { blockhash } = await connection.getRecentBlockhash();
+ const signers1 = [payer, baseVault, quoteVault];
+ tx1.feePayer = payer.publicKey;
+ tx1.recentBlockhash = blockhash;
+ tx1.partialSign(...signers1.slice(1));
+ const signers2 = [payer, market, requestQueue, eventQueue, bids, asks];
+ tx2.feePayer = payer.publicKey;
+ tx2.recentBlockhash = blockhash;
+ tx2.partialSign(...signers2.slice(1));
+ return {
+   tx1,
+   signers1,
+   tx2,
+   signers2,
+   market,
+ }
+}
 
 export class SerumMarket {
 
@@ -30,7 +189,6 @@ export class SerumMarket {
    * @param {PublicKey} dexProgramKey 
    */
   constructor (connection, marketAddress, dexProgramKey) {
-    this.MARKET_LAYOUT = _MARKET_STATE_LAYOUT_V2;
     this.connection = connection;
     this.marketAddress = marketAddress;
     this.dexProgramKey = dexProgramKey;
@@ -41,31 +199,56 @@ export class SerumMarket {
   }
 
   /**
+   * Returns the first available SerumMarket for specified assets
+   * 
+   * @param {Connect} connection 
+   * @param {PublicKey} baseMintAddress 
+   * @param {PublicKey} quoteMintAddress 
+   * @param {PublicKey} dexProgramKey 
+   */
+  static async findByAssets(
+    connection,
+    baseMintAddress,
+    quoteMintAddress,
+    dexProgramKey,
+  ) {
+    const availableMarkets = await SerumMarket.getMarketByAssetKeys(connection, baseMintAddress, quoteMintAddress, dexProgramKey);
+    if (availableMarkets.length) {
+      const market = new SerumMarket(connection, availableMarkets[0].publicKey, dexProgramKey)
+      await market.initMarket();
+      return market;
+    } 
+    return null;
+  }
+
+  /**
    * Look up a Serum market via the Base and Quote mint addresses.
    * @param {PublicKey} baseMintAddress 
    * @param {PublicKey} quoteMintAddress 
+   * @param {PublicKey} dexProgramId
    */
   static async getMarketByAssetKeys (
     connection,
     baseMintAddress,
     quoteMintAddress,
+    dexProgramId,
   ) {
     const filters = [
       {
         memcmp: {
-          offset: this.MARKET_LAYOUT.offsetOf('baseMint'),
+          offset: Market.getLayout(dexProgramId).offsetOf('baseMint'),
           bytes: baseMintAddress.toBase58(),
         },
       },
       {
         memcmp: {
-          offset: this.MARKET_LAYOUT.offsetOf('quoteMint'),
+          offset: Market.getLayout(dexProgramId).offsetOf('quoteMint'),
           bytes: quoteMintAddress.toBase58(),
         },
       },
     ];
     const resp = await connection._rpcRequest('getProgramAccounts', [
-      this.dexProgramKey.toBase58(),
+      dexProgramId.toBase58(),
       {
         commitment: connection.commitment,
         filters,

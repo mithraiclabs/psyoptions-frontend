@@ -9,18 +9,20 @@ const useConnection = () => {
     setConnection,
     endpoint,
     setEndpoint,
+    dexProgramId,
   } = useContext(ConnectionContext)
 
   useEffect(() => {
     const cx = new Connection(endpoint.url, 'max')
     setConnection(cx)
-  }, [endpoint])
+  }, [endpoint, setConnection])
 
   return {
     networks,
     connection,
     endpoint,
     setEndpoint,
+    dexProgramId,
   }
 }
 

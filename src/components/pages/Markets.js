@@ -120,9 +120,7 @@ const Markets = () => {
   }, [endpoint, supportedAssets])
 
   useEffect(() => {
-    console.log('hmmm')
     if (uAsset?.tokenSymbol && qAsset?.tokenSymbol && date) {
-      console.log('hmmm2')
       const optionsChain = getOptionsChain({
         uAssetSymbol: uAsset.tokenSymbol,
         qAssetSymbol: qAsset.tokenSymbol,
@@ -137,7 +135,7 @@ const Markets = () => {
 
       setRows(newRows)
     }
-  }, [uAsset, qAsset, date]) // eslint-disable-line
+  }, [getOptionsChain, uAsset, qAsset, date]) // eslint-disable-line
 
   const setRowloading = ({ index, type, actionInProgress }) => {
     // Set the row to loading state

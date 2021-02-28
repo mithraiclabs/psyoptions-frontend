@@ -26,12 +26,49 @@ const networks = [
   },
 ]
 
-const getAssetsByNetwork = (networks, name) => {
+const getSerumMarketsByNetwork = (name) => {
   switch (name) {
     case networks[0].name:
       return TOKENS.mainnet
     case networks[1].name:
       return [
+        {
+          baseAssetMint: 'So11111111111111111111111111111111111111112',
+          quoteAssetMint: '2ShyNZqKffdYKMV6Pm8Ypcxj8GQwvFiAUkfTiyxq9v42',
+          marketAddress: 'HzCPDBWufc21nDjSUwcTVxjFjYCpktHMNewmuNHXdhtx'
+        },
+        {
+          baseAssetMint: '2ShyNZqKffdYKMV6Pm8Ypcxj8GQwvFiAUkfTiyxq9v42',
+          quoteAssetMint: 'So11111111111111111111111111111111111111112',
+          marketAddress: '339KS1xbJLkfbF5ph3M9AbQpp1LnbPx6L2tReyQR5KD1'
+        },
+        {
+          baseAssetMint: '2ShyNZqKffdYKMV6Pm8Ypcxj8GQwvFiAUkfTiyxq9v42',
+          quoteAssetMint: 'HinfVnJuzMtJsyuLE2ArYCChDZB6FCxEu2p3CQeMcDiF',
+          marketAddress: 'ChLBxZL8RjQ2DhyrZakuTN9nPNjQn23sN7k2fPsSGxuu'
+        }
+      ]
+    case networks[2].name:
+      return TOKENS.testnet
+    case networks[3].name:
+      return []
+    default:
+      return []
+  }
+}
+
+const getAssetsByNetwork = (name) => {
+  switch (name) {
+    case networks[0].name:
+      return TOKENS.mainnet
+    case networks[1].name:
+      return [
+        {
+          "tokenSymbol": "SOL",
+          "mintAddress": "So11111111111111111111111111111111111111112",
+          "tokenName": "Solana",
+          "icon": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/solana/info/logo.png"
+        },
         {
           "tokenSymbol": "PSYA",
           "mintAddress": "2ShyNZqKffdYKMV6Pm8Ypcxj8GQwvFiAUkfTiyxq9v42",
@@ -60,4 +97,4 @@ const getAssetsByNetwork = (networks, name) => {
   }
 }
 
-export {getAssetsByNetwork, networks};
+export {getAssetsByNetwork, getSerumMarketsByNetwork, networks};

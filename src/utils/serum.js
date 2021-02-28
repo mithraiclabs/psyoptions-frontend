@@ -1,13 +1,21 @@
-import { Market, MARKETS } from '@project-serum/serum';
+import { Market, _MARKET_STATE_LAYOUT_V2 } from '@project-serum/serum';
 import { PublicKey } from '@solana/web3.js';
 
 // To initialize a new market, use the initializeSerumMarket from the options protocol bindings package
 
 export class SerumMarket {
 
-  constructor (connection, marketAddress) {
+  /**
+   * 
+   * @param {Connection} connection 
+   * @param {PublicKey} marketAddress 
+   * @param {PublicKey} dexProgramKey 
+   */
+  constructor (connection, marketAddress, dexProgramKey) {
+    this.MARKET_LAYOUT = _MARKET_STATE_LAYOUT_V2;
     this.connection = connection;
     this.marketAddress = marketAddress;
+    this.dexProgramKey = dexProgramKey;
   }
 
   async initMarket () {
@@ -24,23 +32,22 @@ export class SerumMarket {
     baseMintAddress,
     quoteMintAddress,
   ) {
-    const {programId} = MARKETS.find(({ deprecated }) => !deprecated);
     const filters = [
       {
         memcmp: {
-          offset: Market.getLayout(programId).offsetOf('baseMint'),
+          offset: this.MARKET_LAYOUT.offsetOf('baseMint'),
           bytes: baseMintAddress.toBase58(),
         },
       },
       {
         memcmp: {
-          offset: Market.getLayout(programId).offsetOf('quoteMint'),
+          offset: this.MARKET_LAYOUT.offsetOf('quoteMint'),
           bytes: quoteMintAddress.toBase58(),
         },
       },
     ];
     const resp = await connection._rpcRequest('getProgramAccounts', [
-      programId.toBase58(),
+      this.dexProgramKey.toBase58(),
       {
         commitment: connection.commitment,
         filters,
@@ -69,8 +76,7 @@ export class SerumMarket {
    * @param {PublicKey} marketAddress 
    */
   async getMarket () {
-    const {programId} = MARKETS.find(({ deprecated }) => !deprecated);
-    return Market.load(this.connection, this.marketAddress, {}, programId);
+    return Market.load(this.connection, this.marketAddress, {}, this.dexProgramKey);
   }
 
   /**

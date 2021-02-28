@@ -2,7 +2,6 @@ import React, { createContext, useEffect, useState } from 'react'
 import { Connection, PublicKey } from '@solana/web3.js'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import useConnection from '../hooks/useConnection'
-import { networks } from './ConnectionContext'
 import useNotifications from '../hooks/useNotifications'
 import { getAssetsByNetwork } from '../utils/networkInfo';
 
@@ -35,7 +34,7 @@ const SupportedAssetProvider = ({ children }) => {
       setSupportedAssets([])
       return
     }
-    const basicAssets = getAssetsByNetwork(networks, endpoint.name)
+    const basicAssets = getAssetsByNetwork(endpoint.name)
     ;(async () => {
       try {
         const mergedAssets = await mergeAssetsWithChainData(

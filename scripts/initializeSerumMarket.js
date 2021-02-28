@@ -235,7 +235,7 @@ const initializeSerumMarket = async (
   //   fs.readFileSync('./src/hooks/localnetData.json')
   // )
 
-  const splData = getAssetsByNetwork(networks, 'Devnet');
+  const splData = getAssetsByNetwork('Devnet');
   console.log('*** SPL Data = ', splData);
   process.exit(1);
   // const serumDexKeyBuffer = fs.readFileSync(ScriptHelpers.serumDexProgramKeypair);

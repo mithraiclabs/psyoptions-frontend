@@ -9,7 +9,7 @@ const baseCss = `
 
   html, body {
     width: 100%;
-    height: 100%;
+    min-height: 100%;
     margin: 0;
     padding: 0;
   }
@@ -67,36 +67,36 @@ const Template = ({
   htmlString = '',
   env = {},
 }) => (
-    <html lang="en">
-      <head>
-        <title>{title || ''}</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <meta description={description || ''} />
-        <link rel="icon" type="image/png" href={favicon} />
-        <link rel="preconnect" href="https://fonts.gstatic.com" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Goldman:wght@400;700&display=swap"
-          rel="stylesheet"
-        />
-        <link
-          href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300&family=Major+Mono+Display&display=swap"
-          rel="stylesheet"
-        />
-        <style>{baseCss}</style>
-        <style>{cssString}</style>
-      </head>
-      <body>
-        <div id="app" dangerouslySetInnerHTML={{ __html: htmlString }} />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `window.process = {
+  <html lang="en">
+    <head>
+      <title>{title || ''}</title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <meta description={description || ''} />
+      <link rel="icon" type="image/png" href={favicon} />
+      <link rel="preconnect" href="https://fonts.gstatic.com" />
+      <link
+        href="https://fonts.googleapis.com/css2?family=Goldman:wght@400;700&display=swap"
+        rel="stylesheet"
+      />
+      <link
+        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300&family=Major+Mono+Display&display=swap"
+        rel="stylesheet"
+      />
+      <style>{baseCss}</style>
+      <style>{cssString}</style>
+    </head>
+    <body>
+      <div id="app" dangerouslySetInnerHTML={{ __html: htmlString }} />
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `window.process = {
             env: ${JSON.stringify(env)}
           };`,
-          }}
-         />
-        <script src={jsBundle || ''} />
-      </body>
-    </html>
-  )
+        }}
+      />
+      <script src={jsBundle || ''} />
+    </body>
+  </html>
+)
 
 export default Template

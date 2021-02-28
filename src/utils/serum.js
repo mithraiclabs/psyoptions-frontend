@@ -11,11 +11,9 @@ import {
   SystemProgram, 
   LAMPORTS_PER_SOL,
   sendAndConfirmTransaction,
-  TOKEN_PROGRAM_ID,
 } from '@solana/web3.js';
 import BN from 'bn.js';
-
-import { Token } from '@solana/spl-token';
+import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 
 const SOL_MINT = new PublicKey(
   'So11111111111111111111111111111111111111112',

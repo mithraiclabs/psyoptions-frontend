@@ -1,7 +1,6 @@
-import fs from 'fs';
-import yaml from 'js-yaml';
-import os from 'os';
-import {} from '@project-serum/serum';
+const yaml = require('js-yaml');
+const os = require('os');
+const fs = require('fs');
 
 export const serumDexProgramKeypair = './serum/dex/serum_dex-keypair.json';
 export const serumDexBinaryPath = './serum/dex/serum_dex.so';

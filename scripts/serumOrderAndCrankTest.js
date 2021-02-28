@@ -1,10 +1,21 @@
-import { Connection, PublicKey } from '@solana/web3.js';
-import { getAssetsByNetwork, getSerumMarketsByNetwork } from '../src/utils/networkInfo';
-import { Market } from '@project-serum/serum';
+import { 
+  Account,
+  Connection, 
+  PublicKey, 
+  sendAndConfirmTransaction, 
+} from '@solana/web3.js';
+import { getSolanaConfig } from './helpers';
 import { SerumMarket } from '../src/utils/serum';
+
+const fs = require('fs');
 
 const connection = new Connection('https://devnet.solana.com');
 const dexProgramKey = new PublicKey('9MVDeYQnJmN2Dt7H44Z8cob4bET2ysdNu2uFJcatDJno');
+const solanaConfig = getSolanaConfig();
+const keyBuffer = fs.readFileSync(solanaConfig.keypair_path);
+const wallet = new Account(JSON.parse(keyBuffer));
+const ownedTokenAKey = new PublicKey('F2Cz3kTByn7QVFx5hHJLXXeiRiKPtzKGh29tBSttnAKt');
+const ownedTokenBKey = new PublicKey('77FbwQ8fJu4CBhWXseZzowztGMEeSY5d1Pbe7yhKJkqW')
 
 const tokenA = {
   "tokenSymbol": "PSYA",
@@ -31,6 +42,34 @@ const serumMarketMeta = {
   const market = new SerumMarket(connection, new PublicKey(serumMarketMeta.marketAddress), dexProgramKey);
   await market.initMarket();
 
-  console.log('*** MARKET', market.market);
+  // TODO place an order (or a few) and validate the orders are present
+  console.log('\nPlacing order\n');
+  // const { transaction, signers } = await market.createPlaceOrderTx(wallet.publicKey, ownedTokenAKey, "sell", 1.50, 10, "limit")
+  // await sendAndConfirmTransaction(connection, transaction, [wallet, ...signers], {
+  //   skipPreflight: false,
+  //   commitment: 'max',
+  //   preflightCommitment: 'recent',
+  // });
+
+  const res = await market.placeOrder(connection, {
+    owner: wallet,
+    payer: ownedTokenAKey,
+    side: 'sell',
+    price: 1.5,
+    size: 10,
+    orderType: 'limit',
+    clientId: undefined,
+    openOrdersAddressKey: undefined,
+    openOrdersAccount: undefined,
+    feeDiscountPubkey: undefined
+  })
+  console.log('*** placeOrder response = ', res);
+
+  console.log('*** MARKET', market.market)
+  const walletOrders = await market.market.loadOrdersForOwner(connection, wallet.publicKey, 0);
+  console.log('*** walletOrders', walletOrders)
+
+
+  // TODO turn the crank for the market ... also figure out how the above placed orders move through the system when the crank is turned
 })();
 

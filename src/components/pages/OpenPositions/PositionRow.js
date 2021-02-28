@@ -8,8 +8,9 @@ import TableRow from '@material-ui/core/TableRow'
 import PropTypes from 'prop-types'
 import useExerciseOpenPosition from '../../../hooks/useExerciseOpenPosition'
 import useOwnedTokenAccounts from '../../../hooks/useOwnedTokenAccounts'
+import { formatExpirationTimestamp } from '../../../utils/format'
 
-const PositionRow = ({ columns, row }) => {
+const PositionRow = ({ row }) => {
   const [visible, setVisible] = useState(false)
   const ownedTokenAccounts = useOwnedTokenAccounts()
 
@@ -43,76 +44,56 @@ const PositionRow = ({ columns, row }) => {
         tabIndex={-1}
         key={row.optionContractTokenKey}
       >
-        {columns.map((column) => {
-          const value = row[column.id]
-          return (
-            <TableCell
-              key={column.id}
-              align={column.align}
-              width={column.width}
-            >
-              {column.id === 'action' && row.accounts.length <= 1 ? (
-                <Chip
-                  // need to fix the key
-                  key={row[column.id] + row.code}
-                  clickable
-                  size="small"
-                  label="Exercise"
-                  color="primary"
-                  variant="outlined"
-                  onClick={handleExercisePosition}
-                />
-              ) : column.format && typeof value === 'number' ? (
-                column.format(value)
-              ) : (
-                value
-              )}
-            </TableCell>
-          )
-        })}
+        <TableCell width="20%">{row.assetPair}</TableCell>
+        <TableCell width="15%">{row.strike}</TableCell>
+        <TableCell width="15%">TODO</TableCell>
+        <TableCell width="15%">{row.size}</TableCell>
+        <TableCell width="20%">
+          {formatExpirationTimestamp(row.expiration)}
+        </TableCell>
+        <TableCell align="right" width="15%">
+          <Chip
+            clickable
+            size="small"
+            label="Exercise"
+            color="primary"
+            variant="outlined"
+            onClick={handleExercisePosition}
+          />
+        </TableCell>
       </TableRow>
       <TableRow key={`${row.optionContractTokenKey}Collapsible`}>
         <TableCell
           style={{ borderWidth: 0, padding: 0, margin: 0 }}
-          colSpan={columns.length}
+          colSpan={6}
         >
           <Collapse in={visible} timeout="auto" unmountOnExit>
             <Table>
               <TableBody>
                 {row.accounts.map((account) => (
-                  <TableRow hover role="checkbox" tabIndex={-1}>
-                    {columns.map((column) => {
-                      let value = row[column.id]
-                      if (column.id === 'size') {
-                        value = account.amount
-                      } else if (column.id === 'assetpair') {
-                        value = ''
-                      }
-                      return (
-                        <TableCell
-                          key={column.id}
-                          align={column.align}
-                          width={column.width}
-                        >
-                          {column.id === 'action' ? (
-                            <Chip
-                              // need to fix the key
-                              key={row[column.id] + row.code}
-                              clickable
-                              size="small"
-                              label="Exercise"
-                              color="primary"
-                              variant="outlined"
-                              onClick={handleExercisePosition}
-                            />
-                          ) : column.format && typeof value === 'number' ? (
-                            column.format(value)
-                          ) : (
-                            value
-                          )}
-                        </TableCell>
-                      )
-                    })}
+                  <TableRow
+                    key={account.pubKey}
+                    hover
+                    role="checkbox"
+                    tabIndex={-1}
+                  >
+                    <TableCell width="20%" />
+                    <TableCell width="15%">{row.strike}</TableCell>
+                    <TableCell width="15%">TODO</TableCell>
+                    <TableCell width="15%">{account.amount}</TableCell>
+                    <TableCell width="20%">
+                      {formatExpirationTimestamp(row.expiration)}
+                    </TableCell>
+                    <TableCell align="right" width="15%">
+                      <Chip
+                        clickable
+                        size="small"
+                        label="Exercise"
+                        color="primary"
+                        variant="outlined"
+                        onClick={handleExercisePosition}
+                      />
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -125,12 +106,15 @@ const PositionRow = ({ columns, row }) => {
 }
 
 PositionRow.propTypes = {
-  columns: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   row: PropTypes.shape({
     accounts: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
+    assetPair: PropTypes.string.isRequired,
+    expiration: PropTypes.number.isRequired,
     optionContractTokenKey: PropTypes.string.isRequired,
     optionMarketKey: PropTypes.string.isRequired,
     quoteAssetKey: PropTypes.string.isRequired,
+    size: PropTypes.number.isRequired,
+    strike: PropTypes.string.isRequired,
     underlyingAssetKey: PropTypes.string.isRequired,
   }).isRequired,
 }

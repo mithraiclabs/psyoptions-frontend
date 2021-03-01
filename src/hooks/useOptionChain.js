@@ -68,7 +68,8 @@ const useOptionChain = (expirationDate, uAsset, qAsset) => {
         })
   
         const matchingPuts = puts.filter((p) => {
-          if ( reciprocatedPutStrike === strike) {
+          console.log('*** strike check', reciprocatedPutStrike, p.strikePrice);
+          if ( p.strikePrice === reciprocatedPutStrike) {
             sizes.add(p.size)
             return true
           }
@@ -80,7 +81,10 @@ const useOptionChain = (expirationDate, uAsset, qAsset) => {
             const putSize = (new BN(strike).mul(new BN(size))).toString(10)
             console.log('** putSize', putSize);
             let call = matchingCalls.find((c) => c.size === size)
-            let put = matchingPuts.find((p) => p.size === putSize)
+            let put = matchingPuts.find((p) => {
+              console.log('*** size check', putSize, p.size);
+              return p.size === putSize
+            })
             // TODO if Serum market exists, load the current Bid / Ask information for the premiums
   
             if (call) {

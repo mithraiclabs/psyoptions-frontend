@@ -43,7 +43,7 @@
     "@project-serum/sol-wallet-adapter": "^0.1.4",
     "@project-serum/tokens": "0.0.7",
     "@solana/spl-token": "0.0.13",
-    "@solana/web3.js": "^0.90.5",
+    "@solana/web3.js": "0.93.0",
     "axios": "^0.21.1",
     "babel-loader": "^8.2.2",
     "bn.js": "^4.12.0",

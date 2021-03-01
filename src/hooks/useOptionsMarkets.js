@@ -146,6 +146,7 @@ const useOptionsMarkets = () => {
     uAssetMint,
     qAssetMint,
     expiration,
+    decimals
   }) => {
     const results = await Promise.all(
       strikePrices.map(async (strikePrice) => {
@@ -213,8 +214,11 @@ const useOptionsMarkets = () => {
 
     const newMarkets = {}
     results.forEach((market) => {
-      newMarkets[market.key] = market
-      return market
+      const m = market
+      m.size = `${market.size * 10 ** -decimals}`
+      m.strikePrice = `${market.strikePrice}` 
+      newMarkets[market.key] = m
+      return m
     })
     setMarkets({ ...markets, ...newMarkets })
 

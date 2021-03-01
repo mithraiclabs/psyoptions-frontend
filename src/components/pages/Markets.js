@@ -28,8 +28,8 @@ const defaultAssetPairsByNetworkName = {
     qAssetSymbol: 'USDC',
   },
   Devnet: {
-    uAssetSymbol: 'SOL',
-    qAssetSymbol: '', // TODO add this
+    uAssetSymbol: 'PSYA',
+    qAssetSymbol: 'USDCT', // TODO add this
   },
   Testnet: {
     uAssetSymbol: 'SOL',

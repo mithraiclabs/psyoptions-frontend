@@ -17,7 +17,6 @@ const useOptionChain = (expirationDate, uAsset, qAsset) => {
   const [chain, setChain] = useState([]);
 
   const getOptionsChain = useCallback(async (date) => {
-    console.log('*** getOptionsChain',date, uAsset, qAsset, markets);
     const uaDecimals = new BN(10).pow(new BN(uAsset.decimals))
     const callKeyPart = `${date}-${uAsset.tokenSymbol}-${qAsset.tokenSymbol}`
     const putKeyPart = `${date}-${qAsset.tokenSymbol}-${uAsset.tokenSymbol}`
@@ -39,8 +38,6 @@ const useOptionChain = (expirationDate, uAsset, qAsset) => {
       ]),
     )
 
-    console.log('*** strikes', strikes, callKeyPart, putKeyPart, calls, puts);
-
     const template = {
       key: '',
       bid: '--',
@@ -56,7 +53,6 @@ const useOptionChain = (expirationDate, uAsset, qAsset) => {
     await Promise.all(
       strikes.map(async (strike) => {
         const reciprocatedPutStrike = uaDecimals.div(new BN(strike)).toString(10)
-        console.log('** reciprocatedPutStrike', reciprocatedPutStrike);
         const sizes = new Set()
   
         const matchingCalls = calls.filter((c) => {
@@ -68,7 +64,6 @@ const useOptionChain = (expirationDate, uAsset, qAsset) => {
         })
   
         const matchingPuts = puts.filter((p) => {
-          console.log('*** strike check', reciprocatedPutStrike, p.strikePrice);
           if ( p.strikePrice === reciprocatedPutStrike) {
             return true
           }
@@ -78,12 +73,8 @@ const useOptionChain = (expirationDate, uAsset, qAsset) => {
         await Promise.all(
           Array.from(sizes).map(async (size) => {
             const putSize = (new BN(strike).mul(new BN(size))).toString(10)
-            console.log('** putSize', putSize);
             let call = matchingCalls.find((c) => c.size === size)
-            let put = matchingPuts.find((p) => {
-              console.log('*** size check', putSize, p.size);
-              return p.size === putSize
-            })
+            let put = matchingPuts.find((p) => p.size === putSize)
             // TODO if Serum market exists, load the current Bid / Ask information for the premiums
   
             if (call) {

@@ -179,16 +179,6 @@ const Markets = () => {
         sizeAsU64 = new BN(row.strike).mul(new BN(row.size)).mul(qaDecimals);
       }
 
-      console.log('** initializeMarkets ', type, qAsset, uAsset, {
-        size: sizeAsU64.toString(10),
-        strikePrices: [strike.toString(10)],
-        uAssetSymbol: ua.tokenSymbol,
-        qAssetSymbol: qa.tokenSymbol,
-        uAssetMint: ua.mintAddress,
-        qAssetMint: qa.mintAddress,
-        expiration: date.unix(),
-      })
-
       await initializeMarkets({
         size: sizeAsU64.toString(10),
         strikePrices: [strike.toString(10)],
@@ -212,8 +202,6 @@ const Markets = () => {
         }
         return _row
       })
-
-      console.log('*** newRows', newRows);
 
       setRows(newRows)
     } catch (err) {

@@ -5,8 +5,6 @@ import { SerumMarket } from '../utils/serum'
 import useConnection from './useConnection'
 import useOptionsMarkets from './useOptionsMarkets'
 
-const oneBn = new BN('1');
-
 /**
  * 
  * @param {moment} expirationDate 
@@ -18,9 +16,11 @@ const useOptionChain = (expirationDate, uAsset, qAsset) => {
   const { markets } = useOptionsMarkets()
   const [chain, setChain] = useState([]);
 
-  const getOptionsChain = useCallback(async (uAssetSymbol, qAssetSymbol, date) => {
-    const callKeyPart = `${date}-${uAssetSymbol}-${qAssetSymbol}`
-    const putKeyPart = `${date}-${qAssetSymbol}-${uAssetSymbol}`
+  const getOptionsChain = useCallback(async (date) => {
+    console.log('*** getOptionsChain',date, uAsset, qAsset, markets);
+    const uaDecimals = new BN(10).pow(new BN(uAsset.decimals))
+    const callKeyPart = `${date}-${uAsset.tokenSymbol}-${qAsset.tokenSymbol}`
+    const putKeyPart = `${date}-${qAsset.tokenSymbol}-${uAsset.tokenSymbol}`
 
     const calls = Object.keys(markets)
       .filter((k) => k.match(callKeyPart))
@@ -33,11 +33,13 @@ const useOptionChain = (expirationDate, uAsset, qAsset) => {
     const strikes = Array.from(
       new Set([
         ...calls.map((m) => m.strikePrice),
-        ...puts.map((m) =>  oneBn.div(new BN(m.strikePrice)).toString(10)),
+        // TODO reverse PUTs strikes back to calls...but see [comment](https://github.com/mithraiclabs/solana-options-frontend/issues/117#issuecomment-787984227)
+        //  for why this is such a difficult task. 
+        // ...puts.map((m) =>  oneBn.div(new BN(m.strikePrice)).toString(10)),
       ]),
     )
 
-    console.log('*** strikes', strikes);
+    console.log('*** strikes', strikes, callKeyPart, putKeyPart, calls, puts);
 
     const template = {
       key: '',
@@ -53,6 +55,8 @@ const useOptionChain = (expirationDate, uAsset, qAsset) => {
 
     await Promise.all(
       strikes.map(async (strike) => {
+        const reciprocatedPutStrike = uaDecimals.div(new BN(strike)).toString(10)
+        console.log('** reciprocatedPutStrike', reciprocatedPutStrike);
         const sizes = new Set()
   
         const matchingCalls = calls.filter((c) => {
@@ -64,7 +68,6 @@ const useOptionChain = (expirationDate, uAsset, qAsset) => {
         })
   
         const matchingPuts = puts.filter((p) => {
-          const reciprocatedPutStrike = oneBn.div(new BN(p.strikePrice)).toString(10)
           if ( reciprocatedPutStrike === strike) {
             sizes.add(p.size)
             return true
@@ -74,8 +77,10 @@ const useOptionChain = (expirationDate, uAsset, qAsset) => {
   
         await Promise.all(
           Array.from(sizes).map(async (size) => {
+            const putSize = (new BN(strike).mul(new BN(size))).toString(10)
+            console.log('** putSize', putSize);
             let call = matchingCalls.find((c) => c.size === size)
-            let put = matchingPuts.find((p) => p.size === new BN(strike).mul(new BN(size)))
+            let put = matchingPuts.find((p) => p.size === putSize)
             // TODO if Serum market exists, load the current Bid / Ask information for the premiums
   
             if (call) {
@@ -124,7 +129,7 @@ const useOptionChain = (expirationDate, uAsset, qAsset) => {
 
     rows.sort((a, b) => a.strike - b.strike)
     setChain(rows);
-  }, [connection, dexProgramId, markets, setChain])
+  }, [connection, dexProgramId, markets, uAsset, qAsset])
 
   useEffect(() => {
     if (!uAsset?.tokenSymbol || !qAsset?.tokenSymbol || !expirationDate) {
@@ -132,7 +137,7 @@ const useOptionChain = (expirationDate, uAsset, qAsset) => {
       return;
     }
 
-    getOptionsChain(uAsset.tokenSymbol, qAsset.tokenSymbol, expirationDate.unix());
+    getOptionsChain(expirationDate.unix());
   }, [getOptionsChain, expirationDate, uAsset, qAsset]);
 
   return {chain};

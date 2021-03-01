@@ -166,17 +166,20 @@ const Markets = () => {
       const row = rows[index]
 
       const uaDecimals = new BN(10).pow(new BN(ua.decimals));
-      const invUaDecimals = new BN(10).pow(new BN(-ua.decimals));
-      let strike = new BN(row.strike).mul(uaDecimals); 
-      let sizeAsU64 = new BN(row.size).mul(uaDecimals);
+      const qaDecimals = new BN(10).pow(new BN(qa.decimals));
+      let strike; 
+      let sizeAsU64;
       // IF initializing a PUT the strike is the reciprocal of the CALL strike displayed 
       //  and the size is CALL strike price * amountPerContract
-      if (type !== 'call') {
-        strike = uaDecimals.div(new BN(row.strike).mul(invUaDecimals));
-        sizeAsU64 = new BN(row.strike).mul(sizeAsU64)
+      if (type === 'call') {
+        strike = new BN(row.strike).mul(uaDecimals); 
+        sizeAsU64 = new BN(row.size).mul(qaDecimals);
+      } else {
+        strike = uaDecimals.div(new BN(row.strike));
+        sizeAsU64 = new BN(row.strike).mul(new BN(row.size)).mul(qaDecimals);
       }
 
-      console.log('** initializeMarkets ', type, {
+      console.log('** initializeMarkets ', type, qAsset, uAsset, {
         size: sizeAsU64.toString(10),
         strikePrices: [strike.toString(10)],
         uAssetSymbol: ua.tokenSymbol,

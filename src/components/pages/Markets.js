@@ -20,6 +20,7 @@ import useAssetList from '../../hooks/useAssetList'
 import useWallet from '../../hooks/useWallet'
 import useNotifications from '../../hooks/useNotifications'
 import useOptionChain from '../../hooks/useOptionChain'
+import useOwnedTokenAccounts from '../../hooks/useOwnedTokenAccounts'
 
 const defaultAssetPairsByNetworkName = {
   Mainnet: {
@@ -97,7 +98,13 @@ const Markets = () => {
   const [qAsset, setQAsset] = useState()
   const [rows, setRows] = useState(emptyRows)
 
-  const { initializeMarkets } = useOptionsMarkets()
+  const {
+    initializeMarkets,
+    getMarket,
+    createAccountsAndMint,
+  } = useOptionsMarkets()
+
+  const ownedTokenAccounts = useOwnedTokenAccounts()
 
   useEffect(() => {
     if (supportedAssets && supportedAssets.length > 0) {
@@ -120,10 +127,9 @@ const Markets = () => {
     }
   }, [endpoint, supportedAssets])
 
-  const { chain } = useOptionChain(date, uAsset, qAsset);
+  const { chain } = useOptionChain(date, uAsset, qAsset)
 
   useEffect(() => {
-
     let newRows = chain.length ? chain : emptyRows
 
     if (newRows.length < 9) {
@@ -194,8 +200,48 @@ const Markets = () => {
     }
   }
 
-  const handleMint = ({ index, type }) => {
+  const handleMint = async ({ index, type }) => {
     setRowloading({ index, type, actionInProgress: true })
+    try {
+      const ua = type === 'call' ? uAsset : qAsset
+      const qa = type === 'call' ? qAsset : uAsset
+      const row = rows[index]
+
+      const marketParams = {
+        date: date.unix(),
+        uAssetSymbol: ua.tokenSymbol,
+        qAssetSymbol: qa.tokenSymbol,
+        size: type === 'call' ? row.size : row.size * row.strike, // TODO -- deal with FP imprecision
+        price: type === 'call' ? row.strike : 1 / row.strike, // TODO -- deal with FP imprecision
+      }
+
+      const marketData = getMarket(marketParams)
+      const ownedMintedOptionAccounts =
+        (marketData && ownedTokenAccounts[marketData.optionMintAddress]) || []
+      const ownedUAssetAccounts =
+        (uAsset && ownedTokenAccounts[uAsset.mintAddress]) || []
+      const ownedQAssetAccounts =
+        (qAsset && ownedTokenAccounts[qAsset.mintAddress]) || []
+
+      await createAccountsAndMint({
+        ...marketParams,
+        uAssetAccount: ownedUAssetAccounts[0]?.pubKey || '',
+        qAssetAccount: ownedQAssetAccounts[0]?.pubKey || '',
+        ownedQAssetAccounts,
+        mintedOptionAccount: ownedMintedOptionAccounts[0]?.pubKey || '',
+        ownedMintedOptionAccounts,
+      })
+
+      console.log('Minted options token!')
+    } catch (err) {
+      console.log(err)
+      pushNotification({
+        severity: 'error',
+        message: `${err}`,
+      })
+    } finally {
+      setRowloading({ index, type, actionInProgress: false })
+    }
   }
 
   return (

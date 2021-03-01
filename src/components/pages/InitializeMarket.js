@@ -76,7 +76,7 @@ const InitializeMarket = () => {
 
     try {
       setLoading(true)
-      const results = await initializeMarkets({
+      await initializeMarkets({
         size: sizeAsU64,
         strikePrices,
         uAssetSymbol: uAsset.tokenSymbol,
@@ -84,8 +84,8 @@ const InitializeMarket = () => {
         uAssetMint: uAsset.mintAddress,
         qAssetMint: qAsset.mintAddress,
         expiration: date.unix(),
+        decimals: uAsset.decimals
       })
-      console.log(results)
       setLoading(false)
     } catch (err) {
       setLoading(false)

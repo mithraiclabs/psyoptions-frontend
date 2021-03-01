@@ -34,7 +34,7 @@ const SimpleSnackbar = ({
       borderRadius={3}
       display="flex"
       justifyContent="space-between"
-      color={theme.palette[severity].contrastText}
+      color={theme.palette.primary.light}
       style={{
         background: theme.gradients[severity],
       }}

@@ -1,5 +1,6 @@
-import { clusterApiUrl } from '@solana/web3.js'
+import { clusterApiUrl, PublicKey } from '@solana/web3.js'
 import { TOKENS } from '@project-serum/tokens'
+import { MARKETS } from '@project-serum/serum';
 
 // Note these network values are used for determining the asset list.
 // Be sure to update that when modifying the order of this list.
@@ -25,6 +26,27 @@ const networks = [
     programId: process.env.LOCAL_PROGRAM_ID,
   },
 ]
+
+const getDexProgramKeyByNetwork = (name) => {
+  switch (name) {
+    case networks[0].name:
+      return MARKETS.find(({ deprecated }) => !deprecated).programId;
+    case networks[1].name:
+      return new PublicKey('9MVDeYQnJmN2Dt7H44Z8cob4bET2ysdNu2uFJcatDJno')
+    case networks[2].name:
+      // NOTE THIS WILL NOT WORK BECUASE THERE IS NO SERUM DEX DEPLOYED TO TESTNET
+      return new PublicKey('9MVDeYQnJmN2Dt7H44Z8cob4bET2ysdNu2uFJcatDJno')
+    case networks[3].name:
+      // TODO fix this when we can work through the issues with Serum locally
+      // NOTE THIS WILL NOT WORK LOCALLY (fix the commented out section)
+      // const serumDexKeyBuffer = fs.readFileSync(ScriptHelpers.serumDexProgramKeypair);
+      // const dexProgramAccount = new Account(JSON.parse(serumDexKeyBuffer));
+      // const dexProgramId = dexProgramAccount.publicKey;
+      return new PublicKey('9MVDeYQnJmN2Dt7H44Z8cob4bET2ysdNu2uFJcatDJno')
+    default:
+      return []
+  }
+}
 
 const getSerumMarketsByNetwork = (name) => {
   switch (name) {
@@ -76,10 +98,10 @@ const getAssetsByNetwork = (name) => {
           "icon": "https://raw.githubusercontent.com/trustwallet/assets/08d734b5e6ec95227dc50efef3a9cdfea4c398a1/blockchains/ethereum/assets/0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984/logo.png"
         },
         {
-          "tokenSymbol": "PSYB",
+          "tokenSymbol": "USDCT",
           "mintAddress": "HinfVnJuzMtJsyuLE2ArYCChDZB6FCxEu2p3CQeMcDiF",
-          "tokenName": "PSYB Test",
-          "icon": "https://raw.githubusercontent.com/trustwallet/assets/08d734b5e6ec95227dc50efef3a9cdfea4c398a1/blockchains/ethereum/assets/0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984/logo.png"
+          "tokenName": "USDC Test",
+          "icon": "https://raw.githubusercontent.com/trustwallet/assets/f3ffd0b9ae2165336279ce2f8db1981a55ce30f8/blockchains/ethereum/assets/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48/logo.png"
         }
       ]
     case networks[2].name:
@@ -97,4 +119,4 @@ const getAssetsByNetwork = (name) => {
   }
 }
 
-export {getAssetsByNetwork, getSerumMarketsByNetwork, networks};
+export {getAssetsByNetwork, getDexProgramKeyByNetwork, getSerumMarketsByNetwork, networks};

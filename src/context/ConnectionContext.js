@@ -1,6 +1,6 @@
 import React, { createContext, useState } from 'react'
 import useLocalStorageState from 'use-local-storage-state'
-import { networks } from '../utils/networkInfo';
+import { getDexProgramKeyByNetwork, networks } from '../utils/networkInfo';
 
 // Default to first network that has a defined program id
 const DEFAULT_NETWORK = networks.find(
@@ -24,6 +24,7 @@ const ConnectionProvider = ({ children }) => {
     setConnection,
     endpoint,
     setEndpoint,
+    dexProgramId: getDexProgramKeyByNetwork(endpoint.name),
   }
 
   return (

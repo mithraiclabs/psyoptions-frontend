@@ -19,6 +19,7 @@ import useConnection from '../../hooks/useConnection'
 import useAssetList from '../../hooks/useAssetList'
 import useWallet from '../../hooks/useWallet'
 import useNotifications from '../../hooks/useNotifications'
+import useOptionChain from '../../hooks/useOptionChain'
 
 const defaultAssetPairsByNetworkName = {
   Mainnet: {
@@ -96,7 +97,7 @@ const Markets = () => {
   const [qAsset, setQAsset] = useState()
   const [rows, setRows] = useState(emptyRows)
 
-  const { getOptionsChain, initializeMarkets } = useOptionsMarkets()
+  const { initializeMarkets } = useOptionsMarkets()
 
   useEffect(() => {
     if (supportedAssets && supportedAssets.length > 0) {
@@ -119,23 +120,18 @@ const Markets = () => {
     }
   }, [endpoint, supportedAssets])
 
+  const { chain } = useOptionChain(date, uAsset, qAsset);
+
   useEffect(() => {
-    if (uAsset?.tokenSymbol && qAsset?.tokenSymbol && date) {
-      const optionsChain = getOptionsChain({
-        uAssetSymbol: uAsset.tokenSymbol,
-        qAssetSymbol: qAsset.tokenSymbol,
-        date: date.unix(),
-      })
 
-      let newRows = optionsChain.length ? optionsChain : emptyRows
+    let newRows = chain.length ? chain : emptyRows
 
-      if (newRows.length < 9) {
-        newRows = [...newRows, ...emptyRows.slice(newRows.length)]
-      }
-
-      setRows(newRows)
+    if (newRows.length < 9) {
+      newRows = [...newRows, ...emptyRows.slice(newRows.length)]
     }
-  }, [getOptionsChain, uAsset, qAsset, date]) // eslint-disable-line
+
+    setRows(newRows)
+  }, [chain])
 
   const setRowloading = ({ index, type, actionInProgress }) => {
     // Set the row to loading state

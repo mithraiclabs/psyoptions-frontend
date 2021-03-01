@@ -17,6 +17,8 @@ import useAssetList from './useAssetList'
 
 import { OptionsMarketsContext } from '../context/OptionsMarketsContext'
 
+import { initializeTokenAccountTx } from '../utils/token'
+
 // Example of how markets data should look:
 // const markets = {
 //   '1614556800-SOL-USDC-700-14': {
@@ -266,6 +268,120 @@ const useOptionsMarkets = () => {
     return txid
   }
 
+  const createAccountsAndMint = async ({
+    date,
+    uAssetSymbol,
+    qAssetSymbol,
+    size,
+    price,
+    uAssetAccount,
+    qAssetAccount,
+    ownedQAssetAccounts,
+    mintedOptionAccount,
+    ownedMintedOptionAccounts,
+  }) => {
+    const marketData = getMarket({
+      date,
+      uAssetSymbol,
+      qAssetSymbol,
+      size,
+      price,
+    })
+
+    let quoteAssetDestAccount = qAssetAccount || ownedQAssetAccounts[0]
+    // If user has no quote asset account, we can create one because they don't need any quote asset to mint
+    if (!quoteAssetDestAccount) {
+      // TODO: this is not quite working once we get to the actaully mint function call
+      // Maybe just require user to have both qAssetAccount and uAssetAccount before minting for MVP
+      const [tx, newAccount] = await initializeTokenAccountTx({
+        connection,
+        payer: { publicKey: pubKey },
+        mintPublicKey: new PublicKey(marketData.qAssetMint),
+        owner: pubKey,
+      })
+      const signed = await wallet.signTransaction(tx)
+      const txid = await connection.sendRawTransaction(signed.serialize())
+
+      pushNotification({
+        severity: 'info',
+        message: `Submitted Transaction: Create ${qAssetSymbol} Account`,
+        link: (
+          <Link href={buildSolanaExplorerUrl(txid)} target="_new">
+            View on Solana Explorer
+          </Link>
+        ),
+      })
+
+      await connection.confirmTransaction(txid)
+      quoteAssetDestAccount = newAccount.publicKey.toString()
+
+      // TODO: maybe we can send a name for this account in the wallet too, would be nice
+
+      pushNotification({
+        severity: 'success',
+        message: `Transaction Confirmed: Create ${qAssetSymbol} Account`,
+        link: (
+          <Link href={buildSolanaExplorerUrl(txid)} target="_new">
+            View on Solana Explorer
+          </Link>
+        ),
+      })
+    }
+
+    // Fallback to first oowned minted option account
+    let mintedOptionDestAccount =
+      mintedOptionAccount || ownedMintedOptionAccounts[0]
+    if (!mintedOptionDestAccount) {
+      // Create token account for minted option if the user doesn't have one yet
+      const [tx, newAccount] = await initializeTokenAccountTx({
+        connection,
+        payer: { publicKey: pubKey },
+        mintPublicKey: new PublicKey(marketData.optionMintAddress),
+        owner: pubKey,
+      })
+      const signed = await wallet.signTransaction(tx)
+      const txid = await connection.sendRawTransaction(signed.serialize())
+
+      pushNotification({
+        severity: 'info',
+        message: 'Submitted Transaction: Create Options Token Account',
+        link: (
+          <Link href={buildSolanaExplorerUrl(txid)} target="_new">
+            View on Solana Explorer
+          </Link>
+        ),
+      })
+
+      await connection.confirmTransaction(txid)
+      mintedOptionDestAccount = newAccount.publicKey.toString()
+
+      // TODO: maybe we can send a name for this account in the wallet too, would be nice
+
+      pushNotification({
+        severity: 'success',
+        message: 'Transaction Confirmed: Create Options Token Account',
+        link: (
+          <Link href={buildSolanaExplorerUrl(txid)} target="_new">
+            View on Solana Explorer
+          </Link>
+        ),
+      })
+    }
+
+    // console.log('Mint params: ', {
+    //   uAssetAccount,
+    //   quoteAssetDestAccount,
+    //   mintedOptionDestAccount,
+    //   marketData,
+    // })
+    return mint({
+      marketData,
+      mintedOptionDestAccount,
+      underlyingAssetSrcAccount: uAssetAccount,
+      quoteAssetDestAccount,
+    })
+  }
+
   return {
     initializeMarkets,
     markets,
@@ -275,6 +391,7 @@ const useOptionsMarkets = () => {
     getDates,
     getMyMarkets,
     mint,
+    createAccountsAndMint,
   }
 }
 

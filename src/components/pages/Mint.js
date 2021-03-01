@@ -1,30 +1,22 @@
 import React, { useEffect, useState, useMemo } from 'react'
 // import moment from 'moment'
 import Done from '@material-ui/icons/Done'
-import {
-  Box,
-  Paper,
-  Button,
-  Chip,
-  CircularProgress,
-  Link,
-} from '@material-ui/core'
-import { PublicKey } from '@solana/web3.js'
+import { Box, Paper, Button, Chip, CircularProgress } from '@material-ui/core'
 
 import theme from '../../utils/theme'
-import { initializeTokenAccountTx } from '../../utils/token'
+
 import { truncatePublicKey } from '../../utils/format'
 
 import useWallet from '../../hooks/useWallet'
 import useOptionsMarkets from '../../hooks/useOptionsMarkets'
 import useOwnedTokenAccounts from '../../hooks/useOwnedTokenAccounts'
-import useConnection from '../../hooks/useConnection'
+
 import useNotifications from '../../hooks/useNotifications'
 
 import SelectAsset from '../SelectAsset'
 import Page from './Page'
 import Select from '../Select'
-import { buildSolanaExplorerUrl } from '../../utils/solanaExplorer'
+
 import { getNext3Months } from '../../utils/dates'
 
 const darkBorder = `1px solid ${theme.palette.background.main}`
@@ -33,9 +25,13 @@ const next3Months = getNext3Months()
 
 const Mint = () => {
   const { pushNotification } = useNotifications()
-  const { connection } = useConnection()
-  const { connect, connected, wallet, pubKey } = useWallet()
-  const { getMarket, getStrikePrices, getSizes, mint } = useOptionsMarkets()
+  const { connect, connected } = useWallet()
+  const {
+    getMarket,
+    getStrikePrices,
+    getSizes,
+    createAccountsAndMint,
+  } = useOptionsMarkets()
   const ownedTokenAccounts = useOwnedTokenAccounts()
 
   const dates = next3Months
@@ -89,107 +85,20 @@ const Mint = () => {
   }, [ownedMintedOptionAccounts])
 
   const handleMint = async () => {
-    // TODO: push error notification if not enough uAsset available in uAssetAccount, or wallet has no uAsset account
-    // Or maybe just block the mint button
     setLoading(true)
-
     try {
-      let quoteAssetDestAccount = qAssetAccount || ownedQAssetAccounts[0]
-      // If user has no quote asset account, we can create one because they don't need any quote asset to mint
-      if (!quoteAssetDestAccount) {
-        // TODO: this is not quite working once we get to the actaully mint function call
-        // Maybe just require user to have both qAssetAccount and uAssetAccount before minting for MVP
-        const [tx, newAccount] = await initializeTokenAccountTx({
-          connection,
-          payer: { publicKey: pubKey },
-          mintPublicKey: new PublicKey(marketData.qAssetMint),
-          owner: pubKey,
-        })
-        const signed = await wallet.signTransaction(tx)
-        const txid = await connection.sendRawTransaction(signed.serialize())
-
-        pushNotification({
-          severity: 'info',
-          message: `Submitted Transaction: Create ${qAsset.tokenSymbol} Account`,
-          link: (
-            <Link href={buildSolanaExplorerUrl(txid)} target="_new">
-              View on Solana Explorer
-            </Link>
-          ),
-        })
-
-        await connection.confirmTransaction(txid)
-        quoteAssetDestAccount = newAccount.publicKey.toString()
-        setQAssetAccount(quoteAssetDestAccount)
-
-        // TODO: maybe we can send a name for this account in the wallet too, would be nice
-
-        pushNotification({
-          severity: 'success',
-          message: `Transaction Confirmed: Create ${qAsset.tokenSymbol} Account`,
-          link: (
-            <Link href={buildSolanaExplorerUrl(txid)} target="_new">
-              View on Solana Explorer
-            </Link>
-          ),
-        })
-      }
-
-      // Fallback to first oowned minted option account
-      let mintedOptionDestAccount =
-        mintedOptionAccount || ownedMintedOptionAccounts[0]
-      if (!mintedOptionDestAccount) {
-        // Create token account for minted option if the user doesn't have one yet
-        const [tx, newAccount] = await initializeTokenAccountTx({
-          connection,
-          payer: { publicKey: pubKey },
-          mintPublicKey: new PublicKey(marketData.optionMintAddress),
-          owner: pubKey,
-        })
-        const signed = await wallet.signTransaction(tx)
-        const txid = await connection.sendRawTransaction(signed.serialize())
-
-        pushNotification({
-          severity: 'info',
-          message: 'Submitted Transaction: Create Options Token Account',
-          link: (
-            <Link href={buildSolanaExplorerUrl(txid)} target="_new">
-              View on Solana Explorer
-            </Link>
-          ),
-        })
-
-        await connection.confirmTransaction(txid)
-        mintedOptionDestAccount = newAccount.publicKey.toString()
-        setMintedOptionAccount(mintedOptionDestAccount)
-
-        // TODO: maybe we can send a name for this account in the wallet too, would be nice
-
-        pushNotification({
-          severity: 'success',
-          message: 'Transaction Confirmed: Create Options Token Account',
-          link: (
-            <Link href={buildSolanaExplorerUrl(txid)} target="_new">
-              View on Solana Explorer
-            </Link>
-          ),
-        })
-      }
-
-      console.log('Mint params: ', {
+      await createAccountsAndMint({
+        date: date.unix(),
+        uAssetSymbol: uAsset.tokenSymbol,
+        qAssetSymbol: qAsset.tokenSymbol,
+        size,
+        price,
         uAssetAccount,
-        quoteAssetDestAccount,
-        mintedOptionDestAccount,
-        marketData,
+        qAssetAccount,
+        ownedQAssetAccounts,
+        mintedOptionAccount,
+        ownedMintedOptionAccounts,
       })
-
-      await mint({
-        marketData,
-        mintedOptionDestAccount,
-        underlyingAssetSrcAccount: uAssetAccount,
-        quoteAssetDestAccount,
-      })
-
       setLoading(false)
       console.log('Mint Successful')
     } catch (err) {

@@ -1,8 +1,11 @@
 import { useCallback, useEffect, useState } from "react"
 import { PublicKey } from '@solana/web3.js'
+import BN from 'bn.js';
 import { SerumMarket } from '../utils/serum'
 import useConnection from './useConnection'
 import useOptionsMarkets from './useOptionsMarkets'
+
+const oneBn = new BN('1');
 
 /**
  * 
@@ -26,12 +29,15 @@ const useOptionChain = (expirationDate, uAsset, qAsset) => {
       .filter((k) => k.match(putKeyPart))
       .map((k) => markets[k])
 
+
     const strikes = Array.from(
       new Set([
         ...calls.map((m) => m.strikePrice),
-        ...puts.map((m) => m.strikePrice),
+        ...puts.map((m) =>  oneBn.div(new BN(m.strikePrice)).toString(10)),
       ]),
     )
+
+    console.log('*** strikes', strikes);
 
     const template = {
       key: '',
@@ -58,7 +64,8 @@ const useOptionChain = (expirationDate, uAsset, qAsset) => {
         })
   
         const matchingPuts = puts.filter((p) => {
-          if (p.strikePrice === strike) {
+          const reciprocatedPutStrike = oneBn.div(new BN(p.strikePrice)).toString(10)
+          if ( reciprocatedPutStrike === strike) {
             sizes.add(p.size)
             return true
           }
@@ -68,7 +75,7 @@ const useOptionChain = (expirationDate, uAsset, qAsset) => {
         await Promise.all(
           Array.from(sizes).map(async (size) => {
             let call = matchingCalls.find((c) => c.size === size)
-            let put = matchingPuts.find((p) => p.size === size)
+            let put = matchingPuts.find((p) => p.size === new BN(strike).mul(new BN(size)))
             // TODO if Serum market exists, load the current Bid / Ask information for the premiums
   
             if (call) {

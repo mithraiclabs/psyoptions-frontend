@@ -13,7 +13,7 @@ const useConnection = () => {
   } = useContext(ConnectionContext)
 
   useEffect(() => {
-    const cx = new Connection(endpoint.url, 'max')
+    const cx = new Connection(endpoint.url, 'confirmed')
     setConnection(cx)
   }, [endpoint, setConnection])
 

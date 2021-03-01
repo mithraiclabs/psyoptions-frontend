@@ -22,3 +22,19 @@ NOTE: After many hours failing to intiialize on local net due to the following e
 1. Set your `solana` config to your Devnet configuration (i.e. change the url and the keypair being used)
 2. Make sure you airdrop some SOL `solana airdrop 10`
 3. Run the initialize market script `npx babel-node scripts/initializeSerumMarket.js --baseMint=BASE_MINT --quoteMint=QUOTE_MINT`
+
+
+## Interacting on Devnet 
+We use a couple SPL Token faucets to interact on devnet. To use the faucets visit this community built site and be sure to set the network to **devnet**.
+
+````
+Token Symbol: PSYA
+Faucet Address: 7jJJnHWagPPG544FtxSVp8eD52FwCsARcqqup1q3XVio
+Mint Address: BzwRWwr1kCLJVUUM14fQthP6FJKrGpXjw3ZHTZ6PQsYa
+````
+
+````
+Token Symbol: USDCT
+Faucet Address: BmaVN3Wut1k2MtrcsxjTn919GdBJ2gzVLTtbiybnAPnR
+Mint Address: HinfVnJuzMtJsyuLE2ArYCChDZB6FCxEu2p3CQeMcDiF
+````

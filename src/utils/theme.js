@@ -4,10 +4,10 @@ const theme = createMuiTheme({
   gradients: {
     secondary: 'linear-gradient(90deg, #24001A 0%, #790068 50%, #D18641 100%)',
     secondaryPrimary: 'linear-gradient(90deg, #DD3E76 -0.83%, #1D4DC9 100%)',
-    warning: 'linear-gradient(90deg, #F9C164 0.22%, #DC3E78 99.68%)',
-    error: 'linear-gradient(90deg, #F9C164 0.22%, #DC3E78 99.68%)',
-    success: 'linear-gradient(-90deg, #51F39C 0.41%, #1D4DC9 117.22%)',
-    info: 'linear-gradient(90deg, #DC3E78 0.62%, #1D4DC9 89.59%)',
+    warning: 'linear-gradient(90deg, #DC3E78 0%, #FA8965 100%)',
+    error: 'linear-gradient(90deg, #790068 0%, #DD3E76 100%)',
+    success: 'linear-gradient(90deg, #14758A 0%, #28C972 100%)',
+    info: 'linear-gradient(90deg, #686775 0%, #9C9CB6 100%)',
   },
   glow: '0 0 0px #11FFCC, 0 0 20px #0055CC, 0 0 50px #001199',
   typography: {

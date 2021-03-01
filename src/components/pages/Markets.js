@@ -8,7 +8,7 @@ import TableHead from '@material-ui/core/TableHead'
 import TableRow from '@material-ui/core/TableRow'
 import Button from '@material-ui/core/Button'
 import { withStyles } from '@material-ui/core/styles'
-import BN from 'bn.js';
+import BN from 'bn.js'
 import theme from '../../utils/theme'
 import Page from './Page'
 import Select from '../Select'
@@ -38,7 +38,7 @@ const defaultAssetPairsByNetworkName = {
   },
   localhost: {
     uAssetSymbol: 'SOL',
-    qAssetSymbol: 'SPL1',
+    qAssetSymbol: 'USDC',
   },
 }
 
@@ -165,18 +165,18 @@ const Markets = () => {
       const qa = type === 'call' ? qAsset : uAsset
       const row = rows[index]
 
-      const uaDecimals = new BN(10).pow(new BN(ua.decimals));
-      const qaDecimals = new BN(10).pow(new BN(qa.decimals));
-      let strike; 
-      let sizeAsU64;
-      // IF initializing a PUT the strike is the reciprocal of the CALL strike displayed 
+      const uaDecimals = new BN(10).pow(new BN(ua.decimals))
+      const qaDecimals = new BN(10).pow(new BN(qa.decimals))
+      let strike
+      let sizeAsU64
+      // IF initializing a PUT the strike is the reciprocal of the CALL strike displayed
       //  and the size is CALL strike price * amountPerContract
       if (type === 'call') {
-        strike = new BN(row.strike).mul(uaDecimals); 
-        sizeAsU64 = new BN(row.size).mul(qaDecimals);
+        strike = new BN(row.strike).mul(uaDecimals)
+        sizeAsU64 = new BN(row.size).mul(qaDecimals)
       } else {
-        strike = uaDecimals.div(new BN(row.strike));
-        sizeAsU64 = new BN(row.strike).mul(new BN(row.size)).mul(qaDecimals);
+        strike = uaDecimals.div(new BN(row.strike))
+        sizeAsU64 = new BN(row.strike).mul(new BN(row.size)).mul(qaDecimals)
       }
 
       await initializeMarkets({

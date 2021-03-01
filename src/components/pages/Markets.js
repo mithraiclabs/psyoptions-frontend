@@ -8,6 +8,7 @@ import TableHead from '@material-ui/core/TableHead'
 import TableRow from '@material-ui/core/TableRow'
 import Button from '@material-ui/core/Button'
 import { withStyles } from '@material-ui/core/styles'
+import BN from 'bn.js';
 import theme from '../../utils/theme'
 import Page from './Page'
 import Select from '../Select'
@@ -163,11 +164,24 @@ const Markets = () => {
       const ua = type === 'call' ? uAsset : qAsset
       const qa = type === 'call' ? qAsset : uAsset
       const row = rows[index]
-      const sizeAsU64 = row.size * 10 ** ua.decimals
+
+      const uaDecimals = new BN(10).pow(new BN(ua.decimals));
+      const qaDecimals = new BN(10).pow(new BN(qa.decimals));
+      let strike; 
+      let sizeAsU64;
+      // IF initializing a PUT the strike is the reciprocal of the CALL strike displayed 
+      //  and the size is CALL strike price * amountPerContract
+      if (type === 'call') {
+        strike = new BN(row.strike).mul(uaDecimals); 
+        sizeAsU64 = new BN(row.size).mul(qaDecimals);
+      } else {
+        strike = uaDecimals.div(new BN(row.strike));
+        sizeAsU64 = new BN(row.strike).mul(new BN(row.size)).mul(qaDecimals);
+      }
 
       await initializeMarkets({
-        size: sizeAsU64,
-        strikePrices: [row.strike],
+        size: sizeAsU64.toString(10),
+        strikePrices: [strike.toString(10)],
         uAssetSymbol: ua.tokenSymbol,
         qAssetSymbol: qa.tokenSymbol,
         uAssetMint: ua.mintAddress,

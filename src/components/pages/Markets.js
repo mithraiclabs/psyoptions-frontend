@@ -253,14 +253,11 @@ const Markets = () => {
         minHeight="100%"
       >
         <Box
-          py={0}
+          py={[0, 0, 2]}
           display="flex"
           flexDirection={['column', 'column', 'row']}
           alignItems="center"
           justifyContent="space-between"
-          style={{
-            background: `${theme.gradients.secondary}`,
-          }}
         >
           <Box px={0} py={0} width={['100%', '100%', '300px']}>
             <Select

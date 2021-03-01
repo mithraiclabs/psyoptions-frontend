@@ -213,6 +213,8 @@ const Markets = () => {
         return _row
       })
 
+      console.log('*** newRows', newRows);
+
       setRows(newRows)
     } catch (err) {
       console.log(err)

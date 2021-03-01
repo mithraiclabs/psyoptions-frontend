@@ -70,7 +70,6 @@ const useOptionChain = (expirationDate, uAsset, qAsset) => {
         const matchingPuts = puts.filter((p) => {
           console.log('*** strike check', reciprocatedPutStrike, p.strikePrice);
           if ( p.strikePrice === reciprocatedPutStrike) {
-            sizes.add(p.size)
             return true
           }
           return false

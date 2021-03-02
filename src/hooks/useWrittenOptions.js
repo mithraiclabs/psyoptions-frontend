@@ -27,7 +27,7 @@ export const useWrittenOptions = () => {
         const market = markets[marketKey]
         const underlyingAssetTokenAccounts =
           ownedTokenAccounts[market.uAssetMint]
-        const writerAccounts = market.optionWriterRegistry.reduce(
+        const writerAccounts = market.optionWriterRegistry?.reduce(
           (accountsWhereWalletIsWriter, optionWriter) => {
             // For close, the wallet must own the Underlying asset accout in order to get it sent
             if (
@@ -45,7 +45,7 @@ export const useWrittenOptions = () => {
           [],
         )
 
-        if (writerAccounts.length) {
+        if (writerAccounts?.length) {
           acc[marketKey] = writerAccounts
         }
         return acc

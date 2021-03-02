@@ -17,7 +17,7 @@ const useExerciseOpenPosition = (
   const { connection, endpoint } = useConnection()
   const { wallet, pubKey } = useWallet()
 
-  return useCallback(async () => {
+  const exercise = useCallback(async () => {
     const {
       transaction: tx,
     } = await exerciseCoveredCallWithRandomOptionWriter(
@@ -45,7 +45,9 @@ const useExerciseOpenPosition = (
         </Link>
       ),
     })
+
     await connection.confirmTransaction(txid)
+
     pushNotification({
       severity: 'success',
       message: `Transaction Confirmed: Exercise Option`,
@@ -68,6 +70,10 @@ const useExerciseOpenPosition = (
     wallet,
     pushNotification,
   ])
+
+  return {
+    exercise,
+  }
 }
 
 export default useExerciseOpenPosition

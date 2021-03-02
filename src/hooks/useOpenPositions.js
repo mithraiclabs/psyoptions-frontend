@@ -9,11 +9,11 @@ import useOwnedTokenAccounts from './useOwnedTokenAccounts'
  */
 const useOpenPositions = () => {
   const { markets } = useOptionsMarkets()
-  const ownedTokens = useOwnedTokenAccounts()
+  const { ownedTokenAccounts } = useOwnedTokenAccounts()
 
   return useMemo(() => {
     const positions = Object.keys(markets).reduce((acc, marketKey) => {
-      const accountsWithHoldings = ownedTokens[
+      const accountsWithHoldings = ownedTokenAccounts[
         markets[marketKey].optionMintAddress
       ]?.filter((optionTokenAcct) => optionTokenAcct.amount > 0)
       if (accountsWithHoldings?.length) {
@@ -22,7 +22,7 @@ const useOpenPositions = () => {
       return acc
     }, {})
     return positions
-  }, [markets, ownedTokens])
+  }, [markets, ownedTokenAccounts])
 }
 
 export default useOpenPositions

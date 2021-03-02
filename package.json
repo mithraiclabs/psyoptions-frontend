@@ -42,6 +42,8 @@
     "@project-serum/serum": "0.13.23",
     "@project-serum/sol-wallet-adapter": "0.1.4",
     "@project-serum/tokens": "0.0.7",
+    "@sentry/react": "^6.2.1",
+    "@sentry/tracing": "^6.2.1",
     "@solana/spl-token": "0.0.13",
     "@solana/web3.js": "0.93.0",
     "axios": "^0.21.1",

@@ -17,12 +17,12 @@ import useAssetList from '../hooks/useAssetList'
 
 const SelectAsset = ({ label, selectedAsset, onSelectAsset }) => {
   const theme = useTheme()
-  const assetList = useAssetList()
+  const { supportedAssets } = useAssetList()
 
   const [open, setOpen] = useState(false)
   const [filterInput, setFilterInput] = useState('')
 
-  const filteredAssetList = assetList.filter((item) => {
+  const filteredAssetList = supportedAssets.filter((item) => {
     const match = filterInput.toLowerCase()
     const shouldAppear =
       item.tokenName.toLowerCase().match(match) ||
@@ -66,22 +66,22 @@ const SelectAsset = ({ label, selectedAsset, onSelectAsset }) => {
             </Box>
             <Box my={3} height="300px" overflow="auto">
               {filteredAssetList.map((asset) => (
-                  <ListItem
-                    button
-                    onClick={() => {
-                      setOpen(false)
-                      onSelectAsset(asset)
-                    }}
-                    key={asset.mintAddress}
-                  >
-                    <ListItemAvatar>
-                      <Avatar src={asset.icon} />
-                    </ListItemAvatar>
-                    <ListItemText
-                      primary={`${asset.tokenName} (${asset.tokenSymbol})`}
-                    />
-                  </ListItem>
-                ))}
+                <ListItem
+                  button
+                  onClick={() => {
+                    setOpen(false)
+                    onSelectAsset(asset)
+                  }}
+                  key={asset.mintAddress}
+                >
+                  <ListItemAvatar>
+                    <Avatar src={asset.icon} />
+                  </ListItemAvatar>
+                  <ListItemText
+                    primary={`${asset.tokenName} (${asset.tokenSymbol})`}
+                  />
+                </ListItem>
+              ))}
             </Box>
           </Box>
         </Box>

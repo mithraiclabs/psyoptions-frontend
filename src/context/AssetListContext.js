@@ -3,7 +3,26 @@ import { Connection, PublicKey } from '@solana/web3.js'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import useConnection from '../hooks/useConnection'
 import useNotifications from '../hooks/useNotifications'
-import { getAssetsByNetwork } from '../utils/networkInfo';
+import { getAssetsByNetwork } from '../utils/networkInfo'
+
+const defaultAssetPairsByNetworkName = {
+  Mainnet: {
+    uAssetSymbol: 'SOL',
+    qAssetSymbol: 'USDC',
+  },
+  Devnet: {
+    uAssetSymbol: 'PSYA',
+    qAssetSymbol: 'USDCT', // TODO add this
+  },
+  Testnet: {
+    uAssetSymbol: 'SOL',
+    qAssetSymbol: 'ABC',
+  },
+  localhost: {
+    uAssetSymbol: 'SRM',
+    qAssetSymbol: 'USDC',
+  },
+}
 
 // TODO see if we can query many accounts at once
 const mergeAssetsWithChainData = async (connection, assets) =>
@@ -22,11 +41,13 @@ const mergeAssetsWithChainData = async (connection, assets) =>
     }),
   )
 
-const SupportedAssetContext = createContext([])
+const AssetListContext = createContext([])
 
-const SupportedAssetProvider = ({ children }) => {
+const AssetListProvider = ({ children }) => {
   const { connection, endpoint } = useConnection()
   const [supportedAssets, setSupportedAssets] = useState([])
+  const [uAsset, setUAsset] = useState()
+  const [qAsset, setQAsset] = useState()
   const { pushNotification } = useNotifications()
 
   useEffect(() => {
@@ -64,11 +85,41 @@ const SupportedAssetProvider = ({ children }) => {
     })()
   }, [connection, endpoint.name, pushNotification])
 
+  // Set default assets on mount if there are no assets selected and supported assets are available
+  useEffect(() => {
+    if (supportedAssets && supportedAssets.length > 0 && !uAsset && !qAsset) {
+      const defaultAssetPair =
+        defaultAssetPairsByNetworkName[endpoint.name] || {}
+      let defaultUAsset
+      let defaultQAsset
+      supportedAssets.forEach((asset) => {
+        if (asset.tokenSymbol === defaultAssetPair.uAssetSymbol) {
+          defaultUAsset = asset
+        }
+        if (asset.tokenSymbol === defaultAssetPair.qAssetSymbol) {
+          defaultQAsset = asset
+        }
+      })
+      if (defaultUAsset && defaultQAsset) {
+        setUAsset(defaultUAsset)
+        setQAsset(defaultQAsset)
+      }
+    }
+  }, [endpoint, supportedAssets, uAsset, qAsset]) // eslint-disable-line
+
+  const value = {
+    supportedAssets,
+    uAsset,
+    qAsset,
+    setUAsset,
+    setQAsset,
+  }
+
   return (
-    <SupportedAssetContext.Provider value={supportedAssets}>
+    <AssetListContext.Provider value={value}>
       {children}
-    </SupportedAssetContext.Provider>
+    </AssetListContext.Provider>
   )
 }
 
-export { SupportedAssetContext, SupportedAssetProvider }
+export { AssetListContext, AssetListProvider }

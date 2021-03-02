@@ -43,13 +43,15 @@ const useOptionsMarkets = () => {
   const { wallet, pubKey } = useWallet()
   const { connection, endpoint } = useConnection()
   const { markets, setMarkets } = useContext(OptionsMarketsContext)
-  const assetList = useAssetList()
+  const { supportedAssets } = useAssetList()
 
   const fetchMarketData = useCallback(async () => {
     try {
       if (!(connection instanceof Connection)) return
       if (!endpoint.programId) return
-      const assets = assetList.map((asset) => new PublicKey(asset.mintAddress))
+      const assets = supportedAssets.map(
+        (asset) => new PublicKey(asset.mintAddress),
+      )
       const res = await Market.getAllMarketsBySplSupport(
         connection,
         new PublicKey(endpoint.programId),
@@ -59,11 +61,11 @@ const useOptionsMarkets = () => {
       const newMarkets = {}
       res.forEach((market) => {
         const uAssetMint = market.marketData.underlyingAssetMintAddress
-        const uAsset = assetList.filter(
+        const uAsset = supportedAssets.filter(
           (asset) => asset.mintAddress === uAssetMint.toString(),
         )[0]
         const qAssetMint = market.marketData.quoteAssetMintAddress
-        const qAsset = assetList.filter(
+        const qAsset = supportedAssets.filter(
           (asset) => asset.mintAddress === qAssetMint.toString(),
         )[0]
 
@@ -104,7 +106,7 @@ const useOptionsMarkets = () => {
     } catch (err) {
       console.error(err)
     }
-  }, [connection, assetList, endpoint, setMarkets])
+  }, [connection, supportedAssets, endpoint, setMarkets])
 
   useEffect(() => {
     fetchMarketData()
@@ -146,7 +148,7 @@ const useOptionsMarkets = () => {
     uAssetMint,
     qAssetMint,
     expiration,
-    decimals
+    decimals,
   }) => {
     const results = await Promise.all(
       strikePrices.map(async (strikePrice) => {
@@ -216,7 +218,7 @@ const useOptionsMarkets = () => {
     results.forEach((market) => {
       const m = market
       m.size = `${market.size * 10 ** -decimals}`
-      m.strikePrice = `${market.strikePrice}` 
+      m.strikePrice = `${market.strikePrice}`
       newMarkets[market.key] = m
       return m
     })

@@ -12,30 +12,10 @@ import Select from '../../Select'
 import SelectAsset from '../../SelectAsset'
 import { getNext3Months } from '../../../utils/dates'
 
-import useConnection from '../../../hooks/useConnection'
 import useAssetList from '../../../hooks/useAssetList'
 import useOptionChain from '../../../hooks/useOptionChain'
 
-import CallPutRow from './CallPutRow';
-
-const defaultAssetPairsByNetworkName = {
-  Mainnet: {
-    uAssetSymbol: 'SOL',
-    qAssetSymbol: 'USDC',
-  },
-  Devnet: {
-    uAssetSymbol: 'PSYA',
-    qAssetSymbol: 'USDCT', // TODO add this
-  },
-  Testnet: {
-    uAssetSymbol: 'SOL',
-    qAssetSymbol: 'ABC',
-  },
-  localhost: {
-    uAssetSymbol: 'SOL',
-    qAssetSymbol: 'USDC',
-  },
-}
+import CallPutRow from './CallPutRow'
 
 const TCell = withStyles({
   root: {
@@ -76,48 +56,18 @@ const next3Months = getNext3Months()
 const emptyRows = Array(9).fill(rowTemplate)
 
 const Markets = () => {
-  const { endpoint } = useConnection()
-
-  const supportedAssets = useAssetList()
+  const { uAsset, qAsset, setUAsset, setQAsset } = useAssetList()
   const [date, setDate] = useState(next3Months[0])
-  const [uAsset, setUAsset] = useState()
-  const [qAsset, setQAsset] = useState()
   const [rows, setRows] = useState(emptyRows)
-
-
-  useEffect(() => {
-    if (supportedAssets && supportedAssets.length > 0) {
-      const defaultAssetPair =
-        defaultAssetPairsByNetworkName[endpoint.name] || {}
-      let defaultUAsset
-      let defaultQAsset
-      supportedAssets.forEach((asset) => {
-        if (asset.tokenSymbol === defaultAssetPair.uAssetSymbol) {
-          defaultUAsset = asset
-        }
-        if (asset.tokenSymbol === defaultAssetPair.qAssetSymbol) {
-          defaultQAsset = asset
-        }
-      })
-      if (defaultUAsset && defaultQAsset) {
-        setUAsset(defaultUAsset)
-        setQAsset(defaultQAsset)
-      }
-    }
-  }, [endpoint, supportedAssets])
-
   const { chain } = useOptionChain(date, uAsset, qAsset)
 
   useEffect(() => {
     let newRows = chain.length ? chain : emptyRows
-
     if (newRows.length < 9) {
       newRows = [...newRows, ...emptyRows.slice(newRows.length)]
     }
-
     setRows(newRows)
   }, [chain])
-
 
   return (
     <Page>
@@ -234,7 +184,15 @@ const Markets = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {rows.map((row, i) => (<CallPutRow key={i} row={row} uAsset={uAsset} qAsset={qAsset} date={date}/>))}
+                {rows.map((row, i) => (
+                  <CallPutRow
+                    key={i}
+                    row={row}
+                    uAsset={uAsset}
+                    qAsset={qAsset}
+                    date={date}
+                  />
+                ))}
               </TableBody>
             </Table>
           </TableContainer>

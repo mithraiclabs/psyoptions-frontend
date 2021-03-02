@@ -1,9 +1,6 @@
-import { useContext } from 'react';
-import { SupportedAssetContext } from '../context/SupportedAssetContext';
+import { useContext } from 'react'
+import { AssetListContext } from '../context/AssetListContext'
 
-const useAssetList = () => {
-  const supportedAssets = useContext(SupportedAssetContext);
-  return supportedAssets;
-}
+const useAssetList = () => useContext(AssetListContext)
 
 export default useAssetList

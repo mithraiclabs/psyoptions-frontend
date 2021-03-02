@@ -18,6 +18,7 @@ import Page from './Page'
 import Select from '../Select'
 
 import { getNext3Months } from '../../utils/dates'
+import useAssetList from '../../hooks/useAssetList'
 
 const darkBorder = `1px solid ${theme.palette.background.main}`
 
@@ -37,8 +38,7 @@ const Mint = () => {
   const dates = next3Months
 
   const [date, setDate] = useState(dates[0])
-  const [uAsset, setUAsset] = useState()
-  const [qAsset, setQAsset] = useState()
+  const { uAsset, qAsset, setUAsset, setQAsset } = useAssetList()
   const [size, setSize] = useState(100)
   const [price, setPrice] = useState('')
   const [uAssetAccount, setUAssetAccount] = useState('')

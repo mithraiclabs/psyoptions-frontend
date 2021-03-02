@@ -38,3 +38,5 @@ Token Symbol: USDCT
 Faucet Address: BmaVN3Wut1k2MtrcsxjTn919GdBJ2gzVLTtbiybnAPnR
 Mint Address: HinfVnJuzMtJsyuLE2ArYCChDZB6FCxEu2p3CQeMcDiF
 ````
+
+DEV cloud run url: https://solana-options-frontend-ckpgwptysa-uc.a.run.app/

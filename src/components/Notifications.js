@@ -16,6 +16,8 @@ const SimpleSnackbar = ({
 }) => (
   <Snackbar
     open
+    autoHideDuration={3000}
+    onClose={closeNotification}
     style={{
       position: 'relative',
       margin: '10px',

@@ -8,14 +8,16 @@ import TableRow from '@material-ui/core/TableRow'
 import PropTypes from 'prop-types'
 import useExerciseOpenPosition from '../../../hooks/useExerciseOpenPosition'
 import useOwnedTokenAccounts from '../../../hooks/useOwnedTokenAccounts'
+import useNotifications from '../../../hooks/useNotifications'
 import { formatExpirationTimestamp } from '../../../utils/format'
 
 const PositionRow = ({ row }) => {
   const [visible, setVisible] = useState(false)
   const {
     ownedTokenAccounts,
-    // updateOwnedTokenAccounts,
+    updateOwnedTokenAccounts,
   } = useOwnedTokenAccounts()
+  const { pushNotification } = useNotifications
 
   const onRowClick = () => {
     if (row.accounts.length > 1) {
@@ -31,14 +33,25 @@ const PositionRow = ({ row }) => {
     ownedTokenAccounts &&
     ownedTokenAccounts[row.optionContractTokenKey][0]?.pubKey
 
-  const handleExercisePosition = useExerciseOpenPosition(
+  const { exercise } = useExerciseOpenPosition(
     row.optionMarketKey,
     ownedQAssetKey,
     ownedUAssetKey,
     ownedOAssetKey,
   )
-  //   updateOwnedTokenAccounts()
-  // }
+
+  const handleExercisePosition = async () => {
+    try {
+      await exercise()
+    } catch (err) {
+      console.log(err)
+      pushNotification({
+        severity: 'error',
+        message: `${err}`,
+      })
+    }
+    await updateOwnedTokenAccounts()
+  }
 
   return (
     <>

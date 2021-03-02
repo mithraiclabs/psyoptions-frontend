@@ -21,6 +21,7 @@ import useOptionsMarkets from '../../hooks/useOptionsMarkets'
 import useSerumMarketInfo from '../../hooks/useSerumMarketInfo'
 import { generateStrikePrices } from '../../utils/generateStrikePrices'
 import { getNext3Months } from '../../utils/dates'
+import useAssetList from '../../hooks/useAssetList'
 
 const darkBorder = `1px solid ${theme.palette.background.main}`
 
@@ -34,8 +35,7 @@ const InitializeMarket = () => {
   const [multiple, setMultiple] = useState(false)
   const [basePrice, setBasePrice] = useState(0)
   const [date, setDate] = useState(next3Months[0])
-  const [uAsset, setUAsset] = useState()
-  const [qAsset, setQAsset] = useState()
+  const { uAsset, qAsset, setUAsset, setQAsset } = useAssetList()
   const [size, setSize] = useState(0)
   const [priceInterval, setPriceInterval] = useState(0)
   const { marketPrice } = useSerumMarketInfo({
@@ -84,7 +84,7 @@ const InitializeMarket = () => {
         uAssetMint: uAsset.mintAddress,
         qAssetMint: qAsset.mintAddress,
         expiration: date.unix(),
-        decimals: uAsset.decimals
+        decimals: uAsset.decimals,
       })
       setLoading(false)
     } catch (err) {

@@ -19,7 +19,7 @@ import useOwnedTokenAccounts from './useOwnedTokenAccounts'
  */
 export const useWrittenOptions = () => {
   const { markets } = useOptionsMarkets()
-  const ownedTokenAccounts = useOwnedTokenAccounts()
+  const { ownedTokenAccounts } = useOwnedTokenAccounts()
 
   return useMemo(
     () =>

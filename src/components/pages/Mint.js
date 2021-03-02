@@ -32,7 +32,7 @@ const Mint = () => {
     getSizes,
     createAccountsAndMint,
   } = useOptionsMarkets()
-  const ownedTokenAccounts = useOwnedTokenAccounts()
+  const { ownedTokenAccounts } = useOwnedTokenAccounts()
 
   const dates = next3Months
 

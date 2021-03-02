@@ -1,4 +1,4 @@
-import React, { createContext, useEffect, useState } from 'react'
+import React, { createContext, useEffect, useState, useCallback } from 'react'
 import { AccountLayout, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { PublicKey } from '@solana/web3.js'
 import { Buffer } from 'buffer'
@@ -33,63 +33,65 @@ const OwnedTokenAccountsProvider = ({ children }) => {
   const { connected, pubKey } = useWallet()
   const [ownedTokenAccounts, setOwnedTokenAccounts] = useState({})
 
+  const updateOwnedTokenAccounts = useCallback(async () => {
+    const filters = getOwnedTokenAccountsFilter(pubKey)
+    try {
+      const [solBalance, resp] = await Promise.all([
+        connection.getBalance(pubKey),
+        connection._rpcRequest('getProgramAccounts', [
+          TOKEN_PROGRAM_ID.toBase58(),
+          {
+            commitment: connection.commitment,
+            filters,
+          },
+        ]),
+      ])
+      const _ownedTokenAccounts = resp.result?.reduce(
+        (acc, { account, pubkey }) => {
+          const accountInfo = AccountLayout.decode(bs58.decode(account.data))
+          const amountBuffer = Buffer.from(accountInfo.amount)
+          const amount = amountBuffer.readUintLE(0, 8)
+          const mint = new PublicKey(accountInfo.mint)
+          acc[mint.toString()] = [
+            {
+              amount,
+              mint,
+              // public key for the specific token account (NOT the wallet)
+              pubKey: pubkey,
+            },
+          ]
+          return acc
+        },
+        {},
+      )
+      setOwnedTokenAccounts({
+        // Must prepend the SOL token since it's not returned with token accounts
+        [SOLANA_MINT_ADDRESS]: [
+          {
+            amount: solBalance,
+            mint: new PublicKey(SOLANA_MINT_ADDRESS),
+            pubKey: pubKey.toString(),
+          },
+        ],
+        ..._ownedTokenAccounts,
+      })
+    } catch (err) {
+      // TODO add toast or something for better error handling
+      console.error(err)
+    }
+  }, [connection, pubKey, setOwnedTokenAccounts])
+
   useEffect(() => {
     // TODO need to find the best way to update when the user adds new programs
     if (connected && pubKey) {
-      ;(async () => {
-        const filters = getOwnedTokenAccountsFilter(pubKey)
-        try {
-          const [solBalance, resp] = await Promise.all([
-            connection.getBalance(pubKey),
-            connection._rpcRequest('getProgramAccounts', [
-              TOKEN_PROGRAM_ID.toBase58(),
-              {
-                commitment: connection.commitment,
-                filters,
-              },
-            ]),
-          ])
-          const _ownedTokenAccounts = resp.result?.reduce(
-            (acc, { account, pubkey }) => {
-              const accountInfo = AccountLayout.decode(
-                bs58.decode(account.data),
-              )
-              const amountBuffer = Buffer.from(accountInfo.amount)
-              const amount = amountBuffer.readUintLE(0, 8)
-              const mint = new PublicKey(accountInfo.mint)
-              acc[mint.toString()] = [
-                {
-                  amount,
-                  mint,
-                  // public key for the specific token account (NOT the wallet)
-                  pubKey: pubkey,
-                },
-              ]
-              return acc
-            },
-            {},
-          )
-          setOwnedTokenAccounts({
-            // Must prepend the SOL token since it's not returned with token accounts
-            [SOLANA_MINT_ADDRESS]: [
-              {
-                amount: solBalance,
-                mint: new PublicKey(SOLANA_MINT_ADDRESS),
-                pubKey: pubKey.toString(),
-              },
-            ],
-            ..._ownedTokenAccounts,
-          })
-        } catch (err) {
-          // TODO add toast or something for better error handling
-          console.error(err)
-        }
-      })()
+      updateOwnedTokenAccounts()
     }
-  }, [connected, connection, pubKey])
+  }, [connected, connection, pubKey, updateOwnedTokenAccounts])
 
   return (
-    <OwnedTokenAccountsContext.Provider value={ownedTokenAccounts}>
+    <OwnedTokenAccountsContext.Provider
+      value={{ ownedTokenAccounts, updateOwnedTokenAccounts }}
+    >
       {children}
     </OwnedTokenAccountsContext.Provider>
   )

@@ -12,7 +12,10 @@ import { formatExpirationTimestamp } from '../../../utils/format'
 
 const PositionRow = ({ row }) => {
   const [visible, setVisible] = useState(false)
-  const ownedTokenAccounts = useOwnedTokenAccounts()
+  const {
+    ownedTokenAccounts,
+    // updateOwnedTokenAccounts,
+  } = useOwnedTokenAccounts()
 
   const onRowClick = () => {
     if (row.accounts.length > 1) {
@@ -34,6 +37,8 @@ const PositionRow = ({ row }) => {
     ownedUAssetKey,
     ownedOAssetKey,
   )
+  //   updateOwnedTokenAccounts()
+  // }
 
   return (
     <>

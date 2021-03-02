@@ -95,6 +95,20 @@ const Template = ({
         }}
       />
       <script src={jsBundle || ''} />
+      <script
+        async
+        src="https://www.googletagmanager.com/gtag/js?id=G-MDM6MQ5HPL"
+      />
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-MDM6MQ5HPL');`,
+        }}
+      />
     </body>
   </html>
 )

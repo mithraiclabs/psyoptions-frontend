@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react'
+import PropTypes from 'prop-types'
 import TableRow from '@material-ui/core/TableRow'
 import TableCell from '@material-ui/core/TableCell'
 import { withStyles } from '@material-ui/core/styles'
@@ -244,6 +245,35 @@ const CallPutRow = ({row, uAsset, qAsset, date}) =>{
   )
 } 
 
+const CallOrPut = PropTypes.shape({
+  emptyRow: PropTypes.bool,
+  initialized: PropTypes.bool,
+  bid: PropTypes.string,
+  ask: PropTypes.string,
+  change: PropTypes.string,
+  volume: PropTypes.string,
+  openInterest: PropTypes.string,
+})
+const Asset = PropTypes.shape({
+  tokenSymbol: PropTypes.string,
+  mintAddress:PropTypes.string,
+})
+
 CallPutRow.propTypes = {
+  // eslint-disable-next-line react/require-default-props
+  row: PropTypes.shape({
+    size: PropTypes.string.isRequired,
+    strike: PropTypes.string.isRequired,
+    call: CallOrPut,
+    put: CallOrPut,
+  }),
+  // eslint-disable-next-line react/require-default-props
+  uAsset: Asset,
+  // eslint-disable-next-line react/require-default-props
+  qAsset: Asset,
+  // eslint-disable-next-line react/require-default-props
+  date: PropTypes.shape({
+    unix: PropTypes.func
+  })
 }
 export default CallPutRow;

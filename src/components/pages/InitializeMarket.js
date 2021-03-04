@@ -44,7 +44,9 @@ const InitializeMarket = () => {
   })
   const [loading, setLoading] = useState(false)
 
-  const parsedBasePrice = parseInt(basePrice, 10)
+  const parsedBasePrice = parseFloat(
+    basePrice && basePrice.replace(/^\./, '0.'),
+  )
   let strikePrices = []
   if (
     multiple &&
@@ -69,6 +71,14 @@ const InitializeMarket = () => {
     price: strikePrices[0],
   })
   const parametersValid = size && !Number.isNaN(size) && strikePrices.length > 0
+
+  const basePriceMaxLength = 12
+
+  const handleChangeBasePrice = (e) => {
+    // If intput starts with dot, e.g. .123, add a 0
+    const input = e.target.value || ''
+    setBasePrice(input.slice(0, basePriceMaxLength))
+  }
 
   const handleInitialize = async () => {
     // The size must account for the number of decimals the underlying SPL Token has.
@@ -193,7 +203,7 @@ const InitializeMarket = () => {
                   value={basePrice}
                   label="Base Price"
                   variant="filled"
-                  onChange={(e) => setBasePrice(e.target.value)}
+                  onChange={handleChangeBasePrice}
                   helperText={
                     Number.isNaN(parsedBasePrice) ? 'Must be a number' : null
                   }

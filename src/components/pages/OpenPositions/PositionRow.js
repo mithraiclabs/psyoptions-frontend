@@ -26,7 +26,7 @@ const PositionRow = ({ row }) => {
   const classes = useStyles()
   const [visible, setVisible] = useState(false)
   const {
-    // ownedTokenAccounts,
+    ownedTokenAccounts,
     updateOwnedTokenAccounts,
   } = useOwnedTokenAccounts()
   const { pushNotification } = useNotifications
@@ -36,15 +36,6 @@ const PositionRow = ({ row }) => {
       setVisible((vis) => !vis)
     }
   }
-  
-  const PublicKey = {_bn: 'BN'}
-  const ownedTokenAccounts = {
-    '3hCGythLqAaF1mMnB1zxESgNUVfPanuknLquHb1ASprb': [{amount: 97000000000, mint: PublicKey, pubKey: "W53TohUfcsfeeQ545NcafKpAKDKStBALHymwyrFDTy9"}],
-    '6S7z4EgA39BTXyVQhjyNpaMvfH88JQhjvPwq4RcpByXB': [{amount: 0, mint: PublicKey, pubKey: "997QULmBSnskPWYDEEJzheZxh2pea5cjFzUuz5ubyyQN"}],
-    'GQdg99FToa8yHswMT85BgWF8K88B4fKCvLzdhF1166XZ': [{amount: 2, mint: PublicKey, pubKey: "8wdQSavku2vBEQpgMQFEsagzCXCHgy4YGmfytspUx1yV"}],
-    '12zztxVg6dT6qTiMnNoVYhuyrh85Aw12paZL1F9jX1Wc': [{amount: 1, mint: PublicKey, pubKey: "82cTMtjyqyYz8rBPwdD9Rt4oZ3x3F6ZqHt6G5qmj8TE4"}]
-  }
-  // end temp
 
   const ownedQAssetKey =
     ownedTokenAccounts && ownedTokenAccounts[row.quoteAssetKey][0]?.pubKey

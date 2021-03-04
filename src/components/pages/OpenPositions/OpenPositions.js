@@ -46,48 +46,7 @@ const OpenPositions = () => {
     underlyingAssetKey: markets[key]?.uAssetMint,
     optionContractTokenKey: markets[key]?.optionMintAddress,
   }))
-  // temp
-  console.log('pos rows', positionRows)
 
-  const testPositionRows = [{
-    accounts: [{
-      amount: 1,
-      mint: { bn: 'BN'},
-      pubKey: "82cTMtjyqyYz8rBPwdD9Rt4oZ3x3F6ZqHt6G5qmj8TE4"
-    }, {
-      amount: 1,
-      mint: { bn: 'BN'},
-      pubKey: "36AY4DmbSvizz4sfL1JLfyrVQhdVFLYFAxLSQXbRQ9We"
-    }],
-    assetPair: "ETHUSDC",
-    expiration: 1617235200,
-    markprice: "TODO",
-    optionContractTokenKey: "12zztxVg6dT6qTiMnNoVYhuyrh85Aw12paZL1F9jX1Wc",
-    optionMarketKey: "8ufo6P8FefAeVd8bc3hBnKqKA6JnqGXhxah6ntt9MRsn",
-    quoteAssetKey: "6S7z4EgA39BTXyVQhjyNpaMvfH88JQhjvPwq4RcpByXB",
-    size: 1,
-    strike: "2000",
-    underlyingAssetKey: "3hCGythLqAaF1mMnB1zxESgNUVfPanuknLquHb1ASprb",
-  }, {
-    accounts: [{
-      amount: 2,
-      mint: {_bn: 'BN'},
-      pubKey: "8wdQSavku2vBEQpgMQFEsagzCXCHgy4YGmfytspUx1yV"}, {
-        amount: 1,
-      mint: { bn: 'BN'},
-      pubKey: "36AY4DmbSvizz4sfL1JLfyrVQhdVFLYFAxLSQXbRQ9We"
-      }],
-    assetPair: "ETHUSDC",
-    expiration: 1617235200,
-    markprice: "TODO",
-    optionContractTokenKey: "GQdg99FToa8yHswMT85BgWF8K88B4fKCvLzdhF1166XZ",
-    optionMarketKey: "Cm4G3PYDd8gNFBuU3JoXNyQLEMeXsUadyVnabPnSH2Ec",
-    quoteAssetKey: "6S7z4EgA39BTXyVQhjyNpaMvfH88JQhjvPwq4RcpByXB",
-    size: 2,
-    strike: "1400",
-    underlyingAssetKey: "3hCGythLqAaF1mMnB1zxESgNUVfPanuknLquHb1ASprb"
-  }]
-  // end temp
   return (
     <Page>
       <Box
@@ -120,7 +79,7 @@ const OpenPositions = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {testPositionRows
+                {positionRows
                   .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                   .map((row) => (
                     <PositionRow key={row.optionContractTokenKey} row={row} />

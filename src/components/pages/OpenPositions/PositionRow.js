@@ -6,12 +6,24 @@ import TableBody from '@material-ui/core/TableBody'
 import TableCell from '@material-ui/core/TableCell'
 import TableRow from '@material-ui/core/TableRow'
 import PropTypes from 'prop-types'
+import KeyboardArrowDown from '@material-ui/icons/KeyboardArrowDown'
+import { makeStyles } from '@material-ui/core/styles'
 import useExerciseOpenPosition from '../../../hooks/useExerciseOpenPosition'
 import useOwnedTokenAccounts from '../../../hooks/useOwnedTokenAccounts'
 import useNotifications from '../../../hooks/useNotifications'
 import { formatExpirationTimestamp } from '../../../utils/format'
 
+const useStyles = makeStyles({
+  dropdownOpen: {
+    transform: "rotate(-180deg)"
+  },
+  dropdownClosed: {
+    transform: "rotate(0)"
+  }
+})
+
 const PositionRow = ({ row }) => {
+  const classes = useStyles()
   const [visible, setVisible] = useState(false)
   const {
     ownedTokenAccounts,
@@ -62,7 +74,12 @@ const PositionRow = ({ row }) => {
         tabIndex={-1}
         key={row.optionContractTokenKey}
       >
-        <TableCell width="20%">{row.assetPair}</TableCell>
+        <TableCell width="5%">
+          { row.accounts.length > 1 && 
+          <KeyboardArrowDown
+            className={ visible ? classes.dropdownOpen : classes.dropdownClosed }/>}
+        </TableCell>
+        <TableCell width="15%">{row.assetPair}</TableCell>
         <TableCell width="15%">{row.strike}</TableCell>
         <TableCell width="15%">TODO</TableCell>
         <TableCell width="15%">{row.size}</TableCell>
@@ -83,7 +100,7 @@ const PositionRow = ({ row }) => {
       <TableRow key={`${row.optionContractTokenKey}Collapsible`}>
         <TableCell
           style={{ borderWidth: 0, padding: 0, margin: 0 }}
-          colSpan={6}
+          colSpan={7}
         >
           <Collapse in={visible} timeout="auto" unmountOnExit>
             <Table>
@@ -95,7 +112,8 @@ const PositionRow = ({ row }) => {
                     role="checkbox"
                     tabIndex={-1}
                   >
-                    <TableCell width="20%" />
+                    <TableCell width="5%"/>
+                    <TableCell width="15%"/>
                     <TableCell width="15%">{row.strike}</TableCell>
                     <TableCell width="15%">TODO</TableCell>
                     <TableCell width="15%">{account.amount}</TableCell>

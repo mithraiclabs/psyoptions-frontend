@@ -67,7 +67,8 @@ const OpenPositions = () => {
             <Table stickyHeader aria-label="sticky table">
               <TableHead>
                 <TableRow>
-                  <TableCell width="20%">Asset Pair</TableCell>
+                  <TableCell width="5%"/>
+                  <TableCell width="15%">Asset Pair</TableCell>
                   <TableCell width="15%">Strike</TableCell>
                   <TableCell width="15%">Market Price</TableCell>
                   <TableCell width="15%">Size</TableCell>

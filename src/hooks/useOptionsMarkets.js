@@ -150,7 +150,6 @@ const useOptionsMarkets = () => {
     expiration,
     decimals,
   }) => {
-    console.log(strikePrices)
     const results = await Promise.all(
       strikePrices.map(async (strikePrice) => {
         const {

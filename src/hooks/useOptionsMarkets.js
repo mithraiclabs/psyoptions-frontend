@@ -77,11 +77,6 @@ const useOptionsMarkets = () => {
           .div(new BN(10 ** qAsset.decimals))
           .toNumber(10)
 
-          // console.log({
-          //   amountPerContract,
-          //   quoteAmountPerContract
-          // })
-
         const newMarket = {
           // marketData.amountPerContract is a BigNumber
           size: `${amountPerContract}`,
@@ -162,18 +157,6 @@ const useOptionsMarkets = () => {
   }) => {
     const results = await Promise.all(
       strikePrices.map(async (strikePrice) => {
-        console.log({
-          size,
-          strikePrice,
-          uAssetSymbol,
-          qAssetSymbol,
-          uAssetMint,
-          qAssetMint,
-          expiration,
-          uAssetDecimals,
-          qAssetDecimals,
-        })
-
         const {
           // signers,
           transaction,

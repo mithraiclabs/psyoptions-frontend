@@ -81,20 +81,18 @@ const InitializeMarket = () => {
   }
 
   const handleInitialize = async () => {
-    // The size must account for the number of decimals the underlying SPL Token has.
-    const sizeAsU64 = size * 10 ** uAsset.decimals
-
     try {
       setLoading(true)
       await initializeMarkets({
-        size: sizeAsU64,
+        size,
         strikePrices,
         uAssetSymbol: uAsset.tokenSymbol,
         qAssetSymbol: qAsset.tokenSymbol,
         uAssetMint: uAsset.mintAddress,
         qAssetMint: qAsset.mintAddress,
+        uAssetDecimals: uAsset.decimals,
+        qAssetDecimals: uAsset.decimals,
         expiration: date.unix(),
-        decimals: uAsset.decimals,
       })
       setLoading(false)
     } catch (err) {

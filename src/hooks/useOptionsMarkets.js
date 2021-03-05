@@ -69,21 +69,29 @@ const useOptionsMarkets = () => {
           (asset) => asset.mintAddress === qAssetMint.toString(),
         )[0]
 
-        // Remove the decimals from size
-        const size = market.marketData.amountPerContract
+        const amountPerContract = market.marketData.amountPerContract
           .div(new BN(10 ** uAsset.decimals))
-          .toString(10)
+          .toNumber(10)
+
+        const quoteAmountPerContract = market.marketData.quoteAmountPerContract
+          .div(new BN(10 ** qAsset.decimals))
+          .toNumber(10)
+
+          // console.log({
+          //   amountPerContract,
+          //   quoteAmountPerContract
+          // })
 
         const newMarket = {
           // marketData.amountPerContract is a BigNumber
-          size,
+          size: `${amountPerContract}`,
           expiration: market.marketData.expirationUnixTimestamp,
           uAssetSymbol: uAsset.tokenSymbol,
           qAssetSymbol: qAsset.tokenSymbol,
           uAssetMint: uAsset.mintAddress,
           qAssetMint: qAsset.mintAddress,
           // marketData.strikePrice is a BigNumber
-          strikePrice: market.marketData.strikePrice.toString(10),
+          strikePrice: `${quoteAmountPerContract / amountPerContract}`,
           optionMintAddress: market.marketData.optionMintAddress.toString(),
           optionMarketDataAddress: market.pubkey.toString(),
           optionWriterRegistry: market.marketData.optionWriterRegistry?.filter(
@@ -94,6 +102,7 @@ const useOptionsMarkets = () => {
               ),
           ),
         }
+
         const key = `${newMarket.expiration}-${newMarket.uAssetSymbol}-${newMarket.qAssetSymbol}-${newMarket.size}-${newMarket.strikePrice}`
         newMarkets[key] = newMarket
       })
@@ -148,10 +157,23 @@ const useOptionsMarkets = () => {
     uAssetMint,
     qAssetMint,
     expiration,
-    decimals,
+    uAssetDecimals,
+    qAssetDecimals,
   }) => {
     const results = await Promise.all(
       strikePrices.map(async (strikePrice) => {
+        console.log({
+          size,
+          strikePrice,
+          uAssetSymbol,
+          qAssetSymbol,
+          uAssetMint,
+          qAssetMint,
+          expiration,
+          uAssetDecimals,
+          qAssetDecimals,
+        })
+
         const {
           // signers,
           transaction,
@@ -163,6 +185,8 @@ const useOptionsMarkets = () => {
           endpoint.programId,
           uAssetMint,
           qAssetMint,
+          uAssetDecimals,
+          qAssetDecimals,
           size,
           strikePrice,
           expiration,
@@ -217,7 +241,7 @@ const useOptionsMarkets = () => {
     const newMarkets = {}
     results.forEach((market) => {
       const m = market
-      m.size = `${market.size * 10 ** -decimals}`
+      m.size = `${market.size}`
       m.strikePrice = `${market.strikePrice}`
       newMarkets[market.key] = m
       return m

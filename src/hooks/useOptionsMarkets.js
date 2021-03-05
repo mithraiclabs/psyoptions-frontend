@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useCallback } from 'react'
-import BN from 'bn.js'
+import BigNumber from 'bignumber.js'
 import { Link } from '@material-ui/core'
 import {
   initializeMarket,
@@ -45,10 +45,13 @@ const useOptionsMarkets = () => {
   const { markets, setMarkets } = useContext(OptionsMarketsContext)
   const { supportedAssets } = useAssetList()
 
+  // TODO: Move this into a context provider so it only fires once
   const fetchMarketData = useCallback(async () => {
     try {
       if (!(connection instanceof Connection)) return
       if (!endpoint.programId) return
+      if (!supportedAssets || supportedAssets.length === 0) return
+
       const assets = supportedAssets.map(
         (asset) => new PublicKey(asset.mintAddress),
       )
@@ -69,24 +72,28 @@ const useOptionsMarkets = () => {
           (asset) => asset.mintAddress === qAssetMint.toString(),
         )[0]
 
-        const amountPerContract = market.marketData.amountPerContract
-          .div(new BN(10 ** uAsset.decimals))
-          .toNumber(10)
 
-        const quoteAmountPerContract = market.marketData.quoteAmountPerContract
-          .div(new BN(10 ** qAsset.decimals))
-          .toNumber(10)
+        // BN.js doesn't handle decimals while bignumber.js can handle decimals of arbitrary sizes
+        const amountPerContract = new BigNumber(
+          market.marketData.amountPerContract.toString(10)
+        ).div(10 ** uAsset.decimals)
+
+        const quoteAmountPerContract = new BigNumber(
+          market.marketData.quoteAmountPerContract.toString(10)
+        ).div(10 ** qAsset.decimals)
+
+        const strike = quoteAmountPerContract.div(amountPerContract.toString(10))
 
         const newMarket = {
           // marketData.amountPerContract is a BigNumber
-          size: `${amountPerContract}`,
+          size: `${amountPerContract.toString(10)}`,
           expiration: market.marketData.expirationUnixTimestamp,
           uAssetSymbol: uAsset.tokenSymbol,
           qAssetSymbol: qAsset.tokenSymbol,
           uAssetMint: uAsset.mintAddress,
           qAssetMint: qAsset.mintAddress,
           // marketData.strikePrice is a BigNumber
-          strikePrice: `${quoteAmountPerContract / amountPerContract}`,
+          strikePrice: `${strike.toString(10)}`,
           optionMintAddress: market.marketData.optionMintAddress.toString(),
           optionMarketDataAddress: market.pubkey.toString(),
           optionWriterRegistry: market.marketData.optionWriterRegistry?.filter(
@@ -110,7 +117,7 @@ const useOptionsMarkets = () => {
     } catch (err) {
       console.error(err)
     }
-  }, [connection, supportedAssets, endpoint, setMarkets])
+  }, [connection, supportedAssets, endpoint]) // eslint-disable-line
 
   useEffect(() => {
     fetchMarketData()

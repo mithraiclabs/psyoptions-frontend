@@ -72,7 +72,7 @@ const InitializeMarket = () => {
   })
   const parametersValid = size && !Number.isNaN(size) && strikePrices.length > 0
 
-  const basePriceMaxLength = 12
+  const basePriceMaxLength = qAsset?.decimals + 2 || 12
 
   const handleChangeBasePrice = (e) => {
     // If intput starts with dot, e.g. .123, add a 0
@@ -248,7 +248,7 @@ const InitializeMarket = () => {
               ) : null}
               <Box p={1}>
                 Strike Prices to Initialize: <br />
-                {strikePrices.map((n) => `${n.toFixed(5)} `)}
+                {strikePrices.map((n) => `${n.toFixed(qAsset.decimals)} `)}
               </Box>
             </Box>
           ) : null}

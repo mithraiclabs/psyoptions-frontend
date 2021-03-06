@@ -5,7 +5,8 @@ import TableCell from '@material-ui/core/TableCell'
 import { withStyles } from '@material-ui/core/styles'
 import { CircularProgress } from '@material-ui/core'
 import Button from '@material-ui/core/Button'
-import BN from 'bn.js'
+// import BN from 'bn.js'
+import BigNumber from 'bignumber.js'
 
 import theme from '../../../utils/theme'
 import useOptionsMarkets from '../../../hooks/useOptionsMarkets'
@@ -51,27 +52,52 @@ const CallPutRow = ({ row, uAsset, qAsset, date }) => {
         const ua = type === 'call' ? uAsset : qAsset
         const qa = type === 'call' ? qAsset : uAsset
 
-        const uaDecimals = new BN(10).pow(new BN(ua.decimals))
-        const qaDecimals = new BN(10).pow(new BN(qa.decimals))
+        // const uaDecimals = new BigNumber(10).pow(new BigNumber(ua.decimals))
+        // const qaDecimals = new BigNumber(10).pow(new BigNumber(qa.decimals))
+        
         let strike
-        let sizeAsU64
+        let size
+
+        const {
+          call, 
+          put
+        } = row
+
         // IF initializing a PUT the strike is the reciprocal of the CALL strike displayed
         //  and the size is CALL strike price * amountPerContract
         if (type === 'call') {
-          strike = new BN(row.strike).mul(uaDecimals)
-          sizeAsU64 = new BN(row.size).mul(qaDecimals)
+          console.log('Initializing a CALL. The following are from the put:')
+          console.log('quoteAmountPerContract', put.quoteAmountPerContract.toString(10))
+          console.log('amountPerContract', put.amountPerContract.toString(10))
+
+          strike = new BigNumber(row.strike)
+          size = new BigNumber(row.size)
+
+          // return
         } else {
-          strike = uaDecimals.div(new BN(row.strike))
-          sizeAsU64 = new BN(row.strike).mul(new BN(row.size)).mul(qaDecimals)
+          const callStrike = call.quoteAmountPerContract.div(call.amountPerContract)
+          const newPutStrike = new BigNumber(1).div(callStrike)
+          const newPutSize = BigNumber.maximum(1, call.quoteAmountPerContract)
+
+          // Remove this when comfortable with the results:
+          console.log({
+            newPutSize: newPutSize.toString(10),
+            newPutStrike: newPutStrike.toString(10)
+          })
+
+          size = newPutSize
+          strike = newPutStrike
         }
 
         await initializeMarkets({
-          size: sizeAsU64.toString(10),
-          strikePrices: [strike.toString(10)],
+          size: size.toNumber(10),
+          strikePrices: [strike.toNumber(10)],
           uAssetSymbol: ua.tokenSymbol,
           qAssetSymbol: qa.tokenSymbol,
           uAssetMint: ua.mintAddress,
           qAssetMint: qa.mintAddress,
+          uAssetDecimals: ua.decimals,
+          qAssetDecimals: qa.decimals,
           expiration: date.unix(),
         })
       } catch (err) {
@@ -88,8 +114,7 @@ const CallPutRow = ({ row, uAsset, qAsset, date }) => {
       qAsset,
       initializeMarkets,
       date,
-      row.strike,
-      row.size,
+      row,
       pushNotification,
     ],
   )

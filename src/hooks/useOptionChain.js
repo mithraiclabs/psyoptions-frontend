@@ -28,6 +28,7 @@ const useOptionChain = (expirationDate, uAsset, qAsset) => {
       .filter((k) => k.match(putKeyPart))
       .map((k) => markets[k])
 
+    // console.log({calls, puts})
 
     const strikes = Array.from(
       new Set([

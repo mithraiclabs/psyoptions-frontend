@@ -72,6 +72,9 @@ const useOptionsMarkets = () => {
           (asset) => asset.mintAddress === qAssetMint.toString(),
         )[0]
 
+        if (uAsset.tokenSymbol === 'BTC') {
+          console.log(market.marketData)
+        }
 
         // BN.js doesn't handle decimals while bignumber.js can handle decimals of arbitrary sizes
         const amountPerContract = new BigNumber(
@@ -85,7 +88,9 @@ const useOptionsMarkets = () => {
         const strike = quoteAmountPerContract.div(amountPerContract.toString(10))
 
         const newMarket = {
-          // marketData.amountPerContract is a BigNumber
+          // Leave these in tact as BigNumbers to use later for creating the reciprocal put/call
+          amountPerContract,
+          quoteAmountPerContract,
           size: `${amountPerContract.toString(10)}`,
           expiration: market.marketData.expirationUnixTimestamp,
           uAssetSymbol: uAsset.tokenSymbol,

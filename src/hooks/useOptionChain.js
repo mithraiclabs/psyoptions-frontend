@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react"
+import BigNumber from "bignumber.js";
 import { PublicKey } from '@solana/web3.js'
-import BN from 'bn.js';
 import { SerumMarket } from '../utils/serum'
 import useConnection from './useConnection'
 import useOptionsMarkets from './useOptionsMarkets'
@@ -17,7 +17,7 @@ const useOptionChain = (expirationDate, uAsset, qAsset) => {
   const [chain, setChain] = useState([]);
 
   const getOptionsChain = useCallback(async (date) => {
-    const uaDecimals = new BN(10).pow(new BN(uAsset.decimals))
+    // const uaDecimals = new BN(10).pow(new BN(uAsset.decimals))
     const callKeyPart = `${date}-${uAsset.tokenSymbol}-${qAsset.tokenSymbol}`
     const putKeyPart = `${date}-${qAsset.tokenSymbol}-${uAsset.tokenSymbol}`
 
@@ -26,25 +26,30 @@ const useOptionChain = (expirationDate, uAsset, qAsset) => {
       .map((k) => markets[k])
     const puts = Object.keys(markets)
       .filter((k) => k.match(putKeyPart))
-      .map((k) => markets[k])
+      .map((k) => ({
+        ...markets[k],
+        reciprocalStrike: new BigNumber(1).div(new BigNumber(markets[k].strikePrice)).toString(10)
+      }))
 
-
+    // TODO - we might be able to convert amountPerContract and quoteAmountPerContract to strings and use them in the set to determine which calls/puts match up, instead of the strike price which could be something like 0.6666666667 while the inverse is 1.5
+    // So for example this array can be strings of '100/150' which would be the same in both cases
     const strikes = Array.from(
       new Set([
         ...calls.map((m) => m.strikePrice),
         // TODO reverse PUTs strikes back to calls...but see [comment](https://github.com/mithraiclabs/solana-options-frontend/issues/117#issuecomment-787984227)
         //  for why this is such a difficult task. 
-        // ...puts.map((m) =>  oneBn.div(new BN(m.strikePrice)).toString(10)),
+        ...puts.map((m) => m.reciprocalStrike),
       ]),
     )
 
     const template = {
       key: '',
-      bid: '--',
-      ask: '--',
-      change: '--',
-      volume: '--',
-      openInterest: '--',
+      bid: '',
+      ask: '',
+      change: '',
+      volume: '',
+      openInterest: '',
+      size: '',
       serumMarket: null,
     }
 
@@ -52,7 +57,6 @@ const useOptionChain = (expirationDate, uAsset, qAsset) => {
 
     await Promise.all(
       strikes.map(async (strike) => {
-        const reciprocatedPutStrike = uaDecimals.div(new BN(strike)).toString(10)
         const sizes = new Set()
   
         const matchingCalls = calls.filter((c) => {
@@ -64,7 +68,8 @@ const useOptionChain = (expirationDate, uAsset, qAsset) => {
         })
   
         const matchingPuts = puts.filter((p) => {
-          if ( p.strikePrice === reciprocatedPutStrike) {
+          if (p.reciprocalStrike === strike) {
+            sizes.add(p.size)
             return true
           }
           return false
@@ -72,9 +77,9 @@ const useOptionChain = (expirationDate, uAsset, qAsset) => {
   
         await Promise.all(
           Array.from(sizes).map(async (size) => {
-            const putSize = (new BN(strike).mul(new BN(size))).toString(10)
+            // const putSize = (new BN(strike).mul(new BN(size))).toString(10)
             let call = matchingCalls.find((c) => c.size === size)
-            let put = matchingPuts.find((p) => p.size === putSize)
+            let put = matchingPuts.find((p) => p.size === size)
             // TODO if Serum market exists, load the current Bid / Ask information for the premiums
   
             if (call) {

@@ -44,7 +44,9 @@ const InitializeMarket = () => {
   })
   const [loading, setLoading] = useState(false)
 
-  const parsedBasePrice = parseInt(basePrice, 10)
+  const parsedBasePrice = parseFloat(
+    basePrice && basePrice.replace(/^\./, '0.'),
+  )
   let strikePrices = []
   if (
     multiple &&
@@ -70,21 +72,27 @@ const InitializeMarket = () => {
   })
   const parametersValid = size && !Number.isNaN(size) && strikePrices.length > 0
 
-  const handleInitialize = async () => {
-    // The size must account for the number of decimals the underlying SPL Token has.
-    const sizeAsU64 = size * 10 ** uAsset.decimals
+  const basePriceMaxLength = qAsset?.decimals + 2 || 12
 
+  const handleChangeBasePrice = (e) => {
+    // If intput starts with dot, e.g. .123, add a 0
+    const input = e.target.value || ''
+    setBasePrice(input.slice(0, basePriceMaxLength))
+  }
+
+  const handleInitialize = async () => {
     try {
       setLoading(true)
       await initializeMarkets({
-        size: sizeAsU64,
+        size,
         strikePrices,
         uAssetSymbol: uAsset.tokenSymbol,
         qAssetSymbol: qAsset.tokenSymbol,
         uAssetMint: uAsset.mintAddress,
         qAssetMint: qAsset.mintAddress,
+        uAssetDecimals: uAsset.decimals,
+        qAssetDecimals: uAsset.decimals,
         expiration: date.unix(),
-        decimals: uAsset.decimals,
       })
       setLoading(false)
     } catch (err) {
@@ -193,7 +201,7 @@ const InitializeMarket = () => {
                   value={basePrice}
                   label="Base Price"
                   variant="filled"
-                  onChange={(e) => setBasePrice(e.target.value)}
+                  onChange={handleChangeBasePrice}
                   helperText={
                     Number.isNaN(parsedBasePrice) ? 'Must be a number' : null
                   }
@@ -240,7 +248,7 @@ const InitializeMarket = () => {
               ) : null}
               <Box p={1}>
                 Strike Prices to Initialize: <br />
-                {strikePrices.map((n) => `${n.toFixed(5)} `)}
+                {strikePrices.map((n) => `${n.toFixed(qAsset.decimals)} `)}
               </Box>
             </Box>
           ) : null}

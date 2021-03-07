@@ -19,7 +19,7 @@ const defaultAssetPairsByNetworkName = {
     qAssetSymbol: 'ABC',
   },
   localhost: {
-    uAssetSymbol: 'SRM',
+    uAssetSymbol: 'BTC',
     qAssetSymbol: 'USDC',
   },
 }

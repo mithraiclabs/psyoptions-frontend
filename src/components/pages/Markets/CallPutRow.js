@@ -27,7 +27,7 @@ const TCell = withStyles({
 const darkBorder = `1px solid ${theme.palette.background.main}`
 
 const formatStrike = (sp) => {
-  if (sp === '--') return sp
+  if (!sp) return '—'
   const str = `${sp}`
   return str.match(/\..{2,}/) ? str : parseFloat(sp).toFixed(2)
 }
@@ -51,42 +51,18 @@ const CallPutRow = ({ row, uAsset, qAsset, date }) => {
       try {
         const ua = type === 'call' ? uAsset : qAsset
         const qa = type === 'call' ? qAsset : uAsset
-
-        // const uaDecimals = new BigNumber(10).pow(new BigNumber(ua.decimals))
-        // const qaDecimals = new BigNumber(10).pow(new BigNumber(qa.decimals))
-        
         let strike
         let size
+        const { call, put } = row
 
-        const {
-          call, 
-          put
-        } = row
-
-        // IF initializing a PUT the strike is the reciprocal of the CALL strike displayed
-        //  and the size is CALL strike price * amountPerContract
         if (type === 'call') {
-          console.log('Initializing a CALL. The following are from the put:')
-          console.log('quoteAmountPerContract', put.quoteAmountPerContract.toString(10))
-          console.log('amountPerContract', put.amountPerContract.toString(10))
-
-          strike = new BigNumber(row.strike)
-          size = new BigNumber(row.size)
-
-          // return
+          const putStrike = put.quoteAmountPerContract.div(put.amountPerContract)
+          strike = new BigNumber(1).div(putStrike)
+          size = BigNumber.maximum(1, put.quoteAmountPerContract)
         } else {
           const callStrike = call.quoteAmountPerContract.div(call.amountPerContract)
-          const newPutStrike = new BigNumber(1).div(callStrike)
-          const newPutSize = BigNumber.maximum(1, call.quoteAmountPerContract)
-
-          // Remove this when comfortable with the results:
-          console.log({
-            newPutSize: newPutSize.toString(10),
-            newPutStrike: newPutStrike.toString(10)
-          })
-
-          size = newPutSize
-          strike = newPutStrike
+          strike = new BigNumber(1).div(callStrike)
+          size = BigNumber.maximum(1, call.quoteAmountPerContract)
         }
 
         await initializeMarkets({
@@ -106,6 +82,7 @@ const CallPutRow = ({ row, uAsset, qAsset, date }) => {
           severity: 'error',
           message: `${err}`,
         })
+      } finally {
         setLoading((prevState) => ({ ...prevState, [type]: false }))
       }
     },
@@ -130,7 +107,7 @@ const CallPutRow = ({ row, uAsset, qAsset, date }) => {
           date: date.unix(),
           uAssetSymbol: ua.tokenSymbol,
           qAssetSymbol: qa.tokenSymbol,
-          size: type === 'call' ? row.size : row.size * row.strike, // TODO -- deal with FP imprecision
+          size: type === 'call' ? row.call?.size : row.put?.size, // TODO -- deal with FP imprecision
           price: type === 'call' ? row.strike : 1 / row.strike, // TODO -- deal with FP imprecision
         }
 
@@ -169,8 +146,7 @@ const CallPutRow = ({ row, uAsset, qAsset, date }) => {
       ownedTokenAccounts,
       pushNotification,
       qAsset,
-      row.size,
-      row.strike,
+      row,
       uAsset,
     ],
   )
@@ -179,7 +155,7 @@ const CallPutRow = ({ row, uAsset, qAsset, date }) => {
     <TableRow hover role="checkbox" tabIndex={-1}>
       <TCell align="left">
         {row.call?.emptyRow ? (
-          '--'
+          '—'
         ) : loading.call ? (
           <CircularProgress size={32} />
         ) : !connected ? (
@@ -214,12 +190,12 @@ const CallPutRow = ({ row, uAsset, qAsset, date }) => {
           </Button>
         )}
       </TCell>
-      <TCell align="left">{row.size}</TCell>
-      <TCell align="left">{row.call?.bid}</TCell>
-      <TCell align="left">{row.call?.ask}</TCell>
-      <TCell align="left">{row.call?.change}</TCell>
-      <TCell align="left">{row.call?.volume}</TCell>
-      <TCell align="left">{row.call?.openInterest}</TCell>
+      <TCell align="left">{row.call?.size ? `${row.call.size} ${uAsset?.tokenSymbol || ''}` : '—'}</TCell>
+      <TCell align="left">{row.call?.bid || '—'}</TCell>
+      <TCell align="left">{row.call?.ask || '—'}</TCell>
+      <TCell align="left">{row.call?.change || '—'}</TCell>
+      <TCell align="left">{row.call?.volume || '—'}</TCell>
+      <TCell align="left">{row.call?.openInterest || '—'}</TCell>
 
       <TCell
         align="center"
@@ -232,15 +208,15 @@ const CallPutRow = ({ row, uAsset, qAsset, date }) => {
         <h3 style={{ margin: 0 }}>{formatStrike(row.strike)}</h3>
       </TCell>
 
-      <TCell align="right">{row.size}</TCell>
-      <TCell align="right">{row.put?.bid}</TCell>
-      <TCell align="right">{row.put?.ask}</TCell>
-      <TCell align="right">{row.put?.change}</TCell>
-      <TCell align="right">{row.put?.volume}</TCell>
-      <TCell align="right">{row.put?.openInterest}</TCell>
+      <TCell align="right">{row.put?.size ? `${row.put.size} ${qAsset?.tokenSymbol || ''}` : '—'}</TCell>
+      <TCell align="right">{row.put?.bid || '—'}</TCell>
+      <TCell align="right">{row.put?.ask || '—'}</TCell>
+      <TCell align="right">{row.put?.change || '—'}</TCell>
+      <TCell align="right">{row.put?.volume || '—'}</TCell>
+      <TCell align="right">{row.put?.openInterest || '—'}</TCell>
       <TCell align="right">
         {row.put?.emptyRow ? (
-          '--'
+          '—'
         ) : loading.put ? (
           <CircularProgress size={32} />
         ) : !connected ? (
@@ -287,6 +263,11 @@ const CallOrPut = PropTypes.shape({
   change: PropTypes.string,
   volume: PropTypes.string,
   openInterest: PropTypes.string,
+  size: PropTypes.string.isRequired,
+
+  // BigNumber.js objects:
+  amountPerContract: PropTypes.object, // eslint-disable-line
+  quoteAmountPerContract: PropTypes.object, // eslint-disable-line
 })
 const Asset = PropTypes.shape({
   tokenSymbol: PropTypes.string,
@@ -296,7 +277,6 @@ const Asset = PropTypes.shape({
 CallPutRow.propTypes = {
   // eslint-disable-next-line react/require-default-props
   row: PropTypes.shape({
-    size: PropTypes.string.isRequired,
     strike: PropTypes.string.isRequired,
     call: CallOrPut,
     put: CallOrPut,

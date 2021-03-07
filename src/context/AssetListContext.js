@@ -19,8 +19,8 @@ const defaultAssetPairsByNetworkName = {
     qAssetSymbol: 'ABC',
   },
   localhost: {
-    uAssetSymbol: 'USDC',
-    qAssetSymbol: 'BTC',
+    uAssetSymbol: 'BTC',
+    qAssetSymbol: 'USDC',
   },
 }
 

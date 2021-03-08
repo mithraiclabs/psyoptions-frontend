@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useCallback } from 'react'
+import React, { useContext, useCallback } from 'react'
 import BigNumber from 'bignumber.js'
 import { Link } from '@material-ui/core'
 import {
@@ -74,14 +74,16 @@ const useOptionsMarkets = () => {
 
         // BN.js doesn't handle decimals while bignumber.js can handle decimals of arbitrary sizes
         const amountPerContract = new BigNumber(
-          market.marketData.amountPerContract.toString(10)
+          market.marketData.amountPerContract.toString(10),
         ).div(10 ** uAsset.decimals)
 
         const quoteAmountPerContract = new BigNumber(
-          market.marketData.quoteAmountPerContract.toString(10)
+          market.marketData.quoteAmountPerContract.toString(10),
         ).div(10 ** qAsset.decimals)
 
-        const strike = quoteAmountPerContract.div(amountPerContract.toString(10))
+        const strike = quoteAmountPerContract.div(
+          amountPerContract.toString(10),
+        )
 
         const newMarket = {
           // Leave these in tact as BigNumbers to use later for creating the reciprocal put/call
@@ -119,10 +121,6 @@ const useOptionsMarkets = () => {
       console.error(err)
     }
   }, [connection, supportedAssets, endpoint]) // eslint-disable-line
-
-  useEffect(() => {
-    fetchMarketData()
-  }, [fetchMarketData])
 
   const getSizes = ({ uAssetSymbol, qAssetSymbol, date }) => {
     const keyPart = `${date}-${uAssetSymbol}-${qAssetSymbol}-`
@@ -407,6 +405,7 @@ const useOptionsMarkets = () => {
     getMyMarkets,
     mint,
     createAccountsAndMint,
+    fetchMarketData,
   }
 }
 

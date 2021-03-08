@@ -23,7 +23,7 @@ const Page = ({ children, background }) => (
         flexGrow={1}
         justifyContent="center"
       >
-        <Box height="100%">{children}</Box>
+        <Box minHeight="100%">{children}</Box>
       </Box>
       <Footer />
     </Box>

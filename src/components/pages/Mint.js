@@ -94,21 +94,22 @@ const Mint = () => {
     try {
       await createAccountsAndMint({
         date: date.unix(),
-        uAssetSymbol: uAsset.tokenSymbol,
-        qAssetSymbol: qAsset.tokenSymbol,
+        uAsset,
+        qAsset,
         size,
         price,
         uAssetAccount,
         qAssetAccount,
+        ownedUAssetAccounts,
         ownedQAssetAccounts,
         mintedOptionAccount,
         ownedMintedOptionAccounts,
       })
       setLoading(false)
-      console.log('Mint Successful')
     } catch (err) {
       setLoading(false)
       console.log(err)
+      // TODO: Log to sentry here -- the user didn't make a mistake, something went wrong
       pushNotification({
         severity: 'error',
         message: `${err}`,

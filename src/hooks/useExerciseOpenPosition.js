@@ -38,7 +38,7 @@ const useExerciseOpenPosition = (
     // TODO add the Asset Pair to the push note
     pushNotification({
       severity: 'info',
-      message: `Submitted Transaction: Exercise Option`,
+      message: `Processing: Exercise Option`,
       link: (
         <Link href={buildSolanaExplorerUrl(txid)} target="_new">
           View on Solana Explorer
@@ -50,7 +50,7 @@ const useExerciseOpenPosition = (
 
     pushNotification({
       severity: 'success',
-      message: `Transaction Confirmed: Exercise Option`,
+      message: `Confirmed: Exercise Option`,
       link: (
         <Link href={buildSolanaExplorerUrl(txid)} target="_new">
           View on Solana Explorer

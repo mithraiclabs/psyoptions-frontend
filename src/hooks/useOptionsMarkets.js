@@ -19,6 +19,8 @@ import { OptionsMarketsContext } from '../context/OptionsMarketsContext'
 
 import { initializeTokenAccountTx } from '../utils/token'
 
+import { truncatePublicKey } from '../utils/format'
+
 // Example of how markets data should look:
 // const markets = {
 //   '1614556800-SOL-USDC-700-14': {
@@ -189,7 +191,7 @@ const useOptionsMarkets = () => {
         // TODO: make the "View on Solana Explorer" am <a> element instead of text
         pushNotification({
           severity: 'info',
-          message: `Submitted Transaction: Initialize Market`,
+          message: `Processing: Initialize Market`,
           link: (
             <Link href={explorerUrl} target="_new">
               View on Solana Explorer
@@ -201,7 +203,7 @@ const useOptionsMarkets = () => {
 
         pushNotification({
           severity: 'success',
-          message: `Transaction Confirmed: Initialize Market`,
+          message: `Confirmed: Initialize Market`,
           link: (
             <Link href={explorerUrl} target="_new">
               View on Solana Explorer
@@ -264,7 +266,7 @@ const useOptionsMarkets = () => {
 
     pushNotification({
       severity: 'info',
-      message: 'Submitted Transaction: Mint Options Token',
+      message: 'Processing: Mint Options Token',
       link: (
         <Link href={buildSolanaExplorerUrl(txid)} target="_new">
           View on Solana Explorer
@@ -276,7 +278,7 @@ const useOptionsMarkets = () => {
 
     pushNotification({
       severity: 'success',
-      message: 'Transaction Confirmed: Mint Options Token',
+      message: 'Confirmed: Mint Options Token',
       link: (
         <Link href={buildSolanaExplorerUrl(txid)} target="_new">
           View on Solana Explorer
@@ -289,16 +291,46 @@ const useOptionsMarkets = () => {
 
   const createAccountsAndMint = async ({
     date,
-    uAssetSymbol,
-    qAssetSymbol,
+    uAsset,
+    qAsset,
     size,
     price,
     uAssetAccount,
     qAssetAccount,
+    ownedUAssetAccounts,
     ownedQAssetAccounts,
     mintedOptionAccount,
     ownedMintedOptionAccounts,
   }) => {
+    const uAssetSymbol = uAsset.tokenSymbol
+    const qAssetSymbol = qAsset.tokenSymbol
+    if (!uAssetAccount) {
+      // TODO - figure out how to distinguish between "a" vs "an" in this message
+      // Not that simple because "USDC" you say "A", but for "ETH" you say an, it depends on the pronunciation
+      pushNotification({
+        severity: 'warning',
+        message: `You must have a ${uAssetSymbol} account in your wallet to mint this contract`,
+      })
+      return true
+    }
+
+    // TODO - further optimization would be to remove the .find() here and just pass the whole object in
+    const uAssetDecimals = new BigNumber(10).pow(uAsset.decimals)
+    const uAssetBalance = new BigNumber(
+      ownedUAssetAccounts.find((asset) => asset.pubKey === uAssetAccount)
+        ?.amount || 0,
+    )
+
+    if (uAssetBalance.div(uAssetDecimals).isLessThan(size)) {
+      pushNotification({
+        severity: 'warning',
+        message: `You must have at least ${size} ${uAssetSymbol} in your ${uAssetSymbol} account ${truncatePublicKey(
+          uAssetAccount,
+        )} to mint this contract`,
+      })
+      return true
+    }
+
     const marketData = getMarket({
       date,
       uAssetSymbol,
@@ -310,8 +342,6 @@ const useOptionsMarkets = () => {
     let quoteAssetDestAccount = qAssetAccount || ownedQAssetAccounts[0]
     // If user has no quote asset account, we can create one because they don't need any quote asset to mint
     if (!quoteAssetDestAccount) {
-      // TODO: this is not quite working once we get to the actaully mint function call
-      // Maybe just require user to have both qAssetAccount and uAssetAccount before minting for MVP
       const [tx, newAccount] = await initializeTokenAccountTx({
         connection,
         payer: { publicKey: pubKey },
@@ -323,7 +353,7 @@ const useOptionsMarkets = () => {
 
       pushNotification({
         severity: 'info',
-        message: `Submitted Transaction: Create ${qAssetSymbol} Account`,
+        message: `Processing: Create ${qAssetSymbol} Account`,
         link: (
           <Link href={buildSolanaExplorerUrl(txid)} target="_new">
             View on Solana Explorer
@@ -338,7 +368,7 @@ const useOptionsMarkets = () => {
 
       pushNotification({
         severity: 'success',
-        message: `Transaction Confirmed: Create ${qAssetSymbol} Account`,
+        message: `Confirmed: Create ${qAssetSymbol} Account`,
         link: (
           <Link href={buildSolanaExplorerUrl(txid)} target="_new">
             View on Solana Explorer
@@ -363,7 +393,7 @@ const useOptionsMarkets = () => {
 
       pushNotification({
         severity: 'info',
-        message: 'Submitted Transaction: Create Options Token Account',
+        message: 'Processing: Create Options Token Account',
         link: (
           <Link href={buildSolanaExplorerUrl(txid)} target="_new">
             View on Solana Explorer
@@ -378,7 +408,7 @@ const useOptionsMarkets = () => {
 
       pushNotification({
         severity: 'success',
-        message: 'Transaction Confirmed: Create Options Token Account',
+        message: 'Confirmed: Create Options Token Account',
         link: (
           <Link href={buildSolanaExplorerUrl(txid)} target="_new">
             View on Solana Explorer

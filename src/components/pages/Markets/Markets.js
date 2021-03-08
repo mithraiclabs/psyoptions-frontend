@@ -14,6 +14,7 @@ import { getNext3Months } from '../../../utils/dates'
 
 import useAssetList from '../../../hooks/useAssetList'
 import useOptionChain from '../../../hooks/useOptionChain'
+import useOptionsMarkets from '../../../hooks/useOptionsMarkets'
 
 import CallPutRow from './CallPutRow'
 
@@ -54,21 +55,22 @@ const rowTemplate = {
 }
 
 const next3Months = getNext3Months()
-const emptyRows = Array(9).fill(rowTemplate)
 
 const Markets = () => {
   const { uAsset, qAsset, setUAsset, setQAsset } = useAssetList()
   const [date, setDate] = useState(next3Months[0])
-  const [rows, setRows] = useState(emptyRows)
-  const { chain } = useOptionChain(date, uAsset, qAsset)
+  const { chain, fetchOptionsChain } = useOptionChain()
+  const { fetchMarketData } = useOptionsMarkets()
+
+  const rows = [...chain, ...Array(9 - chain.length).fill(rowTemplate)]
 
   useEffect(() => {
-    let newRows = chain.length ? chain : emptyRows
-    if (newRows.length < 9) {
-      newRows = [...newRows, ...emptyRows.slice(newRows.length)]
-    }
-    setRows(newRows)
-  }, [chain])
+    fetchMarketData()
+  }, [fetchMarketData])
+
+  useEffect(() => {
+    fetchOptionsChain(date.unix())
+  }, [fetchOptionsChain, date])
 
   return (
     <Page>

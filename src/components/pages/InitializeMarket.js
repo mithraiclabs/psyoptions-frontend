@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 
 import {
   Box,
@@ -30,8 +30,7 @@ const next3Months = getNext3Months()
 const InitializeMarket = () => {
   const { pushNotification } = useNotifications()
   const { connect, connected } = useWallet()
-  const { getMarket, initializeMarkets } = useOptionsMarkets()
-
+  const { getMarket, fetchMarketData, initializeMarkets } = useOptionsMarkets()
   const [multiple, setMultiple] = useState(false)
   const [basePrice, setBasePrice] = useState(0)
   const [date, setDate] = useState(next3Months[0])
@@ -43,6 +42,10 @@ const InitializeMarket = () => {
     qAssetMint: qAsset?.mintAddress,
   })
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    fetchMarketData()
+  }, [fetchMarketData])
 
   const parsedBasePrice = parseFloat(
     basePrice && basePrice.replace(/^\./, '0.'),

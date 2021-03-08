@@ -32,6 +32,7 @@ const Mint = () => {
     getStrikePrices,
     getSizes,
     createAccountsAndMint,
+    fetchMarketData,
   } = useOptionsMarkets()
   const { ownedTokenAccounts } = useOwnedTokenAccounts()
 
@@ -71,6 +72,10 @@ const Mint = () => {
       (marketData && ownedTokenAccounts[marketData.optionMintAddress]) || [],
     [marketData, ownedTokenAccounts],
   )
+
+  useEffect(() => {
+    fetchMarketData()
+  }, [fetchMarketData])
 
   useEffect(() => {
     setUAssetAccount(ownedUAssetAccounts[0]?.pubKey || '')

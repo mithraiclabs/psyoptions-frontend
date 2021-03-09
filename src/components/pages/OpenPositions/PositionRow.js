@@ -6,6 +6,7 @@ import TableBody from '@material-ui/core/TableBody'
 import TableCell from '@material-ui/core/TableCell'
 import TableRow from '@material-ui/core/TableRow'
 import PropTypes from 'prop-types'
+import * as Sentry from '@sentry/react'
 import KeyboardArrowDown from '@material-ui/icons/KeyboardArrowDown'
 import { makeStyles } from '@material-ui/core/styles'
 import useExerciseOpenPosition from '../../../hooks/useExerciseOpenPosition'
@@ -15,11 +16,11 @@ import { formatExpirationTimestamp } from '../../../utils/format'
 
 const useStyles = makeStyles({
   dropdownOpen: {
-    transform: "rotate(-180deg)"
+    transform: 'rotate(-180deg)',
   },
   dropdownClosed: {
-    transform: "rotate(0)"
-  }
+    transform: 'rotate(0)',
+  },
 })
 
 const PositionRow = ({ row }) => {
@@ -57,6 +58,7 @@ const PositionRow = ({ row }) => {
       await exercise()
     } catch (err) {
       console.log(err)
+      Sentry.captureException(err)
       pushNotification({
         severity: 'error',
         message: `${err}`,
@@ -75,9 +77,13 @@ const PositionRow = ({ row }) => {
         key={row.optionContractTokenKey}
       >
         <TableCell width="5%">
-          { row.accounts.length > 1 && 
-          <KeyboardArrowDown
-            className={ visible ? classes.dropdownOpen : classes.dropdownClosed }/>}
+          {row.accounts.length > 1 && (
+            <KeyboardArrowDown
+              className={
+                visible ? classes.dropdownOpen : classes.dropdownClosed
+              }
+            />
+          )}
         </TableCell>
         <TableCell width="15%">{row.assetPair}</TableCell>
         <TableCell width="15%">{row.strike}</TableCell>
@@ -112,8 +118,8 @@ const PositionRow = ({ row }) => {
                     role="checkbox"
                     tabIndex={-1}
                   >
-                    <TableCell width="5%"/>
-                    <TableCell width="15%"/>
+                    <TableCell width="5%" />
+                    <TableCell width="15%" />
                     <TableCell width="15%">{row.strike}</TableCell>
                     <TableCell width="15%">TODO</TableCell>
                     <TableCell width="15%">{account.amount}</TableCell>

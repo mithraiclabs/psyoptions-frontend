@@ -1,23 +1,20 @@
 import React, { useEffect, useState, useMemo } from 'react'
-// import moment from 'moment'
 import Done from '@material-ui/icons/Done'
 import { Box, Paper, Button, Chip, CircularProgress } from '@material-ui/core'
-
-import theme from '../../utils/theme'
-
-import { truncatePublicKey } from '../../utils/format'
-
-import useWallet from '../../hooks/useWallet'
-import useOptionsMarkets from '../../hooks/useOptionsMarkets'
-import useOwnedTokenAccounts from '../../hooks/useOwnedTokenAccounts'
-
-import useNotifications from '../../hooks/useNotifications'
+import * as Sentry from '@sentry/react'
 
 import SelectAsset from '../SelectAsset'
 import Page from './Page'
 import Select from '../Select'
 
+import theme from '../../utils/theme'
+import { truncatePublicKey } from '../../utils/format'
 import { getNext3Months } from '../../utils/dates'
+
+import useWallet from '../../hooks/useWallet'
+import useOptionsMarkets from '../../hooks/useOptionsMarkets'
+import useOwnedTokenAccounts from '../../hooks/useOwnedTokenAccounts'
+import useNotifications from '../../hooks/useNotifications'
 import useAssetList from '../../hooks/useAssetList'
 
 const darkBorder = `1px solid ${theme.palette.background.main}`
@@ -109,7 +106,7 @@ const Mint = () => {
     } catch (err) {
       setLoading(false)
       console.log(err)
-      // TODO: Log to sentry here -- the user didn't make a mistake, something went wrong
+      Sentry.captureException(err)
       pushNotification({
         severity: 'error',
         message: `${err}`,

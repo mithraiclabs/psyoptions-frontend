@@ -309,7 +309,7 @@ const useOptionsMarkets = () => {
       // Not that simple because "USDC" you say "A", but for "ETH" you say an, it depends on the pronunciation
       pushNotification({
         severity: 'warning',
-        message: `You must have a ${uAssetSymbol} account in your wallet to mint this contract`,
+        message: `You must have one or more ${uAssetSymbol} accounts in your wallet to mint this contract`,
       })
       return true
     }

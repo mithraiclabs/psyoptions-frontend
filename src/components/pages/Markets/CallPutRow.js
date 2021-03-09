@@ -56,11 +56,15 @@ const CallPutRow = ({ row, uAsset, qAsset, date }) => {
         const { call, put } = row
 
         if (type === 'call') {
-          const putStrike = put.quoteAmountPerContract.div(put.amountPerContract)
+          const putStrike = put.quoteAmountPerContract.div(
+            put.amountPerContract,
+          )
           strike = new BigNumber(1).div(putStrike)
           size = BigNumber.maximum(1, put.quoteAmountPerContract)
         } else {
-          const callStrike = call.quoteAmountPerContract.div(call.amountPerContract)
+          const callStrike = call.quoteAmountPerContract.div(
+            call.amountPerContract,
+          )
           strike = new BigNumber(1).div(callStrike)
           size = BigNumber.maximum(1, call.quoteAmountPerContract)
         }
@@ -86,14 +90,7 @@ const CallPutRow = ({ row, uAsset, qAsset, date }) => {
         setLoading((prevState) => ({ ...prevState, [type]: false }))
       }
     },
-    [
-      uAsset,
-      qAsset,
-      initializeMarkets,
-      date,
-      row,
-      pushNotification,
-    ],
+    [uAsset, qAsset, initializeMarkets, date, row, pushNotification],
   )
 
   const handleMint = useCallback(
@@ -121,14 +118,15 @@ const CallPutRow = ({ row, uAsset, qAsset, date }) => {
 
         await createAccountsAndMint({
           ...marketParams,
+          uAsset: ua,
+          qAsset: qa,
           uAssetAccount: ownedUAssetAccounts[0]?.pubKey || '',
           qAssetAccount: ownedQAssetAccounts[0]?.pubKey || '',
+          ownedUAssetAccounts,
           ownedQAssetAccounts,
           mintedOptionAccount: ownedMintedOptionAccounts[0]?.pubKey || '',
           ownedMintedOptionAccounts,
         })
-
-        console.log('Minted options token!')
       } catch (err) {
         console.log(err)
         pushNotification({
@@ -190,7 +188,9 @@ const CallPutRow = ({ row, uAsset, qAsset, date }) => {
           </Button>
         )}
       </TCell>
-      <TCell align="left">{row.call?.size ? `${row.call.size} ${uAsset?.tokenSymbol || ''}` : '—'}</TCell>
+      <TCell align="left">
+        {row.call?.size ? `${row.call.size} ${uAsset?.tokenSymbol || ''}` : '—'}
+      </TCell>
       <TCell align="left">{row.call?.bid || '—'}</TCell>
       <TCell align="left">{row.call?.ask || '—'}</TCell>
       <TCell align="left">{row.call?.change || '—'}</TCell>
@@ -208,7 +208,9 @@ const CallPutRow = ({ row, uAsset, qAsset, date }) => {
         <h3 style={{ margin: 0 }}>{formatStrike(row.strike)}</h3>
       </TCell>
 
-      <TCell align="right">{row.put?.size ? `${row.put.size} ${qAsset?.tokenSymbol || ''}` : '—'}</TCell>
+      <TCell align="right">
+        {row.put?.size ? `${row.put.size} ${qAsset?.tokenSymbol || ''}` : '—'}
+      </TCell>
       <TCell align="right">{row.put?.bid || '—'}</TCell>
       <TCell align="right">{row.put?.ask || '—'}</TCell>
       <TCell align="right">{row.put?.change || '—'}</TCell>

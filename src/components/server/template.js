@@ -95,7 +95,7 @@ const Template = ({
           };`,
         }}
       />
-      <script src={jsBundle || ''} />
+      <script src={`/${jsBundle}`} />
       <script
         async
         src="https://www.googletagmanager.com/gtag/js?id=G-MDM6MQ5HPL"

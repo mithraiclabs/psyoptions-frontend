@@ -1,4 +1,6 @@
 import './config'
+import path from 'path'
+import fs from 'fs'
 import express from 'express'
 import React from 'react'
 import ReactDOMServer from 'react-dom/server'
@@ -7,7 +9,15 @@ import { ServerStyleSheets } from '@material-ui/core/styles'
 import App from './components/App'
 import Template from './components/server/template'
 
-const bundleFilename = '/public/bundle.js'
+const bundleFilename = 'public/bundle.js'
+let manifest = {}
+try {
+  manifest = JSON.parse(
+    fs.readFileSync(path.join(process.cwd(), 'dist', 'assets-manifest.json')),
+  )
+} catch (err) {
+  manifest['main.js'] = bundleFilename
+}
 
 const server = express()
 
@@ -21,7 +31,7 @@ const {
   OPTIONS_API_URL,
 } = process.env
 
-server.use((req, res, next) => {
+server.use((req, res) => {
   const routerCtx = { statusCode: 200 }
   const app = (
     <App location={{ pathname: req?.originalUrl }} routerContext={routerCtx} />
@@ -32,7 +42,7 @@ server.use((req, res, next) => {
 
   const html = ReactDOMServer.renderToString(
     <Template
-      jsBundle={bundleFilename}
+      jsBundle={manifest['main.js']}
       title="PsyOptions"
       description="Defi options trading protocol built on Solana"
       cssString={cssString}
@@ -44,7 +54,7 @@ server.use((req, res, next) => {
         DEVNET_PROGRAM_ID,
         OPTIONS_API_URL,
       }}
-    />
+    />,
   )
   res.status(routerCtx.statusCode)
   res.send(html)

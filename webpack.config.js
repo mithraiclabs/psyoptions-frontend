@@ -1,5 +1,7 @@
 const nodeExternals = require('webpack-node-externals')
 const NodePolyfillPlugin = require('node-polyfill-webpack-plugin')
+const WebpackAssetsManifest = require('webpack-assets-manifest')
+const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
 
 const watch = process.env.NODE_ENV !== 'production'
 const mode =
@@ -38,11 +40,11 @@ module.exports = [
   },
   {
     // Client
-    entry: './src/client.js',
+    entry: ['./src/client.js'],
     watch,
     mode,
     output: {
-      filename: 'public/bundle.js',
+      filename: 'public/bundle.[chunkhash].js',
       assetModuleFilename: 'public/assets/[hash][ext][query]',
     },
     module: {
@@ -63,6 +65,13 @@ module.exports = [
         },
       ],
     },
-    plugins: [new NodePolyfillPlugin()],
+    plugins: [
+      new NodePolyfillPlugin(),
+      new WebpackAssetsManifest({}),
+      new BundleAnalyzerPlugin({
+        analyzerMode: 'static',
+        openAnalyzer: false,
+      }),
+    ],
   },
 ]

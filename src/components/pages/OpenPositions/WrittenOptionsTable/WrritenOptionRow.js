@@ -23,6 +23,7 @@ export const WrittenOptionRow = ({ expired, marketKey, optionsWritten }) => {
     nextWrittenOption.underlyingAssetAcctAddress,
     nextWrittenOption.quoteAssetAcctAddress,
     nextWrittenOption.contractTokenAcctAddress,
+    market.writerRegistryAddress
   )
 
   return (

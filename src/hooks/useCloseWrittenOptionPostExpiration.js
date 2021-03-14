@@ -23,6 +23,7 @@ export const useCloseWrittenOptionPostExpiration = (
   optionWriterUnderlyingAssetKey,
   optionWriterQuotAssetKey,
   optionWriterOptionKey,
+  optionWriterRegistryKey,
 ) => {
   const { connection, endpoint } = useConnection()
   const { pushNotification } = useNotifications()
@@ -41,6 +42,7 @@ export const useCloseWrittenOptionPostExpiration = (
         optionWriterOptionKey,
         new PublicKey(optionMint),
         new PublicKey(optionMarketKey),
+        optionWriterRegistryKey,
       )
       const signed = await wallet.signTransaction(transaction)
       const txid = await connection.sendRawTransaction(signed.serialize())
@@ -69,16 +71,5 @@ export const useCloseWrittenOptionPostExpiration = (
         message: `${err}`,
       })
     }
-  }, [
-    connection,
-    endpoint.programId,
-    optionMarketKey,
-    optionMint,
-    optionWriterOptionKey,
-    optionWriterQuotAssetKey,
-    optionWriterUnderlyingAssetKey,
-    pubKey,
-    pushNotification,
-    wallet,
-  ])
+  }, [connection, endpoint.programId, optionMarketKey, optionMint, optionWriterOptionKey, optionWriterQuotAssetKey, optionWriterRegistryKey, optionWriterUnderlyingAssetKey, pubKey, pushNotification, wallet])
 }

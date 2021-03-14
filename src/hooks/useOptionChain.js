@@ -1,5 +1,5 @@
 import { useCallback, useContext } from 'react'
-// import BigNumber from 'bignumber.js'
+import BigNumber from 'bignumber.js'
 import { Connection, PublicKey } from '@solana/web3.js'
 import { SerumMarket } from '../utils/serum'
 import useConnection from './useConnection'
@@ -74,7 +74,7 @@ const useOptionChain = () => {
         strikeFractions.map(async (fraction) => {
           const sizes = new Set()
           const [amt, qAmt] = fraction.split('/')
-          const strike = parseInt(qAmt, 10) / parseInt(amt, 10)
+          const strike = new BigNumber(qAmt).div(new BigNumber(amt))
 
           const matchingCalls = calls.filter((c) => {
             if (c.fraction === fraction) {
@@ -145,7 +145,7 @@ const useOptionChain = () => {
         }),
       )
 
-      rows.sort((a, b) => a.strike - b.strike)
+      rows.sort((a, b) => a.strike.minus(b.strike).toNumber())
       setChain(rows)
     },
     [connection, dexProgramId, markets, uAsset, qAsset, setChain],

@@ -102,7 +102,9 @@ const useOptionsMarkets = () => {
           writerRegistryAddress: market.marketData.writerRegistryAddress,
         }
 
-        const key = `${newMarket.expiration}-${newMarket.uAssetSymbol}-${newMarket.qAssetSymbol}-${newMarket.size}-${newMarket.strikePrice}`
+        const key = `${newMarket.expiration}-${newMarket.uAssetSymbol}-${
+          newMarket.qAssetSymbol
+        }-${newMarket.size}-${newMarket.quoteAmountPerContract.toString(10)}`
         newMarkets[key] = newMarket
       })
 
@@ -215,6 +217,8 @@ const useOptionsMarkets = () => {
           optionMarketDataAddress: optionMarketDataAddress.toString(),
           optionMintAddress: optionMintAddress.toString(),
           createdByMe: true,
+          amountPerContract,
+          quoteAmountPerContract: qAmount,
         }
 
         return marketData

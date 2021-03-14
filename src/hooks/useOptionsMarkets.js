@@ -99,7 +99,7 @@ const useOptionsMarkets = () => {
           strikePrice: `${strike.toString(10)}`,
           optionMintAddress: market.marketData.optionMintAddress.toString(),
           optionMarketDataAddress: market.pubkey.toString(),
-          writerRegistryAddress: market.marketData.writerRegistryAddress
+          writerRegistryAddress: market.marketData.writerRegistryAddress,
         }
 
         const key = `${newMarket.expiration}-${newMarket.uAssetSymbol}-${newMarket.qAssetSymbol}-${newMarket.size}-${newMarket.strikePrice}`
@@ -145,8 +145,8 @@ const useOptionsMarkets = () => {
   }
 
   const initializeMarkets = async ({
-    size,
-    strikePrices,
+    amountPerContract,
+    quoteAmountsPerContract,
     uAssetSymbol,
     qAssetSymbol,
     uAssetMint,
@@ -156,7 +156,7 @@ const useOptionsMarkets = () => {
     qAssetDecimals,
   }) => {
     const results = await Promise.all(
-      strikePrices.map(async (strikePrice) => {
+      quoteAmountsPerContract.map(async (qAmount) => {
         const {
           // signers,
           transaction,
@@ -170,8 +170,8 @@ const useOptionsMarkets = () => {
           qAssetMint,
           uAssetDecimals,
           qAssetDecimals,
-          size,
-          strikePrice,
+          amountPerContract,
+          qAmount,
           expiration,
         )
 
@@ -204,9 +204,9 @@ const useOptionsMarkets = () => {
         })
 
         const marketData = {
-          key: `${expiration}-${uAssetSymbol}-${qAssetSymbol}-${size}-${strikePrice}`,
-          size,
-          strikePrice,
+          key: `${expiration}-${uAssetSymbol}-${qAssetSymbol}-${qAmount.toString()}-${amountPerContract.toString()}`,
+          size: amountPerContract.toNumber(),
+          strikePrice: qAmount.div(amountPerContract).toNumber(),
           uAssetSymbol,
           qAssetSymbol,
           uAssetMint,

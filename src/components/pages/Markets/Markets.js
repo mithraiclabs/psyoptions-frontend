@@ -62,7 +62,10 @@ const Markets = () => {
   const { chain, fetchOptionsChain } = useOptionChain()
   const { fetchMarketData } = useOptionsMarkets()
 
-  const rows = [...chain, ...Array(9 - chain.length).fill(rowTemplate)]
+  const rows = [
+    ...chain,
+    ...Array(Math.max(9 - chain.length, 0)).fill(rowTemplate),
+  ]
 
   useEffect(() => {
     fetchMarketData()

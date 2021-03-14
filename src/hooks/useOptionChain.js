@@ -92,8 +92,6 @@ const useOptionChain = () => {
             return false
           })
 
-          console.log(sizes)
-
           await Promise.all(
             Array.from(sizes).map(async (size) => {
               // const putSize = (new BN(strike).mul(new BN(size))).toString(10)

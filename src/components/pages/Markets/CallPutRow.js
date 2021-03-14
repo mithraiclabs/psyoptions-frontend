@@ -64,11 +64,6 @@ const CallPutRow = ({ row, uAsset, qAsset, date }) => {
           amountPerContract = call.quoteAmountPerContract
         }
 
-        console.log({
-          quoteAmountPerContract,
-          amountPerContract,
-        })
-
         await initializeMarkets({
           amountPerContract,
           quoteAmountsPerContract: [quoteAmountPerContract],

@@ -57,8 +57,6 @@ const useOptionChain = () => {
         ]),
       )
 
-      console.log(strikeFractions)
-
       const template = {
         key: '',
         bid: '',

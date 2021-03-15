@@ -37,6 +37,7 @@ const baseCss = `
   }
   h4, h5 {
     color: ${theme.palette.primary.light};
+    text-shadow: ${theme.glow};
     text-transform: uppercase;
     font-size: 1.25rem;
   }

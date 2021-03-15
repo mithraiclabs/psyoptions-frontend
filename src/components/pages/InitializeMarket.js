@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import BigNumber from 'bignumber.js'
 
 import {
   Box,
@@ -75,20 +76,19 @@ const InitializeMarket = () => {
   })
   const parametersValid = size && !Number.isNaN(size) && strikePrices.length > 0
 
-  const basePriceMaxLength = qAsset?.decimals + 2 || 12
-
   const handleChangeBasePrice = (e) => {
-    // If intput starts with dot, e.g. .123, add a 0
     const input = e.target.value || ''
-    setBasePrice(input.slice(0, basePriceMaxLength))
+    setBasePrice(input)
   }
 
   const handleInitialize = async () => {
     try {
       setLoading(true)
       await initializeMarkets({
-        size,
-        strikePrices,
+        amountPerContract: new BigNumber(size),
+        quoteAmountsPerContract: strikePrices.map((sp) =>
+          new BigNumber(sp).multipliedBy(size),
+        ),
         uAssetSymbol: uAsset.tokenSymbol,
         qAssetSymbol: qAsset.tokenSymbol,
         uAssetMint: uAsset.mintAddress,

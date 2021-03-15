@@ -1,4 +1,4 @@
-import { Box, Paper } from '@material-ui/core'
+import { Box, Paper, FormControlLabel, Switch } from '@material-ui/core'
 import React, { useState, useEffect } from 'react'
 import Table from '@material-ui/core/Table'
 import TableBody from '@material-ui/core/TableBody'
@@ -61,8 +61,24 @@ const Markets = () => {
   const [date, setDate] = useState(next3Months[0])
   const { chain, fetchOptionsChain } = useOptionChain()
   const { fetchMarketData } = useOptionsMarkets()
+  const [round, setRound] = useState(true) // TODO make this a user toggle-able feature
 
-  const rows = [...chain, ...Array(9 - chain.length).fill(rowTemplate)]
+  let precision
+  if (round && chain[0]?.strike) {
+    const n = chain[0].strike
+    if (n >= 1) {
+      precision = 2
+    } else {
+      const s = n.toString(10).replace('.', '')
+      const numZeros = s.match(/^0+/)[0]?.length || 0
+      precision = 3 + numZeros
+    }
+  }
+
+  const rows = [
+    ...chain,
+    ...Array(Math.max(9 - chain.length, 0)).fill(rowTemplate),
+  ]
 
   useEffect(() => {
     fetchMarketData()
@@ -87,20 +103,41 @@ const Markets = () => {
           alignItems="center"
           justifyContent="space-between"
         >
-          <Box px={0} py={0} width={['100%', '100%', '300px']}>
-            <Select
-              variant="filled"
-              label="Expiration Date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              options={next3Months.map((d) => ({
-                value: d,
-                text: `${d.format('ll')}, 00:00 UTC`,
-              }))}
-              style={{
-                minWidth: '100%',
-              }}
-            />
+          <Box
+            width={['100%', '100%', 'auto']}
+            display="flex"
+            flexDirection={['column', 'column', 'row']}
+            alignItems={['left', 'left', 'center']}
+            justifyContent="space-between"
+          >
+            <Box px={0} py={0} width={['100%', '100%', '300px']}>
+              <Select
+                variant="filled"
+                label="Expiration Date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                options={next3Months.map((d) => ({
+                  value: d,
+                  text: `${d.format('ll')}, 00:00 UTC`,
+                }))}
+                style={{
+                  minWidth: '100%',
+                }}
+              />
+            </Box>
+            <Box px={2} pt={[2, 2, 0]}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={round}
+                    onChange={() => setRound(!round)}
+                    name="round-strike-prices"
+                    color="secondary"
+                  />
+                }
+                label="Round Strike Prices"
+              />
+            </Box>
           </Box>
           <Box
             px={1}
@@ -194,6 +231,8 @@ const Markets = () => {
                     uAsset={uAsset}
                     qAsset={qAsset}
                     date={date}
+                    precision={precision}
+                    round={round}
                   />
                 ))}
               </TableBody>

@@ -6,7 +6,7 @@ import { withStyles } from '@material-ui/core/styles'
 import { CircularProgress } from '@material-ui/core'
 import Button from '@material-ui/core/Button'
 // import BN from 'bn.js'
-import BigNumber from 'bignumber.js'
+// import BigNumber from 'bignumber.js'
 
 import theme from '../../../utils/theme'
 import useOptionsMarkets from '../../../hooks/useOptionsMarkets'
@@ -26,18 +26,17 @@ const TCell = withStyles({
 
 const darkBorder = `1px solid ${theme.palette.background.main}`
 
-const formatStrike = (sp) => {
-  if (!sp) return '—'
-  const str = `${sp}`
-  return str.match(/\..{2,}/) ? str : parseFloat(sp).toFixed(2)
-}
-
-const CallPutRow = ({ row, uAsset, qAsset, date }) => {
+const CallPutRow = ({ row, round, precision, uAsset, qAsset, date }) => {
   const { connect, connected } = useWallet()
   const { pushNotification } = useNotifications()
   const { ownedTokenAccounts } = useOwnedTokenAccounts()
 
   const [loading, setLoading] = useState({ call: false, put: false })
+
+  const formatStrike = (sp) => {
+    if (!sp) return '—'
+    return round ? sp.toFixed(precision) : sp.toString(10)
+  }
 
   const {
     initializeMarkets,
@@ -51,27 +50,22 @@ const CallPutRow = ({ row, uAsset, qAsset, date }) => {
       try {
         const ua = type === 'call' ? uAsset : qAsset
         const qa = type === 'call' ? qAsset : uAsset
-        let strike
-        let size
         const { call, put } = row
 
+        let quoteAmountPerContract
+        let amountPerContract
+
         if (type === 'call') {
-          const putStrike = put.quoteAmountPerContract.div(
-            put.amountPerContract,
-          )
-          strike = new BigNumber(1).div(putStrike)
-          size = BigNumber.maximum(1, put.quoteAmountPerContract)
+          quoteAmountPerContract = put.amountPerContract
+          amountPerContract = put.quoteAmountPerContract
         } else {
-          const callStrike = call.quoteAmountPerContract.div(
-            call.amountPerContract,
-          )
-          strike = new BigNumber(1).div(callStrike)
-          size = BigNumber.maximum(1, call.quoteAmountPerContract)
+          quoteAmountPerContract = call.amountPerContract
+          amountPerContract = call.quoteAmountPerContract
         }
 
         await initializeMarkets({
-          size: size.toNumber(10),
-          strikePrices: [strike.toNumber(10)],
+          amountPerContract,
+          quoteAmountsPerContract: [quoteAmountPerContract],
           uAssetSymbol: ua.tokenSymbol,
           qAssetSymbol: qa.tokenSymbol,
           uAssetMint: ua.mintAddress,
@@ -205,7 +199,7 @@ const CallPutRow = ({ row, uAsset, qAsset, date }) => {
           background: theme.palette.background.main,
         }}
       >
-        <h3 style={{ margin: 0 }}>{formatStrike(row.strike)}</h3>
+        <h4 style={{ margin: 0 }}>{formatStrike(row.strike, precision)}</h4>
       </TCell>
 
       <TCell align="right">
@@ -291,5 +285,14 @@ CallPutRow.propTypes = {
   date: PropTypes.shape({
     unix: PropTypes.func,
   }),
+  // Precision for strike price rounding with .toFixed
+  precision: PropTypes.number,
+  round: PropTypes.bool,
 }
+
+CallPutRow.defaultProps = {
+  round: false,
+  precision: 2,
+}
+
 export default CallPutRow

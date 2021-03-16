@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { utils } from '@mithraic-labs/options-js-bindings'
 import useOptionsMarkets from './useOptionsMarkets'
 import useOwnedTokenAccounts from './useOwnedTokenAccounts'
@@ -28,45 +28,43 @@ export const useWrittenOptions = () => {
   const { ownedTokenAccounts } = useOwnedTokenAccounts()
   const [writtenOptions, setWrittenOptions] = useState({});
 
-  useEffect(() => {
-    (async () => {
-      // fetch option writer registries and find Option Writers that match addresses 
-      // owned by the connected wallet
-      const _writtenOptions = {};
-      await Promise.all(Object.keys(markets).map(async marketKey => {
-        const market = markets[marketKey]
-        const underlyingAssetTokenAccounts =
-          ownedTokenAccounts[market.uAssetMint]
-        // fetch option registry by market
-        const { writerRegistryAddress } = markets[marketKey]
-        const { registry, registryLength } = await utils.getOptionWriterRegistry(connection, writerRegistryAddress)
+  const fetchWrittenOptions = useCallback(async () => {
+    // fetch option writer registries and find Option Writers that match addresses 
+    // owned by the connected wallet
+    const _writtenOptions = {};
+    await Promise.all(Object.keys(markets).map(async marketKey => {
+      const market = markets[marketKey]
+      const underlyingAssetTokenAccounts =
+        ownedTokenAccounts[market.uAssetMint]
+      // fetch option registry by market
+      const { writerRegistryAddress } = markets[marketKey]
+      const { registry, registryLength } = await utils.getOptionWriterRegistry(connection, writerRegistryAddress)
 
-        // loop over registry length to find written options.
-        // Note: used a for loop instead of reduce because the registry directly
-        // from on chain will always be max length. It will just consist of 
-        // "Option Writers" that have PublicKeys that are all 0
-        const writerAccounts = [];
-        for (let i = 0; i < registryLength; i += 1) {
-          const optionWriter = registry[i]
-          if (
-            underlyingAssetTokenAccounts?.find(
-              (account) =>
-                account.pubKey ===
-                optionWriter.underlyingAssetAcctAddress.toString(),
-            )
-          ) {
-            // Wallet owns the underlying asset account for this writer in the registry
-            writerAccounts.push(optionWriter)
-          }
+      // loop over registry length to find written options.
+      // Note: used a for loop instead of reduce because the registry directly
+      // from on chain will always be max length. It will just consist of 
+      // "Option Writers" that have PublicKeys that are all 0
+      const writerAccounts = [];
+      for (let i = 0; i < registryLength; i += 1) {
+        const optionWriter = registry[i]
+        if (
+          underlyingAssetTokenAccounts?.find(
+            (account) =>
+              account.pubKey ===
+              optionWriter.underlyingAssetAcctAddress.toString(),
+          )
+        ) {
+          // Wallet owns the underlying asset account for this writer in the registry
+          writerAccounts.push(optionWriter)
         }
-        if (writerAccounts.length) {
-          _writtenOptions[marketKey] = writerAccounts
-        }
-      }))
+      }
+      if (writerAccounts.length) {
+        _writtenOptions[marketKey] = writerAccounts
+      }
+    }))
 
-      setWrittenOptions(_writtenOptions)
-    })()
+    setWrittenOptions(_writtenOptions)
   }, [connection, markets, ownedTokenAccounts])
 
-  return writtenOptions
+  return { fetchWrittenOptions, writtenOptions }
 }

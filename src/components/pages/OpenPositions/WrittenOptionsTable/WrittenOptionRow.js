@@ -17,7 +17,7 @@ export const WrittenOptionRow = ({ expired, marketKey, optionsWritten }) => {
   const { markets } = useOptionsMarkets()
   const market = markets[marketKey]
   const nextWrittenOption = optionsWritten[0]
-  const onCloseWrittenOption = useCloseWrittenOptionPostExpiration(
+  const { closeOptionPostExpiration } = useCloseWrittenOptionPostExpiration(
     market.optionMintAddress,
     market.optionMarketDataAddress,
     nextWrittenOption.underlyingAssetAcctAddress,
@@ -45,7 +45,7 @@ export const WrittenOptionRow = ({ expired, marketKey, optionsWritten }) => {
             label="Close"
             color="primary"
             variant="outlined"
-            onClick={onCloseWrittenOption}
+            onClick={closeOptionPostExpiration}
           />
         </TableCell>
       ) : (

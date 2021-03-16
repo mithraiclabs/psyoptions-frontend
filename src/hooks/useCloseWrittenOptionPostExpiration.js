@@ -29,7 +29,7 @@ export const useCloseWrittenOptionPostExpiration = (
   const { pushNotification } = useNotifications()
   const { pubKey, wallet } = useWallet()
 
-  return useCallback(async () => {
+  const closeOptionPostExpiration = useCallback(async () => {
     try {
       const { transaction } = await closePostExpirationOption(
         connection,
@@ -72,4 +72,8 @@ export const useCloseWrittenOptionPostExpiration = (
       })
     }
   }, [connection, endpoint.programId, optionMarketKey, optionMint, optionWriterOptionKey, optionWriterQuotAssetKey, optionWriterRegistryKey, optionWriterUnderlyingAssetKey, pubKey, pushNotification, wallet])
+
+  return {
+    closeOptionPostExpiration
+  }
 }

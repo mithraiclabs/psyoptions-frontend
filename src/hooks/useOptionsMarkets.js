@@ -35,6 +35,7 @@ import { truncatePublicKey } from '../utils/format'
 //     strikePrice: 14
 //     uAssetMint: "So11111111111111111111111111111111111111112"
 //     uAssetSymbol: "SOL"
+//     writerRegistryAddress: PublicKey
 //   },
 // }
 

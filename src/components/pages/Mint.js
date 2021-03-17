@@ -9,7 +9,7 @@ import Select from '../Select'
 
 import theme from '../../utils/theme'
 import { truncatePublicKey } from '../../utils/format'
-import { getNext3Months } from '../../utils/dates'
+import { getLastFridayOfMonths } from '../../utils/dates'
 
 import useWallet from '../../hooks/useWallet'
 import useOptionsMarkets from '../../hooks/useOptionsMarkets'
@@ -19,7 +19,7 @@ import useAssetList from '../../hooks/useAssetList'
 
 const darkBorder = `1px solid ${theme.palette.background.main}`
 
-const next3Months = getNext3Months()
+const expirations = getLastFridayOfMonths(10)
 
 const Mint = () => {
   const { pushNotification } = useNotifications()
@@ -33,7 +33,7 @@ const Mint = () => {
   } = useOptionsMarkets()
   const { ownedTokenAccounts } = useOwnedTokenAccounts()
 
-  const dates = next3Months
+  const dates = expirations
 
   const [date, setDate] = useState(dates[0])
   const { uAsset, qAsset, setUAsset, setQAsset } = useAssetList()
@@ -138,8 +138,8 @@ const Mint = () => {
             <Box p={2} borderBottom={darkBorder}>
               Expires On:
               <Box display="flex" flexWrap="wrap">
-                {next3Months.map((moment) => {
-                  const label = `${moment.format('ll')}, 00:00 UTC`
+                {expirations.map((moment) => {
+                  const label = `${moment.format('ll')}`
                   const selected = moment === date
                   const onClick = () => {
                     setDate(moment)

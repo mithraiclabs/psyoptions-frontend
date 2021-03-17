@@ -21,12 +21,12 @@ import useWallet from '../../hooks/useWallet'
 import useOptionsMarkets from '../../hooks/useOptionsMarkets'
 import useSerumMarketInfo from '../../hooks/useSerumMarketInfo'
 import { generateStrikePrices } from '../../utils/generateStrikePrices'
-import { getNext3Months } from '../../utils/dates'
+import { getLastFridayOfMonths } from '../../utils/dates'
 import useAssetList from '../../hooks/useAssetList'
 
 const darkBorder = `1px solid ${theme.palette.background.main}`
 
-const next3Months = getNext3Months()
+const expirations = getLastFridayOfMonths(10)
 
 const InitializeMarket = () => {
   const { pushNotification } = useNotifications()
@@ -34,7 +34,7 @@ const InitializeMarket = () => {
   const { getMarket, fetchMarketData, initializeMarkets } = useOptionsMarkets()
   const [multiple, setMultiple] = useState(false)
   const [basePrice, setBasePrice] = useState(0)
-  const [date, setDate] = useState(next3Months[0])
+  const [date, setDate] = useState(expirations[0])
   const { uAsset, qAsset, setUAsset, setQAsset } = useAssetList()
   const [size, setSize] = useState(0)
   const [priceInterval, setPriceInterval] = useState(0)
@@ -132,7 +132,7 @@ const InitializeMarket = () => {
           <Box p={2} borderBottom={darkBorder}>
             Expires On:
             <Box display="flex" flexWrap="wrap">
-              {next3Months.map((moment) => {
+              {expirations.map((moment) => {
                 const label = `${moment.format('ll')}, 00:00 UTC`
                 const selected = moment === date
                 const onClick = () => setDate(moment)

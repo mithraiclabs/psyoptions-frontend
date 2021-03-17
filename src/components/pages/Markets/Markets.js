@@ -10,7 +10,7 @@ import { withStyles } from '@material-ui/core/styles'
 import Page from '../Page'
 import Select from '../../Select'
 import SelectAsset from '../../SelectAsset'
-import { getNext3Months } from '../../../utils/dates'
+import { getLastFridayOfMonths } from '../../../utils/dates'
 
 import useAssetList from '../../../hooks/useAssetList'
 import useOptionChain from '../../../hooks/useOptionChain'
@@ -54,11 +54,11 @@ const rowTemplate = {
   },
 }
 
-const next3Months = getNext3Months()
+const expirations = getLastFridayOfMonths(10)
 
 const Markets = () => {
   const { uAsset, qAsset, setUAsset, setQAsset } = useAssetList()
-  const [date, setDate] = useState(next3Months[0])
+  const [date, setDate] = useState(expirations[0])
   const { chain, fetchOptionsChain } = useOptionChain()
   const { fetchMarketData } = useOptionsMarkets()
   const [round, setRound] = useState(true) // TODO make this a user toggle-able feature
@@ -116,7 +116,7 @@ const Markets = () => {
                 label="Expiration Date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                options={next3Months.map((d) => ({
+                options={expirations.map((d) => ({
                   value: d,
                   text: `${d.format('ll')}, 00:00 UTC`,
                 }))}

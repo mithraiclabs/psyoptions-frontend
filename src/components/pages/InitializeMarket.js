@@ -133,7 +133,7 @@ const InitializeMarket = () => {
             Expires On:
             <Box display="flex" flexWrap="wrap">
               {expirations.map((moment) => {
-                const label = `${moment.format('ll')}, 00:00 UTC`
+                const label = `${moment.format('ll')}`
                 const selected = moment === date
                 const onClick = () => setDate(moment)
                 return (

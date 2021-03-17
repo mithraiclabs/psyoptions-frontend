@@ -118,7 +118,7 @@ const Markets = () => {
                 onChange={(e) => setDate(e.target.value)}
                 options={expirations.map((d) => ({
                   value: d,
-                  text: `${d.format('ll')}, 00:00 UTC`,
+                  text: `${d.format('ll')} | 23:59:59 UTC`,
                 }))}
                 style={{
                   minWidth: '100%',

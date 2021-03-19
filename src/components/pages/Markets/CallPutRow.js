@@ -26,7 +26,16 @@ const TCell = withStyles({
 
 const darkBorder = `1px solid ${theme.palette.background.main}`
 
-const CallPutRow = ({ row, round, precision, uAsset, qAsset, date }) => {
+const CallPutRow = ({
+  row,
+  round,
+  precision,
+  uAsset,
+  qAsset,
+  date,
+  onClickBuySellCall,
+  onClickBuySellPut,
+}) => {
   const { connect, connected } = useWallet()
   const { pushNotification } = useNotifications()
   const { ownedTokenAccounts } = useOwnedTokenAccounts()
@@ -87,6 +96,7 @@ const CallPutRow = ({ row, round, precision, uAsset, qAsset, date }) => {
     [uAsset, qAsset, initializeMarkets, date, row, pushNotification],
   )
 
+  // TODO -- move this to the modal
   const handleMint = useCallback(
     async ({ type }) => {
       setLoading((prevState) => ({ ...prevState, [type]: true }))
@@ -159,13 +169,9 @@ const CallPutRow = ({ row, round, precision, uAsset, qAsset, date }) => {
             variant="outlined"
             color="primary"
             p="8px"
-            onClick={() =>
-              handleMint({
-                type: 'call',
-              })
-            }
+            onClick={() => onClickBuySellCall({ type: 'call', ...row.call })}
           >
-            Mint
+            Buy/Sell
           </Button>
         ) : (
           <Button
@@ -224,13 +230,9 @@ const CallPutRow = ({ row, round, precision, uAsset, qAsset, date }) => {
             variant="outlined"
             color="primary"
             p="8px"
-            onClick={() =>
-              handleMint({
-                type: 'put',
-              })
-            }
+            onClick={() => onClickBuySellPut({ type: 'put', ...row.put })}
           >
-            Mint
+            Buy/Sell
           </Button>
         ) : (
           <Button

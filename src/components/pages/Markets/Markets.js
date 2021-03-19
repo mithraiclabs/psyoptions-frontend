@@ -63,6 +63,9 @@ const Markets = () => {
   const { fetchMarketData } = useOptionsMarkets()
   const [round, setRound] = useState(true) // TODO make this a user toggle-able feature
 
+  const [modalOpen, setModalOpen] = useState(false)
+  const [modalData, setModalData] = useState({})
+
   let precision
   if (round && chain[0]?.strike) {
     const n = chain[0].strike
@@ -87,6 +90,13 @@ const Markets = () => {
   useEffect(() => {
     fetchOptionsChain(date.unix())
   }, [fetchOptionsChain, date])
+
+  // Open buy/sell/mint modal
+  const handleBuySellClick = (callOrPut) => {
+    setModalData(callOrPut)
+    console.log(callOrPut)
+    setModalOpen(true)
+  }
 
   return (
     <Page>
@@ -233,6 +243,8 @@ const Markets = () => {
                     date={date}
                     precision={precision}
                     round={round}
+                    onClickBuySellCall={handleBuySellClick}
+                    onClickBuySellPut={handleBuySellClick}
                   />
                 ))}
               </TableBody>

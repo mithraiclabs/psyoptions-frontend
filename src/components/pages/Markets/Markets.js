@@ -117,6 +117,8 @@ const Markets = () => {
         onClose={() => setBuySellDialogOpen(false)}
         round={round}
         precision={precision}
+        uAssetDecimals={uAsset?.decimals || 0}
+        qAssetDecimals={qAsset?.decimals || 0}
       />
       <Box
         display="flex"

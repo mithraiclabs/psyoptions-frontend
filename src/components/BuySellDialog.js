@@ -8,9 +8,15 @@ import {
 } from '@material-ui/core'
 import Done from '@material-ui/icons/Done'
 import React, { useState } from 'react'
+import propTypes from 'prop-types'
 import BigNumber from 'bignumber.js'
+import { PublicKey } from '@solana/web3.js'
+import BN from 'bn.js'
 
 import theme from '../utils/theme'
+import { createInitializeMarketTx } from '../utils/serum'
+import useConnection from '../hooks/useConnection'
+import useWallet from '../hooks/useWallet'
 
 const StyledFilledInput = withStyles({
   root: {
@@ -40,6 +46,29 @@ const PlusMinusButton = withStyles({
 
 const orderTypes = ['limit', 'market']
 
+const proptypes = {
+  open: propTypes.bool,
+  onClose: propTypes.func,
+  heading: propTypes.string,
+  amountPerContract: propTypes.object,
+  uAssetSymbol: propTypes.string,
+  qAssetSymbol: propTypes.string,
+  qAssetMint: propTypes.string,
+  uAssetMint: propTypes.string,
+  uAssetDecimals: propTypes.number,
+  qAssetDecimals: propTypes.number,
+  strike: propTypes.object,
+  round: propTypes.bool,
+  precision: propTypes.number,
+  type: propTypes.oneOf(['call', 'put']),
+  optionMintAddress: propTypes.string,
+}
+
+const defaultProps = {
+  amountPerContract: new BigNumber(0),
+  strike: new BigNumber(0),
+}
+
 const BuySellDialog = ({
   open,
   onClose,
@@ -47,14 +76,22 @@ const BuySellDialog = ({
   amountPerContract,
   uAssetSymbol,
   qAssetSymbol,
+  qAssetMint,
+  uAssetMint,
+  uAssetDecimals,
+  qAssetDecimals,
   strike,
   round,
   precision,
   type,
+  optionMintAddress,
 }) => {
+  const { connection, dexProgramId } = useConnection()
+  const { pubKey } = useWallet()
   const [orderType, setOrderType] = useState('limit')
   const [orderSize, setOrderSize] = useState(1)
   const [limitPrice, setLimitPrice] = useState(0) // TODO -- default to lowest ask
+  const [initializingSerum, setInitializingSerum] = useState(false)
 
   // TODO - actually hook this up
   const serumInitialized = false
@@ -80,8 +117,49 @@ const BuySellDialog = ({
 
   const handleChangeSize = (e) => setOrderSize(e.target.value)
 
-  const handleInitializeSerum = () => {
+  const handleInitializeSerum = async () => {
     console.log('initialize dat srm')
+    setInitializingSerum(true)
+
+    try {
+      // TODO: make tick size and quote lot size configurable... maybe?
+      // Or should we just have sane defaults?
+      let tickSize = 0.0001
+      if (
+        (type === 'call' && qAssetSymbol.match(/^USD/)) ||
+        (type === 'put' && uAssetSymbol.match(/^USD/))
+      ) {
+        tickSize = 0.01
+      }
+
+      // This will likely be USDC or USDT but could be other things in some cases
+      const quoteLotSize = new BN(
+        tickSize * 10 ** (type === 'call' ? qAssetDecimals : uAssetDecimals),
+      )
+
+      // baseLotSize should be 1 -- the options market token doesn't have decimals
+      const baseLotSize = new BN(1)
+
+      console.log(baseLotSize)
+
+      const { tx1, tx2, market } = await createInitializeMarketTx({
+        connection,
+        payer: pubKey,
+        baseMint: new PublicKey(optionMintAddress),
+        quoteMint:
+          type === 'call'
+            ? new PublicKey(qAssetMint)
+            : new PublicKey(uAssetMint),
+        baseLotSize,
+        quoteLotSize,
+        dexProgramId,
+      })
+      console.log('market created', market.publicKey.toString())
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setInitializingSerum(false)
+    }
   }
 
   return (
@@ -102,7 +180,8 @@ const BuySellDialog = ({
             <Box py={1}>
               Written: {contractsWritten}{' '}
               <span style={{ opacity: 0.5 }}>
-                ({contractsWritten * amountPerContract} {uAssetSymbol} locked)
+                ({contractsWritten * amountPerContract.toNumber()}{' '}
+                {uAssetSymbol} locked)
               </span>
             </Box>
             <Box pb={1} pt={2}>
@@ -218,5 +297,9 @@ const BuySellDialog = ({
     </Dialog>
   )
 }
+
+BuySellDialog.propTypes = proptypes
+
+BuySellDialog.defaultProps = defaultProps
 
 export default BuySellDialog

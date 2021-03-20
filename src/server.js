@@ -39,6 +39,9 @@ const {
   MAINNET_PROGRAM_ID,
   TESTNET_PROGRAM_ID,
   DEVNET_PROGRAM_ID,
+  LOCAL_DEX_PROGRAM_ID,
+  TESTNET_DEX_PROGRAM_ID,
+  DEVNET_DEX_PROGRAM_ID,
   OPTIONS_API_URL,
 } = process.env
 
@@ -67,6 +70,9 @@ server.use((req, res) => {
           MAINNET_PROGRAM_ID,
           TESTNET_PROGRAM_ID,
           DEVNET_PROGRAM_ID,
+          LOCAL_DEX_PROGRAM_ID,
+          TESTNET_DEX_PROGRAM_ID,
+          DEVNET_DEX_PROGRAM_ID,
           OPTIONS_API_URL,
         }}
       />,

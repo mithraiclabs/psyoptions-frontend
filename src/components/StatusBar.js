@@ -42,7 +42,7 @@ const NavOptions = React.memo(() => {
             history.push('/markets')
           }}
         >
-          Markets
+          Options Markets
         </Button>
       </Box>
       <Box mx={2}>

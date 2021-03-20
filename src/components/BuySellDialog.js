@@ -1,14 +1,14 @@
 import {
   Box,
-  // Paper,
-  // FormControlLabel,
-  // Switch,
+  Chip,
   Dialog,
   FilledInput,
   withStyles,
   Button,
 } from '@material-ui/core'
+import Done from '@material-ui/icons/Done'
 import React, { useState } from 'react'
+import BigNumber from 'bignumber.js'
 
 import theme from '../utils/theme'
 
@@ -38,6 +38,8 @@ const PlusMinusButton = withStyles({
   },
 })(Button)
 
+const orderTypes = ['limit', 'market']
+
 const BuySellDialog = ({
   open,
   onClose,
@@ -48,12 +50,21 @@ const BuySellDialog = ({
   strike,
   round,
   precision,
+  type,
 }) => {
+  const [orderType, setOrderType] = useState('limit')
   const [orderSize, setOrderSize] = useState(1)
-  const [limitPrice, setLimitPrice] = useState('0') // TODO -- default to lowest ask
+  const [limitPrice, setLimitPrice] = useState(0) // TODO -- default to lowest ask
+
+  // TODO - actually hook this up
+  const serumInitialized = false
 
   const parsedOrderSize =
     Number.isNaN(orderSize) || orderSize < 1 ? 1 : parseInt(orderSize, 10)
+
+  const parsedLimitPrice = new BigNumber(
+    Number.isNaN(limitPrice) || limitPrice < 0 ? 0 : limitPrice,
+  )
 
   const collateralRequired =
     amountPerContract &&
@@ -69,23 +80,32 @@ const BuySellDialog = ({
 
   const handleChangeSize = (e) => setOrderSize(e.target.value)
 
+  const handleInitializeSerum = () => {
+    console.log('initialize dat srm')
+  }
+
   return (
     <Dialog open={open} onClose={onClose}>
       <Box py={1} px={2} width="650px" maxWidth="100%">
-        <Box p={1}>
+        <Box p={1} pt={2}>
           <h2 style={{ margin: '0' }}>{heading}</h2>
         </Box>
         <Box flexDirection={['column', 'column', 'row']} display="flex" pb={1}>
           <Box p={1} width={['100%', '100%', '50%']}>
             <Box pt={1}>
-              Strike: {formatStrike(strike)} {uAssetSymbol}/{qAssetSymbol}
+              Strike: {formatStrike(strike)}{' '}
+              {type === 'call'
+                ? `${qAssetSymbol}/${uAssetSymbol}`
+                : `${uAssetSymbol}/${qAssetSymbol}`}
             </Box>
             <Box pt={1}>Open Position: {openPositionSize}</Box>
             <Box py={1}>
-              Written: {contractsWritten} (
-              {contractsWritten * amountPerContract} {uAssetSymbol} locked)
+              Written: {contractsWritten}{' '}
+              <span style={{ opacity: 0.5 }}>
+                ({contractsWritten * amountPerContract} {uAssetSymbol} locked)
+              </span>
             </Box>
-            <Box py={1}>
+            <Box pb={1} pt={2}>
               Order Quantity:
               <Box pt={1} display="flex" flexDirection="row">
                 <StyledFilledInput
@@ -109,25 +129,90 @@ const BuySellDialog = ({
                   +
                 </PlusMinusButton>
               </Box>
-              <Box pt={1} style={{ fontSize: '10px' }}>
-                Collateral required to mint: {collateralRequired} {uAssetSymbol}
+              <Box pt={1} style={{ fontSize: '12px' }}>
+                Collateral req to mint: {collateralRequired} {uAssetSymbol}
               </Box>
-              <Box pt={1} style={{ fontSize: '10px' }}>
-                Available in wallet: TODO {uAssetSymbol}
+              <Box pt={'2px'} style={{ fontSize: '12px' }}>
+                Current Value: $TODO USD
+              </Box>
+              <Box pt={'2px'} style={{ fontSize: '12px' }}>
+                Available: TODO {uAssetSymbol}
               </Box>
             </Box>
-            <Box py={1}>
+            <Box pb={1} pt={2}>
               Order Type:
-              <Box pt={1}></Box>
-            </Box>
-            <Box py={1}>
-              Limit Price ({qAssetSymbol}):
               <Box pt={1}>
-                <StyledFilledInput value={`${limitPrice}`} />
+                {orderTypes.map((type) => {
+                  const selected = type === orderType
+                  return (
+                    <Chip
+                      key={type}
+                      clickable
+                      size="small"
+                      label={type}
+                      color="primary"
+                      onClick={() => setOrderType(type)}
+                      onDelete={selected ? () => setOrderType(type) : undefined}
+                      variant={selected ? undefined : 'outlined'}
+                      deleteIcon={selected ? <Done /> : undefined}
+                      style={{
+                        marginRight: theme.spacing(2),
+                        minWidth: '98px',
+                      }}
+                    />
+                  )
+                })}
+              </Box>
+            </Box>
+            <Box
+              pb={1}
+              pt={2}
+              color={
+                orderType === 'market'
+                  ? theme.palette.background.lighter
+                  : theme.palette.primary.main
+              }
+            >
+              Limit Price ({type === 'call' ? qAssetSymbol : uAssetSymbol}):
+              <Box pt={1}>
+                <StyledFilledInput
+                  type="number"
+                  value={orderType === 'market' ? '' : `${limitPrice}`}
+                  onChange={(e) => setLimitPrice(e.target.value)}
+                  onBlur={() => {
+                    setLimitPrice(parsedLimitPrice.toString())
+                  }}
+                  disabled={orderType === 'market'}
+                />
               </Box>
             </Box>
           </Box>
-          <Box p={1} width={['100%', '100%', '50%']}></Box>
+          <Box p={1} width={['100%', '100%', '50%']}>
+            {serumInitialized ? (
+              <Box>Serum Initialized</Box>
+            ) : (
+              <Box
+                display="flex"
+                flexDirection="column"
+                justifyContent="center"
+                alignItems="center"
+                width="100%"
+                height="100%"
+                pb={3}
+              >
+                <Box textAlign="center" px={2} pb={2}>
+                  Initialize Serum Market to Place Order
+                </Box>
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  onClick={handleInitializeSerum}
+                >
+                  Initialize
+                </Button>
+              </Box>
+            )}
+          </Box>
         </Box>
       </Box>
     </Dialog>

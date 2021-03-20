@@ -21,6 +21,7 @@ const TCell = withStyles({
     fontSize: '11px',
     border: 'none',
     height: '52px',
+    background: theme.palette.background.medium,
   },
 })(TableCell)
 

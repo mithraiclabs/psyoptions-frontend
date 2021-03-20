@@ -47,13 +47,13 @@ const NavOptions = React.memo(() => {
       </Box>
       <Box mx={2}>
         <Button
-          href="/mint"
+          href="/initialize-market"
           onClick={(e) => {
             e.preventDefault()
-            history.push('/mint')
+            history.push('/initialize-market')
           }}
         >
-          Mint Options
+          Initialize Market
         </Button>
       </Box>
       <Box mx={2}>

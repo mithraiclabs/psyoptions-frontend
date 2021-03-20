@@ -169,7 +169,13 @@ const CallPutRow = ({
             variant="outlined"
             color="primary"
             p="8px"
-            onClick={() => onClickBuySellCall({ type: 'call', ...row.call })}
+            onClick={() =>
+              onClickBuySellCall({
+                type: 'call',
+                ...row.call,
+                strike: row.strike,
+              })
+            }
           >
             Buy/Sell
           </Button>
@@ -230,7 +236,9 @@ const CallPutRow = ({
             variant="outlined"
             color="primary"
             p="8px"
-            onClick={() => onClickBuySellPut({ type: 'put', ...row.put })}
+            onClick={() =>
+              onClickBuySellPut({ type: 'put', ...row.put, strike: row.strike })
+            }
           >
             Buy/Sell
           </Button>
@@ -275,7 +283,7 @@ const Asset = PropTypes.shape({
 CallPutRow.propTypes = {
   // eslint-disable-next-line react/require-default-props
   row: PropTypes.shape({
-    strike: PropTypes.string.isRequired,
+    strike: PropTypes.object, // eslint-disable-line
     call: CallOrPut,
     put: CallOrPut,
   }),

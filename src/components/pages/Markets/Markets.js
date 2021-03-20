@@ -1,4 +1,4 @@
-import { Box, Paper, FormControlLabel, Switch } from '@material-ui/core'
+import { Box, Paper, FormControlLabel, Switch, Dialog } from '@material-ui/core'
 import React, { useState, useEffect } from 'react'
 import Table from '@material-ui/core/Table'
 import TableBody from '@material-ui/core/TableBody'
@@ -17,6 +17,9 @@ import useOptionChain from '../../../hooks/useOptionChain'
 import useOptionsMarkets from '../../../hooks/useOptionsMarkets'
 
 import CallPutRow from './CallPutRow'
+import BuySellDialog from '../../BuySellDialog'
+
+const dblsp = `${'\u00A0'}${'\u00A0'}`
 
 const TCell = withStyles({
   root: {
@@ -29,7 +32,6 @@ const TCell = withStyles({
 })(TableCell)
 
 const rowTemplate = {
-  strike: '',
   call: {
     key: '',
     bid: '',
@@ -63,8 +65,8 @@ const Markets = () => {
   const { fetchMarketData } = useOptionsMarkets()
   const [round, setRound] = useState(true) // TODO make this a user toggle-able feature
 
-  const [modalOpen, setModalOpen] = useState(false)
-  const [modalData, setModalData] = useState({})
+  const [buySellDialogOpen, setBuySellDialogOpen] = useState(false)
+  const [callPutData, setCallPutData] = useState({ type: 'call' })
 
   let precision
   if (round && chain[0]?.strike) {
@@ -93,13 +95,29 @@ const Markets = () => {
 
   // Open buy/sell/mint modal
   const handleBuySellClick = (callOrPut) => {
-    setModalData(callOrPut)
     console.log(callOrPut)
-    setModalOpen(true)
+    setCallPutData(callOrPut)
+    setBuySellDialogOpen(true)
   }
+
+  const buySellDialogHeading = callPutData
+    ? `${callPutData.uAssetSymbol}-${
+        callPutData.qAssetSymbol
+      }${dblsp}|${dblsp}${date.format(
+        'D MMM YYYY',
+      )}${dblsp}|${dblsp}${callPutData.type.slice(0, 1).toUpperCase()}`
+    : '--'
 
   return (
     <Page>
+      <BuySellDialog
+        {...callPutData}
+        heading={buySellDialogHeading}
+        open={buySellDialogOpen}
+        onClose={() => setBuySellDialogOpen(false)}
+        round={round}
+        precision={precision}
+      />
       <Box
         display="flex"
         justifyContent="center"

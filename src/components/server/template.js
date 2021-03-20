@@ -19,6 +19,7 @@ const baseCss = `
     background-color: ${theme.palette.background.main};
     color: ${theme.palette.primary.main};
     font-family: JetBrains Mono, monospace;
+    font-size: 14px;
   }
   
   h1, h2, h3 {

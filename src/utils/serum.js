@@ -102,8 +102,6 @@ export const createInitializeMarketTx = async ({
     ),
   )
 
-  console.log('here2')
-
   const tx2 = new Transaction()
   tx2.add(
     SystemProgram.createAccount({
@@ -161,8 +159,6 @@ export const createInitializeMarketTx = async ({
       programId: dexProgramId,
     }),
   )
-
-  console.log('here3')
 
   const { blockhash } = await connection.getRecentBlockhash()
   const signers1 = [payer, baseVault, quoteVault]

@@ -87,7 +87,7 @@ const BuySellDialog = ({
   optionMintAddress,
 }) => {
   const { connection, dexProgramId } = useConnection()
-  const { pubKey } = useWallet()
+  const { wallet, pubKey } = useWallet()
   const [orderType, setOrderType] = useState('limit')
   const [orderSize, setOrderSize] = useState(1)
   const [limitPrice, setLimitPrice] = useState(0) // TODO -- default to lowest ask
@@ -140,8 +140,6 @@ const BuySellDialog = ({
       // baseLotSize should be 1 -- the options market token doesn't have decimals
       const baseLotSize = new BN(1)
 
-      console.log(baseLotSize)
-
       const { tx1, tx2, market } = await createInitializeMarketTx({
         connection,
         payer: pubKey,
@@ -154,6 +152,17 @@ const BuySellDialog = ({
         quoteLotSize,
         dexProgramId,
       })
+
+      const signed = await wallet.signAllTransactions([tx1, tx2])
+
+      await Promise.all(
+        signed.map(async (tx) => {
+          const txid = await connection.sendRawTransaction(tx.serialize())
+          await connection.confirmTransaction(txid)
+          console.log('confirmed', txid)
+        }),
+      )
+
       console.log('market created', market.publicKey.toString())
     } catch (e) {
       console.error(e)

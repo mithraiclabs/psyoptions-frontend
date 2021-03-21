@@ -30,7 +30,7 @@ const NavOptions = React.memo(() => {
           style={{ minWidth: 0, padding: 0 }}
         >
           <Box p={[1, 1, '2px']}>
-            <img src={logo} width="32px" height="32px" />
+            <img src={logo} width="32px" height="32px" alt="PsyOptions Logo" />
           </Box>
         </Button>
       </Box>
@@ -42,7 +42,7 @@ const NavOptions = React.memo(() => {
             history.push('/markets')
           }}
         >
-          Options Markets
+          Markets
         </Button>
       </Box>
       <Box mx={2}>
@@ -53,7 +53,7 @@ const NavOptions = React.memo(() => {
             history.push('/initialize-market')
           }}
         >
-          Initialize Market
+          Initialize
         </Button>
       </Box>
       <Box mx={2}>

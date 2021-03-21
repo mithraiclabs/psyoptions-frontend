@@ -5,6 +5,7 @@ import {
   FilledInput,
   withStyles,
   Button,
+  CircularProgress,
 } from '@material-ui/core'
 import Done from '@material-ui/icons/Done'
 import React, { useState } from 'react'
@@ -155,13 +156,15 @@ const BuySellDialog = ({
 
       const signed = await wallet.signAllTransactions([tx1, tx2])
 
-      await Promise.all(
-        signed.map(async (tx) => {
-          const txid = await connection.sendRawTransaction(tx.serialize())
-          await connection.confirmTransaction(txid)
-          console.log('confirmed', txid)
-        }),
-      )
+      console.log(signed)
+
+      const txid1 = await connection.sendRawTransaction(signed[0].serialize())
+      await connection.confirmTransaction(txid1)
+      console.log('confirmed', txid1)
+
+      const txid2 = await connection.sendRawTransaction(signed[1].serialize())
+      await connection.confirmTransaction(txid2)
+      console.log('confirmed', txid2)
 
       console.log('market created', market.publicKey.toString())
     } catch (e) {
@@ -230,17 +233,19 @@ const BuySellDialog = ({
             <Box pb={1} pt={2}>
               Order Type:
               <Box pt={1}>
-                {orderTypes.map((type) => {
-                  const selected = type === orderType
+                {orderTypes.map((_type) => {
+                  const selected = _type === orderType
                   return (
                     <Chip
-                      key={type}
+                      key={_type}
                       clickable
                       size="small"
-                      label={type}
+                      label={_type}
                       color="primary"
-                      onClick={() => setOrderType(type)}
-                      onDelete={selected ? () => setOrderType(type) : undefined}
+                      onClick={() => setOrderType(_type)}
+                      onDelete={
+                        selected ? () => setOrderType(_type) : undefined
+                      }
                       variant={selected ? undefined : 'outlined'}
                       deleteIcon={selected ? <Done /> : undefined}
                       style={{
@@ -291,13 +296,17 @@ const BuySellDialog = ({
                 <Box textAlign="center" px={2} pb={2}>
                   Initialize Serum Market to Place Order
                 </Box>
-                <Button
-                  variant="outlined"
-                  color="primary"
-                  onClick={handleInitializeSerum}
-                >
-                  Initialize
-                </Button>
+                {initializingSerum ? (
+                  <CircularProgress />
+                ) : (
+                  <Button
+                    variant="outlined"
+                    color="primary"
+                    onClick={handleInitializeSerum}
+                  >
+                    Initialize Serum
+                  </Button>
+                )}
               </Box>
             )}
           </Box>

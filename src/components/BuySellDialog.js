@@ -139,7 +139,7 @@ const BuySellDialog = ({
       )
 
       // baseLotSize should be 1 -- the options market token doesn't have decimals
-      const baseLotSize = new BN(1)
+      const baseLotSize = new BN('1')
 
       const { tx1, tx2, market } = await createInitializeMarketTx({
         connection,

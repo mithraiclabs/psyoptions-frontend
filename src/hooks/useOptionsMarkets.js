@@ -244,20 +244,20 @@ const useOptionsMarkets = () => {
 
   const mint = async ({
     marketData,
-    mintedOptionDestAccount, // account in user's wallet to send minted option to
+    mintedOptionDestKey, // address in user's wallet to send minted Option Token to
     underlyingAssetSrcAccount, // account in user's wallet to post uAsset collateral from
-    quoteAssetDestAccount, // account in user's wallet to send qAsset to if contract is exercised
+    writerTokenDestKey, // address in user's wallet to send the minted Writer Token
   }) => {
-    const { transaction: tx } = await readMarketAndMintCoveredCall(
+    const { transaction: tx } = await readMarketAndMintCoveredCall({
       connection,
-      { publicKey: pubKey },
-      endpoint.programId,
-      new PublicKey(mintedOptionDestAccount),
-      new PublicKey(underlyingAssetSrcAccount),
-      new PublicKey(quoteAssetDestAccount),
-      new PublicKey(marketData.optionMarketDataAddress),
-      { publicKey: pubKey }, // Option writer's UA Authority account - safe to assume this is always the same as the payer when called from the FE UI
-    )
+      payer: { publicKey: pubKey },
+      programId: endpoint.programId,
+      mintedOptionDestKey: new PublicKey(mintedOptionDestKey),
+      writerTokenDestKey: new PublicKey(writerTokenDestKey),
+      underlyingAssetSrcKey: new PublicKey(underlyingAssetSrcAccount),
+      optionMarketKey: new PublicKey(marketData.optionMarketDataAddress),
+      underlyingAssetAuthorityAccount: { publicKey: pubKey }, // Option writer's UA Authority account - safe to assume this is always the same as the payer when called from the FE UI
+    })
 
     const signed = await wallet.signTransaction(tx)
     const txid = await connection.sendRawTransaction(signed.serialize())
@@ -299,6 +299,7 @@ const useOptionsMarkets = () => {
     ownedQAssetAccounts,
     mintedOptionAccount,
     ownedMintedOptionAccounts,
+    mintedWriterTokenDestKey,
   }) => {
     const uAssetSymbol = uAsset.tokenSymbol
     const qAssetSymbol = qAsset.tokenSymbol
@@ -376,9 +377,9 @@ const useOptionsMarkets = () => {
     }
 
     // Fallback to first oowned minted option account
-    let mintedOptionDestAccount =
+    let mintedOptionDestKey =
       mintedOptionAccount || ownedMintedOptionAccounts[0]
-    if (!mintedOptionDestAccount) {
+    if (!mintedOptionDestKey) {
       // Create token account for minted option if the user doesn't have one yet
       const [tx, newAccount] = await initializeTokenAccountTx({
         connection,
@@ -400,7 +401,7 @@ const useOptionsMarkets = () => {
       })
 
       await connection.confirmTransaction(txid)
-      mintedOptionDestAccount = newAccount.publicKey.toString()
+      mintedOptionDestKey = newAccount.publicKey.toString()
 
       // TODO: maybe we can send a name for this account in the wallet too, would be nice
 
@@ -414,12 +415,51 @@ const useOptionsMarkets = () => {
         ),
       })
     }
+    
+    let writerTokenDestKey = mintedWriterTokenDestKey;
+    if (!writerTokenDestKey) {
+      // Create token account for minted Writer Token if the user doesn't have one yet
+      const [tx, newAccount] = await initializeTokenAccountTx({
+        connection,
+        payer: { publicKey: pubKey },
+        mintPublicKey: new PublicKey(marketData.writerTokenMintKey),
+        owner: pubKey,
+      })
+      const signed = await wallet.signTransaction(tx)
+      const txid = await connection.sendRawTransaction(signed.serialize())
+
+      pushNotification({
+        severity: 'info',
+        message: 'Processing: Create Writer Token Account',
+        link: (
+          <Link href={buildSolanaExplorerUrl(txid)} target="_new">
+            View on Solana Explorer
+          </Link>
+        ),
+      })
+
+      await connection.confirmTransaction(txid)
+      writerTokenDestKey = newAccount.publicKey.toString()
+
+      // TODO: maybe we can send a name for this account in the wallet too, would be nice
+
+      pushNotification({
+        severity: 'success',
+        message: 'Confirmed: Create Writer Token Account',
+        link: (
+          <Link href={buildSolanaExplorerUrl(txid)} target="_new">
+            View on Solana Explorer
+          </Link>
+        ),
+      })
+    }
 
     return mint({
       marketData,
-      mintedOptionDestAccount,
+      mintedOptionDestKey,
       underlyingAssetSrcAccount: uAssetAccount,
       quoteAssetDestAccount,
+      writerTokenDestKey,
     })
   }
 

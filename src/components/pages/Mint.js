@@ -42,6 +42,7 @@ const Mint = () => {
   const [uAssetAccount, setUAssetAccount] = useState('')
   const [qAssetAccount, setQAssetAccount] = useState('')
   const [mintedOptionAccount, setMintedOptionAccount] = useState('')
+  const [mintedWriterTokenDestKey, setMintedWriterTokenDestKey] = useState('')
   const [loading, setLoading] = useState(false)
 
   const allParams = {
@@ -69,6 +70,10 @@ const Mint = () => {
       (marketData && ownedTokenAccounts[marketData.optionMintAddress]) || [],
     [marketData, ownedTokenAccounts],
   )
+  const ownedWriterTokenMintAccounts = useMemo(
+    () => (marketData && ownedTokenAccounts[marketData.writerTokenMintKey]) || [],
+    [marketData, ownedTokenAccounts],
+  )
 
   useEffect(() => {
     fetchMarketData()
@@ -86,6 +91,10 @@ const Mint = () => {
     setMintedOptionAccount(ownedMintedOptionAccounts[0]?.pubKey || '')
   }, [ownedMintedOptionAccounts])
 
+  useEffect(() => {
+    setMintedWriterTokenDestKey(ownedWriterTokenMintAccounts[0]?.pubKey || '')
+  }, [ownedWriterTokenMintAccounts])
+
   const handleMint = async () => {
     setLoading(true)
     try {
@@ -101,6 +110,7 @@ const Mint = () => {
         ownedQAssetAccounts,
         mintedOptionAccount,
         ownedMintedOptionAccounts,
+        mintedWriterTokenDestKey,
       })
       setLoading(false)
     } catch (err) {

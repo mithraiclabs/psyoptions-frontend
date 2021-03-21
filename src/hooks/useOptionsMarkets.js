@@ -139,6 +139,7 @@ const useOptionsMarkets = () => {
 
   const getMarket = ({ uAssetSymbol, qAssetSymbol, date, size, price }) => {
     const key = `${date}-${uAssetSymbol}-${qAssetSymbol}-${size}-${price}`
+    console.log('*** gettings market', markets, key);
     return markets[key]
   }
 

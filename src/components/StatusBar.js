@@ -30,7 +30,7 @@ const NavOptions = React.memo(() => {
           style={{ minWidth: 0, padding: 0 }}
         >
           <Box p={[1, 1, '2px']}>
-            <img src={logo} width="32px" height="32px" />
+            <img src={logo} width="32px" height="32px" alt="PsyOptions Logo" />
           </Box>
         </Button>
       </Box>
@@ -47,13 +47,13 @@ const NavOptions = React.memo(() => {
       </Box>
       <Box mx={2}>
         <Button
-          href="/mint"
+          href="/initialize-market"
           onClick={(e) => {
             e.preventDefault()
-            history.push('/mint')
+            history.push('/initialize-market')
           }}
         >
-          Mint Options
+          Initialize
         </Button>
       </Box>
       <Box mx={2}>

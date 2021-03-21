@@ -21,12 +21,22 @@ const TCell = withStyles({
     fontSize: '11px',
     border: 'none',
     height: '52px',
+    background: theme.palette.background.medium,
   },
 })(TableCell)
 
 const darkBorder = `1px solid ${theme.palette.background.main}`
 
-const CallPutRow = ({ row, round, precision, uAsset, qAsset, date }) => {
+const CallPutRow = ({
+  row,
+  round,
+  precision,
+  uAsset,
+  qAsset,
+  date,
+  onClickBuySellCall,
+  onClickBuySellPut,
+}) => {
   const { connect, connected } = useWallet()
   const { pushNotification } = useNotifications()
   const { ownedTokenAccounts } = useOwnedTokenAccounts()
@@ -87,6 +97,7 @@ const CallPutRow = ({ row, round, precision, uAsset, qAsset, date }) => {
     [uAsset, qAsset, initializeMarkets, date, row, pushNotification],
   )
 
+  // TODO -- move this to the modal
   const handleMint = useCallback(
     async ({ type }) => {
       setLoading((prevState) => ({ ...prevState, [type]: true }))
@@ -160,12 +171,14 @@ const CallPutRow = ({ row, round, precision, uAsset, qAsset, date }) => {
             color="primary"
             p="8px"
             onClick={() =>
-              handleMint({
+              onClickBuySellCall({
                 type: 'call',
+                ...row.call,
+                strike: row.strike,
               })
             }
           >
-            Mint
+            Buy/Sell
           </Button>
         ) : (
           <Button
@@ -225,12 +238,10 @@ const CallPutRow = ({ row, round, precision, uAsset, qAsset, date }) => {
             color="primary"
             p="8px"
             onClick={() =>
-              handleMint({
-                type: 'put',
-              })
+              onClickBuySellPut({ type: 'put', ...row.put, strike: row.strike })
             }
           >
-            Mint
+            Buy/Sell
           </Button>
         ) : (
           <Button
@@ -273,7 +284,7 @@ const Asset = PropTypes.shape({
 CallPutRow.propTypes = {
   // eslint-disable-next-line react/require-default-props
   row: PropTypes.shape({
-    strike: PropTypes.string.isRequired,
+    strike: PropTypes.object, // eslint-disable-line
     call: CallOrPut,
     put: CallOrPut,
   }),

@@ -24,6 +24,10 @@
     "global-require": "off",
     "react/no-array-index-key": "warn",
     "no-nested-ternary": "off",
-    "react/jsx-props-no-spreading": "off"
+    "react/jsx-props-no-spreading": "off",
+    "arrow-body-style": "off",
+    "react/require-default-props": "off",
+    "react/forbid-prop-types": "off",
+    "react/jsx-curly-brace-presence": "off"
   }
 }

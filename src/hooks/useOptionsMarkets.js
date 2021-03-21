@@ -106,7 +106,7 @@ const useOptionsMarkets = () => {
 
         const key = `${newMarket.expiration}-${newMarket.uAssetSymbol}-${
           newMarket.qAssetSymbol
-        }-${newMarket.size}-${newMarket.quoteAmountPerContract.toString(10)}`
+        }-${newMarket.size}-${strike.toString(10)}`
         newMarkets[key] = newMarket
       })
 
@@ -139,7 +139,6 @@ const useOptionsMarkets = () => {
 
   const getMarket = ({ uAssetSymbol, qAssetSymbol, date, size, price }) => {
     const key = `${date}-${uAssetSymbol}-${qAssetSymbol}-${size}-${price}`
-    console.log('*** gettings market', markets, key);
     return markets[key]
   }
 
@@ -423,7 +422,7 @@ const useOptionsMarkets = () => {
       const [tx, newAccount] = await initializeTokenAccountTx({
         connection,
         payer: { publicKey: pubKey },
-        mintPublicKey: new PublicKey(marketData.writerTokenMintKey),
+        mintPublicKey: marketData.writerTokenMintKey,
         owner: pubKey,
       })
       const signed = await wallet.signTransaction(tx)

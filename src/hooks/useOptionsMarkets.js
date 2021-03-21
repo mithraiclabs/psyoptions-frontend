@@ -61,14 +61,15 @@ const useOptionsMarkets = () => {
         new PublicKey(endpoint.programId),
         assets,
       )
+
       // Transform the market data to our expectations
       const newMarkets = {}
       res.forEach((market) => {
-        const uAssetMint = market.marketData.underlyingAssetMintAddress
+        const uAssetMint = market.marketData.underlyingAssetMintKey
         const uAsset = supportedAssets.filter(
           (asset) => asset.mintAddress === uAssetMint.toString(),
         )[0]
-        const qAssetMint = market.marketData.quoteAssetMintAddress
+        const qAssetMint = market.marketData.quoteAssetMintKey
         const qAsset = supportedAssets.filter(
           (asset) => asset.mintAddress === qAssetMint.toString(),
         )[0]
@@ -98,9 +99,9 @@ const useOptionsMarkets = () => {
           qAssetMint: qAsset.mintAddress,
           // marketData.strikePrice is a BigNumber
           strikePrice: `${strike.toString(10)}`,
-          optionMintAddress: market.marketData.optionMintAddress.toString(),
+          optionMintAddress: market.marketData.optionMintKey.toString(),
           optionMarketDataAddress: market.pubkey.toString(),
-          writerRegistryAddress: market.marketData.writerRegistryAddress,
+          writerTokenMintKey: market.marketData.writerTokenMintKey
         }
 
         const key = `${newMarket.expiration}-${newMarket.uAssetSymbol}-${
@@ -165,18 +166,18 @@ const useOptionsMarkets = () => {
           transaction,
           optionMarketDataAddress,
           optionMintAddress,
-        } = await initializeMarket(
+        } = await initializeMarket({
           connection,
-          { publicKey: pubKey },
-          endpoint.programId,
-          uAssetMint,
-          qAssetMint,
-          uAssetDecimals,
-          qAssetDecimals,
-          amountPerContract,
-          qAmount,
-          expiration,
-        )
+          payer: { publicKey: pubKey },
+          programId: endpoint.programId,
+          underlyingAssetMintKey: uAssetMint,
+          quoteAssetMintKey: qAssetMint,
+          underlyingAssetDecimals: uAssetDecimals,
+          quoteAssetDecimals: qAssetDecimals,
+          underlyingAmountPerContract: amountPerContract,
+          quoteAmountPerContract: qAmount,
+          expirationUnixTimestamp: expiration,
+        })
 
         const signed = await wallet.signTransaction(transaction)
         const txid = await connection.sendRawTransaction(signed.serialize())

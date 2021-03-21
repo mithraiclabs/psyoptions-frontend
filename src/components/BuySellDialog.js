@@ -139,8 +139,8 @@ const BuySellDialog = ({
       )
 
       // baseLotSize should be 1 -- the options market token doesn't have decimals
-      const baseLotSize = new BN('1.0000000')
-      console.log('*** baseLotSize', baseLotSize, quoteLotSize, optionMintAddress);
+      const baseLotSize = new BN('1')
+
       const { tx1, tx2, market } = await createInitializeMarketTx({
         connection,
         payer: pubKey,

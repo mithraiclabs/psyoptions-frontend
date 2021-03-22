@@ -120,6 +120,8 @@ const CallPutRow = ({
           (uAsset && ownedTokenAccounts[uAsset.mintAddress]) || []
         const ownedQAssetAccounts =
           (qAsset && ownedTokenAccounts[qAsset.mintAddress]) || []
+        const ownedWriterTokenMintAccounts =
+          (marketData && ownedTokenAccounts[marketData.writerTokenMintKey]) || []
 
         await createAccountsAndMint({
           ...marketParams,
@@ -131,6 +133,7 @@ const CallPutRow = ({
           ownedQAssetAccounts,
           mintedOptionAccount: ownedMintedOptionAccounts[0]?.pubKey || '',
           ownedMintedOptionAccounts,
+          mintedWriterTokenDestKey: ownedWriterTokenMintAccounts[0]?.pubKey,
         })
       } catch (err) {
         console.log(err)

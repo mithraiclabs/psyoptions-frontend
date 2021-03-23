@@ -19,24 +19,25 @@ const useWallet = () => {
   const connect = async () => {
     setLoading(true)
 
-    const wallet = new Wallet(url)
+    const w = new Wallet(url)
 
-    setWallet(wallet)
+    setWallet(w)
 
     // TODO: unbind these listeners from old wallet before creating new one
-    wallet.on('connect', (key) => {
+    w.on('connect', (key) => {
       setLoading(false)
       setConnected(true)
       setPubKey(key)
     })
 
-    wallet.on('disconnect', () => {
+    w.on('disconnect', () => {
       setConnected(false)
       setPubKey('')
       console.log('Disconnected')
     })
 
-    return await wallet.connect()
+    // eslint-disable-next-line
+    return await w.connect()
   }
 
   return {

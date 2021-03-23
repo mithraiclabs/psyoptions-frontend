@@ -26,19 +26,19 @@ const NotificationsProvider = ({ children }) => {
   // useCallback() and useMemo() to prevent whole page re-renders
   const pushNotification = useCallback(
     (content) =>
-      setNotifications((notifications) => [content, ...notifications]),
-    []
+      setNotifications((_notifications) => [content, ..._notifications]),
+    [],
   )
 
-  const closeNotification = (index) => {
-    setNotifications((notifications) =>
-      notifications.filter((_, i) => i !== index)
+  const closeNotification = useCallback((index) => {
+    setNotifications((_notifications) =>
+      _notifications.filter((_, i) => i !== index),
     )
-  }
+  }, [])
 
   const value = useMemo(
     () => ({ closeNotification, pushNotification, notifications }),
-    [pushNotification, closeNotification, notifications]
+    [pushNotification, closeNotification, notifications],
   )
 
   return (

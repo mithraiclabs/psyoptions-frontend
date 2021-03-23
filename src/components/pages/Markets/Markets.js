@@ -1,4 +1,4 @@
-import { Box, Paper, FormControlLabel, Switch, Dialog } from '@material-ui/core'
+import { Box, Paper, FormControlLabel, Switch } from '@material-ui/core'
 import React, { useState, useEffect } from 'react'
 import Table from '@material-ui/core/Table'
 import TableBody from '@material-ui/core/TableBody'
@@ -13,7 +13,7 @@ import SelectAsset from '../../SelectAsset'
 import { getLastFridayOfMonths } from '../../../utils/dates'
 
 import useAssetList from '../../../hooks/useAssetList'
-import useOptionChain from '../../../hooks/useOptionChain'
+import useOptionsChain from '../../../hooks/useOptionsChain'
 import useOptionsMarkets from '../../../hooks/useOptionsMarkets'
 
 import CallPutRow from './CallPutRow'
@@ -61,7 +61,7 @@ const expirations = getLastFridayOfMonths(10)
 const Markets = () => {
   const { uAsset, qAsset, setUAsset, setQAsset } = useAssetList()
   const [date, setDate] = useState(expirations[0])
-  const { chain, fetchOptionsChain } = useOptionChain()
+  const { chain, fetchOptionsChain } = useOptionsChain()
   const { fetchMarketData } = useOptionsMarkets()
   const [round, setRound] = useState(true) // TODO make this a user toggle-able feature
 

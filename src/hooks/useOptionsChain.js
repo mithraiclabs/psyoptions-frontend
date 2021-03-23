@@ -10,7 +10,7 @@ import useAssetList from './useAssetList'
 /**
  *
  */
-const useOptionChain = () => {
+const useOptionsChain = () => {
   const { connection, dexProgramId } = useConnection()
   const { markets } = useOptionsMarkets()
   const { uAsset, qAsset } = useAssetList()
@@ -154,4 +154,4 @@ const useOptionChain = () => {
   return { chain, fetchOptionsChain }
 }
 
-export default useOptionChain
+export default useOptionsChain

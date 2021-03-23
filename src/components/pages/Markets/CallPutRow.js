@@ -5,8 +5,6 @@ import TableCell from '@material-ui/core/TableCell'
 import { withStyles } from '@material-ui/core/styles'
 import { CircularProgress } from '@material-ui/core'
 import Button from '@material-ui/core/Button'
-// import BN from 'bn.js'
-// import BigNumber from 'bignumber.js'
 
 import theme from '../../../utils/theme'
 import useOptionsMarkets from '../../../hooks/useOptionsMarkets'
@@ -98,6 +96,7 @@ const CallPutRow = ({
   )
 
   // TODO -- move this to the modal
+  // eslint-disable-next-line
   const handleMint = useCallback(
     async ({ type }) => {
       setLoading((prevState) => ({ ...prevState, [type]: true }))
@@ -121,7 +120,8 @@ const CallPutRow = ({
         const ownedQAssetAccounts =
           (qAsset && ownedTokenAccounts[qAsset.mintAddress]) || []
         const ownedWriterTokenMintAccounts =
-          (marketData && ownedTokenAccounts[marketData.writerTokenMintKey]) || []
+          (marketData && ownedTokenAccounts[marketData.writerTokenMintKey]) ||
+          []
 
         await createAccountsAndMint({
           ...marketParams,

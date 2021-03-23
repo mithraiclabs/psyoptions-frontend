@@ -46,6 +46,10 @@ const baseCss = `
     font-size: 1.2rem;
   }
 
+  a {
+    color: ${theme.palette.primary.main};
+  }
+
   * {
     scrollbar-color: ${theme.palette.border.main} transparent;
   }
@@ -97,7 +101,7 @@ const Template = ({
           };`,
         }}
       />
-      <script src={`/${jsBundle}`} />
+      {(jsBundle && <script src={`/${jsBundle}`} />) || ''}
       <script
         async
         src="https://www.googletagmanager.com/gtag/js?id=G-MDM6MQ5HPL"

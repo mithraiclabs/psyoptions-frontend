@@ -8,6 +8,7 @@ import { ServerStyleSheets } from '@material-ui/core/styles'
 
 import logger from './utils/server-logger'
 import App from './components/App'
+import LandingComingSoon from './components/pages/LandingComingSoon'
 import Template from './components/server/template'
 
 const bundleFilename = 'public/bundle.js'
@@ -43,38 +44,49 @@ const {
   TESTNET_DEX_PROGRAM_ID,
   DEVNET_DEX_PROGRAM_ID,
   OPTIONS_API_URL,
+  APP_ENABLED = false,
 } = process.env
 
 server.use((req, res) => {
   try {
     const routerCtx = { statusCode: 200 }
-    const app = (
-      <App
-        location={{ pathname: req?.originalUrl }}
-        routerContext={routerCtx}
-      />
-    )
+
+    let app
+    let env
+
+    if (APP_ENABLED) {
+      app = (
+        <App
+          location={{ pathname: req?.originalUrl }}
+          routerContext={routerCtx}
+        />
+      )
+      env = {
+        LOCAL_PROGRAM_ID,
+        MAINNET_PROGRAM_ID,
+        TESTNET_PROGRAM_ID,
+        DEVNET_PROGRAM_ID,
+        LOCAL_DEX_PROGRAM_ID,
+        TESTNET_DEX_PROGRAM_ID,
+        DEVNET_DEX_PROGRAM_ID,
+        OPTIONS_API_URL,
+      }
+    } else {
+      app = <LandingComingSoon />
+    }
+
     const sheets = new ServerStyleSheets()
     const appHtml = ReactDOMServer.renderToString(sheets.collect(app))
     const cssString = sheets.toString()
 
     const html = ReactDOMServer.renderToString(
       <Template
-        jsBundle={manifest['main.js']}
+        jsBundle={APP_ENABLED && manifest['main.js']}
         title="PsyOptions"
         description="Defi options trading protocol built on Solana"
         cssString={cssString}
         htmlString={appHtml}
-        env={{
-          LOCAL_PROGRAM_ID,
-          MAINNET_PROGRAM_ID,
-          TESTNET_PROGRAM_ID,
-          DEVNET_PROGRAM_ID,
-          LOCAL_DEX_PROGRAM_ID,
-          TESTNET_DEX_PROGRAM_ID,
-          DEVNET_DEX_PROGRAM_ID,
-          OPTIONS_API_URL,
-        }}
+        env={env}
       />,
     )
 

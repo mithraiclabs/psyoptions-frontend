@@ -1,6 +1,6 @@
 import React from 'react'
 import { Box } from '@material-ui/core'
-import { makeStyles } from '@material-ui/core/styles'
+import { makeStyles, ThemeProvider } from '@material-ui/core/styles'
 
 import logo from '../../../assets/psyoptions-logo-light.png'
 import theme from '../../utils/theme'
@@ -50,40 +50,42 @@ const LandingComingSoon = () => {
   const { logoH1 } = useStyles()
 
   return (
-    <PageWithoutNav>
-      <Box
-        display="flex"
-        justifyContent="center"
-        flexDirection="column"
-        minHeight="100%"
-        pb={4}
-      >
+    <ThemeProvider theme={theme}>
+      <PageWithoutNav>
         <Box
           display="flex"
-          flexDirection={['column', 'column', 'row']}
-          alignItems="center"
           justifyContent="center"
-          mt={2}
-          p={3}
+          flexDirection="column"
+          minHeight="100%"
+          pb={4}
         >
-          <img width="95px" height="95px" src={logo} alt="PsyOptions Logo" />
-          <Box px={[1, 1, 3]} fontSize={['48px', '48px', '60px', '72px']}>
-            <h1 className={logoH1}>PsyOptions</h1>
+          <Box
+            display="flex"
+            flexDirection={['column', 'column', 'row']}
+            alignItems="center"
+            justifyContent="center"
+            mt={2}
+            p={3}
+          >
+            <img width="95px" height="95px" src={logo} alt="PsyOptions Logo" />
+            <Box px={[1, 1, 3]} fontSize={['48px', '48px', '60px', '72px']}>
+              <h1 className={logoH1}>PsyOptions</h1>
+            </Box>
+          </Box>
+          <Box
+            display="flex"
+            flexDirection={['column', 'column', 'column']}
+            alignItems="center"
+            justifyContent="center"
+            p={2}
+            textAlign="center"
+          >
+            <h2 style={{ margin: '5px 0' }}>Decentralized Options Protocol</h2>
+            <h2 style={{ margin: '5px 0' }}>Coming Soon</h2>
           </Box>
         </Box>
-        <Box
-          display="flex"
-          flexDirection={['column', 'column', 'column']}
-          alignItems="center"
-          justifyContent="center"
-          p={2}
-          textAlign="center"
-        >
-          <h2 style={{ margin: '5px 0' }}>Decentralized Options Protocol</h2>
-          <h2 style={{ margin: '5px 0' }}>Coming Soon</h2>
-        </Box>
-      </Box>
-    </PageWithoutNav>
+      </PageWithoutNav>
+    </ThemeProvider>
   )
 }
 

@@ -12,146 +12,174 @@ import useAssetList from './useAssetList'
  */
 const useOptionsChain = () => {
   const { connection, dexProgramId } = useConnection()
-  const { markets } = useOptionsMarkets()
+  const { fetchMarketData } = useOptionsMarkets()
   const { uAsset, qAsset } = useAssetList()
-  const { chain, setChain } = useContext(OptionsChainContext)
+  const {
+    chain,
+    setChain,
+    optionsChainLoading,
+    setOptionsChainLoading,
+  } = useContext(OptionsChainContext)
 
   const fetchOptionsChain = useCallback(
     async (dateTimestamp) => {
-      const numberOfMarkets = Object.keys(markets).length
-      if (
-        !(connection instanceof Connection) ||
-        !uAsset?.tokenSymbol ||
-        !qAsset?.tokenSymbol ||
-        !dateTimestamp ||
-        numberOfMarkets < 1
-      ) {
+      try {
+        if (optionsChainLoading) return
+
         setChain([])
-        return
-      }
 
-      const callKeyPart = `${dateTimestamp}-${uAsset.tokenSymbol}-${qAsset.tokenSymbol}`
-      const putKeyPart = `${dateTimestamp}-${qAsset.tokenSymbol}-${uAsset.tokenSymbol}`
-
-      const callPutMap = (k) => {
-        const amt = markets[k].amountPerContract.toString()
-        const qAmt = markets[k].quoteAmountPerContract.toString()
-        return {
-          fraction: `${amt}/${qAmt}`,
-          reciprocalFraction: `${qAmt}/${amt}`,
-          ...markets[k],
+        if (
+          !(connection instanceof Connection) ||
+          !uAsset?.tokenSymbol ||
+          !qAsset?.tokenSymbol ||
+          !dateTimestamp
+        ) {
+          return
         }
-      }
 
-      const calls = Object.keys(markets)
-        .filter((k) => k.match(callKeyPart))
-        .map(callPutMap)
-      const puts = Object.keys(markets)
-        .filter((k) => k.match(putKeyPart))
-        .map(callPutMap)
+        setOptionsChainLoading(true)
 
-      const strikeFractions = Array.from(
-        new Set([
-          ...calls.map((m) => m.fraction),
-          ...puts.map((m) => m.reciprocalFraction),
-        ]),
-      )
+        const marketData = await fetchMarketData()
+        if (!marketData || Object.keys(marketData).length < 1) {
+          setOptionsChainLoading(false)
+          setChain([])
+          return
+        }
 
-      const template = {
-        key: '',
-        bid: '',
-        ask: '',
-        change: '',
-        volume: '',
-        openInterest: '',
-        size: '',
-        serumMarket: null,
-      }
+        const callKeyPart = `${dateTimestamp}-${uAsset.tokenSymbol}-${qAsset.tokenSymbol}`
+        const putKeyPart = `${dateTimestamp}-${qAsset.tokenSymbol}-${uAsset.tokenSymbol}`
 
-      const rows = []
+        const callPutMap = (k) => {
+          const amt = marketData[k].amountPerContract.toString()
+          const qAmt = marketData[k].quoteAmountPerContract.toString()
+          return {
+            fraction: `${amt}/${qAmt}`,
+            reciprocalFraction: `${qAmt}/${amt}`,
+            ...marketData[k],
+          }
+        }
 
-      await Promise.all(
-        strikeFractions.map(async (fraction) => {
-          const sizes = new Set()
-          const [amt, qAmt] = fraction.split('/')
-          const strike = new BigNumber(qAmt).div(new BigNumber(amt))
+        const calls = Object.keys(marketData)
+          .filter((k) => k.match(callKeyPart))
+          .map(callPutMap)
+        const puts = Object.keys(marketData)
+          .filter((k) => k.match(putKeyPart))
+          .map(callPutMap)
 
-          const matchingCalls = calls.filter((c) => {
-            if (c.fraction === fraction) {
-              sizes.add(c.size)
-              return true
-            }
-            return false
-          })
+        const strikeFractions = Array.from(
+          new Set([
+            ...calls.map((m) => m.fraction),
+            ...puts.map((m) => m.reciprocalFraction),
+          ]),
+        )
 
-          const matchingPuts = puts.filter((p) => {
-            if (p.reciprocalFraction === fraction) {
-              sizes.add(p.quoteAmountPerContract.toString())
-              return true
-            }
-            return false
-          })
+        const template = {
+          key: '',
+          bid: '',
+          ask: '',
+          change: '',
+          volume: '',
+          openInterest: '',
+          size: '',
+          serumMarket: null,
+        }
 
-          await Promise.all(
-            Array.from(sizes).map(async (size) => {
-              // const putSize = (new BN(strike).mul(new BN(size))).toString(10)
-              let call = matchingCalls.find((c) => c.size === size)
-              let put = matchingPuts.find(
-                (p) => p.quoteAmountPerContract.toString() === size,
-              )
-              // TODO if Serum market exists, load the current Bid / Ask information for the premiums
+        const rows = []
 
-              if (call) {
-                // check if there is a serum market
-                const serumMarket = await SerumMarket.findByAssets(
-                  connection,
-                  new PublicKey(call.optionMintAddress),
-                  new PublicKey(call.qAssetMint),
-                  dexProgramId,
-                )
-                call = {
-                  ...template,
-                  ...call,
-                  serumMarket,
-                  initialized: true,
-                }
-              } else {
-                call = template
+        await Promise.all(
+          strikeFractions.map(async (fraction) => {
+            const sizes = new Set()
+            const [amt, qAmt] = fraction.split('/')
+            const strike = new BigNumber(qAmt).div(new BigNumber(amt))
+
+            const matchingCalls = calls.filter((c) => {
+              if (c.fraction === fraction) {
+                sizes.add(c.size)
+                return true
               }
+              return false
+            })
 
-              if (put) {
-                // check if there is a serum market
-                const serumMarket = await SerumMarket.findByAssets(
-                  connection,
-                  new PublicKey(put.optionMintAddress),
-                  // NOTE the PUTs underlying asset is the quote asset for the serum market
-                  // because the strike prices are all denoted in it.
-                  new PublicKey(put.uAssetMint),
-                  dexProgramId,
-                )
-                put = {
-                  ...template,
-                  ...put,
-                  serumMarket,
-                  initialized: true,
-                }
-              } else {
-                put = template
+            const matchingPuts = puts.filter((p) => {
+              if (p.reciprocalFraction === fraction) {
+                sizes.add(p.quoteAmountPerContract.toString())
+                return true
               }
+              return false
+            })
 
-              rows.push({ strike, size, call, put })
-            }),
-          )
-        }),
-      )
+            await Promise.all(
+              Array.from(sizes).map(async (size) => {
+                // const putSize = (new BN(strike).mul(new BN(size))).toString(10)
+                let call = matchingCalls.find((c) => c.size === size)
+                let put = matchingPuts.find(
+                  (p) => p.quoteAmountPerContract.toString() === size,
+                )
+                // TODO if Serum market exists, load the current Bid / Ask information for the premiums
 
-      rows.sort((a, b) => a.strike.minus(b.strike).toNumber())
-      setChain(rows)
+                if (call) {
+                  // check if there is a serum market
+                  const serumMarket = await SerumMarket.findByAssets(
+                    connection,
+                    new PublicKey(call.optionMintAddress),
+                    new PublicKey(call.qAssetMint),
+                    dexProgramId,
+                  )
+                  call = {
+                    ...template,
+                    ...call,
+                    serumMarket,
+                    initialized: true,
+                  }
+                } else {
+                  call = template
+                }
+
+                if (put) {
+                  // check if there is a serum market
+                  const serumMarket = await SerumMarket.findByAssets(
+                    connection,
+                    new PublicKey(put.optionMintAddress),
+                    // NOTE the PUTs underlying asset is the quote asset for the serum market
+                    // because the strike prices are all denoted in it.
+                    new PublicKey(put.uAssetMint),
+                    dexProgramId,
+                  )
+                  put = {
+                    ...template,
+                    ...put,
+                    serumMarket,
+                    initialized: true,
+                  }
+                } else {
+                  put = template
+                }
+
+                rows.push({ strike, size, call, put, key: `${size}-${strike}` })
+              }),
+            )
+          }),
+        )
+
+        rows.sort((a, b) => a.strike.minus(b.strike).toNumber())
+        setChain(rows)
+        setOptionsChainLoading(false)
+      } catch (err) {
+        console.log(err)
+        setChain([])
+        setOptionsChainLoading(false)
+      }
     },
-    [connection, dexProgramId, markets, uAsset, qAsset, setChain],
+    [connection, dexProgramId, uAsset, qAsset, setChain, fetchMarketData], // eslint-disable-line
   )
 
-  return { chain, fetchOptionsChain }
+  return {
+    chain,
+    setChain,
+    setOptionsChainLoading,
+    fetchOptionsChain,
+    optionsChainLoading,
+  }
 }
 
 export default useOptionsChain

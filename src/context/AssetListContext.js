@@ -48,6 +48,7 @@ const AssetListProvider = ({ children }) => {
   const [supportedAssets, setSupportedAssets] = useState([])
   const [uAsset, setUAsset] = useState()
   const [qAsset, setQAsset] = useState()
+  const [assetListLoading, setAssetListLoading] = useState(false)
   const { pushNotification } = useNotifications()
 
   useEffect(() => {
@@ -81,6 +82,7 @@ const AssetListProvider = ({ children }) => {
     }
 
     const loadAssets = async (basicAssets) => {
+      setAssetListLoading(true)
       try {
         const mergedAssets = await mergeAssetsWithChainData(
           connection,
@@ -98,12 +100,14 @@ const AssetListProvider = ({ children }) => {
           .map((res) => res.value)
         setSupportedAssets(loadedAssets)
         setDefaultAssets(loadedAssets)
+        setAssetListLoading(false)
       } catch (error) {
         pushNotification({
           severity: 'error',
           message: `${error}`,
         })
         console.error(error)
+        setAssetListLoading(false)
         setSupportedAssets([])
       }
     }
@@ -114,10 +118,12 @@ const AssetListProvider = ({ children }) => {
 
   const value = {
     supportedAssets,
+    setSupportedAssets,
     uAsset,
     qAsset,
     setUAsset,
     setQAsset,
+    assetListLoading,
   }
 
   return (

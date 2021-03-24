@@ -43,15 +43,19 @@ const useOptionsMarkets = () => {
   const { pushNotification } = useNotifications()
   const { wallet, pubKey } = useWallet()
   const { connection, endpoint } = useConnection()
-  const { markets, setMarkets } = useContext(OptionsMarketsContext)
+  const { markets, setMarkets, marketsLoading, setMarketsLoading } = useContext(
+    OptionsMarketsContext,
+  )
   const { supportedAssets } = useAssetList()
 
-  // TODO: Move this into a context provider so it only fires once
   const fetchMarketData = useCallback(async () => {
     try {
+      if (marketsLoading) return
       if (!(connection instanceof Connection)) return
       if (!endpoint.programId) return
       if (!supportedAssets || supportedAssets.length === 0) return
+
+      setMarketsLoading(true)
 
       const assets = supportedAssets.map(
         (asset) => new PublicKey(asset.mintAddress),
@@ -87,6 +91,7 @@ const useOptionsMarkets = () => {
           amountPerContract.toString(10),
         )
 
+        // TODO clean up these values, not sure if everything is still used or the correct type
         const newMarket = {
           // Leave these in tact as BigNumbers to use later for creating the reciprocal put/call
           amountPerContract,
@@ -97,11 +102,10 @@ const useOptionsMarkets = () => {
           qAssetSymbol: qAsset.tokenSymbol,
           uAssetMint: uAsset.mintAddress,
           qAssetMint: qAsset.mintAddress,
-          // marketData.strikePrice is a BigNumber
           strikePrice: `${strike.toString(10)}`,
           optionMintAddress: market.marketData.optionMintKey.toString(),
           optionMarketDataAddress: market.pubkey.toString(),
-          writerTokenMintKey: market.marketData.writerTokenMintKey
+          writerTokenMintKey: market.marketData.writerTokenMintKey,
         }
 
         const key = `${newMarket.expiration}-${newMarket.uAssetSymbol}-${
@@ -109,14 +113,13 @@ const useOptionsMarkets = () => {
         }-${newMarket.size}-${strike.toString(10)}`
         newMarkets[key] = newMarket
       })
-
       // Not sure if we should replace the existing markets or merge them
-      setMarkets((prevMarkets) => ({
-        ...prevMarkets,
-        ...newMarkets,
-      }))
+      setMarkets(newMarkets)
+      setMarketsLoading(false)
+      return newMarkets //eslint-disable-line
     } catch (err) {
       console.error(err)
+      setMarketsLoading(false)
     }
   }, [connection, supportedAssets, endpoint]) // eslint-disable-line
 
@@ -415,8 +418,8 @@ const useOptionsMarkets = () => {
         ),
       })
     }
-    
-    let writerTokenDestKey = mintedWriterTokenDestKey;
+
+    let writerTokenDestKey = mintedWriterTokenDestKey
     if (!writerTokenDestKey) {
       // Create token account for minted Writer Token if the user doesn't have one yet
       const [tx, newAccount] = await initializeTokenAccountTx({
@@ -466,6 +469,9 @@ const useOptionsMarkets = () => {
   return {
     initializeMarkets,
     markets,
+    marketsLoading,
+    setMarkets,
+    setMarketsLoading,
     getMarket,
     getStrikePrices,
     getSizes,

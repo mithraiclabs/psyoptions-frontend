@@ -55,25 +55,49 @@ const AssetListProvider = ({ children }) => {
       setSupportedAssets([])
       return
     }
-    const basicAssets = getAssetsByNetwork(endpoint.name)
-    ;(async () => {
+
+    const setDefaultAssets = (assets) => {
+      if (assets && assets.length > 1) {
+        const defaultAssetPair =
+          defaultAssetPairsByNetworkName[endpoint.name] || {}
+        let defaultUAsset
+        let defaultQAsset
+        assets.forEach((asset) => {
+          if (asset.tokenSymbol === defaultAssetPair.uAssetSymbol) {
+            defaultUAsset = asset
+          }
+          if (asset.tokenSymbol === defaultAssetPair.qAssetSymbol) {
+            defaultQAsset = asset
+          }
+        })
+        if (defaultUAsset && defaultQAsset) {
+          setUAsset(defaultUAsset)
+          setQAsset(defaultQAsset)
+        }
+      } else {
+        setUAsset()
+        setQAsset()
+      }
+    }
+
+    const loadAssets = async (basicAssets) => {
       try {
         const mergedAssets = await mergeAssetsWithChainData(
           connection,
           basicAssets,
         )
-        setSupportedAssets(
-          mergedAssets
-            .filter((res) => {
-              if (res.status === 'rejected') {
-                // We could put a notificatiomn here but it would really fill up the screen if there were multiple failures
-                console.error(res.reason)
-                return false
-              }
-              return true
-            })
-            .map((res) => res.value),
-        )
+        const loadedAssets = mergedAssets
+          .filter((res) => {
+            if (res.status === 'rejected') {
+              // We could put a notificatiomn here but it would really fill up the screen if there were multiple failures
+              console.error(res.reason)
+              return false
+            }
+            return true
+          })
+          .map((res) => res.value)
+        setSupportedAssets(loadedAssets)
+        setDefaultAssets(loadedAssets)
       } catch (error) {
         pushNotification({
           severity: 'error',
@@ -82,30 +106,11 @@ const AssetListProvider = ({ children }) => {
         console.error(error)
         setSupportedAssets([])
       }
-    })()
-  }, [connection, endpoint.name, pushNotification])
-
-  // Set default assets on mount if there are no assets selected and supported assets are available
-  useEffect(() => {
-    if (supportedAssets && supportedAssets.length > 0 && !uAsset && !qAsset) {
-      const defaultAssetPair =
-        defaultAssetPairsByNetworkName[endpoint.name] || {}
-      let defaultUAsset
-      let defaultQAsset
-      supportedAssets.forEach((asset) => {
-        if (asset.tokenSymbol === defaultAssetPair.uAssetSymbol) {
-          defaultUAsset = asset
-        }
-        if (asset.tokenSymbol === defaultAssetPair.qAssetSymbol) {
-          defaultQAsset = asset
-        }
-      })
-      if (defaultUAsset && defaultQAsset) {
-        setUAsset(defaultUAsset)
-        setQAsset(defaultQAsset)
-      }
     }
-  }, [endpoint, supportedAssets, uAsset, qAsset]) // eslint-disable-line
+
+    const basicAssets = getAssetsByNetwork(endpoint.name)
+    loadAssets(basicAssets)
+  }, [connection, endpoint.name, pushNotification])
 
   const value = {
     supportedAssets,

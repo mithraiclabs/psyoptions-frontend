@@ -18,12 +18,9 @@ import { buildSolanaExplorerUrl } from '../utils/solanaExplorer'
  * @param optionWriterOptionKey Option account owned by the option writer
  */
 export const useCloseWrittenOptionPostExpiration = (
-  optionMint,
-  optionMarketKey,
-  optionWriterUnderlyingAssetKey,
-  optionWriterQuotAssetKey,
-  optionWriterOptionKey,
-  optionWriterRegistryKey,
+  market,
+  underlyingAssetDestKey,
+  writerTokenSourceKey,
 ) => {
   const { connection, endpoint } = useConnection()
   const { pushNotification } = useNotifications()
@@ -31,19 +28,17 @@ export const useCloseWrittenOptionPostExpiration = (
 
   const closeOptionPostExpiration = useCallback(async () => {
     try {
-      const { transaction } = await closePostExpirationOption(
+      const { transaction } = await closePostExpirationOption({
         connection,
-        {
+        payer: {
           publicKey: pubKey,
         },
-        endpoint.programId,
-        optionWriterUnderlyingAssetKey,
-        optionWriterQuotAssetKey,
-        optionWriterOptionKey,
-        new PublicKey(optionMint),
-        new PublicKey(optionMarketKey),
-        optionWriterRegistryKey,
-      )
+        programId: endpoint.programId,
+        optionMarketKey: new PublicKey(market.optionMarketDataAddress),
+        underlyingAssetDestKey,
+        writerTokenSourceKey,
+        writerTokenSourceAuthorityKey: pubKey,
+      })
       const signed = await wallet.signTransaction(transaction)
       const txid = await connection.sendRawTransaction(signed.serialize())
       pushNotification({
@@ -71,7 +66,7 @@ export const useCloseWrittenOptionPostExpiration = (
         message: `${err}`,
       })
     }
-  }, [connection, endpoint.programId, optionMarketKey, optionMint, optionWriterOptionKey, optionWriterQuotAssetKey, optionWriterRegistryKey, optionWriterUnderlyingAssetKey, pubKey, pushNotification, wallet])
+  }, [connection, endpoint.programId, market.optionMarketDataAddress, pubKey, pushNotification, underlyingAssetDestKey, wallet, writerTokenSourceKey])
 
   return {
     closeOptionPostExpiration

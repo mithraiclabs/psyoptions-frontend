@@ -11,11 +11,9 @@ import { buildSolanaExplorerUrl } from '../utils/solanaExplorer'
  * Close the Option the wallet has written in order to return the
  * underlying asset to the option writer
  *
- * @param optionMint Mint for the option contract
- * @param optionMarketKey address for the option market data account
- * @param optionWriterUnderlyingAssetKey Underlying Asset account owned by the option writer
- * @param optionWriterQuotAssetKey Quote Asset account owned by the option writer
- * @param optionWriterOptionKey Option account owned by the option writer
+ * @param market Market for the option to be closed
+ * @param underlyingAssetDestKEy PublicKey where the unlocked underlying asset will be sent
+ * @param writerTokenSourceKey PublicKey of the address where the Writer Token will be burned from
  */
 export const useCloseWrittenOptionPostExpiration = (
   market,

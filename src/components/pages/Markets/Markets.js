@@ -13,20 +13,54 @@ import SelectAsset from '../../SelectAsset'
 import { getLastFridayOfMonths } from '../../../utils/dates'
 
 import useAssetList from '../../../hooks/useAssetList'
+import useOptionsMarkets from '../../../hooks/useOptionsMarkets'
 import useOptionsChain from '../../../hooks/useOptionsChain'
 
 import CallPutRow from './CallPutRow'
 import BuySellDialog from '../../BuySellDialog'
+import Loading from '../../Loading'
+import theme from '../../../utils/theme'
 
 const dblsp = `${'\u00A0'}${'\u00A0'}`
 
-const TCell = withStyles({
+const THeadCell = withStyles({
   root: {
-    padding: '8px',
+    padding: '4px',
     whiteSpace: 'nowrap',
     fontSize: '11px',
+    height: '48px',
     border: 'none',
+  },
+})(TableCell)
+
+const THeadCellStrike = withStyles({
+  root: {
+    padding: '4px',
+    whiteSpace: 'nowrap',
+    fontSize: '11px',
+    height: '48px',
+    border: 'none',
+  },
+})(TableCell)
+
+const TCellLoading = withStyles({
+  root: {
+    padding: '16px',
+    whiteSpace: 'nowrap',
+    fontSize: '11px',
     height: '52px',
+    border: 'none',
+  },
+})(TableCell)
+
+const TCellStrike = withStyles({
+  root: {
+    padding: '16px',
+    whiteSpace: 'nowrap',
+    fontSize: '11px',
+    height: '52px',
+    border: 'none',
+    background: theme.palette.background.default,
   },
 })(TableCell)
 
@@ -58,14 +92,23 @@ const rowTemplate = {
 const expirations = getLastFridayOfMonths(10)
 
 const Markets = () => {
-  const { uAsset, qAsset, setUAsset, setQAsset } = useAssetList()
+  const {
+    uAsset,
+    qAsset,
+    setUAsset,
+    setQAsset,
+    assetListLoading,
+  } = useAssetList()
   const [date, setDate] = useState(expirations[0])
-  const { chain, fetchOptionsChain } = useOptionsChain()
-  // const { fetchMarketData } = useOptionsMarkets()
+  const { chain, fetchOptionsChain, optionsChainLoading } = useOptionsChain()
+  const { marketsLoading } = useOptionsMarkets()
   const [round, setRound] = useState(true) // TODO make this a user toggle-able feature
 
   const [buySellDialogOpen, setBuySellDialogOpen] = useState(false)
   const [callPutData, setCallPutData] = useState({ type: 'call' })
+
+  const fullPageLoading =
+    assetListLoading || marketsLoading || optionsChainLoading
 
   let precision
   if (round && chain[0]?.strike) {
@@ -216,7 +259,7 @@ const Markets = () => {
                   <TableCell colSpan={7}>
                     <h3 style={{ margin: 0 }}>
                       {`Calls${
-                        uAsset && qAsset
+                        uAsset && qAsset && !assetListLoading
                           ? `  (${uAsset.tokenSymbol}/${qAsset.tokenSymbol})`
                           : ''
                       }`}
@@ -226,7 +269,7 @@ const Markets = () => {
                   <TableCell colSpan={7}>
                     <h3 style={{ margin: 0 }}>
                       {`Puts${
-                        uAsset && qAsset
+                        uAsset && qAsset && !assetListLoading
                           ? `  (${qAsset.tokenSymbol}/${uAsset.tokenSymbol})`
                           : ''
                       }`}
@@ -234,28 +277,48 @@ const Markets = () => {
                   </TableCell>
                 </TableRow>
                 <TableRow>
-                  <TCell align="left">Action</TCell>
-                  <TCell align="left">Size</TCell>
-                  <TCell align="left">Bid</TCell>
-                  <TCell align="left">Ask</TCell>
-                  <TCell align="left">Change</TCell>
-                  <TCell align="left">Volume</TCell>
-                  <TCell align="left">Open Interest</TCell>
+                  <THeadCell align="left">Action</THeadCell>
+                  <THeadCell align="left">Size</THeadCell>
+                  <THeadCell align="left">Bid</THeadCell>
+                  <THeadCell align="left">Ask</THeadCell>
+                  <THeadCell align="left">Change</THeadCell>
+                  <THeadCell align="left">Volume</THeadCell>
+                  <THeadCell align="left">Open Interest</THeadCell>
 
-                  <TCell align="center">Strike</TCell>
+                  <THeadCellStrike align="center">Strike</THeadCellStrike>
 
-                  <TCell align="right">Size</TCell>
-                  <TCell align="right">Bid</TCell>
-                  <TCell align="right">Ask</TCell>
-                  <TCell align="right">Change</TCell>
-                  <TCell align="right">Volume</TCell>
-                  <TCell align="right">Open Interest</TCell>
-                  <TCell align="right">Action</TCell>
+                  <THeadCell align="right">Size</THeadCell>
+                  <THeadCell align="right">Bid</THeadCell>
+                  <THeadCell align="right">Ask</THeadCell>
+                  <THeadCell align="right">Change</THeadCell>
+                  <THeadCell align="right">Volume</THeadCell>
+                  <THeadCell align="right">Open Interest</THeadCell>
+                  <THeadCell align="right">Action</THeadCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {rows.map((row) => {
-                  return (
+                  return fullPageLoading ? (
+                    <tr>
+                      <TCellLoading
+                        colSpan={7}
+                        style={{
+                          backgroundColor: theme.palette.background.medium,
+                        }}
+                      >
+                        <Loading />
+                      </TCellLoading>
+                      <TCellStrike />
+                      <TCellLoading
+                        colSpan={7}
+                        style={{
+                          backgroundColor: theme.palette.background.medium,
+                        }}
+                      >
+                        <Loading />
+                      </TCellLoading>
+                    </tr>
+                  ) : (
                     <CallPutRow
                       key={`${row.key}`}
                       row={row}

@@ -48,7 +48,7 @@ const AssetListProvider = ({ children }) => {
   const [supportedAssets, setSupportedAssets] = useState([])
   const [uAsset, setUAsset] = useState()
   const [qAsset, setQAsset] = useState()
-  const [assetListLoading, setAssetListLoading] = useState(false)
+  const [assetListLoading, setAssetListLoading] = useState(true)
   const { pushNotification } = useNotifications()
 
   useEffect(() => {

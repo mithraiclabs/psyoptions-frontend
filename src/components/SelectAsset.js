@@ -17,7 +17,7 @@ import useAssetList from '../hooks/useAssetList'
 
 const SelectAsset = ({ label, selectedAsset, onSelectAsset }) => {
   const theme = useTheme()
-  const { supportedAssets } = useAssetList()
+  const { supportedAssets, assetListLoading } = useAssetList()
 
   const [open, setOpen] = useState(false)
   const [filterInput, setFilterInput] = useState('')
@@ -38,6 +38,10 @@ const SelectAsset = ({ label, selectedAsset, onSelectAsset }) => {
     setFilterInput('')
     setOpen(true)
   }
+
+  const chipLabel = assetListLoading
+    ? 'Loading...'
+    : selectedAsset?.tokenName || 'Choose Asset'
 
   return (
     <>
@@ -87,7 +91,7 @@ const SelectAsset = ({ label, selectedAsset, onSelectAsset }) => {
         </Box>
       </Dialog>
       <Chip
-        label={selectedAsset ? selectedAsset.tokenName : 'Choose Asset'}
+        label={chipLabel}
         clickable
         color="primary"
         variant="outlined"
@@ -99,7 +103,9 @@ const SelectAsset = ({ label, selectedAsset, onSelectAsset }) => {
               style={{
                 backgroundColor: theme.palette.primary.main,
               }}
-            />
+            >
+              {assetListLoading ? '?' : ''}
+            </Avatar>
           ) : null
         }
         onClick={handleOpen}

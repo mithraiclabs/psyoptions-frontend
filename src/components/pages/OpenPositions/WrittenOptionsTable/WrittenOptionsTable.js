@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React from 'react'
 import Table from '@material-ui/core/Table'
 import TableBody from '@material-ui/core/TableBody'
 import TableCell from '@material-ui/core/TableCell'
@@ -12,13 +12,9 @@ import { WrittenOptionRow } from './WrittenOptionRow'
 
 // TODO handle the case where the writer has multiple underlying asset accounts
 export const WrittenOptionsTable = () => {
-  const { fetchWrittenOptions, writtenOptions } = useWrittenOptions()
+  const writtenOptions = useWrittenOptions()
   const { markets } = useOptionsMarkets()
   const nowInSeconds = Date.now() / 1000
-
-  useEffect(() => {
-    fetchWrittenOptions()
-  }, [fetchWrittenOptions])
 
   return (
     <>
@@ -45,7 +41,7 @@ export const WrittenOptionsTable = () => {
                   expired={nowInSeconds > market.expiration}
                   key={marketKey}
                   marketKey={marketKey}
-                  optionsWritten={writtenOptions[marketKey]}
+                  writerTokenAccounts={writtenOptions[marketKey]}
                 />
               )
             })}

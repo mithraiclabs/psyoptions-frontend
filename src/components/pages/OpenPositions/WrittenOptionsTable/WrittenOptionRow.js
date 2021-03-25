@@ -4,26 +4,29 @@ import Chip from '@material-ui/core/Chip'
 import TableCell from '@material-ui/core/TableCell'
 import TableRow from '@material-ui/core/TableRow'
 import PropTypes from 'prop-types'
+import { PublicKey } from '@solana/web3.js';
 import { formatExpirationTimestamp } from '../../../../utils/format'
 import useOptionsMarkets from '../../../../hooks/useOptionsMarkets'
 import { useCloseWrittenOptionPostExpiration } from '../../../../hooks/useCloseWrittenOptionPostExpiration'
+import useOwnedTokenAccounts from '../../../../hooks/useOwnedTokenAccounts';
 
 /**
  * Row to display the wallet's minted options
  *
  * Only closes a single expired option at a time right now.
  */
-export const WrittenOptionRow = ({ expired, marketKey, optionsWritten }) => {
+export const WrittenOptionRow = ({ expired, marketKey, writerTokenAccounts }) => {
+  const { ownedTokenAccounts } = useOwnedTokenAccounts()
   const { markets } = useOptionsMarkets()
   const market = markets[marketKey]
-  const nextWrittenOption = optionsWritten[0]
+  // TODO handle multiple wallets for the same Writer Token
+  const initialWriterTokenAccount = writerTokenAccounts[0]
+  const ownedUAssetAddress =
+    ownedTokenAccounts[market.uAssetMint][0]?.pubKey
   const { closeOptionPostExpiration } = useCloseWrittenOptionPostExpiration(
-    market.optionMintAddress,
-    market.optionMarketDataAddress,
-    nextWrittenOption.underlyingAssetAcctAddress,
-    nextWrittenOption.quoteAssetAcctAddress,
-    nextWrittenOption.contractTokenAcctAddress,
-    market.writerRegistryAddress
+    market,
+    new PublicKey(ownedUAssetAddress),
+    new PublicKey(initialWriterTokenAccount.pubKey)
   )
 
   return (
@@ -33,7 +36,7 @@ export const WrittenOptionRow = ({ expired, marketKey, optionsWritten }) => {
       <TableCell width="15%">
         {market.size} {market.uAssetSymbol}
       </TableCell>
-      <TableCell width="15%">{-optionsWritten.length}</TableCell>
+      <TableCell width="15%">{-initialWriterTokenAccount.amount}</TableCell>
       <TableCell width="20%">
         {formatExpirationTimestamp(market.expiration)}
       </TableCell>
@@ -58,14 +61,14 @@ export const WrittenOptionRow = ({ expired, marketKey, optionsWritten }) => {
 WrittenOptionRow.propTypes = {
   expired: PropTypes.bool.isRequired,
   marketKey: PropTypes.string.isRequired,
-  optionsWritten: PropTypes.arrayOf(
+  writerTokenAccounts: PropTypes.arrayOf(
     PropTypes.shape({
       // really instance of PublicKey, but instanceOf is throwing
       // Invalid prop `optionsWritten[0].contractTokenAcctAddress` of type `PublicKey`
       // supplied to `WrittenOptionRow`, expected instance of `PublicKey`
-      contractTokenAcctAddress: PropTypes.object.isRequired,
-      quoteAssetAcctAddress: PropTypes.object.isRequired,
-      underlyingAssetAcctAddress: PropTypes.object.isRequired,
+      amount: PropTypes.number.isRequired,
+      mint: PropTypes.object.isRequired,
+      pubKey: PropTypes.string.isRequired,
     }).isRequired,
   ).isRequired,
 }

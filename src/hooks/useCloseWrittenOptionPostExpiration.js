@@ -11,19 +11,14 @@ import { buildSolanaExplorerUrl } from '../utils/solanaExplorer'
  * Close the Option the wallet has written in order to return the
  * underlying asset to the option writer
  *
- * @param optionMint Mint for the option contract
- * @param optionMarketKey address for the option market data account
- * @param optionWriterUnderlyingAssetKey Underlying Asset account owned by the option writer
- * @param optionWriterQuotAssetKey Quote Asset account owned by the option writer
- * @param optionWriterOptionKey Option account owned by the option writer
+ * @param market Market for the option to be closed
+ * @param underlyingAssetDestKEy PublicKey where the unlocked underlying asset will be sent
+ * @param writerTokenSourceKey PublicKey of the address where the Writer Token will be burned from
  */
 export const useCloseWrittenOptionPostExpiration = (
-  optionMint,
-  optionMarketKey,
-  optionWriterUnderlyingAssetKey,
-  optionWriterQuotAssetKey,
-  optionWriterOptionKey,
-  optionWriterRegistryKey,
+  market,
+  underlyingAssetDestKey,
+  writerTokenSourceKey,
 ) => {
   const { connection, endpoint } = useConnection()
   const { pushNotification } = useNotifications()
@@ -31,19 +26,17 @@ export const useCloseWrittenOptionPostExpiration = (
 
   const closeOptionPostExpiration = useCallback(async () => {
     try {
-      const { transaction } = await closePostExpirationOption(
+      const { transaction } = await closePostExpirationOption({
         connection,
-        {
+        payer: {
           publicKey: pubKey,
         },
-        endpoint.programId,
-        optionWriterUnderlyingAssetKey,
-        optionWriterQuotAssetKey,
-        optionWriterOptionKey,
-        new PublicKey(optionMint),
-        new PublicKey(optionMarketKey),
-        optionWriterRegistryKey,
-      )
+        programId: endpoint.programId,
+        optionMarketKey: new PublicKey(market.optionMarketDataAddress),
+        underlyingAssetDestKey,
+        writerTokenSourceKey,
+        writerTokenSourceAuthorityKey: pubKey,
+      })
       const signed = await wallet.signTransaction(transaction)
       const txid = await connection.sendRawTransaction(signed.serialize())
       pushNotification({
@@ -71,7 +64,7 @@ export const useCloseWrittenOptionPostExpiration = (
         message: `${err}`,
       })
     }
-  }, [connection, endpoint.programId, optionMarketKey, optionMint, optionWriterOptionKey, optionWriterQuotAssetKey, optionWriterRegistryKey, optionWriterUnderlyingAssetKey, pubKey, pushNotification, wallet])
+  }, [connection, endpoint.programId, market.optionMarketDataAddress, pubKey, pushNotification, underlyingAssetDestKey, wallet, writerTokenSourceKey])
 
   return {
     closeOptionPostExpiration

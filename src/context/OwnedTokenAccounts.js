@@ -64,6 +64,7 @@ const OwnedTokenAccountsProvider = ({ children }) => {
         },
         {},
       )
+      console.log('*** _ownedTokenAccounts', _ownedTokenAccounts);
       setOwnedTokenAccounts({
         // Must prepend the SOL token since it's not returned with token accounts
         [SOLANA_MINT_ADDRESS]: [

@@ -44,8 +44,8 @@ ScriptHelpers.validateLocalnet(solanaConfig);
   
   const serumDexBinaryExists = fs.existsSync(ScriptHelpers.serumDexBinaryPath);
   if (!serumDexBinaryExists || !!argv.pullDex) {
-    const dexProgramId = MARKETS.find(({ deprecated }) => !deprecated).programId;
-    console.log('*** dexProgramId', dexProgramId);
+    const dexProgramId = new SolWeb3.PublicKey('EUqojwWA2rd19FZrzeBncJsm38Jm1hEhE3zsmX3bRc2o');
+    console.log('Pulling DEX from address: ', dexProgramId.toString());
     // TODO need to specify this should run on mainnet
     const mainnetConnection = new Connection('https://api.mainnet-beta.solana.com');
     let account = await mainnetConnection.getAccountInfo(dexProgramId);

@@ -5,10 +5,12 @@ const OptionsChainContext = createContext()
 
 const OptionsChainProvider = ({ children }) => {
   const [chain, setChain] = useState([])
-  const [loading, setLoading] = useState(false)
+  const [optionsChainLoading, setOptionsChainLoading] = useState(false)
 
   return (
-    <OptionsChainContext.Provider value={{ chain, setChain, loading, setLoading }}>
+    <OptionsChainContext.Provider
+      value={{ chain, setChain, optionsChainLoading, setOptionsChainLoading }}
+    >
       {children}
     </OptionsChainContext.Provider>
   )

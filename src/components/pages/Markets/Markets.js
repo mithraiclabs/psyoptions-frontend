@@ -14,7 +14,6 @@ import { getLastFridayOfMonths } from '../../../utils/dates'
 
 import useAssetList from '../../../hooks/useAssetList'
 import useOptionsChain from '../../../hooks/useOptionsChain'
-import useOptionsMarkets from '../../../hooks/useOptionsMarkets'
 
 import CallPutRow from './CallPutRow'
 import BuySellDialog from '../../BuySellDialog'
@@ -62,7 +61,7 @@ const Markets = () => {
   const { uAsset, qAsset, setUAsset, setQAsset } = useAssetList()
   const [date, setDate] = useState(expirations[0])
   const { chain, fetchOptionsChain } = useOptionsChain()
-  const { fetchMarketData } = useOptionsMarkets()
+  // const { fetchMarketData } = useOptionsMarkets()
   const [round, setRound] = useState(true) // TODO make this a user toggle-able feature
 
   const [buySellDialogOpen, setBuySellDialogOpen] = useState(false)
@@ -82,12 +81,13 @@ const Markets = () => {
 
   const rows = [
     ...chain,
-    ...Array(Math.max(9 - chain.length, 0)).fill(rowTemplate),
+    ...Array(Math.max(9 - chain.length, 0))
+      .fill(rowTemplate)
+      .map((row, i) => ({
+        ...row,
+        key: `empty-${i}`,
+      })),
   ]
-
-  useEffect(() => {
-    fetchMarketData()
-  }, [fetchMarketData])
 
   useEffect(() => {
     fetchOptionsChain(date.unix())
@@ -254,19 +254,21 @@ const Markets = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {rows.map((row, i) => (
-                  <CallPutRow
-                    key={i}
-                    row={row}
-                    uAsset={uAsset}
-                    qAsset={qAsset}
-                    date={date}
-                    precision={precision}
-                    round={round}
-                    onClickBuySellCall={handleBuySellClick}
-                    onClickBuySellPut={handleBuySellClick}
-                  />
-                ))}
+                {rows.map((row) => {
+                  return (
+                    <CallPutRow
+                      key={`${row.key}`}
+                      row={row}
+                      uAsset={uAsset}
+                      qAsset={qAsset}
+                      date={date}
+                      precision={precision}
+                      round={round}
+                      onClickBuySellCall={handleBuySellClick}
+                      onClickBuySellPut={handleBuySellClick}
+                    />
+                  )
+                })}
               </TableBody>
             </Table>
           </TableContainer>

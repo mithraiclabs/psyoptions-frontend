@@ -5,9 +5,12 @@ const OptionsMarketsContext = createContext()
 
 const OptionsMarketsProvider = ({ children }) => {
   const [markets, setMarkets] = useState({})
+  const [marketsLoading, setMarketsLoading] = useState(false)
 
   return (
-    <OptionsMarketsContext.Provider value={{ markets, setMarkets }}>
+    <OptionsMarketsContext.Provider
+      value={{ markets, setMarkets, marketsLoading, setMarketsLoading }}
+    >
       {children}
     </OptionsMarketsContext.Provider>
   )

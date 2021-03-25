@@ -6,12 +6,24 @@ import Card from '@material-ui/core/Card'
 import Popper from '@material-ui/core/Popper'
 import MenuItem from '@material-ui/core/MenuItem'
 import MenuList from '@material-ui/core/MenuList'
+import { CircularProgress } from '@material-ui/core'
 
 import useConnection from '../hooks/useConnection'
+import useAssetList from '../hooks/useAssetList'
+import useOptionsChain from '../hooks/useOptionsChain'
+import useOptionsMarkets from '../hooks/useOptionsMarkets'
 import theme from '../utils/theme'
 
 const NetworkMenu = () => {
   const { networks, endpoint, setEndpoint } = useConnection()
+  const {
+    setUAsset,
+    setQAsset,
+    setSupportedAssets,
+    assetListLoading,
+  } = useAssetList()
+  const { setChain, optionsChainLoading } = useOptionsChain()
+  const { setMarkets, marketsLoading } = useOptionsMarkets()
 
   const [open, setOpen] = useState(false)
   const anchorRef = React.useRef(null)
@@ -31,29 +43,55 @@ const NetworkMenu = () => {
     setOpen(false)
   }
 
+  // Do not allow switching network while still loading on-chain data
+  const loading = marketsLoading || optionsChainLoading || assetListLoading
+
+  const handleSelectNetwork = (ep) => {
+    if (loading) return
+    setEndpoint(ep)
+    // Reset assets, markets, and chain when changing endpoint
+    // This allows us to refresh everything when changing the endpoint
+    setSupportedAssets([])
+    setUAsset({})
+    setQAsset({})
+    setChain([])
+    setMarkets({})
+  }
+
   return (
     <Box style={{ position: 'relative' }} ml={2}>
       <Button
         color="primary"
         onClick={() => {
-          setOpen(!open)
+          if (open === false && !loading) {
+            setOpen(true)
+          } else {
+            setOpen(false)
+          }
         }}
         variant="outlined"
+        innerRef={anchorRef}
       >
         {endpoint.name}
+        {loading && (
+          <CircularProgress size={18} style={{ marginLeft: '8px' }} />
+        )}
       </Button>
       <Popper
-        open={open}
         anchorEl={anchorRef.current}
+        open={open}
         role={undefined}
         transition
         disablePortal
+        placement="bottom-end"
         style={{
           position: 'absolute',
           inset: 'initial',
           right: 0,
+          left: 'auto',
           marginTop: '16px',
           zIndex: 20,
+          width: 'fit-content',
         }}
       >
         <Card
@@ -73,7 +111,7 @@ const NetworkMenu = () => {
                 .map((item) => (
                   <MenuItem
                     onClick={(event) => {
-                      setEndpoint(item)
+                      handleSelectNetwork(item)
                       handleClose(event)
                     }}
                     key={item.url}

@@ -33,6 +33,52 @@ const OwnedTokenAccountsProvider = ({ children }) => {
   const { connected, pubKey } = useWallet()
   const [ownedTokenAccounts, setOwnedTokenAccounts] = useState({})
 
+  useEffect(() => {
+    let subscriptionIds;
+    (async () => {
+      const filters = getOwnedTokenAccountsFilter(pubKey)
+      const resp = await connection._rpcRequest('getProgramAccounts', [
+        TOKEN_PROGRAM_ID.toBase58(),
+        {
+          commitment: connection.commitment,
+          filters,
+        },
+      ])
+      subscriptionIds = resp.result?.map(({ pubkey }) => {
+        return connection.onAccountChange(new PublicKey(pubkey), (_account) => {
+          const accountInfo = AccountLayout.decode(_account.data)
+          const amountBuffer = Buffer.from(accountInfo.amount)
+          const amount = amountBuffer.readUintLE(0, 8)
+          const mint = new PublicKey(accountInfo.mint)
+          setOwnedTokenAccounts(prevOwnedTokenAccounts => {
+            const mintAsString = mint.toString()
+            const prevMintState = prevOwnedTokenAccounts[mintAsString];
+            const index = prevMintState.findIndex(account => account.pubKey === pubkey)
+            // replace prev state with updated state
+            const mintState = Object.assign([], prevMintState, { 
+              [index]: {
+                amount,
+                mint,
+                // public key for the specific token account (NOT the wallet)
+                pubKey: pubkey,
+              } 
+            })
+            return {
+              ...prevOwnedTokenAccounts,
+              [mintAsString]: mintState,
+            }
+          })
+        })
+      })
+    })()
+
+    return () => {
+      if (subscriptionIds) {
+        subscriptionIds.forEach(connection.removeAccountChangeListener)
+      }
+    }
+  }, [connection, pubKey])
+
   const updateOwnedTokenAccounts = useCallback(async () => {
     const filters = getOwnedTokenAccountsFilter(pubKey)
     try {

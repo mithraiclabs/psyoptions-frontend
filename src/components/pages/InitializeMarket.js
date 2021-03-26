@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import BigNumber from 'bignumber.js'
 
 import {
@@ -31,7 +31,7 @@ const expirations = getLastFridayOfMonths(10)
 const InitializeMarket = () => {
   const { pushNotification } = useNotifications()
   const { connect, connected } = useWallet()
-  const { getMarket, fetchMarketData, initializeMarkets } = useOptionsMarkets()
+  const { getMarket, initializeMarkets } = useOptionsMarkets()
   const [multiple, setMultiple] = useState(false)
   const [basePrice, setBasePrice] = useState(0)
   const [date, setDate] = useState(expirations[0])
@@ -44,9 +44,9 @@ const InitializeMarket = () => {
   })
   const [loading, setLoading] = useState(false)
 
-  useEffect(() => {
-    fetchMarketData()
-  }, [fetchMarketData])
+  // useEffect(() => {
+  //   fetchMarketData()
+  // }, [fetchMarketData])
 
   const parsedBasePrice = parseFloat(
     basePrice && basePrice.replace(/^\./, '0.'),

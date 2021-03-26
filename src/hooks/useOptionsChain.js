@@ -1,7 +1,9 @@
 import { useCallback, useContext } from 'react'
 import BigNumber from 'bignumber.js'
 import { Connection, PublicKey } from '@solana/web3.js'
+
 import { SerumMarket } from '../utils/serum'
+
 import useConnection from './useConnection'
 import useOptionsMarkets from './useOptionsMarkets'
 import { OptionsChainContext } from '../context/OptionsChainContext'
@@ -12,7 +14,7 @@ import useAssetList from './useAssetList'
  */
 const useOptionsChain = () => {
   const { connection, dexProgramId } = useConnection()
-  const { fetchMarketData } = useOptionsMarkets()
+  const { markets: marketData, marketsLoading } = useOptionsMarkets()
   const { uAsset, qAsset } = useAssetList()
   const {
     chain,
@@ -21,30 +23,78 @@ const useOptionsChain = () => {
     setOptionsChainLoading,
   } = useContext(OptionsChainContext)
 
+  // Non-blocking fetch of serum data for each row
+  const fetchSerumData = useCallback(
+    async (row) => {
+      const newRow = { ...row }
+      console.log('Fetching serum data for', row)
+
+      if (newRow.call?.optionMintAddress) {
+        try {
+          const serum = await SerumMarket.findByAssets(
+            connection,
+            new PublicKey(newRow.call.optionMintAddress),
+            new PublicKey(newRow.call.qAssetMint),
+            dexProgramId,
+          )
+          // TODO - this always returns null
+          console.log('call srm', serum)
+          newRow.call.serumMarket = serum
+        } catch (err) {
+          // TODO should we log error here or nah?
+          console.log(err)
+        }
+        newRow.call.serumLoading = false
+      }
+
+      if (newRow.put?.optionMintAddress) {
+        try {
+          const serum = await SerumMarket.findByAssets(
+            connection,
+            new PublicKey(newRow.put.optionMintAddress),
+            new PublicKey(newRow.put.uAssetMint),
+            dexProgramId,
+          )
+          // TODO - this always returns null
+          console.log('put srm', serum)
+          newRow.put.serumMarket = serum
+        } catch (err) {
+          // TODO should we log error here or nah?
+          console.log(err)
+        }
+        newRow.put.serumLoading = false
+      }
+
+      // Replace the row that changed
+      setChain((existingChain) => {
+        return existingChain.map((existingRow) => {
+          return existingRow.key === newRow.key ? newRow : existingRow
+        })
+      })
+    },
+    [setChain, connection, dexProgramId],
+  )
+
   const fetchOptionsChain = useCallback(
     async (dateTimestamp) => {
       try {
-        if (optionsChainLoading) return
-
-        setChain([])
+        if (optionsChainLoading || marketsLoading) return
 
         if (
           !(connection instanceof Connection) ||
           !uAsset?.tokenSymbol ||
           !qAsset?.tokenSymbol ||
-          !dateTimestamp
+          !dateTimestamp ||
+          !marketData ||
+          Object.keys(marketData).length < 1
         ) {
-          return
-        }
-
-        setOptionsChainLoading(true)
-
-        const marketData = await fetchMarketData()
-        if (!marketData || Object.keys(marketData).length < 1) {
           setOptionsChainLoading(false)
           setChain([])
           return
         }
+
+        setOptionsChainLoading(true)
+        console.log('Fetching options chain')
 
         const callKeyPart = `${dateTimestamp}-${uAsset.tokenSymbol}-${qAsset.tokenSymbol}`
         const putKeyPart = `${dateTimestamp}-${qAsset.tokenSymbol}-${uAsset.tokenSymbol}`
@@ -110,52 +160,38 @@ const useOptionsChain = () => {
 
             await Promise.all(
               Array.from(sizes).map(async (size) => {
-                // const putSize = (new BN(strike).mul(new BN(size))).toString(10)
-                let call = matchingCalls.find((c) => c.size === size)
-                let put = matchingPuts.find(
+                const call = matchingCalls.find((c) => c.size === size)
+                const put = matchingPuts.find(
                   (p) => p.quoteAmountPerContract.toString() === size,
                 )
-                // TODO if Serum market exists, load the current Bid / Ask information for the premiums
 
-                if (call) {
-                  // check if there is a serum market
-                  const serumMarket = await SerumMarket.findByAssets(
-                    connection,
-                    new PublicKey(call.optionMintAddress),
-                    new PublicKey(call.qAssetMint),
-                    dexProgramId,
-                  )
-                  call = {
-                    ...template,
-                    ...call,
-                    serumMarket,
-                    initialized: true,
-                  }
-                } else {
-                  call = template
+                const row = {
+                  strike,
+                  size,
+                  call: call
+                    ? {
+                        ...template,
+                        ...call,
+                        serumLoading: true,
+                        serumMarket: null,
+                        initialized: true,
+                      }
+                    : template,
+                  put: put
+                    ? {
+                        ...template,
+                        ...put,
+                        serumLoading: true,
+                        serumMarket: null,
+                        initialized: true,
+                      }
+                    : template,
+                  key: `${callKeyPart}-${size}-${strike}`,
                 }
 
-                if (put) {
-                  // check if there is a serum market
-                  const serumMarket = await SerumMarket.findByAssets(
-                    connection,
-                    new PublicKey(put.optionMintAddress),
-                    // NOTE the PUTs underlying asset is the quote asset for the serum market
-                    // because the strike prices are all denoted in it.
-                    new PublicKey(put.uAssetMint),
-                    dexProgramId,
-                  )
-                  put = {
-                    ...template,
-                    ...put,
-                    serumMarket,
-                    initialized: true,
-                  }
-                } else {
-                  put = template
-                }
-
-                rows.push({ strike, size, call, put, key: `${size}-${strike}` })
+                // Fetch for serum data should be non-blocking
+                fetchSerumData(row)
+                rows.push(row)
               }),
             )
           }),
@@ -170,7 +206,16 @@ const useOptionsChain = () => {
         setOptionsChainLoading(false)
       }
     },
-    [connection, dexProgramId, uAsset, qAsset, setChain, fetchMarketData], // eslint-disable-line
+    // eslint-disable-next-line
+    [
+      connection,
+      dexProgramId,
+      uAsset,
+      qAsset,
+      setChain,
+      marketData,
+      marketsLoading,
+    ],
   )
 
   return {

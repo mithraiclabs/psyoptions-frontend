@@ -70,14 +70,10 @@ const LandingCard = ({ title = '', text = '', button = '' } = {}) => {
 const Landing = () => {
   const history = useHistory()
   const { connection } = useConnection()
-  const { markets, fetchMarketData } = useOptionsMarkets()
+  const { markets } = useOptionsMarkets()
   const positions = useOpenPositions()
   const { logoH1 } = useStyles()
   const { landingCard } = useStyles()
-
-  useEffect(() => {
-    fetchMarketData()
-  }, [fetchMarketData])
 
   const [numberOfTokens, setNumberOfTokens] = useState()
 

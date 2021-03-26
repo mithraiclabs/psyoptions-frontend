@@ -71,6 +71,7 @@ const defaultProps = {
 }
 
 const BuySellDialog = ({
+  serumLoading,
   open,
   onClose,
   heading,
@@ -281,34 +282,38 @@ const BuySellDialog = ({
             </Box>
           </Box>
           <Box p={1} width={['100%', '100%', '50%']}>
-            {serumInitialized ? (
-              <Box>Serum Initialized</Box>
-            ) : (
-              <Box
-                display="flex"
-                flexDirection="column"
-                justifyContent="center"
-                alignItems="center"
-                width="100%"
-                height="100%"
-                pb={3}
-              >
-                <Box textAlign="center" px={2} pb={2}>
-                  Initialize Serum Market to Place Order
-                </Box>
-                {initializingSerum ? (
-                  <CircularProgress />
-                ) : (
-                  <Button
-                    variant="outlined"
-                    color="primary"
-                    onClick={handleInitializeSerum}
-                  >
-                    Initialize Serum
-                  </Button>
-                )}
-              </Box>
-            )}
+            <Box
+              display="flex"
+              flexDirection="column"
+              justifyContent="center"
+              alignItems="center"
+              width="100%"
+              height="100%"
+              pb={3}
+            >
+              {serumLoading ? (
+                <CircularProgress />
+              ) : serumInitialized ? (
+                <Box>Serum Initialized</Box>
+              ) : (
+                <>
+                  <Box textAlign="center" px={2} pb={2}>
+                    Initialize Serum Market to Place Order
+                  </Box>
+                  {initializingSerum ? (
+                    <CircularProgress />
+                  ) : (
+                    <Button
+                      variant="outlined"
+                      color="primary"
+                      onClick={handleInitializeSerum}
+                    >
+                      Initialize Serum
+                    </Button>
+                  )}
+                </>
+              )}
+            </Box>
           </Box>
         </Box>
       </Box>

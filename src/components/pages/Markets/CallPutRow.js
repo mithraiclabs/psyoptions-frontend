@@ -11,6 +11,7 @@ import useOptionsMarkets from '../../../hooks/useOptionsMarkets'
 import useWallet from '../../../hooks/useWallet'
 import useOwnedTokenAccounts from '../../../hooks/useOwnedTokenAccounts'
 import useNotifications from '../../../hooks/useNotifications'
+import Loading from '../../Loading'
 
 const TCell = withStyles({
   root: {
@@ -19,6 +20,17 @@ const TCell = withStyles({
     fontSize: '11px',
     border: 'none',
     height: '52px',
+    background: theme.palette.background.medium,
+  },
+})(TableCell)
+
+const TCellLoading = withStyles({
+  root: {
+    padding: '16px',
+    whiteSpace: 'nowrap',
+    fontSize: '11px',
+    height: '52px',
+    border: 'none',
     background: theme.palette.background.medium,
   },
 })(TableCell)
@@ -201,11 +213,19 @@ const CallPutRow = ({
       <TCell align="left">
         {row.call?.size ? `${row.call.size} ${uAsset?.tokenSymbol || ''}` : '—'}
       </TCell>
-      <TCell align="left">{row.call?.bid || '—'}</TCell>
-      <TCell align="left">{row.call?.ask || '—'}</TCell>
-      <TCell align="left">{row.call?.change || '—'}</TCell>
-      <TCell align="left">{row.call?.volume || '—'}</TCell>
-      <TCell align="left">{row.call?.openInterest || '—'}</TCell>
+      {row.call?.serumLoading ? (
+        <TCellLoading colSpan={5}>
+          <Loading />
+        </TCellLoading>
+      ) : (
+        <>
+          <TCell align="left">{row.call?.bid || '—'}</TCell>
+          <TCell align="left">{row.call?.ask || '—'}</TCell>
+          <TCell align="left">{row.call?.change || '—'}</TCell>
+          <TCell align="left">{row.call?.volume || '—'}</TCell>
+          <TCell align="left">{row.call?.openInterest || '—'}</TCell>
+        </>
+      )}
 
       <TCell
         align="center"
@@ -221,11 +241,19 @@ const CallPutRow = ({
       <TCell align="right">
         {row.put?.size ? `${row.put.size} ${qAsset?.tokenSymbol || ''}` : '—'}
       </TCell>
-      <TCell align="right">{row.put?.bid || '—'}</TCell>
-      <TCell align="right">{row.put?.ask || '—'}</TCell>
-      <TCell align="right">{row.put?.change || '—'}</TCell>
-      <TCell align="right">{row.put?.volume || '—'}</TCell>
-      <TCell align="right">{row.put?.openInterest || '—'}</TCell>
+      {row.put?.serumLoading ? (
+        <TCellLoading colSpan={5}>
+          <Loading />
+        </TCellLoading>
+      ) : (
+        <>
+          <TCell align="left">{row.put?.bid || '—'}</TCell>
+          <TCell align="left">{row.put?.ask || '—'}</TCell>
+          <TCell align="left">{row.put?.change || '—'}</TCell>
+          <TCell align="left">{row.put?.volume || '—'}</TCell>
+          <TCell align="left">{row.put?.openInterest || '—'}</TCell>
+        </>
+      )}
       <TCell align="right">
         {row.put?.emptyRow ? (
           '—'
@@ -274,6 +302,10 @@ const CallOrPut = PropTypes.shape({
   volume: PropTypes.string,
   openInterest: PropTypes.string,
   size: PropTypes.string.isRequired,
+  serumLoading: PropTypes.bool,
+  serumMarket: PropTypes.shape({
+    // TODO fill this out
+  }),
 
   // BigNumber.js objects:
   amountPerContract: PropTypes.object, // eslint-disable-line

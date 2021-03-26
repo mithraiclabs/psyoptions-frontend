@@ -103,8 +103,12 @@ const useOptionsMarkets = () => {
           uAssetMint: uAsset.mintAddress,
           qAssetMint: qAsset.mintAddress,
           strikePrice: `${strike.toString(10)}`,
+          // optionMintAddress is deprecated and references should be removed
           optionMintAddress: market.marketData.optionMintKey.toString(),
+          optionMintKey: market.marketData.optionMintKey,
+          // optionMarketDataAddress is deprecated and references should be removed
           optionMarketDataAddress: market.pubkey.toString(),
+          optionMarketKey: market.pubkey,
           writerTokenMintKey: market.marketData.writerTokenMintKey,
           underlyingAssetPoolKey: market.marketData.underlyingAssetPoolKey,
           quoteAssetPoolKey: market.marketData.quoteAssetPoolKey,

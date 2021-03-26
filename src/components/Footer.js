@@ -20,7 +20,7 @@ const Footer = () => (
         telegram
       </Link>{' '}
       |{' '}
-      <Link color="primary" href="https://discord.gg/cVHFVA4b">
+      <Link color="primary" href="https://discord.gg/MgDdJKgZJc">
         discord
       </Link>{' '}
       |{' '}

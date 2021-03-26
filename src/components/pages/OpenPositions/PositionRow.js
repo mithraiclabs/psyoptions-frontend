@@ -28,7 +28,6 @@ const PositionRow = ({ row }) => {
   const [visible, setVisible] = useState(false)
   const {
     ownedTokenAccounts,
-    updateOwnedTokenAccounts,
   } = useOwnedTokenAccounts()
   const { pushNotification } = useNotifications
 
@@ -64,7 +63,6 @@ const PositionRow = ({ row }) => {
         message: `${err}`,
       })
     }
-    await updateOwnedTokenAccounts()
   }
 
   return (

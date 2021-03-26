@@ -45,7 +45,7 @@
     "@project-serum/tokens": "0.0.7",
     "@sentry/react": "^6.2.1",
     "@sentry/tracing": "^6.2.1",
-    "@solana/spl-token": "0.0.13",
+    "@solana/spl-token": "^0.1.1",
     "@solana/web3.js": "0.93.0",
     "axios": "^0.21.1",
     "babel-loader": "^8.2.2",

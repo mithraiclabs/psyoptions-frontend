@@ -1,17 +1,17 @@
 import React, { useCallback } from 'react'
 import { PublicKey } from '@solana/web3.js'
 import { Link } from '@material-ui/core'
-import { exerciseCoveredCallWithRandomOptionWriter } from '@mithraic-labs/options-js-bindings'
+import { exerciseCoveredCall } from '@mithraic-labs/options-js-bindings'
 import useConnection from './useConnection'
 import useWallet from './useWallet'
 import useNotifications from './useNotifications'
 import { buildSolanaExplorerUrl } from '../utils/solanaExplorer'
 
 const useExerciseOpenPosition = (
-  optionMarketKey,
-  exerciserQuoteAssetKey,
-  exerciserUnderlyingAssetKey,
-  exerciserContractTokenKey,
+  market,
+  exerciserQuoteAssetAddress,
+  exerciserUnderlyingAssetAddress,
+  exerciserContractTokenAddress,
 ) => {
   const { pushNotification } = useNotifications()
   const { connection, endpoint } = useConnection()
@@ -20,17 +20,20 @@ const useExerciseOpenPosition = (
   const exercise = useCallback(async () => {
     const {
       transaction: tx,
-    } = await exerciseCoveredCallWithRandomOptionWriter(
+    } = await exerciseCoveredCall({
       connection,
-      { publicKey: pubKey },
-      endpoint.programId,
-      new PublicKey(optionMarketKey),
-      new PublicKey(exerciserQuoteAssetKey),
-      new PublicKey(exerciserUnderlyingAssetKey),
-      { publicKey: pubKey },
-      new PublicKey(exerciserContractTokenKey),
-      { publicKey: pubKey },
-    )
+      payer: { publicKey: pubKey },
+      programId: endpoint.programId,
+      optionMintKey: new PublicKey(market.optionMintAddress),
+      optionMarketKey: new PublicKey(market.optionMarketDataAddress),
+      exerciserQuoteAssetKey: new PublicKey(exerciserQuoteAssetAddress),
+      exerciserUnderlyingAssetKey: new PublicKey(exerciserUnderlyingAssetAddress),
+      exerciserQuoteAssetAuthorityAccount: { publicKey: pubKey },
+      underlyingAssetPoolKey: market.underlyingAssetPoolKey,
+      quoteAssetPoolKey: market.quoteAssetPoolKey,
+      optionTokenKey: new PublicKey(exerciserContractTokenAddress),
+      optionTokenAuthorityAccount: { publicKey: pubKey },
+    })
 
     const signed = await wallet.signTransaction(tx)
     const txid = await connection.sendRawTransaction(signed.serialize())
@@ -63,10 +66,10 @@ const useExerciseOpenPosition = (
     connection,
     pubKey,
     endpoint.programId,
-    optionMarketKey,
-    exerciserQuoteAssetKey,
-    exerciserUnderlyingAssetKey,
-    exerciserContractTokenKey,
+    market,
+    exerciserQuoteAssetAddress,
+    exerciserUnderlyingAssetAddress,
+    exerciserContractTokenAddress,
     wallet,
     pushNotification,
   ])

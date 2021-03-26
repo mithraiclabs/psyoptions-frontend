@@ -47,7 +47,7 @@ const PositionRow = ({ row }) => {
     ownedTokenAccounts[row.optionContractTokenKey][0]?.pubKey
 
   const { exercise } = useExerciseOpenPosition(
-    row.optionMarketKey,
+    row.market,
     ownedQAssetKey,
     ownedUAssetKey,
     ownedOAssetKey,

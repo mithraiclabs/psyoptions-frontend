@@ -46,6 +46,7 @@ const OpenPositions = () => {
     ),
     strike: markets[key]?.strikePrice,
     optionMarketKey: markets[key]?.optionMarketDataAddress,
+    market: markets[key],
     quoteAssetKey: markets[key]?.qAssetMint,
     underlyingAssetKey: markets[key]?.uAssetMint,
     optionContractTokenKey: markets[key]?.optionMintAddress,

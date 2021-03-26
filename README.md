@@ -26,6 +26,7 @@ NOTE: After many hours failing to intiialize on local net due to the following e
 
 ## Interacting on Devnet 
 We use a couple SPL Token faucets to interact on devnet. To use the faucets visit this community built site and be sure to set the network to **devnet**.
+https://spl-token-ui.netlify.app/#/token-faucets
 
 ````
 Token Symbol: PSYA
@@ -38,5 +39,23 @@ Token Symbol: USDCT
 Faucet Address: BmaVN3Wut1k2MtrcsxjTn919GdBJ2gzVLTtbiybnAPnR
 Mint Address: HinfVnJuzMtJsyuLE2ArYCChDZB6FCxEu2p3CQeMcDiF
 ````
+
+### Example: To Airdrop PSYA Tokens
+1. Go to Sollet.io
+2. Set netowrk to **DEVNET**
+3. Click + to add a token account manually. Enter the following and submit
+````
+ Token Mint Address: _BzwRWwr1kCLJVUUM14fQthP6FJKrGpXjw3ZHTZ6PQsYa_  
+ Token Name: PSYA Test
+ Token Symbol: PSYA
+````
+4. Head to the [Token Faucet](https://spl-token-ui.netlify.app/#/token-faucets) to perform a "Token Airdrop". Enter the following
+````
+Token Destination Address: The "Deposit Address" from the token account you just created on Sollet
+Faucet Address: 7jJJnHWagPPG544FtxSVp8eD52FwCsARcqqup1q3XVio
+Amount: 1000000000000 (or whatever you feel)
+````
+
+
 
 DEV cloud run url: https://solana-options-frontend-ckpgwptysa-uc.a.run.app/

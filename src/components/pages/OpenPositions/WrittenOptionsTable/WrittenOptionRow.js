@@ -1,52 +1,19 @@
 /* eslint-disable react/forbid-prop-types */
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import Chip from '@material-ui/core/Chip'
 import TableCell from '@material-ui/core/TableCell'
 import TableRow from '@material-ui/core/TableRow'
 import PropTypes from 'prop-types'
 import { PublicKey } from '@solana/web3.js';
+import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { Box } from '@material-ui/core';
 import { formatExpirationTimestamp } from '../../../../utils/format'
 import useOptionsMarkets from '../../../../hooks/useOptionsMarkets'
 import { useCloseWrittenOptionPostExpiration } from '../../../../hooks/useCloseWrittenOptionPostExpiration'
 import { useClosePosition } from '../../../../hooks/useClosePosition'
 import useOwnedTokenAccounts from '../../../../hooks/useOwnedTokenAccounts';
-
-const ActionItem = ({expired, closeOptionPostExpiration, holdsContracts, closePosition}) => {
-  if (expired) {
-    return (
-      <TableCell align="right" width="15%">
-        <Chip
-          clickable
-          size="small"
-          label="Close"
-          color="primary"
-          variant="outlined"
-          onClick={closeOptionPostExpiration}
-        />
-      </TableCell>
-    )
-  } if (holdsContracts) {
-    return (
-      <TableCell align="right" width="15%">
-        <Chip
-          clickable
-          size="small"
-          label="Close Position"
-          color="primary"
-          variant="outlined"
-          onClick={closePosition}
-        />
-      </TableCell>
-    )
-  }
-    return <TableCell align="right" width="15%" />
-}
-ActionItem.propTypes = {
-  expired: PropTypes.bool.isRequired,
-  closeOptionPostExpiration: PropTypes.func.isRequired,
-  holdsContracts: PropTypes.bool,
-  closePosition: PropTypes.func,
-}
+import useConnection from '../../../../hooks/useConnection';
+import { useExchangeWriterTokenForQuote } from '../../../../hooks/useExchangeWriterTokenForQuote';
 
 /**
  * Row to display the wallet's minted options
@@ -54,24 +21,29 @@ ActionItem.propTypes = {
  * Only closes a single expired option at a time right now.
  */
 export const WrittenOptionRow = ({ expired, marketKey, writerTokenAccounts, heldContracts }) => {
+  const { connection } = useConnection();
   const { ownedTokenAccounts } = useOwnedTokenAccounts()
   const { markets } = useOptionsMarkets()
+  const [quotePoolNotEmpty, setQuoteAssetPoolNotEmpty] = useState(false)
   const market = markets[marketKey]
   // TODO handle multiple wallets for the same Writer Token
   const initialWriterTokenAccount = writerTokenAccounts[0]
   const ownedUAssetAddress =
-    ownedTokenAccounts[market.uAssetMint][0]?.pubKey
+  ownedTokenAccounts[market.uAssetMint][0]?.pubKey
+  const ownedQAssetAddress =
+  ownedTokenAccounts[market.qAssetMint][0]?.pubKey
   const { closeOptionPostExpiration } = useCloseWrittenOptionPostExpiration(
     market,
     new PublicKey(ownedUAssetAddress),
     new PublicKey(initialWriterTokenAccount.pubKey)
   )
+  const { exchangeWriterTokenForQuote } = useExchangeWriterTokenForQuote(market, new PublicKey(initialWriterTokenAccount.pubKey), new PublicKey(ownedQAssetAddress))
   const holdsContracts = !!heldContracts.length;
   let _closePosition;
   if (holdsContracts) {
     // TODO handle multiple wallets for same Option Token
     const initialOptionTokenAccount = heldContracts[0];
-
+  
     const { closePosition } = useClosePosition(
       market,
       new PublicKey(initialOptionTokenAccount.pubKey),
@@ -79,6 +51,49 @@ export const WrittenOptionRow = ({ expired, marketKey, writerTokenAccounts, held
       new PublicKey(initialWriterTokenAccount.pubKey)
     )
     _closePosition = closePosition;
+  }
+      
+  useEffect(() => {
+    (async () => {
+      const quoteToken = new Token(connection, new PublicKey(market.qAssetMint), TOKEN_PROGRAM_ID, null)
+      const quoteAssetPoolAccount = await quoteToken.getAccountInfo(market.quoteAssetPoolKey)
+      if (!quoteAssetPoolAccount.amount.isZero()) {
+        setQuoteAssetPoolNotEmpty(true)
+      }
+    })()
+
+  }, [connection, market.qAssetMint, market.quoteAssetPoolKey])
+
+  let ActionFragment = null;
+  if (expired) {
+    ActionFragment =  <Chip
+          clickable
+          size="small"
+          label="Close"
+          color="primary"
+          variant="outlined"
+          onClick={closeOptionPostExpiration}
+        />
+  } else {
+    ActionFragment = <Box display="flex" flexDirection="row" justifyContent="flex-end">
+      {holdsContracts && <Chip
+        clickable
+        size="small"
+        label="Close Position"
+        color="primary"
+        variant="outlined"
+        onClick={_closePosition}
+      />}
+      {quotePoolNotEmpty && <Chip
+        clickable
+        size="small"
+        label="Claim Quote"
+        color="primary"
+        variant="outlined"
+        onClick={exchangeWriterTokenForQuote}
+        style={holdsContracts && { marginLeft: 8 }}
+      />}
+    </Box>
   }
 
   return (
@@ -92,12 +107,9 @@ export const WrittenOptionRow = ({ expired, marketKey, writerTokenAccounts, held
       <TableCell width="20%">
         {formatExpirationTimestamp(market.expiration)}
       </TableCell>
-      <ActionItem 
-        expired={expired}
-        closeOptionPostExpiration={closeOptionPostExpiration}
-        closePosition={_closePosition}
-        holdsContracts={holdsContracts}
-      />
+      <TableCell align="right" width="15%">
+        {ActionFragment}
+      </TableCell>
     </TableRow>
   )
 }

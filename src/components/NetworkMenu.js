@@ -6,12 +6,12 @@ import Card from '@material-ui/core/Card'
 import Popper from '@material-ui/core/Popper'
 import MenuItem from '@material-ui/core/MenuItem'
 import MenuList from '@material-ui/core/MenuList'
-import { CircularProgress } from '@material-ui/core'
 
 import useConnection from '../hooks/useConnection'
 import useAssetList from '../hooks/useAssetList'
 import useOptionsChain from '../hooks/useOptionsChain'
 import useOptionsMarkets from '../hooks/useOptionsMarkets'
+import useSerum from '../hooks/useSerum'
 import theme from '../utils/theme'
 
 const NetworkMenu = () => {
@@ -22,8 +22,9 @@ const NetworkMenu = () => {
     setSupportedAssets,
     assetListLoading,
   } = useAssetList()
-  const { setChain, optionsChainLoading } = useOptionsChain()
+  const { setChain } = useOptionsChain()
   const { setMarkets, marketsLoading } = useOptionsMarkets()
+  const { setSerumMarkets } = useSerum()
 
   const [open, setOpen] = useState(false)
   const anchorRef = React.useRef(null)
@@ -44,7 +45,7 @@ const NetworkMenu = () => {
   }
 
   // Do not allow switching network while still loading on-chain data
-  const loading = marketsLoading || optionsChainLoading || assetListLoading
+  const loading = marketsLoading || assetListLoading
 
   const handleSelectNetwork = (ep) => {
     if (loading) return
@@ -56,6 +57,7 @@ const NetworkMenu = () => {
     setQAsset({})
     setChain([])
     setMarkets({})
+    setSerumMarkets({})
   }
 
   return (
@@ -71,11 +73,9 @@ const NetworkMenu = () => {
         }}
         variant="outlined"
         innerRef={anchorRef}
+        disabled={loading}
       >
         {endpoint.name}
-        {loading && (
-          <CircularProgress size={18} style={{ marginLeft: '8px' }} />
-        )}
       </Button>
       <Popper
         anchorEl={anchorRef.current}

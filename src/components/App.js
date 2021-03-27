@@ -1,17 +1,30 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 
 import Store from '../context/store'
 import Router from './Router'
+import useOptionsMarkets from '../hooks/useOptionsMarkets'
 
-const App = ({ location, routerContext }) => (
+const WrappedApp = (props) => {
+  return (
     <Store>
-      <Router location={location} context={routerContext} />
+      <App {...props} />
     </Store>
   )
+}
+
+const App = ({ location, routerContext }) => {
+  const { fetchMarketData } = useOptionsMarkets()
+
+  useEffect(() => {
+    fetchMarketData()
+  }, [fetchMarketData])
+
+  return <Router location={location} context={routerContext} />
+}
 
 App.defaultProps = {
   location: { pathname: '/' },
   routerContext: {},
 }
 
-export default App
+export default WrappedApp

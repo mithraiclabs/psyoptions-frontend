@@ -18,6 +18,7 @@ import theme from '../utils/theme'
 import { createInitializeMarketTx } from '../utils/serum'
 import useConnection from '../hooks/useConnection'
 import useWallet from '../hooks/useWallet'
+import useSerum from '../hooks/useSerum'
 
 const StyledFilledInput = withStyles({
   root: {
@@ -63,6 +64,7 @@ const proptypes = {
   precision: propTypes.number,
   type: propTypes.oneOf(['call', 'put']),
   optionMintAddress: propTypes.string,
+  serumKey: propTypes.string,
 }
 
 const defaultProps = {
@@ -86,16 +88,17 @@ const BuySellDialog = ({
   precision,
   type,
   optionMintAddress,
+  serumKey,
 }) => {
   const { connection, dexProgramId } = useConnection()
   const { wallet, pubKey } = useWallet()
+  const { serumMarkets, fetchSerumMarket } = useSerum()
   const [orderType, setOrderType] = useState('limit')
   const [orderSize, setOrderSize] = useState(1)
   const [limitPrice, setLimitPrice] = useState(0) // TODO -- default to lowest ask
   const [initializingSerum, setInitializingSerum] = useState(false)
 
-  // TODO - actually hook this up
-  const serumInitialized = false
+  const serumMarketData = serumMarkets[serumKey]
 
   const parsedOrderSize =
     Number.isNaN(orderSize) || orderSize < 1 ? 1 : parseInt(orderSize, 10)
@@ -119,7 +122,6 @@ const BuySellDialog = ({
   const handleChangeSize = (e) => setOrderSize(e.target.value)
 
   const handleInitializeSerum = async () => {
-    console.log('initialize dat srm')
     setInitializingSerum(true)
 
     try {
@@ -156,8 +158,6 @@ const BuySellDialog = ({
 
       const signed = await wallet.signAllTransactions([tx1, tx2])
 
-      console.log(signed)
-
       const txid1 = await connection.sendRawTransaction(signed[0].serialize())
       await connection.confirmTransaction(txid1)
       console.log('confirmed', txid1)
@@ -167,6 +167,11 @@ const BuySellDialog = ({
       console.log('confirmed', txid2)
 
       console.log('market created', market.publicKey.toString())
+
+      // Load the market instance into serum context state
+      // There may be a more efficient way to do this part since we have the keypair here
+      // Open to suggestions / refactoring
+      await fetchSerumMarket(...serumKey.split('-'))
     } catch (e) {
       console.error(e)
     } finally {
@@ -281,34 +286,38 @@ const BuySellDialog = ({
             </Box>
           </Box>
           <Box p={1} width={['100%', '100%', '50%']}>
-            {serumInitialized ? (
-              <Box>Serum Initialized</Box>
-            ) : (
-              <Box
-                display="flex"
-                flexDirection="column"
-                justifyContent="center"
-                alignItems="center"
-                width="100%"
-                height="100%"
-                pb={3}
-              >
-                <Box textAlign="center" px={2} pb={2}>
-                  Initialize Serum Market to Place Order
-                </Box>
-                {initializingSerum ? (
-                  <CircularProgress />
-                ) : (
-                  <Button
-                    variant="outlined"
-                    color="primary"
-                    onClick={handleInitializeSerum}
-                  >
-                    Initialize Serum
-                  </Button>
-                )}
-              </Box>
-            )}
+            <Box
+              display="flex"
+              flexDirection="column"
+              justifyContent="center"
+              alignItems="center"
+              width="100%"
+              height="100%"
+              pb={3}
+            >
+              {serumMarketData?.loading ? (
+                <CircularProgress />
+              ) : serumMarketData?.serumMarket ? (
+                <Box>Serum Initialized</Box>
+              ) : (
+                <>
+                  <Box textAlign="center" px={2} pb={2}>
+                    Initialize Serum Market to Place Order
+                  </Box>
+                  {initializingSerum ? (
+                    <CircularProgress />
+                  ) : (
+                    <Button
+                      variant="outlined"
+                      color="primary"
+                      onClick={handleInitializeSerum}
+                    >
+                      Initialize Serum
+                    </Button>
+                  )}
+                </>
+              )}
+            </Box>
           </Box>
         </Box>
       </Box>

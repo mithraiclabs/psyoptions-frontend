@@ -9,7 +9,12 @@ const OptionsMarketsProvider = ({ children }) => {
 
   return (
     <OptionsMarketsContext.Provider
-      value={{ markets, setMarkets, marketsLoading, setMarketsLoading }}
+      value={{
+        markets,
+        setMarkets,
+        marketsLoading,
+        setMarketsLoading,
+      }}
     >
       {children}
     </OptionsMarketsContext.Provider>

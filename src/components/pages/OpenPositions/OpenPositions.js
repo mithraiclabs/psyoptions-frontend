@@ -1,5 +1,5 @@
 import { Box, Paper } from '@material-ui/core'
-import React, { useEffect } from 'react'
+import React from 'react'
 import Table from '@material-ui/core/Table'
 import TableBody from '@material-ui/core/TableBody'
 import TableCell from '@material-ui/core/TableCell'
@@ -29,11 +29,7 @@ const OpenPositions = () => {
   const [page] = React.useState(0)
   const [rowsPerPage] = React.useState(10)
   const positions = useOpenPositions()
-  const { markets, fetchMarketData } = useOptionsMarkets()
-
-  useEffect(() => {
-    fetchMarketData()
-  }, [fetchMarketData])
+  const { markets } = useOptionsMarkets()
 
   const positionRows = Object.keys(positions).map((key) => ({
     accounts: positions[key],

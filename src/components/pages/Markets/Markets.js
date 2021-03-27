@@ -1,4 +1,4 @@
-import { Box, Paper, FormControlLabel, Switch } from '@material-ui/core'
+import { Box, FormControlLabel, Switch } from '@material-ui/core'
 import React, { useState, useEffect } from 'react'
 import Table from '@material-ui/core/Table'
 import TableBody from '@material-ui/core/TableBody'
@@ -7,19 +7,22 @@ import TableContainer from '@material-ui/core/TableContainer'
 import TableHead from '@material-ui/core/TableHead'
 import TableRow from '@material-ui/core/TableRow'
 import { withStyles } from '@material-ui/core/styles'
-import Page from '../Page'
-import Select from '../../Select'
-import SelectAsset from '../../SelectAsset'
+
 import { getLastFridayOfMonths } from '../../../utils/dates'
+import theme from '../../../utils/theme'
 
 import useAssetList from '../../../hooks/useAssetList'
 import useOptionsMarkets from '../../../hooks/useOptionsMarkets'
 import useOptionsChain from '../../../hooks/useOptionsChain'
 
+import Page from '../Page'
+import Select from '../../Select'
+import SelectAsset from '../../SelectAsset'
 import CallPutRow from './CallPutRow'
 import BuySellDialog from '../../BuySellDialog'
 import Loading from '../../Loading'
-import theme from '../../../utils/theme'
+import RefreshButton from '../../RefreshButton'
+import useSerum from '../../../hooks/useSerum'
 
 const dblsp = `${'\u00A0'}${'\u00A0'}`
 
@@ -100,15 +103,14 @@ const Markets = () => {
     assetListLoading,
   } = useAssetList()
   const [date, setDate] = useState(expirations[0])
-  const { chain, fetchOptionsChain, optionsChainLoading } = useOptionsChain()
-  const { marketsLoading } = useOptionsMarkets()
-  const [round, setRound] = useState(true) // TODO make this a user toggle-able feature
-
+  const { chain, fetchOptionsChain } = useOptionsChain()
+  const { marketsLoading, fetchMarketData } = useOptionsMarkets()
+  const { serumMarkets, fetchSerumMarket } = useSerum()
+  const [round, setRound] = useState(true)
   const [buySellDialogOpen, setBuySellDialogOpen] = useState(false)
   const [callPutData, setCallPutData] = useState({ type: 'call' })
 
-  const fullPageLoading =
-    assetListLoading || marketsLoading || optionsChainLoading
+  const fullPageLoading = assetListLoading || marketsLoading
 
   let precision
   if (round && chain[0]?.strike) {
@@ -136,9 +138,21 @@ const Markets = () => {
     fetchOptionsChain(date.unix())
   }, [fetchOptionsChain, date])
 
+  useEffect(() => {
+    // Load serum markets when the options chain changes
+    // Only if they don't already exist for the matching call/put
+    chain.forEach(({ call, put }) => {
+      if (call?.serumKey && !serumMarkets[call.serumKey]) {
+        fetchSerumMarket(...call.serumKey.split('-'))
+      }
+      if (put?.serumKey && !serumMarkets[put.serumKey]) {
+        fetchSerumMarket(...put.serumKey.split('-'))
+      }
+    })
+  }, [chain, fetchSerumMarket, serumMarkets])
+
   // Open buy/sell/mint modal
   const handleBuySellClick = (callOrPut) => {
-    console.log(callOrPut)
     setCallPutData(callOrPut)
     setBuySellDialogOpen(true)
   }
@@ -198,7 +212,7 @@ const Markets = () => {
                 }}
               />
             </Box>
-            <Box px={2} pt={[2, 2, 0]}>
+            <Box px={2} pt={[2, 2, 0]} display="flex" alignItems="center">
               <FormControlLabel
                 control={
                   <Switch
@@ -213,7 +227,7 @@ const Markets = () => {
             </Box>
           </Box>
           <Box
-            px={1}
+            px={[1, 1, 0]}
             py={[2, 2, 1]}
             width={['100%', '100%', 'auto']}
             fontSize="12px"
@@ -236,7 +250,7 @@ const Markets = () => {
             <Box>
               <h3 style={{ margin: 0 }}>/</h3>
             </Box>
-            <Box px={1}>
+            <Box pl={1} pr={[1, 1, 0]}>
               <Box>
                 <SelectAsset
                   selectedAsset={qAsset}
@@ -251,7 +265,19 @@ const Markets = () => {
             </Box>
           </Box>
         </Box>
-        <Paper>
+        <Box position="relative">
+          <Box
+            position="absolute"
+            zIndex={5}
+            right={['16px', '16px', '1px']}
+            top={'8px'}
+            bgcolor={theme.palette.background.default}
+          >
+            <RefreshButton
+              loading={fullPageLoading}
+              onRefresh={fetchMarketData}
+            />
+          </Box>
           <TableContainer>
             <Table stickyHeader aria-label="sticky table">
               <TableHead>
@@ -299,7 +325,7 @@ const Markets = () => {
               <TableBody>
                 {rows.map((row) => {
                   return fullPageLoading ? (
-                    <tr>
+                    <tr key={`${row.key}`}>
                       <TCellLoading
                         colSpan={7}
                         style={{
@@ -335,7 +361,7 @@ const Markets = () => {
               </TableBody>
             </Table>
           </TableContainer>
-        </Paper>
+        </Box>
       </Box>
     </Page>
   )

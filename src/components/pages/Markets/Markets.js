@@ -212,19 +212,6 @@ const Markets = () => {
                 }}
               />
             </Box>
-            <Box px={2} pt={[2, 2, 0]} display="flex" alignItems="center">
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={round}
-                    onChange={() => setRound(!round)}
-                    name="round-strike-prices"
-                    color="secondary"
-                  />
-                }
-                label="Round Strike Prices"
-              />
-            </Box>
           </Box>
           <Box
             px={[1, 1, 0]}
@@ -361,6 +348,30 @@ const Markets = () => {
               </TableBody>
             </Table>
           </TableContainer>
+          <Box
+            pt={1}
+            px={[1, 1, 0]}
+            display="flex"
+            justifyContent="flex-end"
+            alignItems="center"
+          >
+            <FormControlLabel
+              labelPlacement="start"
+              control={
+                <Switch
+                  checked={round}
+                  onChange={() => setRound(!round)}
+                  name="round-strike-prices"
+                  color="primary"
+                  size="small"
+                />
+              }
+              label={
+                <span style={{ fontSize: '11px' }}>Round Strike Prices</span>
+              }
+              style={{ margin: '0' }}
+            />
+          </Box>
         </Box>
       </Box>
     </Page>

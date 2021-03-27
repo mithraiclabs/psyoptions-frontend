@@ -6,6 +6,10 @@ import {
   withStyles,
   Button,
   CircularProgress,
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
 } from '@material-ui/core'
 import Done from '@material-ui/icons/Done'
 import React, { useState } from 'react'
@@ -19,6 +23,11 @@ import { createInitializeMarketTx } from '../utils/serum'
 import useConnection from '../hooks/useConnection'
 import useWallet from '../hooks/useWallet'
 import useSerum from '../hooks/useSerum'
+
+const successColor = theme.palette.success.main
+const errorColor = theme.palette.error.main
+const primaryColor = theme.palette.primary.main
+const bgLighterColor = theme.palette.background.lighter
 
 const StyledFilledInput = withStyles({
   root: {
@@ -45,6 +54,109 @@ const PlusMinusButton = withStyles({
     },
   },
 })(Button)
+
+const BuyButton = withStyles({
+  root: {
+    backgroundColor: successColor,
+    color: theme.palette.background.default,
+    '&:hover': {
+      backgroundColor: theme.palette.success.light,
+    },
+  },
+})(Button)
+
+const SellButton = withStyles({
+  root: {
+    backgroundColor: errorColor,
+    '&:hover': {
+      backgroundColor: theme.palette.error.light,
+    },
+  },
+})(Button)
+
+const BidAskCell = withStyles({
+  root: {
+    padding: '2px 6px',
+    borderRight: `1px solid ${bgLighterColor}`,
+    fontSize: '12px',
+    '&:last-child': {
+      borderRight: 'none',
+    },
+  },
+})(TableCell)
+
+const centerBorder = { borderRight: `1px solid ${primaryColor}` }
+const topRowBorder = { borderTop: `1px solid ${bgLighterColor}` }
+
+const OrderBook = () => {
+  return (
+    <>
+      <Box pb={2}>Order Book</Box>
+      <Box width="100%">
+        <Table>
+          <TableHead>
+            <TableRow style={topRowBorder}>
+              <BidAskCell
+                colSpan={2}
+                align="left"
+                style={{ ...centerBorder, fontSize: '16px' }}
+              >
+                Bids
+              </BidAskCell>
+              <BidAskCell
+                colSpan={2}
+                align="right"
+                style={{ fontSize: '16px' }}
+              >
+                Asks
+              </BidAskCell>
+            </TableRow>
+            <TableRow>
+              <BidAskCell width="25%">price</BidAskCell>
+              <BidAskCell width="25%" style={{ ...centerBorder }}>
+                size
+              </BidAskCell>
+              <BidAskCell width="25%" align="right">
+                size
+              </BidAskCell>
+              <BidAskCell width="25%" align="right">
+                price
+              </BidAskCell>
+            </TableRow>
+          </TableHead>
+          <TableRow>
+            <BidAskCell width="25%" style={{ color: successColor }}>
+              80.00
+            </BidAskCell>
+            <BidAskCell width="25%" style={centerBorder}>
+              2
+            </BidAskCell>
+            <BidAskCell width="25%" align="right">
+              10
+            </BidAskCell>
+            <BidAskCell width="25%" align="right" style={{ color: errorColor }}>
+              100.00
+            </BidAskCell>
+          </TableRow>
+          <TableRow>
+            <BidAskCell width="25%" style={{ color: successColor }}>
+              70.00
+            </BidAskCell>
+            <BidAskCell width="25%" style={centerBorder}>
+              2
+            </BidAskCell>
+            <BidAskCell width="25%" align="right">
+              12
+            </BidAskCell>
+            <BidAskCell width="25%" align="right" style={{ color: errorColor }}>
+              110.00
+            </BidAskCell>
+          </TableRow>
+        </Table>
+      </Box>
+    </>
+  )
+}
 
 const orderTypes = ['limit', 'market']
 
@@ -180,8 +292,8 @@ const BuySellDialog = ({
   }
 
   return (
-    <Dialog open={open} onClose={onClose}>
-      <Box py={1} px={2} width="650px" maxWidth="100%">
+    <Dialog open={open} onClose={onClose} maxWidth={['100%']}>
+      <Box py={1} px={2} width="680px" maxWidth={['100%']}>
         <Box p={1} pt={2}>
           <h2 style={{ margin: '0' }}>{heading}</h2>
         </Box>
@@ -289,7 +401,9 @@ const BuySellDialog = ({
             <Box
               display="flex"
               flexDirection="column"
-              justifyContent="center"
+              justifyContent={
+                serumMarketData?.serumMarket ? 'flex-start' : 'center'
+              }
               alignItems="center"
               width="100%"
               height="100%"
@@ -298,7 +412,48 @@ const BuySellDialog = ({
               {serumMarketData?.loading ? (
                 <CircularProgress />
               ) : serumMarketData?.serumMarket ? (
-                <Box>Serum Initialized</Box>
+                <>
+                  <OrderBook />
+                  <Box
+                    pt={3}
+                    pb={1}
+                    display="flex"
+                    flexDirection="row"
+                    width="100%"
+                  >
+                    <Box pr={1} width="50%">
+                      <BuyButton fullWidth color="success">
+                        Buy
+                      </BuyButton>
+                    </Box>
+                    <Box pl={1} width="50%">
+                      <SellButton fullWidth color="error">
+                        Mint/Sell
+                      </SellButton>
+                    </Box>
+                  </Box>
+                  <Box pt={1} pb={2}>
+                    {/* E.g. "5 calls @ 50 USDC each" or "5 calls @ market price" */}
+                    {`${orderSize} ${type}${orderSize > 1 ? 's' : ''} @ ${
+                      orderType === 'limit'
+                        ? `${limitPrice} ${
+                            type === 'call' ? qAssetSymbol : uAssetSymbol
+                          } ${orderSize > 1 ? 'each' : ''}`
+                        : 'market price'
+                    }`}
+                  </Box>
+                  <Box
+                    py={2}
+                    borderTop={`1px solid ${bgLighterColor}`}
+                    fontSize={'10px'}
+                  >
+                    {`This is a ${
+                      type === 'call' ? 'covered call' : 'secured put'
+                    }. Mint/Sell will lock the required collateral (${collateralRequired} ${
+                      type === 'call' ? qAssetSymbol : uAssetSymbol
+                    }) until the contract expires or is exercised.`}
+                  </Box>
+                </>
               ) : (
                 <>
                   <Box textAlign="center" px={2} pb={2}>

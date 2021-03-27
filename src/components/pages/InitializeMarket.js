@@ -44,10 +44,6 @@ const InitializeMarket = () => {
   })
   const [loading, setLoading] = useState(false)
 
-  // useEffect(() => {
-  //   fetchMarketData()
-  // }, [fetchMarketData])
-
   const parsedBasePrice = parseFloat(
     basePrice && basePrice.replace(/^\./, '0.'),
   )

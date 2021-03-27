@@ -31,10 +31,6 @@ const OpenPositions = () => {
   const positions = useOpenPositions()
   const { markets } = useOptionsMarkets()
 
-  // useEffect(() => {
-  //   fetchMarketData()
-  // }, [fetchMarketData])
-
   const positionRows = Object.keys(positions).map((key) => ({
     accounts: positions[key],
     assetPair: `${markets[key]?.uAssetSymbol}${markets[key]?.qAssetSymbol}`,

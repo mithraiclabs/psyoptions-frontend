@@ -16,7 +16,6 @@ const App = ({ location, routerContext }) => {
   const { fetchMarketData } = useOptionsMarkets()
 
   useEffect(() => {
-    console.log('Fetching app-wide market data')
     fetchMarketData()
   }, [fetchMarketData])
 

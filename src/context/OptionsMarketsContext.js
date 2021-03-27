@@ -5,7 +5,6 @@ const OptionsMarketsContext = createContext()
 
 const OptionsMarketsProvider = ({ children }) => {
   const [markets, setMarkets] = useState({})
-  const [serumMarkets, setSerumMarkets] = useState({})
   const [marketsLoading, setMarketsLoading] = useState(false)
 
   return (
@@ -15,8 +14,6 @@ const OptionsMarketsProvider = ({ children }) => {
         setMarkets,
         marketsLoading,
         setMarketsLoading,
-        serumMarkets,
-        setSerumMarkets,
       }}
     >
       {children}

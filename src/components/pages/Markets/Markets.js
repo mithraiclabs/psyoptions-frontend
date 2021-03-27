@@ -139,10 +139,6 @@ const Markets = () => {
   }, [fetchOptionsChain, date])
 
   useEffect(() => {
-    if (serumMarkets) {
-      console.log(serumMarkets)
-    }
-
     // Load serum markets when the options chain changes
     // Only if they don't already exist for the matching call/put
     chain.forEach(({ call, put }) => {
@@ -157,7 +153,6 @@ const Markets = () => {
 
   // Open buy/sell/mint modal
   const handleBuySellClick = (callOrPut) => {
-    console.log(callOrPut)
     setCallPutData(callOrPut)
     setBuySellDialogOpen(true)
   }

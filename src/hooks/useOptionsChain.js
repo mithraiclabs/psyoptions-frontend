@@ -52,7 +52,6 @@ const useOptionsChain = () => {
         }
 
         setOptionsChainLoading(true)
-        console.log('Fetching options chain')
 
         const callKeyPart = `${dateTimestamp}-${uAsset.tokenSymbol}-${qAsset.tokenSymbol}`
         const putKeyPart = `${dateTimestamp}-${qAsset.tokenSymbol}-${uAsset.tokenSymbol}`

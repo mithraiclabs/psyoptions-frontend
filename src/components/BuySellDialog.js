@@ -122,7 +122,6 @@ const BuySellDialog = ({
   const handleChangeSize = (e) => setOrderSize(e.target.value)
 
   const handleInitializeSerum = async () => {
-    console.log('initialize dat srm')
     setInitializingSerum(true)
 
     try {
@@ -158,8 +157,6 @@ const BuySellDialog = ({
       })
 
       const signed = await wallet.signAllTransactions([tx1, tx2])
-
-      console.log(signed)
 
       const txid1 = await connection.sendRawTransaction(signed[0].serialize())
       await connection.confirmTransaction(txid1)

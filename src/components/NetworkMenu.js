@@ -11,6 +11,7 @@ import useConnection from '../hooks/useConnection'
 import useAssetList from '../hooks/useAssetList'
 import useOptionsChain from '../hooks/useOptionsChain'
 import useOptionsMarkets from '../hooks/useOptionsMarkets'
+import useSerum from '../hooks/useSerum'
 import theme from '../utils/theme'
 
 const NetworkMenu = () => {
@@ -23,6 +24,7 @@ const NetworkMenu = () => {
   } = useAssetList()
   const { setChain } = useOptionsChain()
   const { setMarkets, marketsLoading } = useOptionsMarkets()
+  const { setSerumMarkets } = useSerum()
 
   const [open, setOpen] = useState(false)
   const anchorRef = React.useRef(null)
@@ -55,6 +57,7 @@ const NetworkMenu = () => {
     setQAsset({})
     setChain([])
     setMarkets({})
+    setSerumMarkets({})
   }
 
   return (

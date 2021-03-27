@@ -18,6 +18,7 @@ import theme from '../utils/theme'
 import { createInitializeMarketTx } from '../utils/serum'
 import useConnection from '../hooks/useConnection'
 import useWallet from '../hooks/useWallet'
+import useSerum from '../hooks/useSerum'
 
 const StyledFilledInput = withStyles({
   root: {
@@ -63,6 +64,7 @@ const proptypes = {
   precision: propTypes.number,
   type: propTypes.oneOf(['call', 'put']),
   optionMintAddress: propTypes.string,
+  serumKey: propTypes.string,
 }
 
 const defaultProps = {
@@ -71,7 +73,6 @@ const defaultProps = {
 }
 
 const BuySellDialog = ({
-  serumLoading,
   open,
   onClose,
   heading,
@@ -87,16 +88,17 @@ const BuySellDialog = ({
   precision,
   type,
   optionMintAddress,
+  serumKey,
 }) => {
   const { connection, dexProgramId } = useConnection()
   const { wallet, pubKey } = useWallet()
+  const { serumMarkets, fetchSerumMarket } = useSerum()
   const [orderType, setOrderType] = useState('limit')
   const [orderSize, setOrderSize] = useState(1)
   const [limitPrice, setLimitPrice] = useState(0) // TODO -- default to lowest ask
   const [initializingSerum, setInitializingSerum] = useState(false)
 
-  // TODO - actually hook this up
-  const serumInitialized = false
+  const serumMarketData = serumMarkets[serumKey]
 
   const parsedOrderSize =
     Number.isNaN(orderSize) || orderSize < 1 ? 1 : parseInt(orderSize, 10)
@@ -168,6 +170,11 @@ const BuySellDialog = ({
       console.log('confirmed', txid2)
 
       console.log('market created', market.publicKey.toString())
+
+      // Load the market instance into serum context state
+      // There may be a more efficient way to do this part since we have the keypair here
+      // Open to suggestions / refactoring
+      await fetchSerumMarket(...serumKey.split('-'))
     } catch (e) {
       console.error(e)
     } finally {
@@ -291,9 +298,9 @@ const BuySellDialog = ({
               height="100%"
               pb={3}
             >
-              {serumLoading ? (
+              {serumMarketData?.loading ? (
                 <CircularProgress />
-              ) : serumInitialized ? (
+              ) : serumMarketData?.serumMarket ? (
                 <Box>Serum Initialized</Box>
               ) : (
                 <>

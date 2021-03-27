@@ -20,8 +20,6 @@ const useSerum = () => {
     async (mintA, mintB) => {
       const key = `${mintA}-${mintB}`
 
-      // if (serumMarkets[key]) return serumMarkets[key]
-
       // Set individual loading states for each market
       setSerumMarkets((markets) => ({
         ...markets,

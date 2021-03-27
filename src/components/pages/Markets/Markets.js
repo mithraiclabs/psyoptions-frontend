@@ -143,13 +143,13 @@ const Markets = () => {
       console.log(serumMarkets)
     }
 
+    // Load serum markets when the options chain changes
+    // Only if they don't already exist for the matching call/put
     chain.forEach(({ call, put }) => {
       if (call?.serumKey && !serumMarkets[call.serumKey]) {
-        console.log(`fetching serum market ${call.serumKey}`)
         fetchSerumMarket(...call.serumKey.split('-'))
       }
       if (put?.serumKey && !serumMarkets[put.serumKey]) {
-        console.log(`fetching serum market ${put.serumKey}`)
         fetchSerumMarket(...put.serumKey.split('-'))
       }
     })

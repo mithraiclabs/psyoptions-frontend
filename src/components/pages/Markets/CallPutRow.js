@@ -8,6 +8,7 @@ import Button from '@material-ui/core/Button'
 
 import theme from '../../../utils/theme'
 import useOptionsMarkets from '../../../hooks/useOptionsMarkets'
+import useSerum from '../../../hooks/useSerum'
 import useWallet from '../../../hooks/useWallet'
 import useOwnedTokenAccounts from '../../../hooks/useOwnedTokenAccounts'
 import useNotifications from '../../../hooks/useNotifications'
@@ -50,6 +51,7 @@ const CallPutRow = ({
   const { connect, connected } = useWallet()
   const { pushNotification } = useNotifications()
   const { ownedTokenAccounts } = useOwnedTokenAccounts()
+  const { serumMarkets } = useSerum()
 
   const [loading, setLoading] = useState({ call: false, put: false })
 
@@ -213,7 +215,7 @@ const CallPutRow = ({
       <TCell align="left">
         {row.call?.size ? `${row.call.size} ${uAsset?.tokenSymbol || ''}` : '—'}
       </TCell>
-      {row.call?.serumLoading ? (
+      {row.call?.serumKey && serumMarkets[row.call?.serumKey]?.loading ? (
         <TCellLoading colSpan={5}>
           <Loading />
         </TCellLoading>
@@ -241,7 +243,7 @@ const CallPutRow = ({
       <TCell align="right">
         {row.put?.size ? `${row.put.size} ${qAsset?.tokenSymbol || ''}` : '—'}
       </TCell>
-      {row.put?.serumLoading ? (
+      {row.put?.serumKey && serumMarkets[row.put?.serumKey]?.loading ? (
         <TCellLoading colSpan={5}>
           <Loading />
         </TCellLoading>
@@ -302,10 +304,7 @@ const CallOrPut = PropTypes.shape({
   volume: PropTypes.string,
   openInterest: PropTypes.string,
   size: PropTypes.string.isRequired,
-  serumLoading: PropTypes.bool,
-  serumMarket: PropTypes.shape({
-    // TODO fill this out
-  }),
+  serumKey: PropTypes.string,
 
   // BigNumber.js objects:
   amountPerContract: PropTypes.object, // eslint-disable-line

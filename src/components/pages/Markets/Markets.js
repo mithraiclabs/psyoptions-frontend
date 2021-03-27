@@ -22,6 +22,7 @@ import CallPutRow from './CallPutRow'
 import BuySellDialog from '../../BuySellDialog'
 import Loading from '../../Loading'
 import RefreshButton from '../../RefreshButton'
+import useSerum from '../../../hooks/useSerum'
 
 const dblsp = `${'\u00A0'}${'\u00A0'}`
 
@@ -104,6 +105,7 @@ const Markets = () => {
   const [date, setDate] = useState(expirations[0])
   const { chain, fetchOptionsChain } = useOptionsChain()
   const { marketsLoading, fetchMarketData } = useOptionsMarkets()
+  const { serumMarkets, fetchSerumMarket } = useSerum()
   const [round, setRound] = useState(true)
   const [buySellDialogOpen, setBuySellDialogOpen] = useState(false)
   const [callPutData, setCallPutData] = useState({ type: 'call' })
@@ -135,6 +137,23 @@ const Markets = () => {
   useEffect(() => {
     fetchOptionsChain(date.unix())
   }, [fetchOptionsChain, date])
+
+  useEffect(() => {
+    if (serumMarkets) {
+      console.log(serumMarkets)
+    }
+
+    chain.forEach(({ call, put }) => {
+      if (call?.serumKey && !serumMarkets[call.serumKey]) {
+        console.log(`fetching serum market ${call.serumKey}`)
+        fetchSerumMarket(...call.serumKey.split('-'))
+      }
+      if (put?.serumKey && !serumMarkets[put.serumKey]) {
+        console.log(`fetching serum market ${put.serumKey}`)
+        fetchSerumMarket(...put.serumKey.split('-'))
+      }
+    })
+  }, [chain, fetchSerumMarket, serumMarkets])
 
   // Open buy/sell/mint modal
   const handleBuySellClick = (callOrPut) => {
@@ -311,7 +330,7 @@ const Markets = () => {
               <TableBody>
                 {rows.map((row) => {
                   return fullPageLoading ? (
-                    <tr>
+                    <tr key={`${row.key}`}>
                       <TCellLoading
                         colSpan={7}
                         style={{

@@ -7,6 +7,7 @@ import { OwnedTokenAccountsProvider } from './OwnedTokenAccounts'
 import { WalletProvider } from './WalletContext'
 import { NotificationsProvider } from './NotificationsContext'
 import { OptionsMarketsProvider } from './OptionsMarketsContext'
+import { SerumProvider } from './SerumContext'
 import { OptionsChainProvider } from './OptionsChainContext'
 import { AssetListProvider } from './AssetListContext'
 import theme from '../utils/theme'
@@ -20,7 +21,8 @@ const _providers = [
   <WalletProvider />,
   <OwnedTokenAccountsProvider />,
   <OptionsMarketsProvider />,
-  <OptionsChainProvider />
+  <OptionsChainProvider />,
+  <SerumProvider />,
 ]
 
 // flatten context providers for simpler app component tree

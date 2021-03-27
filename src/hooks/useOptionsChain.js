@@ -1,19 +1,29 @@
 import { useCallback, useContext } from 'react'
 import BigNumber from 'bignumber.js'
-import { Connection, PublicKey } from '@solana/web3.js'
-
-import { SerumMarket } from '../utils/serum'
+import { Connection } from '@solana/web3.js'
 
 import useConnection from './useConnection'
 import useOptionsMarkets from './useOptionsMarkets'
 import { OptionsChainContext } from '../context/OptionsChainContext'
 import useAssetList from './useAssetList'
 
+const callOrPutTemplate = {
+  key: '',
+  bid: '',
+  ask: '',
+  change: '',
+  volume: '',
+  openInterest: '',
+  size: '',
+  serumKey: '',
+  initialized: false,
+}
+
 /**
  *
  */
 const useOptionsChain = () => {
-  const { connection, dexProgramId } = useConnection()
+  const { connection } = useConnection()
   const { markets: marketData, marketsLoading } = useOptionsMarkets()
   const { uAsset, qAsset } = useAssetList()
   const {
@@ -22,58 +32,6 @@ const useOptionsChain = () => {
     optionsChainLoading,
     setOptionsChainLoading,
   } = useContext(OptionsChainContext)
-
-  // Non-blocking fetch of serum data for each row
-  const fetchSerumData = useCallback(
-    async (row) => {
-      const newRow = { ...row }
-      console.log('Fetching serum data for', row)
-
-      if (newRow.call?.optionMintAddress) {
-        try {
-          const serum = await SerumMarket.findByAssets(
-            connection,
-            new PublicKey(newRow.call.optionMintAddress),
-            new PublicKey(newRow.call.qAssetMint),
-            dexProgramId,
-          )
-          // TODO - this always returns null
-          console.log('call srm', serum)
-          newRow.call.serumMarket = serum
-        } catch (err) {
-          // TODO should we log error here or nah?
-          console.log(err)
-        }
-        newRow.call.serumLoading = false
-      }
-
-      if (newRow.put?.optionMintAddress) {
-        try {
-          const serum = await SerumMarket.findByAssets(
-            connection,
-            new PublicKey(newRow.put.optionMintAddress),
-            new PublicKey(newRow.put.uAssetMint),
-            dexProgramId,
-          )
-          // TODO - this always returns null
-          console.log('put srm', serum)
-          newRow.put.serumMarket = serum
-        } catch (err) {
-          // TODO should we log error here or nah?
-          console.log(err)
-        }
-        newRow.put.serumLoading = false
-      }
-
-      // Replace the row that changed
-      setChain((existingChain) => {
-        return existingChain.map((existingRow) => {
-          return existingRow.key === newRow.key ? newRow : existingRow
-        })
-      })
-    },
-    [setChain, connection, dexProgramId],
-  )
 
   const fetchOptionsChain = useCallback(
     async (dateTimestamp) => {
@@ -123,17 +81,6 @@ const useOptionsChain = () => {
           ]),
         )
 
-        const template = {
-          key: '',
-          bid: '',
-          ask: '',
-          change: '',
-          volume: '',
-          openInterest: '',
-          size: '',
-          serumMarket: null,
-        }
-
         const rows = []
 
         await Promise.all(
@@ -170,27 +117,23 @@ const useOptionsChain = () => {
                   size,
                   call: call
                     ? {
-                        ...template,
+                        ...callOrPutTemplate,
                         ...call,
-                        serumLoading: true,
-                        serumMarket: null,
+                        serumKey: `${call?.optionMintAddress}-${call?.qAssetMint}`,
                         initialized: true,
                       }
-                    : template,
+                    : callOrPutTemplate,
                   put: put
                     ? {
-                        ...template,
+                        ...callOrPutTemplate,
                         ...put,
-                        serumLoading: true,
-                        serumMarket: null,
+                        serumKey: `${put?.optionMintAddress}-${put?.uAssetMint}`,
                         initialized: true,
                       }
-                    : template,
+                    : callOrPutTemplate,
                   key: `${callKeyPart}-${size}-${strike}`,
                 }
 
-                // Fetch for serum data should be non-blocking
-                fetchSerumData(row)
                 rows.push(row)
               }),
             )
@@ -207,15 +150,7 @@ const useOptionsChain = () => {
       }
     },
     // eslint-disable-next-line
-    [
-      connection,
-      dexProgramId,
-      uAsset,
-      qAsset,
-      setChain,
-      marketData,
-      marketsLoading,
-    ],
+    [connection, uAsset, qAsset, setChain, marketData, marketsLoading],
   )
 
   return {

@@ -124,8 +124,6 @@ const OrderBook = memo(({ bids = [[]], asks = [[]] }) => {
     i += 1
   }
 
-  console.log(rows)
-
   return (
     <>
       <Box pb={2}>Order Book</Box>

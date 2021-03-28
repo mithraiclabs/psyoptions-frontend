@@ -10,9 +10,10 @@ import {
   TableHead,
   TableRow,
   TableCell,
+  TableBody,
 } from '@material-ui/core'
 import Done from '@material-ui/icons/Done'
-import React, { useState } from 'react'
+import React, { useState, useEffect, memo } from 'react'
 import propTypes from 'prop-types'
 import BigNumber from 'bignumber.js'
 import { PublicKey } from '@solana/web3.js'
@@ -63,6 +64,9 @@ const BuyButton = withStyles({
       backgroundColor: theme.palette.success.light,
     },
   },
+  disabled: {
+    backgroundColor: theme.palette.success.dark,
+  },
 })(Button)
 
 const SellButton = withStyles({
@@ -71,6 +75,9 @@ const SellButton = withStyles({
     '&:hover': {
       backgroundColor: theme.palette.error.light,
     },
+  },
+  disabled: {
+    backgroundColor: theme.palette.error.dark,
   },
 })(Button)
 
@@ -88,7 +95,37 @@ const BidAskCell = withStyles({
 const centerBorder = { borderRight: `1px solid ${primaryColor}` }
 const topRowBorder = { borderTop: `1px solid ${bgLighterColor}` }
 
-const OrderBook = () => {
+const bidOrAskType = propTypes.shape({
+  size: propTypes.number,
+  price: propTypes.number,
+})
+
+const orderBookPropTypes = {
+  bids: propTypes.arrayOf(bidOrAskType),
+  asks: propTypes.arrayOf(bidOrAskType),
+}
+
+const OrderBook = memo(({ bids = [[]], asks = [[]] }) => {
+  // Maybe we should do this zipping of the bids/asks elsewhere
+  // Doing it here for quick and dirty solution, don't over-engineer right? :)
+  const rows = []
+  const minRows = 4
+  let i = 0
+  while (
+    rows.length < bids.length ||
+    rows.length < asks.length ||
+    rows.length < minRows
+  ) {
+    if (bids[i] || asks[i]) {
+      rows.push({ bid: bids[i] || {}, ask: asks[i] || {}, key: i })
+    } else {
+      rows.push({ bid: {}, ask: {}, key: i })
+    }
+    i += 1
+  }
+
+  console.log(rows)
+
   return (
     <>
       <Box pb={2}>Order Book</Box>
@@ -124,39 +161,37 @@ const OrderBook = () => {
               </BidAskCell>
             </TableRow>
           </TableHead>
-          <TableRow>
-            <BidAskCell width="25%" style={{ color: successColor }}>
-              80.00
-            </BidAskCell>
-            <BidAskCell width="25%" style={centerBorder}>
-              2
-            </BidAskCell>
-            <BidAskCell width="25%" align="right">
-              10
-            </BidAskCell>
-            <BidAskCell width="25%" align="right" style={{ color: errorColor }}>
-              100.00
-            </BidAskCell>
-          </TableRow>
-          <TableRow>
-            <BidAskCell width="25%" style={{ color: successColor }}>
-              70.00
-            </BidAskCell>
-            <BidAskCell width="25%" style={centerBorder}>
-              2
-            </BidAskCell>
-            <BidAskCell width="25%" align="right">
-              12
-            </BidAskCell>
-            <BidAskCell width="25%" align="right" style={{ color: errorColor }}>
-              110.00
-            </BidAskCell>
-          </TableRow>
+          <TableBody>
+            {rows.map(({ bid, ask, key }) => {
+              return (
+                <TableRow key={key}>
+                  <BidAskCell width="25%" style={{ color: successColor }}>
+                    {bid?.price || '\u00A0'}
+                  </BidAskCell>
+                  <BidAskCell width="25%" style={centerBorder}>
+                    {bid?.size || '\u00A0'}
+                  </BidAskCell>
+                  <BidAskCell width="25%" align="right">
+                    {ask?.size || '\u00A0'}
+                  </BidAskCell>
+                  <BidAskCell
+                    width="25%"
+                    align="right"
+                    style={{ color: errorColor }}
+                  >
+                    {ask?.price || '\u00A0'}
+                  </BidAskCell>
+                </TableRow>
+              )
+            })}
+          </TableBody>
         </Table>
       </Box>
     </>
   )
-}
+})
+
+OrderBook.propTypes = orderBookPropTypes
 
 const orderTypes = ['limit', 'market']
 
@@ -207,16 +242,37 @@ const BuySellDialog = ({
   const { serumMarkets, fetchSerumMarket } = useSerum()
   const [orderType, setOrderType] = useState('limit')
   const [orderSize, setOrderSize] = useState(1)
-  const [limitPrice, setLimitPrice] = useState(0) // TODO -- default to lowest ask
+  const [limitPrice, setLimitPrice] = useState(0)
   const [initializingSerum, setInitializingSerum] = useState(false)
+  const [orderbookLoaded, setOrderbookLoaded] = useState(false)
+  const [orderbook, setOrderbook] = useState({
+    bids: [],
+    asks: [],
+  })
 
   const serumMarketData = serumMarkets[serumKey]
+  const serum = serumMarketData?.serumMarket
+
+  // Load full orderbook if serum instance exists
+  useEffect(() => {
+    ;(async () => {
+      if (serum && !orderbookLoaded) {
+        // console.log('getting order book')
+        const book = await serum.getOrderbook()
+        setOrderbook(book)
+        setOrderbookLoaded(true)
+        // console.log(book)
+      }
+    })()
+  }, [serum, orderbookLoaded, setOrderbook, setOrderbookLoaded])
 
   const parsedOrderSize =
-    Number.isNaN(orderSize) || orderSize < 1 ? 1 : parseInt(orderSize, 10)
+    Number.isNaN(parseFloat(orderSize)) || orderSize < 1
+      ? 1
+      : parseInt(orderSize, 10)
 
   const parsedLimitPrice = new BigNumber(
-    Number.isNaN(limitPrice) || limitPrice < 0 ? 0 : limitPrice,
+    Number.isNaN(parseFloat(limitPrice)) || limitPrice < 0 ? 0 : limitPrice,
   )
 
   const collateralRequired =
@@ -292,7 +348,7 @@ const BuySellDialog = ({
   }
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth={['100%']}>
+    <Dialog open={open} onClose={onClose} maxWidth={'lg'}>
       <Box py={1} px={2} width="680px" maxWidth={['100%']}>
         <Box p={1} pt={2}>
           <h2 style={{ margin: '0' }}>{heading}</h2>
@@ -401,9 +457,7 @@ const BuySellDialog = ({
             <Box
               display="flex"
               flexDirection="column"
-              justifyContent={
-                serumMarketData?.serumMarket ? 'flex-start' : 'center'
-              }
+              justifyContent={serum ? 'flex-start' : 'center'}
               alignItems="center"
               width="100%"
               height="100%"
@@ -411,9 +465,9 @@ const BuySellDialog = ({
             >
               {serumMarketData?.loading ? (
                 <CircularProgress />
-              ) : serumMarketData?.serumMarket ? (
+              ) : serum ? (
                 <>
-                  <OrderBook />
+                  <OrderBook {...orderbook} />
                   <Box
                     pt={3}
                     pb={1}
@@ -422,25 +476,45 @@ const BuySellDialog = ({
                     width="100%"
                   >
                     <Box pr={1} width="50%">
-                      <BuyButton fullWidth color="success">
+                      <BuyButton
+                        fullWidth
+                        disabled={
+                          (!orderbook?.asks?.length &&
+                            orderType === 'market') ||
+                          (orderType === 'limit' &&
+                            parsedLimitPrice.isLessThanOrEqualTo(0))
+                        }
+                      >
                         Buy
                       </BuyButton>
                     </Box>
                     <Box pl={1} width="50%">
-                      <SellButton fullWidth color="error">
+                      <SellButton
+                        fullWidth
+                        disabled={
+                          (!orderbook?.bids?.length &&
+                            orderType === 'market') ||
+                          (orderType === 'limit' &&
+                            parsedLimitPrice.isLessThanOrEqualTo(0))
+                        }
+                      >
                         Mint/Sell
                       </SellButton>
                     </Box>
                   </Box>
                   <Box pt={1} pb={2}>
-                    {/* E.g. "5 calls @ 50 USDC each" or "5 calls @ market price" */}
-                    {`${orderSize} ${type}${orderSize > 1 ? 's' : ''} @ ${
-                      orderType === 'limit'
-                        ? `${limitPrice} ${
-                            type === 'call' ? qAssetSymbol : uAssetSymbol
-                          } ${orderSize > 1 ? 'each' : ''}`
-                        : 'market price'
-                    }`}
+                    {orderType === 'limit' &&
+                    parsedLimitPrice.isLessThanOrEqualTo(0)
+                      ? `Invalid Limit Price: ${parsedLimitPrice}`
+                      : `${parsedOrderSize} ${type}${
+                          parsedOrderSize > 1 ? 's' : ''
+                        } @ ${
+                          orderType === 'limit'
+                            ? `${parsedLimitPrice} ${
+                                type === 'call' ? qAssetSymbol : uAssetSymbol
+                              } ${parsedOrderSize > 1 ? 'each' : ''}`
+                            : 'market price'
+                        }`}
                   </Box>
                   <Box
                     py={2}
@@ -450,7 +524,7 @@ const BuySellDialog = ({
                     {`This is a ${
                       type === 'call' ? 'covered call' : 'secured put'
                     }. Mint/Sell will lock the required collateral (${collateralRequired} ${
-                      type === 'call' ? qAssetSymbol : uAssetSymbol
+                      type === 'call' ? uAssetSymbol : qAssetSymbol
                     }) until the contract expires or is exercised.`}
                   </Box>
                 </>

@@ -116,11 +116,7 @@ const OrderBook = memo(({ bids = [[]], asks = [[]] }) => {
     rows.length < asks.length ||
     rows.length < minRows
   ) {
-    if (bids[i] || asks[i]) {
-      rows.push({ bid: bids[i] || {}, ask: asks[i] || {}, key: i })
-    } else {
-      rows.push({ bid: {}, ask: {}, key: i })
-    }
+    rows.push({ bid: bids[i] || {}, ask: asks[i] || {}, key: i })
     i += 1
   }
 

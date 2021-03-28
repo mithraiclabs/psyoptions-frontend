@@ -306,6 +306,35 @@ export class SerumMarket {
     return { bid: highestbid[0], ask: lowestAsk[0] }
   }
 
+  /**
+   * Returns full orderbook up to specified depth
+   * @param {number} depth
+   * @param {number} roundTo -- TODO: merge orderbook rows by rounding the prices to a number of decimals
+   * @returns {{ bids[[ price, size ]], asks[[ price, size ]]}}
+   */
+  async getOrderbook(depth = 20) {
+    try {
+      const [bidOrderbook, askOrderbook] = await Promise.all([
+        this.market.loadBids(this.connection),
+        this.market.loadAsks(this.connection),
+      ])
+
+      return {
+        bids: !bidOrderbook
+          ? []
+          : bidOrderbook.getL2(depth).map(([price, size]) => ({ price, size })),
+        asks: !askOrderbook
+          ? []
+          : askOrderbook.getL2(depth).map(([price, size]) => ({ price, size })),
+      }
+    } catch (err) {
+      return {
+        bids: [],
+        asks: [],
+      }
+    }
+  }
+
   async getPrice() {
     const { bid, ask } = await this.getBidAskSpread()
     return (ask - bid) / 2 + bid

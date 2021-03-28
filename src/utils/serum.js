@@ -12,7 +12,7 @@ import BN from 'bn.js'
 import { Token } from '@solana/spl-token'
 import { Buffer } from 'buffer'
 
-import { TOKEN_PROGRAM_ID } from './tokenInstructions.mjs'
+import { TOKEN_PROGRAM_ID } from './tokenInstructions'
 
 const SOL_MINT = new PublicKey('So11111111111111111111111111111111111111112')
 

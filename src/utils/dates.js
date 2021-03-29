@@ -10,3 +10,4 @@ export const getLastFridayOfMonths = (n = 10) =>
       const lastFriday = lastDay.subtract(subtractDays[lastDay.day()], 'day')
       return lastFriday
     })
+    .filter((date) => date.isSameOrAfter(moment.utc()))

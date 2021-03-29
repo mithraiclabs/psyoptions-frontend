@@ -35,7 +35,7 @@ const InitializeMarket = () => {
   const [multiple, setMultiple] = useState(false)
   const [basePrice, setBasePrice] = useState(0)
   const [date, setDate] = useState(expirations[0])
-  const { uAsset, qAsset, setUAsset, setQAsset } = useAssetList()
+  const { uAsset, qAsset, setUAsset } = useAssetList()
   const [size, setSize] = useState(0)
   const [priceInterval, setPriceInterval] = useState(0)
   const { marketPrice } = useSerumMarketInfo({
@@ -160,9 +160,6 @@ const InitializeMarket = () => {
                 <SelectAsset
                   selectedAsset={uAsset}
                   onSelectAsset={(asset) => {
-                    if (asset === qAsset) {
-                      setQAsset(uAsset)
-                    }
                     setUAsset(asset)
                   }}
                 />
@@ -172,15 +169,7 @@ const InitializeMarket = () => {
             <Box width="50%" p={2}>
               Quote Asset:
               <Box mt={2}>
-                <SelectAsset
-                  selectedAsset={qAsset}
-                  onSelectAsset={(asset) => {
-                    if (asset === uAsset) {
-                      setUAsset(qAsset)
-                    }
-                    setQAsset(asset)
-                  }}
-                />
+                <SelectAsset selectedAsset={qAsset} disabled />
               </Box>
             </Box>
           </Box>

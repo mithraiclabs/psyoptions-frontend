@@ -9,13 +9,21 @@ import {
   Avatar,
   ListItemText,
   useTheme,
+  withStyles,
 } from '@material-ui/core'
 import KeyboardArrowDown from '@material-ui/icons/KeyboardArrowDown'
 import { debounce } from 'throttle-debounce'
 
 import useAssetList from '../hooks/useAssetList'
 
-const SelectAsset = ({ label, selectedAsset, onSelectAsset }) => {
+const CustomChip = withStyles({
+  disabled: {
+    border: '1px solid transparent',
+    opacity: '1 !important',
+  },
+})(Chip)
+
+const SelectAsset = ({ label, selectedAsset, onSelectAsset, disabled }) => {
   const theme = useTheme()
   const { supportedAssets, assetListLoading } = useAssetList()
 
@@ -25,8 +33,9 @@ const SelectAsset = ({ label, selectedAsset, onSelectAsset }) => {
   const filteredAssetList = supportedAssets.filter((item) => {
     const match = filterInput.toLowerCase()
     const shouldAppear =
-      item.tokenName.toLowerCase().match(match) ||
-      item.tokenSymbol.toLowerCase().match(match)
+      (item.tokenName.toLowerCase().match(match) ||
+        item.tokenSymbol.toLowerCase().match(match)) &&
+      !item.tokenSymbol.toLowerCase().match('usdc')
     return shouldAppear
   })
 
@@ -41,7 +50,7 @@ const SelectAsset = ({ label, selectedAsset, onSelectAsset }) => {
 
   const chipLabel = assetListLoading
     ? 'Loading...'
-    : selectedAsset?.tokenName || 'Choose Asset'
+    : selectedAsset?.tokenSymbol || 'Choose Asset'
 
   return (
     <>
@@ -90,11 +99,12 @@ const SelectAsset = ({ label, selectedAsset, onSelectAsset }) => {
           </Box>
         </Box>
       </Dialog>
-      <Chip
+      <CustomChip
         label={chipLabel}
-        clickable
-        color="primary"
+        clickable={!disabled}
+        color={'primary'}
         variant="outlined"
+        disabled={disabled}
         avatar={
           selectedAsset ? (
             <Avatar
@@ -108,9 +118,9 @@ const SelectAsset = ({ label, selectedAsset, onSelectAsset }) => {
             </Avatar>
           ) : null
         }
-        onClick={handleOpen}
-        onDelete={handleOpen}
-        deleteIcon={<KeyboardArrowDown />}
+        onClick={disabled ? null : handleOpen}
+        onDelete={disabled ? null : handleOpen}
+        deleteIcon={disabled ? null : <KeyboardArrowDown />}
       />
     </>
   )

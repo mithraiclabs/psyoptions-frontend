@@ -95,13 +95,7 @@ const rowTemplate = {
 const expirations = getLastFridayOfMonths(10)
 
 const Markets = () => {
-  const {
-    uAsset,
-    qAsset,
-    setUAsset,
-    setQAsset,
-    assetListLoading,
-  } = useAssetList()
+  const { uAsset, qAsset, setUAsset, assetListLoading } = useAssetList()
   const [date, setDate] = useState(expirations[0])
   const { chain, fetchOptionsChain } = useOptionsChain()
   const { marketsLoading, fetchMarketData } = useOptionsMarkets()
@@ -213,41 +207,31 @@ const Markets = () => {
               />
             </Box>
           </Box>
-          <Box
-            px={[1, 1, 0]}
-            py={[2, 2, 1]}
-            width={['100%', '100%', 'auto']}
-            fontSize="12px"
-            display="flex"
-            alignItems="center"
-          >
-            <Box px={1}>
-              <Box>
-                <SelectAsset
-                  selectedAsset={uAsset}
-                  onSelectAsset={(asset) => {
-                    if (asset === qAsset) {
-                      setQAsset(uAsset)
-                    }
-                    setUAsset(asset)
-                  }}
-                />
+          <Box px={[1, 1, 0]} py={[2, 2, 1]} width={['100%', '100%', 'auto']}>
+            <Box pb={'6px'} pl="10px" fontSize={'11px'}>
+              Asset Pair:
+            </Box>
+            <Box
+              fontSize="12px"
+              display="flex"
+              alignItems="center"
+              border={`1px solid ${theme.palette.background.lighter}`}
+              borderRadius={'20px'}
+              width={'fit-content'}
+            >
+              <Box pr={1}>
+                <Box>
+                  <SelectAsset
+                    selectedAsset={uAsset}
+                    onSelectAsset={(asset) => {
+                      setUAsset(asset)
+                    }}
+                  />
+                </Box>
               </Box>
-            </Box>
-            <Box>
               <h3 style={{ margin: 0 }}>/</h3>
-            </Box>
-            <Box pl={1} pr={[1, 1, 0]}>
-              <Box>
-                <SelectAsset
-                  selectedAsset={qAsset}
-                  onSelectAsset={(asset) => {
-                    if (asset === uAsset) {
-                      setUAsset(qAsset)
-                    }
-                    setQAsset(asset)
-                  }}
-                />
+              <Box pl={'4px'}>
+                <SelectAsset disabled selectedAsset={qAsset} />
               </Box>
             </Box>
           </Box>

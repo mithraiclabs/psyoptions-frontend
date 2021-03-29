@@ -36,7 +36,7 @@ const Mint = () => {
   const dates = expirations
 
   const [date, setDate] = useState(dates[0])
-  const { uAsset, qAsset, setUAsset, setQAsset } = useAssetList()
+  const { uAsset, qAsset, setUAsset } = useAssetList()
   const [size, setSize] = useState(100)
   const [price, setPrice] = useState('')
   const [uAssetAccount, setUAssetAccount] = useState('')
@@ -71,7 +71,8 @@ const Mint = () => {
     [marketData, ownedTokenAccounts],
   )
   const ownedWriterTokenMintAccounts = useMemo(
-    () => (marketData && ownedTokenAccounts[marketData.writerTokenMintKey]) || [],
+    () =>
+      (marketData && ownedTokenAccounts[marketData.writerTokenMintKey]) || [],
     [marketData, ownedTokenAccounts],
   )
 
@@ -183,9 +184,6 @@ const Mint = () => {
                   <SelectAsset
                     selectedAsset={uAsset}
                     onSelectAsset={(asset) => {
-                      if (asset === qAsset) {
-                        setQAsset(uAsset)
-                      }
                       setUAsset(asset)
                       setPrice('')
                     }}
@@ -213,16 +211,7 @@ const Mint = () => {
               <Box width="50%" p={2}>
                 Quote Asset:
                 <Box my={2}>
-                  <SelectAsset
-                    selectedAsset={qAsset}
-                    onSelectAsset={(asset) => {
-                      if (asset === uAsset) {
-                        setUAsset(qAsset)
-                      }
-                      setQAsset(asset)
-                      setPrice('')
-                    }}
-                  />
+                  <SelectAsset selectedAsset={qAsset} disabled />
                 </Box>
                 {ownedQAssetAccounts.length > 1 ? (
                   <Select

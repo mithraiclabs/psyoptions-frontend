@@ -126,7 +126,7 @@ const useOptionsChain = () => {
                     ? {
                         ...callOrPutTemplate,
                         ...put,
-                        serumKey: `${put?.optionMintAddress}-${put?.uAssetMint}`,
+                        serumKey: `${put?.optionMintAddress}-${put?.qAssetMint}`,
                         initialized: true,
                       }
                     : callOrPutTemplate,

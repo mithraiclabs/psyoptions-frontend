@@ -221,8 +221,8 @@ const BuySellDialog = ({
   uAssetSymbol,
   qAssetSymbol,
   qAssetMint,
-  uAssetMint,
-  uAssetDecimals,
+  // uAssetMint,
+  // uAssetDecimals,
   qAssetDecimals,
   strike,
   round,
@@ -290,17 +290,12 @@ const BuySellDialog = ({
       // TODO: make tick size and quote lot size configurable... maybe?
       // Or should we just have sane defaults?
       let tickSize = 0.0001
-      if (
-        (type === 'call' && qAssetSymbol.match(/^USD/)) ||
-        (type === 'put' && uAssetSymbol.match(/^USD/))
-      ) {
+      if (qAssetSymbol.match(/^USD/)) {
         tickSize = 0.01
       }
 
       // This will likely be USDC or USDT but could be other things in some cases
-      const quoteLotSize = new BN(
-        tickSize * 10 ** (type === 'call' ? qAssetDecimals : uAssetDecimals),
-      )
+      const quoteLotSize = new BN(tickSize * 10 ** qAssetDecimals)
 
       // baseLotSize should be 1 -- the options market token doesn't have decimals
       const baseLotSize = new BN('1')
@@ -309,10 +304,7 @@ const BuySellDialog = ({
         connection,
         payer: pubKey,
         baseMint: new PublicKey(optionMintAddress),
-        quoteMint:
-          type === 'call'
-            ? new PublicKey(qAssetMint)
-            : new PublicKey(uAssetMint),
+        quoteMint: new PublicKey(qAssetMint),
         baseLotSize,
         quoteLotSize,
         dexProgramId,
@@ -433,7 +425,7 @@ const BuySellDialog = ({
                   : theme.palette.primary.main
               }
             >
-              Limit Price ({type === 'call' ? qAssetSymbol : uAssetSymbol}):
+              Limit Price ({qAssetSymbol}):
               <Box pt={1}>
                 <StyledFilledInput
                   type="number"
@@ -462,6 +454,9 @@ const BuySellDialog = ({
               ) : serum ? (
                 <>
                   <OrderBook {...orderbook} />
+                  <Box fontSize={11} pt={1}>
+                    (Prices denoted in {qAssetSymbol})
+                  </Box>
                   <Box
                     pt={3}
                     pb={1}
@@ -504,9 +499,9 @@ const BuySellDialog = ({
                           parsedOrderSize > 1 ? 's' : ''
                         } @ ${
                           orderType === 'limit'
-                            ? `${parsedLimitPrice} ${
-                                type === 'call' ? qAssetSymbol : uAssetSymbol
-                              } ${parsedOrderSize > 1 ? 'each' : ''}`
+                            ? `${parsedLimitPrice} ${qAssetSymbol} ${
+                                parsedOrderSize > 1 ? 'each' : ''
+                              }`
                             : 'market price'
                         }`}
                   </Box>

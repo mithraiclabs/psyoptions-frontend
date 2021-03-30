@@ -7,7 +7,8 @@ import {
   Market,
 } from '@mithraic-labs/options-js-bindings'
 
-import { Connection, PublicKey } from '@solana/web3.js'
+import { Connection, PublicKey, SystemProgram, Transaction } from '@solana/web3.js'
+import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 
 import { buildSolanaExplorerUrl } from '../utils/solanaExplorer'
 import useNotifications from './useNotifications'
@@ -17,7 +18,7 @@ import useAssetList from './useAssetList'
 
 import { OptionsMarketsContext } from '../context/OptionsMarketsContext'
 
-import { initializeTokenAccountTx } from '../utils/token'
+import { initializeTokenAccountTx, WRAPPED_SOL_ADDRESS } from '../utils/token'
 
 import { truncatePublicKey } from '../utils/format'
 
@@ -257,6 +258,10 @@ const useOptionsMarkets = () => {
     underlyingAssetSrcAccount, // account in user's wallet to post uAsset collateral from
     writerTokenDestKey, // address in user's wallet to send the minted Writer Token
   }) => {
+    const transaction = new Transaction();
+    // TODO check if the token is wrapped SOL before add this transfer
+    transaction.add(Token.createTransferInstruction(TOKEN_PROGRAM_ID, pubKey, underlyingAssetSrcAccount, pubKey, [], marketData.amountPerContract))
+
     const { transaction: tx } = await readMarketAndMintCoveredCall({
       connection,
       payer: { publicKey: pubKey },
@@ -267,6 +272,7 @@ const useOptionsMarkets = () => {
       optionMarketKey: new PublicKey(marketData.optionMarketDataAddress),
       underlyingAssetAuthorityAccount: { publicKey: pubKey }, // Option writer's UA Authority account - safe to assume this is always the same as the payer when called from the FE UI
     })
+    transaction.add(tx);
 
     const signed = await wallet.signTransaction(tx)
     const txid = await connection.sendRawTransaction(signed.serialize())
@@ -312,6 +318,7 @@ const useOptionsMarkets = () => {
   }) => {
     const uAssetSymbol = uAsset.tokenSymbol
     const qAssetSymbol = qAsset.tokenSymbol
+
     if (!uAssetAccount) {
       // TODO - figure out how to distinguish between "a" vs "an" in this message
       // Not that simple because "USDC" you say "A", but for "ETH" you say an, it depends on the pronunciation
@@ -329,6 +336,54 @@ const useOptionsMarkets = () => {
         ?.amount || 0,
     )
 
+    const marketData = getMarket({
+      date,
+      uAssetSymbol,
+      qAssetSymbol,
+      size,
+      price,
+    })
+
+    // Handle Wrapped SOL
+    console.log('***** uAssetAccount', uAssetAccount, marketData, marketData.amountPerContract.times(uAssetDecimals).toString());
+    if (uAsset.mintAddress === WRAPPED_SOL_ADDRESS) {
+      const transaction = new Transaction();
+      // TODO check if the token is wrapped SOL before add this transfer
+      transaction.add(
+        SystemProgram.transfer({
+          fromPubkey: pubKey,
+          toPubkey: new PublicKey(uAssetAccount),
+          lamports: marketData.amountPerContract.times(uAssetDecimals).toString(),
+        }),
+      )
+      const { blockhash } = await connection.getRecentBlockhash();
+      transaction.recentBlockhash = blockhash;
+      transaction.feePayer = pubKey;
+      const signed = await wallet.signTransaction(transaction)
+      const txid = await connection.sendRawTransaction(signed.serialize())
+      pushNotification({
+        severity: 'info',
+        message: `Processing: Wrap ${size} Solana`,
+        link: (
+          <Link href={buildSolanaExplorerUrl(txid)} target="_new">
+            View on Solana Explorer
+          </Link>
+        ),
+      })
+
+      await connection.confirmTransaction(txid)
+
+      pushNotification({
+        severity: 'success',
+        message: `Confirmed: Wrap ${size} Solana`,
+        link: (
+          <Link href={buildSolanaExplorerUrl(txid)} target="_new">
+            View on Solana Explorer
+          </Link>
+        ),
+      })
+    } 
+
     if (uAssetBalance.div(uAssetDecimals).isLessThan(size)) {
       pushNotification({
         severity: 'warning',
@@ -338,14 +393,6 @@ const useOptionsMarkets = () => {
       })
       return true
     }
-
-    const marketData = getMarket({
-      date,
-      uAssetSymbol,
-      qAssetSymbol,
-      size,
-      price,
-    })
 
     let quoteAssetDestAccount = qAssetAccount || ownedQAssetAccounts[0]
     // If user has no quote asset account, we can create one because they don't need any quote asset to mint

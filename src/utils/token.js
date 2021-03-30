@@ -2,6 +2,8 @@ import { SystemProgram, Transaction, Account } from '@solana/web3.js'
 import { AccountLayout, Token } from '@solana/spl-token'
 import { TOKEN_PROGRAM_ID } from './tokenInstructions'
 
+export const WRAPPED_SOL_ADDRESS = 'So11111111111111111111111111111111111111112';
+
 export async function initializeTokenAccountTx({
   connection,
   payer,

@@ -18,9 +18,10 @@ import useAssetList from './useAssetList'
 
 import { OptionsMarketsContext } from '../context/OptionsMarketsContext'
 
-import { initializeTokenAccountTx, WRAPPED_SOL_ADDRESS } from '../utils/token'
+import { WRAPPED_SOL_ADDRESS } from '../utils/token'
 
 import { truncatePublicKey } from '../utils/format'
+import { useCreateNewTokenAccount } from './useCreateNewTokenAccount';
 
 // Example of how markets data should look:
 // const markets = {
@@ -48,6 +49,7 @@ const useOptionsMarkets = () => {
     OptionsMarketsContext,
   )
   const { supportedAssets } = useAssetList()
+  const createNewTokenAccount = useCreateNewTokenAccount()
 
   const fetchMarketData = useCallback(async () => {
     try {
@@ -318,8 +320,14 @@ const useOptionsMarkets = () => {
   }) => {
     const uAssetSymbol = uAsset.tokenSymbol
     const qAssetSymbol = qAsset.tokenSymbol
+    let _uAssetAccount = uAssetAccount;
 
-    if (!uAssetAccount) {
+    if (!_uAssetAccount && uAsset.mintAddress === WRAPPED_SOL_ADDRESS) {
+      // make an account for wrapped Sol when there is none
+      _uAssetAccount = await createNewTokenAccount(new PublicKey(WRAPPED_SOL_ADDRESS), 'Wrapped SOL')
+    }
+
+    if (!_uAssetAccount) {
       // TODO - figure out how to distinguish between "a" vs "an" in this message
       // Not that simple because "USDC" you say "A", but for "ETH" you say an, it depends on the pronunciation
       pushNotification({
@@ -332,7 +340,7 @@ const useOptionsMarkets = () => {
     // TODO - further optimization would be to remove the .find() here and just pass the whole object in
     const uAssetDecimals = new BigNumber(10).pow(uAsset.decimals)
     const uAssetBalance = new BigNumber(
-      ownedUAssetAccounts.find((asset) => asset.pubKey === uAssetAccount)
+      ownedUAssetAccounts.find((asset) => asset.pubKey === _uAssetAccount)
         ?.amount || 0,
     )
 
@@ -345,14 +353,14 @@ const useOptionsMarkets = () => {
     })
 
     // Handle Wrapped SOL
-    console.log('***** uAssetAccount', uAssetAccount, marketData, marketData.amountPerContract.times(uAssetDecimals).toString());
+    console.log('***** uAssetAccount', _uAssetAccount, marketData, marketData.amountPerContract.times(uAssetDecimals).toString());
     if (uAsset.mintAddress === WRAPPED_SOL_ADDRESS) {
       const transaction = new Transaction();
       // TODO check if the token is wrapped SOL before add this transfer
       transaction.add(
         SystemProgram.transfer({
           fromPubkey: pubKey,
-          toPubkey: new PublicKey(uAssetAccount),
+          toPubkey: new PublicKey(_uAssetAccount),
           lamports: marketData.amountPerContract.times(uAssetDecimals).toString(),
         }),
       )
@@ -388,7 +396,7 @@ const useOptionsMarkets = () => {
       pushNotification({
         severity: 'warning',
         message: `You must have at least ${size} ${uAssetSymbol} in your ${uAssetSymbol} account ${truncatePublicKey(
-          uAssetAccount,
+          _uAssetAccount,
         )} to mint this contract`,
       })
       return true
@@ -397,39 +405,7 @@ const useOptionsMarkets = () => {
     let quoteAssetDestAccount = qAssetAccount || ownedQAssetAccounts[0]
     // If user has no quote asset account, we can create one because they don't need any quote asset to mint
     if (!quoteAssetDestAccount) {
-      const [tx, newAccount] = await initializeTokenAccountTx({
-        connection,
-        payer: { publicKey: pubKey },
-        mintPublicKey: new PublicKey(marketData.qAssetMint),
-        owner: pubKey,
-      })
-      const signed = await wallet.signTransaction(tx)
-      const txid = await connection.sendRawTransaction(signed.serialize())
-
-      pushNotification({
-        severity: 'info',
-        message: `Processing: Create ${qAssetSymbol} Account`,
-        link: (
-          <Link href={buildSolanaExplorerUrl(txid)} target="_new">
-            View on Solana Explorer
-          </Link>
-        ),
-      })
-
-      await connection.confirmTransaction(txid)
-      quoteAssetDestAccount = newAccount.publicKey.toString()
-
-      // TODO: maybe we can send a name for this account in the wallet too, would be nice
-
-      pushNotification({
-        severity: 'success',
-        message: `Confirmed: Create ${qAssetSymbol} Account`,
-        link: (
-          <Link href={buildSolanaExplorerUrl(txid)} target="_new">
-            View on Solana Explorer
-          </Link>
-        ),
-      })
+      quoteAssetDestAccount = await createNewTokenAccount(new PublicKey(marketData.qAssetMint), qAssetSymbol)
     }
 
     // Fallback to first oowned minted option account
@@ -437,83 +413,19 @@ const useOptionsMarkets = () => {
       mintedOptionAccount || ownedMintedOptionAccounts[0]
     if (!mintedOptionDestKey) {
       // Create token account for minted option if the user doesn't have one yet
-      const [tx, newAccount] = await initializeTokenAccountTx({
-        connection,
-        payer: { publicKey: pubKey },
-        mintPublicKey: new PublicKey(marketData.optionMintAddress),
-        owner: pubKey,
-      })
-      const signed = await wallet.signTransaction(tx)
-      const txid = await connection.sendRawTransaction(signed.serialize())
-
-      pushNotification({
-        severity: 'info',
-        message: 'Processing: Create Options Token Account',
-        link: (
-          <Link href={buildSolanaExplorerUrl(txid)} target="_new">
-            View on Solana Explorer
-          </Link>
-        ),
-      })
-
-      await connection.confirmTransaction(txid)
-      mintedOptionDestKey = newAccount.publicKey.toString()
-
-      // TODO: maybe we can send a name for this account in the wallet too, would be nice
-
-      pushNotification({
-        severity: 'success',
-        message: 'Confirmed: Create Options Token Account',
-        link: (
-          <Link href={buildSolanaExplorerUrl(txid)} target="_new">
-            View on Solana Explorer
-          </Link>
-        ),
-      })
+      mintedOptionDestKey = await createNewTokenAccount(new PublicKey(marketData.optionMintAddress), 'Options Token')
     }
 
     let writerTokenDestKey = mintedWriterTokenDestKey
     if (!writerTokenDestKey) {
       // Create token account for minted Writer Token if the user doesn't have one yet
-      const [tx, newAccount] = await initializeTokenAccountTx({
-        connection,
-        payer: { publicKey: pubKey },
-        mintPublicKey: marketData.writerTokenMintKey,
-        owner: pubKey,
-      })
-      const signed = await wallet.signTransaction(tx)
-      const txid = await connection.sendRawTransaction(signed.serialize())
-
-      pushNotification({
-        severity: 'info',
-        message: 'Processing: Create Writer Token Account',
-        link: (
-          <Link href={buildSolanaExplorerUrl(txid)} target="_new">
-            View on Solana Explorer
-          </Link>
-        ),
-      })
-
-      await connection.confirmTransaction(txid)
-      writerTokenDestKey = newAccount.publicKey.toString()
-
-      // TODO: maybe we can send a name for this account in the wallet too, would be nice
-
-      pushNotification({
-        severity: 'success',
-        message: 'Confirmed: Create Writer Token Account',
-        link: (
-          <Link href={buildSolanaExplorerUrl(txid)} target="_new">
-            View on Solana Explorer
-          </Link>
-        ),
-      })
+      writerTokenDestKey = await createNewTokenAccount(marketData.writerTokenMintKey, 'Writer Token')
     }
 
     return mint({
       marketData,
       mintedOptionDestKey,
-      underlyingAssetSrcAccount: uAssetAccount,
+      underlyingAssetSrcAccount: _uAssetAccount,
       quoteAssetDestAccount,
       writerTokenDestKey,
     })

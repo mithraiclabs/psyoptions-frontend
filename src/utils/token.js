@@ -1,4 +1,4 @@
-import { SystemProgram, Transaction, Account } from '@solana/web3.js'
+import { LAMPORTS_PER_SOL, SystemProgram, Transaction, Account } from '@solana/web3.js'
 import { AccountLayout, Token } from '@solana/spl-token'
 import { TOKEN_PROGRAM_ID } from './tokenInstructions'
 
@@ -6,6 +6,7 @@ export const WRAPPED_SOL_ADDRESS = 'So11111111111111111111111111111111111111112'
 
 export async function initializeTokenAccountTx({
   connection,
+  extraLamports = 0,
   payer,
   mintPublicKey,
   owner,
@@ -21,7 +22,7 @@ export async function initializeTokenAccountTx({
     SystemProgram.createAccount({
       fromPubkey: payer.publicKey,
       newAccountPubkey: newAccount.publicKey,
-      lamports: tokenAccountRentBalance,
+      lamports: tokenAccountRentBalance + extraLamports,
       space: AccountLayout.span,
       programId: TOKEN_PROGRAM_ID,
     })

@@ -18,7 +18,7 @@ import useAssetList from './useAssetList'
 
 import { OptionsMarketsContext } from '../context/OptionsMarketsContext'
 
-import { WRAPPED_SOL_ADDRESS } from '../utils/token'
+import { initializeTokenAccountTx, WRAPPED_SOL_ADDRESS } from '../utils/token'
 
 import { truncatePublicKey } from '../utils/format'
 import { useCreateNewTokenAccount } from './useCreateNewTokenAccount';
@@ -322,12 +322,14 @@ const useOptionsMarkets = () => {
     const qAssetSymbol = qAsset.tokenSymbol
     let _uAssetAccount = uAssetAccount;
 
-    if (!_uAssetAccount && uAsset.mintAddress === WRAPPED_SOL_ADDRESS) {
-      // make an account for wrapped Sol when there is none
-      _uAssetAccount = await createNewTokenAccount(new PublicKey(WRAPPED_SOL_ADDRESS), 'Wrapped SOL')
-    }
+    // if (!_uAssetAccount && uAsset.mintAddress === WRAPPED_SOL_ADDRESS) {
+    //   // make an account for wrapped Sol when there is none
+    //   // TODO this might be a bad idea without listening/polling to get newly created accounts.
+    //   // If i don't refresh the page it will make a new account every time
+    //   _uAssetAccount = await createNewTokenAccount(new PublicKey(WRAPPED_SOL_ADDRESS), 'Wrapped SOL')
+    // }
 
-    if (!_uAssetAccount) {
+    if (!_uAssetAccount && uAsset.mintAddress !== WRAPPED_SOL_ADDRESS) {
       // TODO - figure out how to distinguish between "a" vs "an" in this message
       // Not that simple because "USDC" you say "A", but for "ETH" you say an, it depends on the pronunciation
       pushNotification({
@@ -355,19 +357,15 @@ const useOptionsMarkets = () => {
     // Handle Wrapped SOL
     console.log('***** uAssetAccount', _uAssetAccount, marketData, marketData.amountPerContract.times(uAssetDecimals).toString());
     if (uAsset.mintAddress === WRAPPED_SOL_ADDRESS) {
-      const transaction = new Transaction();
-      // TODO check if the token is wrapped SOL before add this transfer
-      transaction.add(
-        SystemProgram.transfer({
-          fromPubkey: pubKey,
-          toPubkey: new PublicKey(_uAssetAccount),
-          lamports: marketData.amountPerContract.times(uAssetDecimals).toString(),
-        }),
-      )
-      const { blockhash } = await connection.getRecentBlockhash();
-      transaction.recentBlockhash = blockhash;
-      transaction.feePayer = pubKey;
-      const signed = await wallet.signTransaction(transaction)
+      const lamports = marketData.amountPerContract.times(uAssetDecimals).toNumber()
+      const [tx, newAccount] = await initializeTokenAccountTx({
+        connection,
+        payer: { publicKey: pubKey },
+        mintPublicKey: new PublicKey(WRAPPED_SOL_ADDRESS),
+        owner: pubKey,
+        extraLamports: lamports,
+      })
+      const signed = await wallet.signTransaction(tx)
       const txid = await connection.sendRawTransaction(signed.serialize())
       pushNotification({
         severity: 'info',
@@ -380,6 +378,8 @@ const useOptionsMarkets = () => {
       })
 
       await connection.confirmTransaction(txid)
+
+      _uAssetAccount = newAccount.publicKey.toString();
 
       pushNotification({
         severity: 'success',
@@ -422,13 +422,15 @@ const useOptionsMarkets = () => {
       writerTokenDestKey = await createNewTokenAccount(marketData.writerTokenMintKey, 'Writer Token')
     }
 
-    return mint({
+    await mint({
       marketData,
       mintedOptionDestKey,
       underlyingAssetSrcAccount: _uAssetAccount,
       quoteAssetDestAccount,
       writerTokenDestKey,
     })
+
+    // TODO delete wrapped sol account
   }
 
   return {

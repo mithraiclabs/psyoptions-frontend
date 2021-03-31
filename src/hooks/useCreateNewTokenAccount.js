@@ -12,13 +12,13 @@ export const useCreateNewTokenAccount = () => {
   const { pushNotification } = useNotifications()
 
   return useCallback(async (mintKey, accountName) => {
-    const {transaction, signers} = await initializeTokenAccountTx({
+    const [tx, newAccount] = await initializeTokenAccountTx({
       connection,
       payer: { publicKey: pubKey },
       mintPublicKey: mintKey,
       owner: pubKey,
     })
-    const signed = await wallet.signTransaction(transaction)
+    const signed = await wallet.signTransaction(tx)
     const txid = await connection.sendRawTransaction(signed.serialize())
   
     pushNotification({
@@ -44,6 +44,6 @@ export const useCreateNewTokenAccount = () => {
         </Link>
       ),
     })
-    return signers[0].publicKey.toString()
+    return newAccount.publicKey.toString()
   }, [connection, pubKey, pushNotification, wallet])
 }

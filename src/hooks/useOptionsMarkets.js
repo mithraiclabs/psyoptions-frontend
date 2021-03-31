@@ -260,18 +260,6 @@ const useOptionsMarkets = () => {
   }) => {
     const tx = transaction;
 
-    console.log('**** mintCoveredCallInstruction', {
-      authorityPubkey: pubKey,
-      programId: new PublicKey(endpoint.programId),
-      optionMarketKey: marketData.optionMarketKey,
-      optionMintKey: marketData.optionMintKey,
-      mintedOptionDestKey,
-      writerTokenDestKey,
-      writerTokenMintKey: marketData.writerTokenMintKey,
-      underlyingAssetPoolKey: marketData.underlyingAssetPoolKey,
-      underlyingAssetSrcKey: new PublicKey(underlyingAssetSrcAddress),
-    });
-
     const mintInstruction = await mintCoveredCallInstruction({
       authorityPubkey: pubKey,
       programId: new PublicKey(endpoint.programId),
@@ -284,29 +272,14 @@ const useOptionsMarkets = () => {
       underlyingAssetSrcKey: new PublicKey(underlyingAssetSrcAddress),
     });
 
-    // const { transaction: tx } = await readMarketAndMintCoveredCall({
-    //   connection,
-    //   payer: { publicKey: pubKey },
-    //   programId: endpoint.programId,
-    //   mintedOptionDestKey,
-    //   writerTokenDestKey: new PublicKey(writerTokenDestKey),
-    //   underlyingAssetSrcKey: new PublicKey(underlyingAssetSrcAccount),
-    //   optionMarketKey: new PublicKey(marketData.optionMarketDataAddress),
-    //   underlyingAssetAuthorityAccount: { publicKey: pubKey }, // Option writer's UA Authority account - safe to assume this is always the same as the payer when called from the FE UI
-    // })
-
     tx.add(mintInstruction);
     tx.feePayer = pubKey;
     const { blockhash } = await connection.getRecentBlockhash();
     tx.recentBlockhash = blockhash;
+
     if (signers.length) {
       tx.partialSign(...signers);
     }
-    console.log('*** Transaction', tx, signers);
-
-    // TODO add fee payer, add signer, add recent blockhash
-
-
     const signed = await wallet.signTransaction(tx)
     const txid = await connection.sendRawTransaction(signed.serialize())
 
@@ -354,14 +327,7 @@ const useOptionsMarkets = () => {
     const signers = [];
     const uAssetSymbol = uAsset.tokenSymbol
     const qAssetSymbol = qAsset.tokenSymbol
-    const _uAssetAccount = uAssetAccount;
-
-    // if (!_uAssetAccount && uAsset.mintAddress === WRAPPED_SOL_ADDRESS) {
-    //   // make an account for wrapped Sol when there is none
-    //   // TODO this might be a bad idea without listening/polling to get newly created accounts.
-    //   // If i don't refresh the page it will make a new account every time
-    //   _uAssetAccount = await createNewTokenAccount(new PublicKey(WRAPPED_SOL_ADDRESS), 'Wrapped SOL')
-    // }
+    let _uAssetAccount = uAssetAccount;
 
     if (!_uAssetAccount && uAsset.mintAddress !== WRAPPED_SOL_ADDRESS) {
       // TODO - figure out how to distinguish between "a" vs "an" in this message
@@ -400,34 +366,10 @@ const useOptionsMarkets = () => {
         extraLamports: lamports,
       })
       tx.add(transaction);
-      signers.push(newTokenAccount)
+      signers.push(newTokenAccount);
 
-      // const signed = await wallet.signTransaction(tx)
-      // const txid = await connection.sendRawTransaction(signed.serialize())
-      // pushNotification({
-      //   severity: 'info',
-      //   message: `Processing: Wrap ${size} Solana`,
-      //   link: (
-      //     <Link href={buildSolanaExplorerUrl(txid)} target="_new">
-      //       View on Solana Explorer
-      //     </Link>
-      //   ),
-      // })
-
-      // await connection.confirmTransaction(txid)
-
-      // _uAssetAccount = newAccount.publicKey.toString();
+      _uAssetAccount = newTokenAccount.publicKey.toString();
       uAssetBalance = new BigNumber(lamports);
-
-      // pushNotification({
-      //   severity: 'success',
-      //   message: `Confirmed: Wrap ${size} Solana`,
-      //   link: (
-      //     <Link href={buildSolanaExplorerUrl(txid)} target="_new">
-      //       View on Solana Explorer
-      //     </Link>
-      //   ),
-      // })
     } 
 
     if (uAssetBalance.div(uAssetDecimals).isLessThan(size)) {
@@ -487,7 +429,7 @@ const useOptionsMarkets = () => {
     return mint({
       marketData,
       mintedOptionDestKey: new PublicKey(mintedOptionDestAddress),
-      underlyingAssetSrcAccount: _uAssetAccount,
+      underlyingAssetSrcAddress: _uAssetAccount,
       quoteAssetDestAccount,
       writerTokenDestKey: new PublicKey(writerTokenDestAddress),
       existingTransaction: {transaction: tx, signers}

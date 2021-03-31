@@ -29,9 +29,9 @@ export const WrittenOptionRow = ({ expired, marketKey, writerTokenAccounts, held
   // TODO handle multiple wallets for the same Writer Token
   const initialWriterTokenAccount = writerTokenAccounts[0]
   const ownedUAssetAddress =
-  ownedTokenAccounts[market.uAssetMint][0]?.pubKey
+  ownedTokenAccounts[market.uAssetMint]?.[0]?.pubKey
   const ownedQAssetAddress =
-  ownedTokenAccounts[market.qAssetMint][0]?.pubKey
+  ownedTokenAccounts[market.qAssetMint]?.[0]?.pubKey
   const { closeOptionPostExpiration } = useCloseWrittenOptionPostExpiration(
     market,
     new PublicKey(ownedUAssetAddress),

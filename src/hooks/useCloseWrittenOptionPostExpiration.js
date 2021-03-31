@@ -1,11 +1,13 @@
 import React, { useCallback } from 'react'
-import { PublicKey } from '@solana/web3.js'
+import { PublicKey, Transaction } from '@solana/web3.js'
 import { Link } from '@material-ui/core'
-import { closePostExpirationOption } from '@mithraic-labs/options-js-bindings'
+import { closePostExpirationCoveredCallInstruction } from '@mithraic-labs/options-js-bindings'
+import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import useConnection from './useConnection'
 import useWallet from './useWallet'
 import useNotifications from './useNotifications'
 import { buildSolanaExplorerUrl } from '../utils/solanaExplorer'
+import { initializeTokenAccountTx, WRAPPED_SOL_ADDRESS } from '../utils/token';
 
 /**
  * Close the Option the wallet has written in order to return the
@@ -24,19 +26,55 @@ export const useCloseWrittenOptionPostExpiration = (
   const { pushNotification } = useNotifications()
   const { pubKey, wallet } = useWallet()
 
+  
   const closeOptionPostExpiration = useCallback(async () => {
     try {
-      const { transaction } = await closePostExpirationOption({
-        connection,
-        payer: {
-          publicKey: pubKey,
-        },
-        programId: endpoint.programId,
+      const transaction = new Transaction();
+      const signers = [];
+      let _underlyingAssetDestKey = underlyingAssetDestKey;
+      if (market.uAssetMint === WRAPPED_SOL_ADDRESS) {
+        // need to create a sol account
+        const {transaction: initWrappedSolAcctIx, newTokenAccount: wrappedSolAccount} = await initializeTokenAccountTx({
+          connection,
+          payer: { publicKey: pubKey },
+          mintPublicKey: new PublicKey(WRAPPED_SOL_ADDRESS),
+          owner: pubKey,
+        })
+        transaction.add(initWrappedSolAcctIx);
+        signers.push(wrappedSolAccount);
+        _underlyingAssetDestKey = wrappedSolAccount.publicKey
+      }
+      const ix = await closePostExpirationCoveredCallInstruction({
+        programId: new PublicKey(endpoint.programId),
         optionMarketKey: new PublicKey(market.optionMarketDataAddress),
-        underlyingAssetDestKey,
+        optionMintKey: market.optionMintKey,
+        underlyingAssetDestKey: _underlyingAssetDestKey,
+        underlyingAssetPoolKey: market.underlyingAssetPoolKey,
+        writerTokenMintKey: market.writerTokenMintKey,
         writerTokenSourceKey,
         writerTokenSourceAuthorityKey: pubKey,
       })
+      transaction.add(ix)
+      
+      // Close out the wrapped SOL account so it feels native
+      if (market.uAssetMint === WRAPPED_SOL_ADDRESS) {
+        transaction.add(
+          Token.createCloseAccountInstruction(
+            TOKEN_PROGRAM_ID,
+            _underlyingAssetDestKey,
+            pubKey, // Send any remaining SOL to the owner
+            pubKey,
+            [],
+          )
+        );
+      }
+      transaction.feePayer = pubKey;
+      const { blockhash } = await connection.getRecentBlockhash();
+      transaction.recentBlockhash = blockhash;
+      
+      if (signers.length) {
+        transaction.partialSign(...signers);
+      }
       const signed = await wallet.signTransaction(transaction)
       const txid = await connection.sendRawTransaction(signed.serialize())
       pushNotification({
@@ -64,7 +102,7 @@ export const useCloseWrittenOptionPostExpiration = (
         message: `${err}`,
       })
     }
-  }, [connection, endpoint.programId, market.optionMarketDataAddress, pubKey, pushNotification, underlyingAssetDestKey, wallet, writerTokenSourceKey])
+  }, [underlyingAssetDestKey, market.uAssetMint, market.optionMarketDataAddress, market.optionMintKey, market.underlyingAssetPoolKey, market.writerTokenMintKey, endpoint.programId, writerTokenSourceKey, pubKey, connection, wallet, pushNotification])
 
   return {
     closeOptionPostExpiration

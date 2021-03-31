@@ -38,12 +38,11 @@ const PositionRow = ({ row }) => {
   }
 
   const ownedQAssetKey =
-    ownedTokenAccounts && ownedTokenAccounts[row.quoteAssetKey][0]?.pubKey
+    ownedTokenAccounts[row.quoteAssetKey]?.[0]?.pubKey
   const ownedUAssetKey =
-    ownedTokenAccounts && ownedTokenAccounts[row.underlyingAssetKey][0]?.pubKey
+    ownedTokenAccounts[row.underlyingAssetKey]?.[0]?.pubKey
   const ownedOAssetKey =
-    ownedTokenAccounts &&
-    ownedTokenAccounts[row.optionContractTokenKey][0]?.pubKey
+    ownedTokenAccounts[row.optionContractTokenKey]?.[0]?.pubKey
 
   const { exercise } = useExerciseOpenPosition(
     row.market,

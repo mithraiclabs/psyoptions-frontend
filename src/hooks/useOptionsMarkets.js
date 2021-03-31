@@ -7,8 +7,7 @@ import {
   Market,
 } from '@mithraic-labs/options-js-bindings'
 
-import { Connection, PublicKey, SystemProgram, Transaction } from '@solana/web3.js'
-import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { Connection, PublicKey } from '@solana/web3.js'
 
 import { buildSolanaExplorerUrl } from '../utils/solanaExplorer'
 import useNotifications from './useNotifications'
@@ -260,9 +259,6 @@ const useOptionsMarkets = () => {
     underlyingAssetSrcAccount, // account in user's wallet to post uAsset collateral from
     writerTokenDestKey, // address in user's wallet to send the minted Writer Token
   }) => {
-    const transaction = new Transaction();
-    // TODO check if the token is wrapped SOL before add this transfer
-    transaction.add(Token.createTransferInstruction(TOKEN_PROGRAM_ID, pubKey, underlyingAssetSrcAccount, pubKey, [], marketData.amountPerContract))
 
     const { transaction: tx } = await readMarketAndMintCoveredCall({
       connection,
@@ -274,7 +270,6 @@ const useOptionsMarkets = () => {
       optionMarketKey: new PublicKey(marketData.optionMarketDataAddress),
       underlyingAssetAuthorityAccount: { publicKey: pubKey }, // Option writer's UA Authority account - safe to assume this is always the same as the payer when called from the FE UI
     })
-    transaction.add(tx);
 
     const signed = await wallet.signTransaction(tx)
     const txid = await connection.sendRawTransaction(signed.serialize())
@@ -341,7 +336,7 @@ const useOptionsMarkets = () => {
 
     // TODO - further optimization would be to remove the .find() here and just pass the whole object in
     const uAssetDecimals = new BigNumber(10).pow(uAsset.decimals)
-    const uAssetBalance = new BigNumber(
+    let uAssetBalance = new BigNumber(
       ownedUAssetAccounts.find((asset) => asset.pubKey === _uAssetAccount)
         ?.amount || 0,
     )
@@ -355,9 +350,9 @@ const useOptionsMarkets = () => {
     })
 
     // Handle Wrapped SOL
-    console.log('***** uAssetAccount', _uAssetAccount, marketData, marketData.amountPerContract.times(uAssetDecimals).toString());
     if (uAsset.mintAddress === WRAPPED_SOL_ADDRESS) {
       const lamports = marketData.amountPerContract.times(uAssetDecimals).toNumber()
+
       const [tx, newAccount] = await initializeTokenAccountTx({
         connection,
         payer: { publicKey: pubKey },
@@ -365,6 +360,7 @@ const useOptionsMarkets = () => {
         owner: pubKey,
         extraLamports: lamports,
       })
+
       const signed = await wallet.signTransaction(tx)
       const txid = await connection.sendRawTransaction(signed.serialize())
       pushNotification({
@@ -380,6 +376,7 @@ const useOptionsMarkets = () => {
       await connection.confirmTransaction(txid)
 
       _uAssetAccount = newAccount.publicKey.toString();
+      uAssetBalance = new BigNumber(lamports);
 
       pushNotification({
         severity: 'success',
@@ -422,7 +419,7 @@ const useOptionsMarkets = () => {
       writerTokenDestKey = await createNewTokenAccount(marketData.writerTokenMintKey, 'Writer Token')
     }
 
-    await mint({
+    return mint({
       marketData,
       mintedOptionDestKey,
       underlyingAssetSrcAccount: _uAssetAccount,

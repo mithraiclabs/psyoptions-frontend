@@ -1,4 +1,4 @@
-import { LAMPORTS_PER_SOL, SystemProgram, Transaction, Account } from '@solana/web3.js'
+import { SystemProgram, Transaction, Account } from '@solana/web3.js'
 import { AccountLayout, Token } from '@solana/spl-token'
 import { TOKEN_PROGRAM_ID } from './tokenInstructions'
 

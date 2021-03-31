@@ -2,8 +2,11 @@ import { SystemProgram, Transaction, Account } from '@solana/web3.js'
 import { AccountLayout, Token } from '@solana/spl-token'
 import { TOKEN_PROGRAM_ID } from './tokenInstructions'
 
+export const WRAPPED_SOL_ADDRESS = 'So11111111111111111111111111111111111111112';
+
 export async function initializeTokenAccountTx({
   connection,
+  extraLamports = 0,
   payer,
   mintPublicKey,
   owner,
@@ -11,6 +14,8 @@ export async function initializeTokenAccountTx({
   const newAccount = new Account()
   const transaction = new Transaction()
 
+  // TODO this should be hoisted out to some sort of context so the request 
+  //  isn't being made every time
   const tokenAccountRentBalance = await connection.getMinimumBalanceForRentExemption(
     AccountLayout.span
   )
@@ -19,7 +24,7 @@ export async function initializeTokenAccountTx({
     SystemProgram.createAccount({
       fromPubkey: payer.publicKey,
       newAccountPubkey: newAccount.publicKey,
-      lamports: tokenAccountRentBalance,
+      lamports: tokenAccountRentBalance + extraLamports,
       space: AccountLayout.span,
       programId: TOKEN_PROGRAM_ID,
     })
@@ -34,12 +39,7 @@ export async function initializeTokenAccountTx({
     )
   )
 
-  transaction.feePayer = payer.publicKey
-  const { blockhash } = await connection.getRecentBlockhash()
-  transaction.recentBlockhash = blockhash
-  transaction.partialSign(newAccount)
-
-  return [transaction, newAccount]
+  return {transaction, newTokenAccount: newAccount}
 }
 
 // return await signAndSendTransaction(connection, transaction, payer, signers)

@@ -29,9 +29,9 @@ export const WrittenOptionRow = ({ expired, marketKey, writerTokenAccounts, held
   // TODO handle multiple wallets for the same Writer Token
   const initialWriterTokenAccount = writerTokenAccounts[0]
   const ownedUAssetAddress =
-  ownedTokenAccounts[market.uAssetMint][0]?.pubKey
+  ownedTokenAccounts[market.uAssetMint]?.[0]?.pubKey
   const ownedQAssetAddress =
-  ownedTokenAccounts[market.qAssetMint][0]?.pubKey
+  ownedTokenAccounts[market.qAssetMint]?.[0]?.pubKey
   const { closeOptionPostExpiration } = useCloseWrittenOptionPostExpiration(
     market,
     new PublicKey(ownedUAssetAddress),
@@ -39,19 +39,15 @@ export const WrittenOptionRow = ({ expired, marketKey, writerTokenAccounts, held
   )
   const { exchangeWriterTokenForQuote } = useExchangeWriterTokenForQuote(market, new PublicKey(initialWriterTokenAccount.pubKey), new PublicKey(ownedQAssetAddress))
   const holdsContracts = !!heldContracts.length;
-  let _closePosition;
-  if (holdsContracts) {
-    // TODO handle multiple wallets for same Option Token
-    const initialOptionTokenAccount = heldContracts[0];
-  
-    const { closePosition } = useClosePosition(
-      market,
-      new PublicKey(initialOptionTokenAccount.pubKey),
-      new PublicKey(ownedUAssetAddress),
-      new PublicKey(initialWriterTokenAccount.pubKey)
-    )
-    _closePosition = closePosition;
-  }
+  // TODO handle multiple wallets for same Option Token
+  const initialOptionTokenAccount = heldContracts[0];
+  const { closePosition } = useClosePosition(
+    market,
+    // initialOptionTokenAccount can be undefined if there are no held contracts
+    new PublicKey(initialOptionTokenAccount?.pubKey),
+    new PublicKey(ownedUAssetAddress),
+    new PublicKey(initialWriterTokenAccount.pubKey)
+  )
       
   useEffect(() => {
     (async () => {
@@ -82,7 +78,7 @@ export const WrittenOptionRow = ({ expired, marketKey, writerTokenAccounts, held
         label="Close Position"
         color="primary"
         variant="outlined"
-        onClick={_closePosition}
+        onClick={closePosition}
       />}
       {quotePoolNotEmpty && <Chip
         clickable

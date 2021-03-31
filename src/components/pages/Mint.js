@@ -41,7 +41,6 @@ const Mint = () => {
   const [size, setSize] = useState(100)
   const [price, setPrice] = useState('')
   const [uAssetAccount, setUAssetAccount] = useState('')
-  const [qAssetAccount, setQAssetAccount] = useState('')
   const [mintedOptionAccount, setMintedOptionAccount] = useState('')
   const [mintedWriterTokenDestKey, setMintedWriterTokenDestKey] = useState('')
   const [loading, setLoading] = useState(false)
@@ -61,10 +60,6 @@ const Mint = () => {
   const ownedUAssetAccounts = useMemo(
     () => (uAsset && ownedTokenAccounts[uAsset.mintAddress]) || [],
     [uAsset, ownedTokenAccounts],
-  )
-  const ownedQAssetAccounts = useMemo(
-    () => (qAsset && ownedTokenAccounts[qAsset.mintAddress]) || [],
-    [qAsset, ownedTokenAccounts],
   )
   const ownedMintedOptionAccounts = useMemo(
     () =>
@@ -86,10 +81,6 @@ const Mint = () => {
   }, [ownedUAssetAccounts])
 
   useEffect(() => {
-    setQAssetAccount(ownedQAssetAccounts[0]?.pubKey || '')
-  }, [ownedQAssetAccounts])
-
-  useEffect(() => {
     setMintedOptionAccount(ownedMintedOptionAccounts[0]?.pubKey || '')
   }, [ownedMintedOptionAccounts])
 
@@ -107,9 +98,7 @@ const Mint = () => {
         size,
         price,
         uAssetAccount,
-        qAssetAccount,
         ownedUAssetAccounts,
-        ownedQAssetAccounts,
         mintedOptionAccount,
         ownedMintedOptionAccounts,
         mintedWriterTokenDestKey,
@@ -214,27 +203,6 @@ const Mint = () => {
                 <Box my={2}>
                   <SelectAsset selectedAsset={qAsset} disabled />
                 </Box>
-                {ownedQAssetAccounts.length > 1 && qAsset.mintAddress !== WRAPPED_SOL_ADDRESS ? (
-                  <Select
-                    variant="filled"
-                    label="Account"
-                    value={qAssetAccount}
-                    onChange={(e) => setQAssetAccount(e.target.value)}
-                    options={ownedQAssetAccounts.map((account) => ({
-                      value: account.pubKey,
-                      text: `${account.pubKey.slice(
-                        0,
-                        3,
-                      )}...${account.pubKey.slice(
-                        account.pubKey.length - 3,
-                        account.pubKey.length,
-                      )} (${account.amount} ${qAsset?.tokenSymbol})`,
-                    }))}
-                    style={{
-                      minWidth: '100%',
-                    }}
-                  />
-                ) : null}
               </Box>
             </Box>
 

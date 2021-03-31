@@ -273,7 +273,7 @@ const useOptionsMarkets = () => {
       underlyingAssetSrcKey: new PublicKey(underlyingAssetSrcAddress),
     });
     tx.add(mintInstruction);
-
+    
     // Close out the wrapped SOL account so it feels native
     if (marketData.uAssetMint === WRAPPED_SOL_ADDRESS) {
       transaction.add(
@@ -286,12 +286,11 @@ const useOptionsMarkets = () => {
         )
       );
     }
-
-
+    
     tx.feePayer = pubKey;
     const { blockhash } = await connection.getRecentBlockhash();
     tx.recentBlockhash = blockhash;
-
+    
     if (signers.length) {
       tx.partialSign(...signers);
     }
@@ -330,9 +329,7 @@ const useOptionsMarkets = () => {
     size,
     price,
     uAssetAccount,
-    qAssetAccount,
     ownedUAssetAccounts,
-    ownedQAssetAccounts,
     mintedOptionAccount,
     ownedMintedOptionAccounts,
     mintedWriterTokenDestKey,
@@ -372,7 +369,7 @@ const useOptionsMarkets = () => {
     // Handle Wrapped SOL
     if (uAsset.mintAddress === WRAPPED_SOL_ADDRESS) {
       const lamports = marketData.amountPerContract.times(uAssetDecimals).toNumber()
-
+      
       const {transaction, newTokenAccount} = await initializeTokenAccountTx({
         connection,
         payer: { publicKey: pubKey },
@@ -382,7 +379,7 @@ const useOptionsMarkets = () => {
       })
       tx.add(transaction);
       signers.push(newTokenAccount);
-
+      
       _uAssetAccount = newTokenAccount.publicKey.toString();
       uAssetBalance = new BigNumber(lamports);
     } 
@@ -392,60 +389,45 @@ const useOptionsMarkets = () => {
         severity: 'warning',
         message: `You must have at least ${size} ${uAssetSymbol} in your ${uAssetSymbol} account ${truncatePublicKey(
           _uAssetAccount,
-        )} to mint this contract`,
-      })
-      return true
-    }
-
-    let quoteAssetDestAccount = qAssetAccount || ownedQAssetAccounts[0]
-    // If user has no quote asset account, we can create one because they don't need any quote asset to mint
-    if (!quoteAssetDestAccount) {
-      const {transaction, newTokenAccount} = await initializeTokenAccountTx({
-        connection,
-        payer: { publicKey: pubKey },
-        mintPublicKey: new PublicKey(marketData.qAssetMint),
-        owner: pubKey,
-      });
-      tx.add(transaction);
-      signers.push(newTokenAccount);
-      quoteAssetDestAccount = newTokenAccount;
-    }
-
-    // Fallback to first oowned minted option account
-    let mintedOptionDestAddress =
+          )} to mint this contract`,
+        })
+        return true
+      }
+      
+      // Fallback to first oowned minted option account
+      let mintedOptionDestAddress =
       mintedOptionAccount || ownedMintedOptionAccounts[0]
-    if (!mintedOptionDestAddress) {
-      // Create token account for minted option if the user doesn't have one yet
-      const {transaction, newTokenAccount} = await initializeTokenAccountTx({
-        connection,
-        payer: { publicKey: pubKey },
-        mintPublicKey: new PublicKey(marketData.optionMintAddress),
-        owner: pubKey,
-      });
-      tx.add(transaction);
-      signers.push(newTokenAccount);
-      mintedOptionDestAddress = newTokenAccount;
-    }
-
-    let writerTokenDestAddress = mintedWriterTokenDestKey
-    if (!writerTokenDestAddress) {
-      // Create token account for minted Writer Token if the user doesn't have one yet
-      const {transaction, newTokenAccount} = await initializeTokenAccountTx({
-        connection,
-        payer: { publicKey: pubKey },
-        mintPublicKey: new PublicKey(marketData.writerTokenMintKey),
-        owner: pubKey,
-      });
-      tx.add(transaction);
-      signers.push(newTokenAccount);
-      writerTokenDestAddress = newTokenAccount;
-    }
-
+      if (!mintedOptionDestAddress) {
+        // Create token account for minted option if the user doesn't have one yet
+        const {transaction, newTokenAccount} = await initializeTokenAccountTx({
+          connection,
+          payer: { publicKey: pubKey },
+          mintPublicKey: new PublicKey(marketData.optionMintAddress),
+          owner: pubKey,
+        });
+        tx.add(transaction);
+        signers.push(newTokenAccount);
+        mintedOptionDestAddress = newTokenAccount.publicKey.toString();
+      }
+      
+      let writerTokenDestAddress = mintedWriterTokenDestKey
+      if (!writerTokenDestAddress) {
+        // Create token account for minted Writer Token if the user doesn't have one yet
+        const {transaction, newTokenAccount} = await initializeTokenAccountTx({
+          connection,
+          payer: { publicKey: pubKey },
+          mintPublicKey: marketData.writerTokenMintKey,
+          owner: pubKey,
+        });
+        tx.add(transaction);
+        signers.push(newTokenAccount);
+        writerTokenDestAddress = newTokenAccount.publicKey.toString();
+      }
+      
     return mint({
       marketData,
       mintedOptionDestKey: new PublicKey(mintedOptionDestAddress),
       underlyingAssetSrcAddress: _uAssetAccount,
-      quoteAssetDestAccount,
       writerTokenDestKey: new PublicKey(writerTokenDestAddress),
       existingTransaction: {transaction: tx, signers}
     })

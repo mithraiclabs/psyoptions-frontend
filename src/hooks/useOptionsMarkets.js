@@ -8,6 +8,7 @@ import {
 } from '@mithraic-labs/options-js-bindings'
 
 import { Connection, PublicKey, Transaction } from '@solana/web3.js'
+import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 
 import { buildSolanaExplorerUrl } from '../utils/solanaExplorer'
 import useNotifications from './useNotifications'
@@ -271,8 +272,22 @@ const useOptionsMarkets = () => {
       underlyingAssetPoolKey: marketData.underlyingAssetPoolKey,
       underlyingAssetSrcKey: new PublicKey(underlyingAssetSrcAddress),
     });
-
     tx.add(mintInstruction);
+
+    // Close out the wrapped SOL account so it feels native
+    if (marketData.uAssetMint === WRAPPED_SOL_ADDRESS) {
+      transaction.add(
+        Token.createCloseAccountInstruction(
+          TOKEN_PROGRAM_ID,
+          new PublicKey(underlyingAssetSrcAddress),
+          pubKey, // Send any remaining SOL to the owner
+          pubKey,
+          [],
+        )
+      );
+    }
+
+
     tx.feePayer = pubKey;
     const { blockhash } = await connection.getRecentBlockhash();
     tx.recentBlockhash = blockhash;

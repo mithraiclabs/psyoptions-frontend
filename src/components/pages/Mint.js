@@ -16,6 +16,7 @@ import useOptionsMarkets from '../../hooks/useOptionsMarkets'
 import useOwnedTokenAccounts from '../../hooks/useOwnedTokenAccounts'
 import useNotifications from '../../hooks/useNotifications'
 import useAssetList from '../../hooks/useAssetList'
+import { WRAPPED_SOL_ADDRESS } from '../../utils/token';
 
 const darkBorder = `1px solid ${theme.palette.background.main}`
 
@@ -189,7 +190,7 @@ const Mint = () => {
                     }}
                   />
                 </Box>
-                {ownedUAssetAccounts.length > 1 ? (
+                {ownedUAssetAccounts.length > 1 && uAsset.mintAddress !== WRAPPED_SOL_ADDRESS ? (
                   <Select
                     variant="filled"
                     label="Account"
@@ -213,7 +214,7 @@ const Mint = () => {
                 <Box my={2}>
                   <SelectAsset selectedAsset={qAsset} disabled />
                 </Box>
-                {ownedQAssetAccounts.length > 1 ? (
+                {ownedQAssetAccounts.length > 1 && qAsset.mintAddress !== WRAPPED_SOL_ADDRESS ? (
                   <Select
                     variant="filled"
                     label="Account"

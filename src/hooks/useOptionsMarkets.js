@@ -3,11 +3,12 @@ import BigNumber from 'bignumber.js'
 import { Link } from '@material-ui/core'
 import {
   initializeMarket,
-  readMarketAndMintCoveredCall,
+  mintCoveredCallInstruction,
   Market,
 } from '@mithraic-labs/options-js-bindings'
 
-import { Connection, PublicKey } from '@solana/web3.js'
+import { Connection, PublicKey, Transaction } from '@solana/web3.js'
+import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 
 import { buildSolanaExplorerUrl } from '../utils/solanaExplorer'
 import useNotifications from './useNotifications'
@@ -20,7 +21,6 @@ import { OptionsMarketsContext } from '../context/OptionsMarketsContext'
 import { initializeTokenAccountTx, WRAPPED_SOL_ADDRESS } from '../utils/token'
 
 import { truncatePublicKey } from '../utils/format'
-import { useCreateNewTokenAccount } from './useCreateNewTokenAccount';
 
 // Example of how markets data should look:
 // const markets = {
@@ -48,7 +48,6 @@ const useOptionsMarkets = () => {
     OptionsMarketsContext,
   )
   const { supportedAssets } = useAssetList()
-  const createNewTokenAccount = useCreateNewTokenAccount()
 
   const fetchMarketData = useCallback(async () => {
     try {
@@ -256,21 +255,46 @@ const useOptionsMarkets = () => {
   const mint = async ({
     marketData,
     mintedOptionDestKey, // address in user's wallet to send minted Option Token to
-    underlyingAssetSrcAccount, // account in user's wallet to post uAsset collateral from
+    underlyingAssetSrcAddress, // account in user's wallet to post uAsset collateral from
     writerTokenDestKey, // address in user's wallet to send the minted Writer Token
+    existingTransaction: {transaction, signers}, // existing transaction and signers
   }) => {
+    const tx = transaction;
 
-    const { transaction: tx } = await readMarketAndMintCoveredCall({
-      connection,
-      payer: { publicKey: pubKey },
-      programId: endpoint.programId,
-      mintedOptionDestKey: new PublicKey(mintedOptionDestKey),
-      writerTokenDestKey: new PublicKey(writerTokenDestKey),
-      underlyingAssetSrcKey: new PublicKey(underlyingAssetSrcAccount),
-      optionMarketKey: new PublicKey(marketData.optionMarketDataAddress),
-      underlyingAssetAuthorityAccount: { publicKey: pubKey }, // Option writer's UA Authority account - safe to assume this is always the same as the payer when called from the FE UI
-    })
+    const mintInstruction = await mintCoveredCallInstruction({
+      authorityPubkey: pubKey,
+      programId: new PublicKey(endpoint.programId),
+      optionMarketKey: marketData.optionMarketKey,
+      optionMintKey: marketData.optionMintKey,
+      mintedOptionDestKey,
+      writerTokenDestKey,
+      writerTokenMintKey: marketData.writerTokenMintKey,
+      underlyingAssetPoolKey: marketData.underlyingAssetPoolKey,
+      underlyingAssetSrcKey: new PublicKey(underlyingAssetSrcAddress),
+    });
+    tx.add(mintInstruction);
 
+    // Close out the wrapped SOL account so it feels native
+    if (marketData.uAssetMint === WRAPPED_SOL_ADDRESS) {
+      transaction.add(
+        Token.createCloseAccountInstruction(
+          TOKEN_PROGRAM_ID,
+          new PublicKey(underlyingAssetSrcAddress),
+          pubKey, // Send any remaining SOL to the owner
+          pubKey,
+          [],
+        )
+      );
+    }
+
+
+    tx.feePayer = pubKey;
+    const { blockhash } = await connection.getRecentBlockhash();
+    tx.recentBlockhash = blockhash;
+
+    if (signers.length) {
+      tx.partialSign(...signers);
+    }
     const signed = await wallet.signTransaction(tx)
     const txid = await connection.sendRawTransaction(signed.serialize())
 
@@ -313,16 +337,12 @@ const useOptionsMarkets = () => {
     ownedMintedOptionAccounts,
     mintedWriterTokenDestKey,
   }) => {
+
+    const tx = new Transaction();
+    const signers = [];
     const uAssetSymbol = uAsset.tokenSymbol
     const qAssetSymbol = qAsset.tokenSymbol
     let _uAssetAccount = uAssetAccount;
-
-    // if (!_uAssetAccount && uAsset.mintAddress === WRAPPED_SOL_ADDRESS) {
-    //   // make an account for wrapped Sol when there is none
-    //   // TODO this might be a bad idea without listening/polling to get newly created accounts.
-    //   // If i don't refresh the page it will make a new account every time
-    //   _uAssetAccount = await createNewTokenAccount(new PublicKey(WRAPPED_SOL_ADDRESS), 'Wrapped SOL')
-    // }
 
     if (!_uAssetAccount && uAsset.mintAddress !== WRAPPED_SOL_ADDRESS) {
       // TODO - figure out how to distinguish between "a" vs "an" in this message
@@ -353,40 +373,18 @@ const useOptionsMarkets = () => {
     if (uAsset.mintAddress === WRAPPED_SOL_ADDRESS) {
       const lamports = marketData.amountPerContract.times(uAssetDecimals).toNumber()
 
-      const [tx, newAccount] = await initializeTokenAccountTx({
+      const {transaction, newTokenAccount} = await initializeTokenAccountTx({
         connection,
         payer: { publicKey: pubKey },
         mintPublicKey: new PublicKey(WRAPPED_SOL_ADDRESS),
         owner: pubKey,
         extraLamports: lamports,
       })
+      tx.add(transaction);
+      signers.push(newTokenAccount);
 
-      const signed = await wallet.signTransaction(tx)
-      const txid = await connection.sendRawTransaction(signed.serialize())
-      pushNotification({
-        severity: 'info',
-        message: `Processing: Wrap ${size} Solana`,
-        link: (
-          <Link href={buildSolanaExplorerUrl(txid)} target="_new">
-            View on Solana Explorer
-          </Link>
-        ),
-      })
-
-      await connection.confirmTransaction(txid)
-
-      _uAssetAccount = newAccount.publicKey.toString();
+      _uAssetAccount = newTokenAccount.publicKey.toString();
       uAssetBalance = new BigNumber(lamports);
-
-      pushNotification({
-        severity: 'success',
-        message: `Confirmed: Wrap ${size} Solana`,
-        link: (
-          <Link href={buildSolanaExplorerUrl(txid)} target="_new">
-            View on Solana Explorer
-          </Link>
-        ),
-      })
     } 
 
     if (uAssetBalance.div(uAssetDecimals).isLessThan(size)) {
@@ -402,29 +400,54 @@ const useOptionsMarkets = () => {
     let quoteAssetDestAccount = qAssetAccount || ownedQAssetAccounts[0]
     // If user has no quote asset account, we can create one because they don't need any quote asset to mint
     if (!quoteAssetDestAccount) {
-      quoteAssetDestAccount = await createNewTokenAccount(new PublicKey(marketData.qAssetMint), qAssetSymbol)
+      const {transaction, newTokenAccount} = await initializeTokenAccountTx({
+        connection,
+        payer: { publicKey: pubKey },
+        mintPublicKey: new PublicKey(marketData.qAssetMint),
+        owner: pubKey,
+      });
+      tx.add(transaction);
+      signers.push(newTokenAccount);
+      quoteAssetDestAccount = newTokenAccount;
     }
 
     // Fallback to first oowned minted option account
-    let mintedOptionDestKey =
+    let mintedOptionDestAddress =
       mintedOptionAccount || ownedMintedOptionAccounts[0]
-    if (!mintedOptionDestKey) {
+    if (!mintedOptionDestAddress) {
       // Create token account for minted option if the user doesn't have one yet
-      mintedOptionDestKey = await createNewTokenAccount(new PublicKey(marketData.optionMintAddress), 'Options Token')
+      const {transaction, newTokenAccount} = await initializeTokenAccountTx({
+        connection,
+        payer: { publicKey: pubKey },
+        mintPublicKey: new PublicKey(marketData.optionMintAddress),
+        owner: pubKey,
+      });
+      tx.add(transaction);
+      signers.push(newTokenAccount);
+      mintedOptionDestAddress = newTokenAccount;
     }
 
-    let writerTokenDestKey = mintedWriterTokenDestKey
-    if (!writerTokenDestKey) {
+    let writerTokenDestAddress = mintedWriterTokenDestKey
+    if (!writerTokenDestAddress) {
       // Create token account for minted Writer Token if the user doesn't have one yet
-      writerTokenDestKey = await createNewTokenAccount(marketData.writerTokenMintKey, 'Writer Token')
+      const {transaction, newTokenAccount} = await initializeTokenAccountTx({
+        connection,
+        payer: { publicKey: pubKey },
+        mintPublicKey: new PublicKey(marketData.writerTokenMintKey),
+        owner: pubKey,
+      });
+      tx.add(transaction);
+      signers.push(newTokenAccount);
+      writerTokenDestAddress = newTokenAccount;
     }
 
     return mint({
       marketData,
-      mintedOptionDestKey,
-      underlyingAssetSrcAccount: _uAssetAccount,
+      mintedOptionDestKey: new PublicKey(mintedOptionDestAddress),
+      underlyingAssetSrcAddress: _uAssetAccount,
       quoteAssetDestAccount,
-      writerTokenDestKey,
+      writerTokenDestKey: new PublicKey(writerTokenDestAddress),
+      existingTransaction: {transaction: tx, signers}
     })
 
     // TODO delete wrapped sol account

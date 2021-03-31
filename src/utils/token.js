@@ -14,6 +14,8 @@ export async function initializeTokenAccountTx({
   const newAccount = new Account()
   const transaction = new Transaction()
 
+  // TODO this should be hoisted out to some sort of context so the request 
+  //  isn't being made every time
   const tokenAccountRentBalance = await connection.getMinimumBalanceForRentExemption(
     AccountLayout.span
   )
@@ -37,12 +39,7 @@ export async function initializeTokenAccountTx({
     )
   )
 
-  transaction.feePayer = payer.publicKey
-  const { blockhash } = await connection.getRecentBlockhash()
-  transaction.recentBlockhash = blockhash
-  transaction.partialSign(newAccount)
-
-  return [transaction, newAccount]
+  return {transaction, newTokenAccount: newAccount}
 }
 
 // return await signAndSendTransaction(connection, transaction, payer, signers)

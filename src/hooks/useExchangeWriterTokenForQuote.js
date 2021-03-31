@@ -1,10 +1,13 @@
 import React, { useCallback } from 'react';
-import { exchangeWriterTokenForQuote } from '@mithraic-labs/options-js-bindings'
+import { exchangeWriterTokenForQuoteInstruction } from '@mithraic-labs/options-js-bindings'
 import { Link } from '@material-ui/core'
+import { PublicKey, Transaction } from '@solana/web3.js';
+import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import useNotifications from './useNotifications';
 import useConnection from './useConnection';
 import useWallet from './useWallet';
 import { buildSolanaExplorerUrl } from '../utils/solanaExplorer'
+import { initializeTokenAccountTx, WRAPPED_SOL_ADDRESS } from '../utils/token';
 
 /**
  * Allow user to burn a Writer Token in exchange for Quote Asset in the 
@@ -12,7 +15,7 @@ import { buildSolanaExplorerUrl } from '../utils/solanaExplorer'
  * 
  * @param {*} market 
  * @param {*} writerTokenSourceKey 
- * @param {*} quoteAssetDestKey 
+ * @param {*} _quoteAssetDestKey 
  * @returns 
  */
 export const useExchangeWriterTokenForQuote = (market, writerTokenSourceKey, quoteAssetDestKey) => {
@@ -22,20 +25,53 @@ export const useExchangeWriterTokenForQuote = (market, writerTokenSourceKey, quo
   
   const _exchangeWriterTokenFoQuote = useCallback(async () => {
     try {
-      const { transaction } = await exchangeWriterTokenForQuote({
-        connection,
-        payer: {
-          publicKey: pubKey,
-        },
-        programId: endpoint.programId,
+      const transaction = new Transaction()
+      const signers = [];
+      let _quoteAssetDestKey = quoteAssetDestKey
+      if (market.qAssetMint === WRAPPED_SOL_ADDRESS) {
+        // quote is wrapped sol, must create account to transfer and close
+        const {transaction: initWrappedSolAcctIx, newTokenAccount: wrappedSolAccount} = await initializeTokenAccountTx({
+          connection,
+          payer: { publicKey: pubKey },
+          mintPublicKey: new PublicKey(WRAPPED_SOL_ADDRESS),
+          owner: pubKey,
+        })
+        transaction.add(initWrappedSolAcctIx);
+        signers.push(wrappedSolAccount);
+        _quoteAssetDestKey = wrappedSolAccount.publicKey
+      }
+      const ix = await exchangeWriterTokenForQuoteInstruction({
+        programId: new PublicKey(endpoint.programId),
         optionMarketKey: market.optionMarketKey,
         optionMintKey: market.optionMintKey,
         writerTokenMintKey: market.writerTokenMintKey,
         writerTokenSourceAuthorityKey: pubKey,
         quoteAssetPoolKey: market.quoteAssetPoolKey,
         writerTokenSourceKey,
-        quoteAssetDestKey,
+        quoteAssetDestKey: _quoteAssetDestKey,
       })
+      transaction.add(ix)
+
+      // Close out the wrapped SOL account so it feels native
+      if (market.qAssetMint === WRAPPED_SOL_ADDRESS) {
+        transaction.add(
+          Token.createCloseAccountInstruction(
+            TOKEN_PROGRAM_ID,
+            _quoteAssetDestKey,
+            pubKey, // Send any remaining SOL to the owner
+            pubKey,
+            [],
+          )
+        );
+      }
+      transaction.feePayer = pubKey;
+      const { blockhash } = await connection.getRecentBlockhash();
+      transaction.recentBlockhash = blockhash;
+      
+      if (signers.length) {
+        transaction.partialSign(...signers);
+      }
+
       const signed = await wallet.signTransaction(transaction)
       const txid = await connection.sendRawTransaction(signed.serialize())
       pushNotification({
@@ -63,7 +99,7 @@ export const useExchangeWriterTokenForQuote = (market, writerTokenSourceKey, quo
         message: `${err}`,
       })
     }
-  }, [connection, endpoint.programId, market.optionMarketKey, market.optionMintKey, market.quoteAssetPoolKey, market.writerTokenMintKey, pubKey, pushNotification, quoteAssetDestKey, wallet, writerTokenSourceKey])
+  }, [quoteAssetDestKey, market.qAssetMint, market.optionMarketKey, market.optionMintKey, market.writerTokenMintKey, market.quoteAssetPoolKey, endpoint.programId, pubKey, writerTokenSourceKey, wallet, connection, pushNotification])
 
   return {
     exchangeWriterTokenForQuote: _exchangeWriterTokenFoQuote

@@ -15,6 +15,7 @@ import useNotifications from './useNotifications'
 import useWallet from './useWallet'
 import useConnection from './useConnection'
 import useAssetList from './useAssetList'
+import useOwnedTokenAccounts from './useOwnedTokenAccounts'
 
 import { OptionsMarketsContext } from '../context/OptionsMarketsContext'
 
@@ -44,6 +45,7 @@ const useOptionsMarkets = () => {
   const { pushNotification } = useNotifications()
   const { wallet, pubKey } = useWallet()
   const { connection, endpoint } = useConnection()
+  const { refreshTokenAccounts } = useOwnedTokenAccounts();
   const { markets, setMarkets, marketsLoading, setMarketsLoading } = useContext(
     OptionsMarketsContext,
   )
@@ -258,6 +260,7 @@ const useOptionsMarkets = () => {
     underlyingAssetSrcAddress, // account in user's wallet to post uAsset collateral from
     writerTokenDestKey, // address in user's wallet to send the minted Writer Token
     existingTransaction: {transaction, signers}, // existing transaction and signers
+    shouldRefreshTokenAccounts,
   }) => {
     const tx = transaction;
 
@@ -309,6 +312,10 @@ const useOptionsMarkets = () => {
 
     await connection.confirmTransaction(txid)
 
+    if (shouldRefreshTokenAccounts) {
+      refreshTokenAccounts();
+    }
+
     pushNotification({
       severity: 'success',
       message: 'Confirmed: Mint Options Token',
@@ -340,6 +347,7 @@ const useOptionsMarkets = () => {
     const uAssetSymbol = uAsset.tokenSymbol
     const qAssetSymbol = qAsset.tokenSymbol
     let _uAssetAccount = uAssetAccount;
+    let shouldRefreshTokenAccounts = false;
 
     if (!_uAssetAccount && uAsset.mintAddress !== WRAPPED_SOL_ADDRESS) {
       // TODO - figure out how to distinguish between "a" vs "an" in this message
@@ -408,6 +416,7 @@ const useOptionsMarkets = () => {
         tx.add(transaction);
         signers.push(newTokenAccount);
         mintedOptionDestAddress = newTokenAccount.publicKey.toString();
+        shouldRefreshTokenAccounts = true;
       }
       
       let writerTokenDestAddress = mintedWriterTokenDestKey
@@ -422,6 +431,7 @@ const useOptionsMarkets = () => {
         tx.add(transaction);
         signers.push(newTokenAccount);
         writerTokenDestAddress = newTokenAccount.publicKey.toString();
+        shouldRefreshTokenAccounts = true;
       }
       
     return mint({
@@ -429,7 +439,8 @@ const useOptionsMarkets = () => {
       mintedOptionDestKey: new PublicKey(mintedOptionDestAddress),
       underlyingAssetSrcAddress: _uAssetAccount,
       writerTokenDestKey: new PublicKey(writerTokenDestAddress),
-      existingTransaction: {transaction: tx, signers}
+      existingTransaction: {transaction: tx, signers},
+      shouldRefreshTokenAccounts,
     })
 
     // TODO delete wrapped sol account

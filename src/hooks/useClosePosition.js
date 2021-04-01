@@ -91,6 +91,7 @@ export const useClosePosition = (
         ),
       })
       await connection.confirmTransaction(txid)
+
       pushNotification({
         severity: 'success',
         message: `Transaction Confirmed: Close Position`,

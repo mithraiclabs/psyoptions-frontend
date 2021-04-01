@@ -81,6 +81,12 @@ const SellButton = withStyles({
 
 const orderTypes = ['limit', 'market']
 
+const getHighestAccount = (accounts) => {
+  if (accounts.length === 0) return {}
+  if (accounts.length === 1) return accounts[0]
+  return accounts.sort((a, b) => b.amount - a.amount)[0]
+}
+
 const proptypes = {
   open: propTypes.bool,
   onClose: propTypes.func,
@@ -127,12 +133,16 @@ const BuySellDialog = ({
   const { connection, dexProgramId } = useConnection()
   const { wallet, pubKey } = useWallet()
   const { serumMarkets, fetchSerumMarket } = useSerum()
-  const { ownedTokenAccounts } = useOwnedTokenAccounts()
+  const {
+    ownedTokenAccounts,
+    loadingOwnedTokenAccounts,
+  } = useOwnedTokenAccounts()
   const [orderType, setOrderType] = useState('limit')
   const [orderSize, setOrderSize] = useState(1)
   const [limitPrice, setLimitPrice] = useState(0)
   const [initializingSerum, setInitializingSerum] = useState(false)
   const [orderbookLoaded, setOrderbookLoaded] = useState(false)
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false)
   const [orderbook, setOrderbook] = useState({
     bids: [],
     asks: [],
@@ -140,16 +150,16 @@ const BuySellDialog = ({
 
   const optionAccounts = ownedTokenAccounts[optionMintAddress] || []
   const writerAccounts = ownedTokenAccounts[writerTokenMintKey] || []
-  const contractsWritten = writerAccounts.reduce(
-    (a, b) => a + (b?.amount || 0),
-    0,
-  )
-  const openPositionSize = optionAccounts.reduce(
-    (a, b) => a + (b?.amount || 0),
-    0,
-  )
+  const uAssetAccounts = ownedTokenAccounts[uAssetMint] || []
 
-  // console.log(optionAccounts)
+  const contractsWritten = getHighestAccount(writerAccounts)?.amount
+  const openPositionSize = getHighestAccount(optionAccounts)?.amount
+  const uAssetBalance =
+    (getHighestAccount(uAssetAccounts)?.amount || 0) / 10 ** uAssetDecimals
+
+  const openPositionUAssetBalance = openPositionSize * amountPerContract
+  const sufficientFundsToSell =
+    openPositionSize + uAssetBalance / amountPerContract >= orderSize
 
   const serumMarketData = serumMarkets[serumKey]
   const serum = serumMarketData?.serumMarket
@@ -245,8 +255,74 @@ const BuySellDialog = ({
     }
   }
 
+  const showConfirmDialog = async () => {
+    setConfirmDialogOpen(true)
+  }
+
+  const hideConfirmDialog = async () => {
+    setConfirmDialogOpen(false)
+  }
+
+  const handleConfirmMintSell = async () => {
+    // Mint and place order
+  }
+
+  const confirmSellOrderMessage =
+    openPositionSize >= parsedOrderSize
+      ? `Place sell order with ${orderSize} owned option${
+          orderSize > 1 ? 's' : ''
+        }?`
+      : openPositionSize + uAssetBalance / amountPerContract >= parsedOrderSize
+      ? `Place sell order with ${
+          openPositionSize > 0
+            ? `${openPositionSize} owned option${
+                openPositionSize > 1 && orderSize > 1 ? 's' : ''
+              } and `
+            : ''
+        }${
+          (parsedOrderSize - openPositionSize) * amountPerContract
+        } ${uAssetSymbol}?`
+      : 'Not enough funds available to place sell order'
+
   return (
     <Dialog open={open} onClose={onClose} maxWidth={'lg'}>
+      <Dialog
+        open={confirmDialogOpen}
+        onClose={hideConfirmDialog}
+        maxWidth="sm"
+      >
+        <Box py={2} px={3} maxWidth="360px">
+          <Box py={1} textAlign="center">
+            {confirmSellOrderMessage}
+          </Box>
+          <Box
+            display="flex"
+            flexDirection="row"
+            py={1}
+            alignItems="center"
+            justifyContent="center"
+            width="100%"
+          >
+            <Button
+              variant="outlined"
+              color="primary"
+              onClick={hideConfirmDialog}
+              style={{ margin: '0 10px' }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="outlined"
+              color="primary"
+              onClick={() => handleConfirmMintSell()}
+              style={{ margin: '0 10px' }}
+              disabled={!sufficientFundsToSell}
+            >
+              Confirm
+            </Button>
+          </Box>
+        </Box>
+      </Dialog>
       <Box py={1} px={2} width="680px" maxWidth={['100%']}>
         <Box p={1} pt={2}>
           <h2 style={{ margin: '0' }}>{heading}</h2>
@@ -259,13 +335,24 @@ const BuySellDialog = ({
                 ? `${qAssetSymbol}/${uAssetSymbol}`
                 : `${uAssetSymbol}/${qAssetSymbol}`}
             </Box>
-            <Box pt={1}>Open Position: {openPositionSize}</Box>
+            <Box pt={1}>Mark Price: TODO</Box>
+            <Box pt={1}>
+              Open Position:{' '}
+              {loadingOwnedTokenAccounts ? 'Loading...' : openPositionSize}
+            </Box>
             <Box py={1}>
-              Written: {contractsWritten}{' '}
-              <span style={{ opacity: 0.5 }}>
-                ({contractsWritten * amountPerContract.toNumber()}{' '}
-                {uAssetSymbol} locked)
-              </span>
+              Written:{' '}
+              {loadingOwnedTokenAccounts ? (
+                'Loading...'
+              ) : (
+                <>
+                  {contractsWritten}{' '}
+                  <span style={{ opacity: 0.5 }}>
+                    ({contractsWritten * amountPerContract.toNumber()}{' '}
+                    {uAssetSymbol} locked)
+                  </span>
+                </>
+              )}
             </Box>
             <Box pb={1} pt={2}>
               Order Quantity:
@@ -292,13 +379,16 @@ const BuySellDialog = ({
                 </PlusMinusButton>
               </Box>
               <Box pt={1} style={{ fontSize: '12px' }}>
-                Collateral req to mint: {collateralRequired} {uAssetSymbol}
+                Collateral req to place order: {collateralRequired}{' '}
+                {uAssetSymbol}
               </Box>
               <Box pt={'2px'} style={{ fontSize: '12px' }}>
-                Current Value: $TODO USD
-              </Box>
-              <Box pt={'2px'} style={{ fontSize: '12px' }}>
-                Available: TODO {uAssetSymbol}
+                Available:{' '}
+                {loadingOwnedTokenAccounts
+                  ? 'Loading...'
+                  : `${
+                      uAssetBalance + openPositionUAssetBalance
+                    } ${uAssetSymbol} (${openPositionUAssetBalance} from open position)`}
               </Box>
             </Box>
             <Box pb={1} pt={2}>
@@ -395,6 +485,7 @@ const BuySellDialog = ({
                           (orderType === 'limit' &&
                             parsedLimitPrice.isLessThanOrEqualTo(0))
                         }
+                        onClick={showConfirmDialog}
                       >
                         Mint/Sell
                       </SellButton>

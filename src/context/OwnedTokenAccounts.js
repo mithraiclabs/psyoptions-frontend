@@ -25,12 +25,12 @@ const convertAccountInfoToLocalStruct = (_accountInfo, pubkey) => {
   const amountBuffer = Buffer.from(_accountInfo.amount)
   const amount = amountBuffer.readUintLE(0, 8)
   const mint = new PublicKey(_accountInfo.mint)
-    return {
-      amount,
-      mint,
-      // public key for the specific token account (NOT the wallet)
-      pubKey: pubkey,
-    }
+  return {
+    amount,
+    mint,
+    // public key for the specific token account (NOT the wallet)
+    pubKey: pubkey,
+  }
 }
 
 /**
@@ -40,21 +40,23 @@ const convertAccountInfoToLocalStruct = (_accountInfo, pubkey) => {
 const OwnedTokenAccountsProvider = ({ children }) => {
   const { connection } = useConnection()
   const { connected, pubKey } = useWallet()
+  const [loadingOwnedTokenAccounts, setLoading] = useState(false)
   const [ownedTokenAccounts, setOwnedTokenAccounts] = useState({})
-  const [refreshCount, setRefreshCount] = useState(0);
+  const [refreshCount, setRefreshCount] = useState(0)
   const refreshTokenAccounts = useCallback(() => {
-    setRefreshCount(count => count + 1)
+    setRefreshCount((count) => count + 1)
   }, [])
 
   useEffect(() => {
-    if(!connected || !pubKey) {
+    if (!connected || !pubKey) {
       // short circuit when there is no wallet connected
       return () => {}
     }
-    
-    let subscriptionIds;
-    (async () => {
+
+    let subscriptionIds
+    ;(async () => {
       const filters = getOwnedTokenAccountsFilter(pubKey)
+      setLoading(true)
       const resp = await connection._rpcRequest('getProgramAccounts', [
         TOKEN_PROGRAM_ID.toBase58(),
         {
@@ -62,29 +64,35 @@ const OwnedTokenAccountsProvider = ({ children }) => {
           filters,
         },
       ])
-      const _ownedTokenAccounts = {};
-      subscriptionIds = resp.result?.map(({account,  pubkey }) => {
+      const _ownedTokenAccounts = {}
+      subscriptionIds = resp.result?.map(({ account, pubkey }) => {
         const accountInfo = AccountLayout.decode(bs58.decode(account.data))
-        const initialAccount = convertAccountInfoToLocalStruct(accountInfo, pubkey)
-        const mint = initialAccount.mint.toString();
+        const initialAccount = convertAccountInfoToLocalStruct(
+          accountInfo,
+          pubkey,
+        )
+        const mint = initialAccount.mint.toString()
         if (_ownedTokenAccounts[mint]) {
-          _ownedTokenAccounts[mint].push(initialAccount)  
+          _ownedTokenAccounts[mint].push(initialAccount)
         } else {
-          _ownedTokenAccounts[mint] = [
-            initialAccount 
-          ]
+          _ownedTokenAccounts[mint] = [initialAccount]
         }
         // subscribe to the SPL token account updates
         return connection.onAccountChange(new PublicKey(pubkey), (_account) => {
           const listenerAccountInfo = AccountLayout.decode(_account.data)
-          const listenerAccount = convertAccountInfoToLocalStruct(listenerAccountInfo, pubkey)
-          setOwnedTokenAccounts(prevOwnedTokenAccounts => {
+          const listenerAccount = convertAccountInfoToLocalStruct(
+            listenerAccountInfo,
+            pubkey,
+          )
+          setOwnedTokenAccounts((prevOwnedTokenAccounts) => {
             const mintAsString = listenerAccount.mint.toString()
-            const prevMintState = prevOwnedTokenAccounts[mintAsString];
-            const index = prevMintState.findIndex(prevAccount => prevAccount.pubKey === pubkey)
+            const prevMintState = prevOwnedTokenAccounts[mintAsString]
+            const index = prevMintState.findIndex(
+              (prevAccount) => prevAccount.pubKey === pubkey,
+            )
             // replace prev state with updated state
-            const mintState = Object.assign([], prevMintState, { 
-              [index]: listenerAccount 
+            const mintState = Object.assign([], prevMintState, {
+              [index]: listenerAccount,
             })
             return {
               ...prevOwnedTokenAccounts,
@@ -94,6 +102,7 @@ const OwnedTokenAccountsProvider = ({ children }) => {
         })
       })
       setOwnedTokenAccounts(_ownedTokenAccounts)
+      setLoading(false)
     })()
 
     return () => {
@@ -105,7 +114,11 @@ const OwnedTokenAccountsProvider = ({ children }) => {
 
   return (
     <OwnedTokenAccountsContext.Provider
-      value={{ ownedTokenAccounts, refreshTokenAccounts }}
+      value={{
+        loadingOwnedTokenAccounts,
+        ownedTokenAccounts,
+        refreshTokenAccounts,
+      }}
     >
       {children}
     </OwnedTokenAccountsContext.Provider>

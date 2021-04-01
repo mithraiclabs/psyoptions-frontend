@@ -6,14 +6,9 @@ import {
   withStyles,
   Button,
   CircularProgress,
-  Table,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableBody,
 } from '@material-ui/core'
 import Done from '@material-ui/icons/Done'
-import React, { useState, useEffect, memo } from 'react'
+import React, { useState, useEffect } from 'react'
 import propTypes from 'prop-types'
 import BigNumber from 'bignumber.js'
 import { PublicKey } from '@solana/web3.js'
@@ -24,10 +19,13 @@ import { createInitializeMarketTx } from '../utils/serum'
 import useConnection from '../hooks/useConnection'
 import useWallet from '../hooks/useWallet'
 import useSerum from '../hooks/useSerum'
+import useOwnedTokenAccounts from '../hooks/useOwnedTokenAccounts'
+
+import OrderBook from './OrderBook'
 
 const successColor = theme.palette.success.main
 const errorColor = theme.palette.error.main
-const primaryColor = theme.palette.primary.main
+// const primaryColor = theme.palette.primary.main
 const bgLighterColor = theme.palette.background.lighter
 
 const StyledFilledInput = withStyles({
@@ -81,112 +79,6 @@ const SellButton = withStyles({
   },
 })(Button)
 
-const BidAskCell = withStyles({
-  root: {
-    padding: '2px 6px',
-    borderRight: `1px solid ${bgLighterColor}`,
-    fontSize: '12px',
-    '&:last-child': {
-      borderRight: 'none',
-    },
-  },
-})(TableCell)
-
-const centerBorder = { borderRight: `1px solid ${primaryColor}` }
-const topRowBorder = { borderTop: `1px solid ${bgLighterColor}` }
-
-const bidOrAskType = propTypes.shape({
-  size: propTypes.number,
-  price: propTypes.number,
-})
-
-const orderBookPropTypes = {
-  bids: propTypes.arrayOf(bidOrAskType),
-  asks: propTypes.arrayOf(bidOrAskType),
-}
-
-const OrderBook = memo(({ bids = [[]], asks = [[]] }) => {
-  // Maybe we should do this zipping of the bids/asks elsewhere
-  // Doing it here for quick and dirty solution, don't over-engineer right? :)
-  const rows = []
-  const minRows = 4
-  let i = 0
-  while (
-    rows.length < bids.length ||
-    rows.length < asks.length ||
-    rows.length < minRows
-  ) {
-    rows.push({ bid: bids[i] || {}, ask: asks[i] || {}, key: i })
-    i += 1
-  }
-
-  return (
-    <>
-      <Box pb={2}>Order Book</Box>
-      <Box width="100%">
-        <Table>
-          <TableHead>
-            <TableRow style={topRowBorder}>
-              <BidAskCell
-                colSpan={2}
-                align="left"
-                style={{ ...centerBorder, fontSize: '16px' }}
-              >
-                Bids
-              </BidAskCell>
-              <BidAskCell
-                colSpan={2}
-                align="right"
-                style={{ fontSize: '16px' }}
-              >
-                Asks
-              </BidAskCell>
-            </TableRow>
-            <TableRow>
-              <BidAskCell width="25%">price</BidAskCell>
-              <BidAskCell width="25%" style={{ ...centerBorder }}>
-                size
-              </BidAskCell>
-              <BidAskCell width="25%" align="right">
-                size
-              </BidAskCell>
-              <BidAskCell width="25%" align="right">
-                price
-              </BidAskCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {rows.map(({ bid, ask, key }) => {
-              return (
-                <TableRow key={key}>
-                  <BidAskCell width="25%" style={{ color: successColor }}>
-                    {bid?.price || '\u00A0'}
-                  </BidAskCell>
-                  <BidAskCell width="25%" style={centerBorder}>
-                    {bid?.size || '\u00A0'}
-                  </BidAskCell>
-                  <BidAskCell width="25%" align="right">
-                    {ask?.size || '\u00A0'}
-                  </BidAskCell>
-                  <BidAskCell
-                    width="25%"
-                    align="right"
-                    style={{ color: errorColor }}
-                  >
-                    {ask?.price || '\u00A0'}
-                  </BidAskCell>
-                </TableRow>
-              )
-            })}
-          </TableBody>
-        </Table>
-      </Box>
-    </>
-  )
-})
-
-OrderBook.propTypes = orderBookPropTypes
-
 const orderTypes = ['limit', 'market']
 
 const proptypes = {
@@ -229,11 +121,13 @@ const BuySellDialog = ({
   precision,
   type,
   optionMintAddress,
+  writerTokenMintKey,
   serumKey,
 }) => {
   const { connection, dexProgramId } = useConnection()
   const { wallet, pubKey } = useWallet()
   const { serumMarkets, fetchSerumMarket } = useSerum()
+  const { ownedTokenAccounts } = useOwnedTokenAccounts()
   const [orderType, setOrderType] = useState('limit')
   const [orderSize, setOrderSize] = useState(1)
   const [limitPrice, setLimitPrice] = useState(0)
@@ -243,6 +137,19 @@ const BuySellDialog = ({
     bids: [],
     asks: [],
   })
+
+  const optionAccounts = ownedTokenAccounts[optionMintAddress] || []
+  const writerAccounts = ownedTokenAccounts[writerTokenMintKey] || []
+  const contractsWritten = writerAccounts.reduce(
+    (a, b) => a + (b?.amount || 0),
+    0,
+  )
+  const openPositionSize = optionAccounts.reduce(
+    (a, b) => a + (b?.amount || 0),
+    0,
+  )
+
+  // console.log(optionAccounts)
 
   const serumMarketData = serumMarkets[serumKey]
   const serum = serumMarketData?.serumMarket
@@ -272,9 +179,6 @@ const BuySellDialog = ({
   const collateralRequired =
     amountPerContract &&
     amountPerContract.multipliedBy(parsedOrderSize).toString()
-
-  const contractsWritten = 0
-  const openPositionSize = 0
 
   const formatStrike = (sp) => {
     if (!sp) return '—'

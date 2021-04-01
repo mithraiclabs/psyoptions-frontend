@@ -103,10 +103,6 @@ const OwnedTokenAccountsProvider = ({ children }) => {
     }
   }, [connected, connection, pubKey, refreshCount])
 
-  useEffect(() => {
-    
-  }, [])
-
   return (
     <OwnedTokenAccountsContext.Provider
       value={{ ownedTokenAccounts, refreshTokenAccounts }}

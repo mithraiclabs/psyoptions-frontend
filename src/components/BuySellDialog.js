@@ -8,11 +8,13 @@ import {
   CircularProgress,
 } from '@material-ui/core'
 import Done from '@material-ui/icons/Done'
+import Tooltip from '@material-ui/core/Tooltip'
 import React, { useState, useEffect } from 'react'
 import propTypes from 'prop-types'
 import BigNumber from 'bignumber.js'
 import { PublicKey } from '@solana/web3.js'
 import BN from 'bn.js'
+import * as Sentry from '@sentry/react'
 
 import theme from '../utils/theme'
 import { createInitializeMarketTx } from '../utils/serum'
@@ -20,6 +22,8 @@ import useConnection from '../hooks/useConnection'
 import useWallet from '../hooks/useWallet'
 import useSerum from '../hooks/useSerum'
 import useOwnedTokenAccounts from '../hooks/useOwnedTokenAccounts'
+import useOptionsMarkets from '../hooks/useOptionsMarkets'
+import useNotifications from '../hooks/useNotifications'
 
 import OrderBook from './OrderBook'
 
@@ -129,9 +133,12 @@ const BuySellDialog = ({
   optionMintAddress,
   writerTokenMintKey,
   serumKey,
+  date,
 }) => {
+  const { pushNotification } = useNotifications()
   const { connection, dexProgramId } = useConnection()
   const { wallet, pubKey } = useWallet()
+  const { createAccountsAndMint } = useOptionsMarkets()
   const { serumMarkets, fetchSerumMarket } = useSerum()
   const {
     ownedTokenAccounts,
@@ -142,7 +149,7 @@ const BuySellDialog = ({
   const [limitPrice, setLimitPrice] = useState(0)
   const [initializingSerum, setInitializingSerum] = useState(false)
   const [orderbookLoaded, setOrderbookLoaded] = useState(false)
-  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false)
+  const [placeOrderLoading, setPlaceOrderLoading] = useState(false)
   const [orderbook, setOrderbook] = useState({
     bids: [],
     asks: [],
@@ -186,9 +193,13 @@ const BuySellDialog = ({
     Number.isNaN(parseFloat(limitPrice)) || limitPrice < 0 ? 0 : limitPrice,
   )
 
-  const collateralRequired =
-    amountPerContract &&
-    amountPerContract.multipliedBy(parsedOrderSize).toString()
+  const collateralRequired = amountPerContract
+    ? Math.max(
+        amountPerContract.multipliedBy(parsedOrderSize).toNumber() -
+          openPositionUAssetBalance,
+        0,
+      )
+    : 'N/A'
 
   const formatStrike = (sp) => {
     if (!sp) return '—'
@@ -255,74 +266,83 @@ const BuySellDialog = ({
     }
   }
 
-  const showConfirmDialog = async () => {
-    setConfirmDialogOpen(true)
+  const handleMint = async (numberOfContracts) => {
+    setPlaceOrderLoading(true)
+    try {
+      await createAccountsAndMint({
+        date: date.unix(),
+        uAsset: {
+          tokenSymbol: uAssetSymbol,
+          mintAddress: uAssetMint,
+          decimals: uAssetDecimals,
+        },
+        qAsset: {
+          tokenSymbol: qAssetSymbol,
+          mintAddress: qAssetMint,
+          decimals: qAssetDecimals,
+        },
+        size: amountPerContract.toNumber(),
+        price: strike.toString(),
+        uAssetAccount: getHighestAccount(uAssetAccounts)?.pubKey,
+        ownedUAssetAccounts: uAssetAccounts,
+        mintedOptionAccount: getHighestAccount(optionAccounts)?.pubKey,
+        ownedMintedOptionAccounts: optionAccounts,
+        mintedWriterTokenDestKey: getHighestAccount(writerAccounts)?.pubKey,
+        numberOfContracts,
+      })
+
+      // setPlaceOrderLoading(false)
+    } catch (err) {
+      setPlaceOrderLoading(false)
+      console.log(err)
+      Sentry.captureException(err)
+      pushNotification({
+        severity: 'error',
+        message: `${err}`,
+      })
+    }
   }
 
-  const hideConfirmDialog = async () => {
-    setConfirmDialogOpen(false)
-  }
-
-  const handleConfirmMintSell = async () => {
+  const handlePlaceSellOrder = async () => {
     // Mint and place order
+    if (parsedOrderSize <= openPositionSize) {
+      // Just place order with currently open position
+      console.log('TODO: place order with open position')
+      // TODO
+    } else {
+      // Mint missing contracs before placing order
+      const numberOfContracts = parsedOrderSize - openPositionSize
+      await handleMint(numberOfContracts)
+    }
   }
 
-  const confirmSellOrderMessage =
+  // const buyTooltipLabel = null
+
+  const mintSellTooltipLabel =
     openPositionSize >= parsedOrderSize
-      ? `Place sell order with ${orderSize} owned option${
+      ? `Place sell order using: ${orderSize} owned option${
           orderSize > 1 ? 's' : ''
-        }?`
-      : openPositionSize + uAssetBalance / amountPerContract >= parsedOrderSize
-      ? `Place sell order with ${
+        }`
+      : openPositionSize + uAssetBalance / amountPerContract.toNumber() >=
+        parsedOrderSize
+      ? `Place sell order using: ${
           openPositionSize > 0
             ? `${openPositionSize} owned option${
                 openPositionSize > 1 && orderSize > 1 ? 's' : ''
               } and `
             : ''
         }${
-          (parsedOrderSize - openPositionSize) * amountPerContract
-        } ${uAssetSymbol}?`
-      : 'Not enough funds available to place sell order'
+          (parsedOrderSize - openPositionSize) * amountPerContract.toNumber()
+        } ${uAssetSymbol}`
+      : 'Collateral requirement not met to place sell order'
+
+  const isSellDisabled =
+    (!orderbook?.bids?.length && orderType === 'market') ||
+    (orderType === 'limit' && parsedLimitPrice.isLessThanOrEqualTo(0)) ||
+    !sufficientFundsToSell
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth={'lg'}>
-      <Dialog
-        open={confirmDialogOpen}
-        onClose={hideConfirmDialog}
-        maxWidth="sm"
-      >
-        <Box py={2} px={3} maxWidth="360px">
-          <Box py={1} textAlign="center">
-            {confirmSellOrderMessage}
-          </Box>
-          <Box
-            display="flex"
-            flexDirection="row"
-            py={1}
-            alignItems="center"
-            justifyContent="center"
-            width="100%"
-          >
-            <Button
-              variant="outlined"
-              color="primary"
-              onClick={hideConfirmDialog}
-              style={{ margin: '0 10px' }}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="outlined"
-              color="primary"
-              onClick={() => handleConfirmMintSell()}
-              style={{ margin: '0 10px' }}
-              disabled={!sufficientFundsToSell}
-            >
-              Confirm
-            </Button>
-          </Box>
-        </Box>
-      </Dialog>
       <Box py={1} px={2} width="680px" maxWidth={['100%']}>
         <Box p={1} pt={2}>
           <h2 style={{ margin: '0' }}>{heading}</h2>
@@ -379,16 +399,16 @@ const BuySellDialog = ({
                 </PlusMinusButton>
               </Box>
               <Box pt={1} style={{ fontSize: '12px' }}>
-                Collateral req to place order: {collateralRequired}{' '}
-                {uAssetSymbol}
+                Collateral req to sell:{' '}
+                {loadingOwnedTokenAccounts
+                  ? 'Loading...'
+                  : `${collateralRequired} ${uAssetSymbol}`}
               </Box>
               <Box pt={'2px'} style={{ fontSize: '12px' }}>
                 Available:{' '}
                 {loadingOwnedTokenAccounts
                   ? 'Loading...'
-                  : `${
-                      uAssetBalance + openPositionUAssetBalance
-                    } ${uAssetSymbol} (${openPositionUAssetBalance} from open position)`}
+                  : `${uAssetBalance} ${uAssetSymbol}`}
               </Box>
             </Box>
             <Box pb={1} pt={2}>
@@ -461,35 +481,54 @@ const BuySellDialog = ({
                     pb={1}
                     display="flex"
                     flexDirection="row"
+                    justifyContent="center"
                     width="100%"
                   >
-                    <Box pr={1} width="50%">
-                      <BuyButton
-                        fullWidth
-                        disabled={
-                          (!orderbook?.asks?.length &&
-                            orderType === 'market') ||
-                          (orderType === 'limit' &&
-                            parsedLimitPrice.isLessThanOrEqualTo(0))
-                        }
-                      >
-                        Buy
-                      </BuyButton>
-                    </Box>
-                    <Box pl={1} width="50%">
-                      <SellButton
-                        fullWidth
-                        disabled={
-                          (!orderbook?.bids?.length &&
-                            orderType === 'market') ||
-                          (orderType === 'limit' &&
-                            parsedLimitPrice.isLessThanOrEqualTo(0))
-                        }
-                        onClick={showConfirmDialog}
-                      >
-                        Mint/Sell
-                      </SellButton>
-                    </Box>
+                    {placeOrderLoading ? (
+                      <CircularProgress />
+                    ) : (
+                      <>
+                        <Box pr={1} width="50%">
+                          {/* <Tooltip title={buyTooltipLabel} placement="top"> */}
+                          <BuyButton
+                            fullWidth
+                            disabled={
+                              (!orderbook?.asks?.length &&
+                                orderType === 'market') ||
+                              (orderType === 'limit' &&
+                                parsedLimitPrice.isLessThanOrEqualTo(0))
+                            }
+                          >
+                            Buy
+                          </BuyButton>
+                          {/* </Tooltip> */}
+                        </Box>
+                        <Box pl={1} width="50%">
+                          {/* Annoying thing I had to do to get MUI to stop clogging the console with "errors" that aren't real errors about how wrapping a disabled button in a tooltip won't show the tooltip... sigh */}
+                          {isSellDisabled ? (
+                            <SellButton
+                              fullWidth
+                              disabled
+                              onClick={handlePlaceSellOrder}
+                            >
+                              Mint/Sell
+                            </SellButton>
+                          ) : (
+                            <Tooltip
+                              title={mintSellTooltipLabel}
+                              placement="top"
+                            >
+                              <SellButton
+                                fullWidth
+                                onClick={handlePlaceSellOrder}
+                              >
+                                Mint/Sell
+                              </SellButton>
+                            </Tooltip>
+                          )}
+                        </Box>
+                      </>
+                    )}
                   </Box>
                   <Box pt={1} pb={2}>
                     {orderType === 'limit' &&

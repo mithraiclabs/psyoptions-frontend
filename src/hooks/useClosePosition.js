@@ -8,6 +8,7 @@ import useWallet from './useWallet'
 import useNotifications from './useNotifications'
 import { buildSolanaExplorerUrl } from '../utils/solanaExplorer'
 import { initializeTokenAccountTx, WRAPPED_SOL_ADDRESS } from '../utils/token';
+import { useSolanaMeta } from '../context/SolanaMetaContext';
 
 /**
  * Close the Option the wallet has written in order to return the
@@ -27,6 +28,7 @@ export const useClosePosition = (
   const { connection, endpoint } = useConnection()
   const { pushNotification } = useNotifications()
   const { pubKey, wallet } = useWallet()
+  const { splTokenAccountRentBalance } = useSolanaMeta()
 
   const closePosition = useCallback(async () => {
     try {
@@ -40,6 +42,7 @@ export const useClosePosition = (
           payer: { publicKey: pubKey },
           mintPublicKey: new PublicKey(WRAPPED_SOL_ADDRESS),
           owner: pubKey,
+          rentBalance: splTokenAccountRentBalance,
         })
         tx.add(transaction);
         signers.push(wrappedSolAccount);
@@ -107,7 +110,7 @@ export const useClosePosition = (
         message: `${err}`,
       })
     }
-  }, [underlyingAssetDestKey, market.uAssetMint, market.optionMarketKey, market.underlyingAssetPoolKey, market.optionMintKey, market.writerTokenMintKey, connection, pubKey, endpoint.programId, optionTokenSrcKey, writerTokenSourceKey, wallet, pushNotification])
+  }, [underlyingAssetDestKey, market.uAssetMint, market.optionMarketKey, market.underlyingAssetPoolKey, market.optionMintKey, market.writerTokenMintKey, endpoint.programId, optionTokenSrcKey, pubKey, writerTokenSourceKey, connection, wallet, pushNotification, splTokenAccountRentBalance])
 
   return {
     closePosition

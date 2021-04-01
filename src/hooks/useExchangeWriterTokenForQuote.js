@@ -8,6 +8,7 @@ import useConnection from './useConnection';
 import useWallet from './useWallet';
 import { buildSolanaExplorerUrl } from '../utils/solanaExplorer'
 import { initializeTokenAccountTx, WRAPPED_SOL_ADDRESS } from '../utils/token';
+import { useSolanaMeta } from '../context/SolanaMetaContext';
 
 /**
  * Allow user to burn a Writer Token in exchange for Quote Asset in the 
@@ -21,6 +22,7 @@ import { initializeTokenAccountTx, WRAPPED_SOL_ADDRESS } from '../utils/token';
 export const useExchangeWriterTokenForQuote = (market, writerTokenSourceKey, quoteAssetDestKey) => {
   const { connection, endpoint } = useConnection()
   const { pubKey, wallet } = useWallet()
+  const { splTokenAccountRentBalance } = useSolanaMeta()
   const { pushNotification } = useNotifications()
   
   const _exchangeWriterTokenFoQuote = useCallback(async () => {
@@ -35,6 +37,7 @@ export const useExchangeWriterTokenForQuote = (market, writerTokenSourceKey, quo
           payer: { publicKey: pubKey },
           mintPublicKey: new PublicKey(WRAPPED_SOL_ADDRESS),
           owner: pubKey,
+          rentBalance: splTokenAccountRentBalance,
         })
         transaction.add(initWrappedSolAcctIx);
         signers.push(wrappedSolAccount);
@@ -99,7 +102,7 @@ export const useExchangeWriterTokenForQuote = (market, writerTokenSourceKey, quo
         message: `${err}`,
       })
     }
-  }, [quoteAssetDestKey, market.qAssetMint, market.optionMarketKey, market.optionMintKey, market.writerTokenMintKey, market.quoteAssetPoolKey, endpoint.programId, pubKey, writerTokenSourceKey, wallet, connection, pushNotification])
+  }, [quoteAssetDestKey, market.qAssetMint, market.optionMarketKey, market.optionMintKey, market.writerTokenMintKey, market.quoteAssetPoolKey, endpoint.programId, pubKey, writerTokenSourceKey, connection, wallet, pushNotification, splTokenAccountRentBalance])
 
   return {
     exchangeWriterTokenForQuote: _exchangeWriterTokenFoQuote

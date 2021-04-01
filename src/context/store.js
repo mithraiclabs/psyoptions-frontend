@@ -11,12 +11,14 @@ import { SerumProvider } from './SerumContext'
 import { OptionsChainProvider } from './OptionsChainContext'
 import { AssetListProvider } from './AssetListContext'
 import theme from '../utils/theme'
+import { SolanaMetaProvider } from './SolanaMetaContext';
 
 const _providers = [
   // eslint-disable-next-line react/no-children-prop
   <ThemeProvider theme={theme} children={<div />} />,
   <NotificationsProvider />,
   <ConnectionProvider />,
+  <SolanaMetaProvider />,
   <AssetListProvider />,
   <WalletProvider />,
   <OwnedTokenAccountsProvider />,

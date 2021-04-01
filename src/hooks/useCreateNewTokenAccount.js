@@ -5,11 +5,13 @@ import useConnection from "./useConnection";
 import useNotifications from "./useNotifications";
 import useWallet from "./useWallet";
 import { buildSolanaExplorerUrl } from "../utils/solanaExplorer";
+import { useSolanaMeta } from "../context/SolanaMetaContext";
 
 export const useCreateNewTokenAccount = () => {
   const { connection } = useConnection()
   const { wallet, pubKey } = useWallet()
   const { pushNotification } = useNotifications()
+  const { splTokenAccountRentBalance } = useSolanaMeta()
 
   return useCallback(async (mintKey, accountName) => {
     const [tx, newAccount] = await initializeTokenAccountTx({
@@ -17,6 +19,7 @@ export const useCreateNewTokenAccount = () => {
       payer: { publicKey: pubKey },
       mintPublicKey: mintKey,
       owner: pubKey,
+      rentBalance: splTokenAccountRentBalance,
     })
     const signed = await wallet.signTransaction(tx)
     const txid = await connection.sendRawTransaction(signed.serialize())
@@ -45,5 +48,5 @@ export const useCreateNewTokenAccount = () => {
       ),
     })
     return newAccount.publicKey.toString()
-  }, [connection, pubKey, pushNotification, wallet])
+  }, [connection, pubKey, pushNotification, splTokenAccountRentBalance, wallet])
 }

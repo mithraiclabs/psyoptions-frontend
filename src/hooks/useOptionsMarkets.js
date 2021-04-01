@@ -22,6 +22,7 @@ import { OptionsMarketsContext } from '../context/OptionsMarketsContext'
 import { initializeTokenAccountTx, WRAPPED_SOL_ADDRESS } from '../utils/token'
 
 import { truncatePublicKey } from '../utils/format'
+import { useSolanaMeta } from '../context/SolanaMetaContext';
 
 // Example of how markets data should look:
 // const markets = {
@@ -46,6 +47,7 @@ const useOptionsMarkets = () => {
   const { wallet, pubKey } = useWallet()
   const { connection, endpoint } = useConnection()
   const { refreshTokenAccounts } = useOwnedTokenAccounts();
+  const { splTokenAccountRentBalance } = useSolanaMeta()
   const { markets, setMarkets, marketsLoading, setMarketsLoading } = useContext(
     OptionsMarketsContext,
   )
@@ -384,6 +386,7 @@ const useOptionsMarkets = () => {
         mintPublicKey: new PublicKey(WRAPPED_SOL_ADDRESS),
         owner: pubKey,
         extraLamports: lamports,
+        rentBalance: splTokenAccountRentBalance,
       })
       tx.add(transaction);
       signers.push(newTokenAccount);
@@ -412,6 +415,7 @@ const useOptionsMarkets = () => {
           payer: { publicKey: pubKey },
           mintPublicKey: new PublicKey(marketData.optionMintAddress),
           owner: pubKey,
+          rentBalance: splTokenAccountRentBalance,
         });
         tx.add(transaction);
         signers.push(newTokenAccount);
@@ -427,6 +431,7 @@ const useOptionsMarkets = () => {
           payer: { publicKey: pubKey },
           mintPublicKey: marketData.writerTokenMintKey,
           owner: pubKey,
+          rentBalance: splTokenAccountRentBalance,
         });
         tx.add(transaction);
         signers.push(newTokenAccount);
@@ -442,8 +447,6 @@ const useOptionsMarkets = () => {
       existingTransaction: {transaction: tx, signers},
       shouldRefreshTokenAccounts,
     })
-
-    // TODO delete wrapped sol account
   }
 
   return {

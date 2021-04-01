@@ -10,21 +10,24 @@ export async function initializeTokenAccountTx({
   payer,
   mintPublicKey,
   owner,
+  rentBalance,
 }) {
   const newAccount = new Account()
   const transaction = new Transaction()
 
-  // TODO this should be hoisted out to some sort of context so the request 
-  //  isn't being made every time
-  const tokenAccountRentBalance = await connection.getMinimumBalanceForRentExemption(
-    AccountLayout.span
-  )
+  let _rentBalance = rentBalance
+  if (!rentBalance) {
+    _rentBalance = await connection.getMinimumBalanceForRentExemption(
+      AccountLayout.span
+    )
+
+  }
 
   transaction.add(
     SystemProgram.createAccount({
       fromPubkey: payer.publicKey,
       newAccountPubkey: newAccount.publicKey,
-      lamports: tokenAccountRentBalance + extraLamports,
+      lamports: _rentBalance + extraLamports,
       space: AccountLayout.span,
       programId: TOKEN_PROGRAM_ID,
     })

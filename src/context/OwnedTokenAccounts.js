@@ -1,4 +1,4 @@
-import React, { createContext, useEffect, useState } from 'react'
+import React, { createContext, useCallback, useEffect, useState } from 'react'
 import { AccountLayout, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { PublicKey } from '@solana/web3.js'
 import { Buffer } from 'buffer'
@@ -41,6 +41,10 @@ const OwnedTokenAccountsProvider = ({ children }) => {
   const { connection } = useConnection()
   const { connected, pubKey } = useWallet()
   const [ownedTokenAccounts, setOwnedTokenAccounts] = useState({})
+  const [refreshCount, setRefreshCount] = useState(0);
+  const refreshTokenAccounts = useCallback(() => {
+    setRefreshCount(count => count + 1)
+  }, [])
 
   useEffect(() => {
     if(!connected || !pubKey) {
@@ -97,11 +101,15 @@ const OwnedTokenAccountsProvider = ({ children }) => {
         subscriptionIds.forEach(connection.removeAccountChangeListener)
       }
     }
-  }, [connected, connection, pubKey])
+  }, [connected, connection, pubKey, refreshCount])
+
+  useEffect(() => {
+    
+  }, [])
 
   return (
     <OwnedTokenAccountsContext.Provider
-      value={{ ownedTokenAccounts }}
+      value={{ ownedTokenAccounts, refreshTokenAccounts }}
     >
       {children}
     </OwnedTokenAccountsContext.Provider>

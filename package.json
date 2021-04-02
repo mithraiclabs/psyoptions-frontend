@@ -11,6 +11,7 @@
     "serve": "nodemon index.js",
     "start": "concurrently 'npm run build' 'npm run serve' --kill-all",
     "test": "echo \"Error: no test specified\" && exit 1",
+    "type-check": "tsc",
     "build-docker": "docker build -t solana-options-frontend:latest .",
     "start-docker": "docker run -p 3000:3000 solana-options-frontend:latest"
   },
@@ -68,6 +69,7 @@
     "react-router-dom": "^5.2.0",
     "styled-components": "^5.2.1",
     "throttle-debounce": "^3.0.1",
+    "typescript": "^4.2.3",
     "use-cookie-state": "^1.1.1",
     "use-local-storage-state": "^9.0.2",
     "webpack": "^5.21.1",

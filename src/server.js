@@ -2,6 +2,7 @@ import './config'
 import path from 'path'
 import fs from 'fs'
 import express from 'express'
+import cookieParser from 'cookie-parser'
 import React from 'react'
 import ReactDOMServer from 'react-dom/server'
 import { ServerStyleSheets } from '@material-ui/core/styles'
@@ -33,6 +34,7 @@ server.use((req, res, next) => {
   next()
 })
 
+server.use(cookieParser())
 server.use('/public', express.static('dist/public'))
 
 const {
@@ -45,6 +47,8 @@ const {
   DEVNET_DEX_PROGRAM_ID,
   OPTIONS_API_URL,
   APP_ENABLED = false,
+  APP_PASSWORD,
+  APP_PASSWORD_PROTECTED,
 } = process.env
 
 server.use((req, res) => {
@@ -59,6 +63,7 @@ server.use((req, res) => {
         <App
           location={{ pathname: req?.originalUrl }}
           routerContext={routerCtx}
+          ssrPassword={req.cookies?.password}
         />
       )
       env = {
@@ -70,6 +75,8 @@ server.use((req, res) => {
         TESTNET_DEX_PROGRAM_ID,
         DEVNET_DEX_PROGRAM_ID,
         OPTIONS_API_URL,
+        APP_PASSWORD,
+        APP_PASSWORD_PROTECTED,
       }
     } else {
       app = <LandingComingSoon />

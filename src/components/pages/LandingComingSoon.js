@@ -1,10 +1,13 @@
-import React from 'react'
-import { Box } from '@material-ui/core'
+import React, { useState } from 'react'
+import { Box, Button, TextField } from '@material-ui/core'
 import { makeStyles, ThemeProvider } from '@material-ui/core/styles'
+
+import usePassword from '../../hooks/usePassword'
 
 import logo from '../../../assets/psyoptions-logo-light.png'
 import theme from '../../utils/theme'
 import Footer from '../Footer'
+import { isBrowser } from '../../utils/isNode'
 
 const useStyles = makeStyles({
   logoH1: {
@@ -46,8 +49,11 @@ const PageWithoutNav = ({ children }) => (
   </Box>
 )
 
-const LandingComingSoon = () => {
+const LandingComingSoon = ({ showPasswordField }) => {
+  const [_, setPassword] = isBrowser ? usePassword() : [] // eslint-disable-line
   const { logoH1 } = useStyles()
+
+  const [pwInput, setPwInput] = useState('')
 
   return (
     <ThemeProvider theme={theme}>
@@ -83,6 +89,36 @@ const LandingComingSoon = () => {
             <h2 style={{ margin: '5px 0' }}>Decentralized Options Protocol</h2>
             <h2 style={{ margin: '5px 0' }}>Coming Soon</h2>
           </Box>
+          {showPasswordField ? (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+                setPassword(pwInput)
+              }}
+            >
+              <Box
+                display="flex"
+                flexDirection={['column', 'column', 'row']}
+                alignItems="center"
+                justifyContent="center"
+                p={1}
+                textAlign="center"
+              >
+                <Box p={1}>
+                  <TextField
+                    label="Closed Alpha Login"
+                    variant="filled"
+                    onChange={(e) => setPwInput(e.target.value)}
+                  />
+                </Box>
+                <Box p={1}>
+                  <Button variant="outlined" color="primary" type="submit">
+                    Enter
+                  </Button>
+                </Box>
+              </Box>
+            </form>
+          ) : null}
         </Box>
       </PageWithoutNav>
     </ThemeProvider>

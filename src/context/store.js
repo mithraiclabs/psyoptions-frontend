@@ -10,8 +10,9 @@ import { OptionsMarketsProvider } from './OptionsMarketsContext'
 import { SerumProvider } from './SerumContext'
 import { OptionsChainProvider } from './OptionsChainContext'
 import { AssetListProvider } from './AssetListContext'
+import { SolanaMetaProvider } from './SolanaMetaContext'
+import { PasswordProvider } from './PasswordContext'
 import theme from '../utils/theme'
-import { SolanaMetaProvider } from './SolanaMetaContext';
 
 const _providers = [
   // eslint-disable-next-line react/no-children-prop
@@ -25,6 +26,7 @@ const _providers = [
   <OptionsMarketsProvider />,
   <OptionsChainProvider />,
   <SerumProvider />,
+  <PasswordProvider />,
 ]
 
 // flatten context providers for simpler app component tree

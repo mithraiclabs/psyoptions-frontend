@@ -12,14 +12,20 @@ const WrappedApp = (props) => {
   )
 }
 
-const App = ({ location, routerContext }) => {
+const App = ({ location, routerContext, ssrPassword }) => {
   const { fetchMarketData } = useOptionsMarkets()
 
   useEffect(() => {
     fetchMarketData()
   }, [fetchMarketData])
 
-  return <Router location={location} context={routerContext} />
+  return (
+    <Router
+      location={location}
+      context={routerContext}
+      ssrPassword={ssrPassword}
+    />
+  )
 }
 
 App.defaultProps = {

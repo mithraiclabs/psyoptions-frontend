@@ -25,7 +25,7 @@ const defaultAssetPairsByNetworkName = {
 }
 
 // TODO see if we can query many accounts at once
-const mergeAssetsWithChainData = async (connection, assets) =>
+const mergeAssetsWithChainData = async (connection: Connection, assets) =>
   Promise.allSettled(
     assets.map(async (a) => {
       const asset = a

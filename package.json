@@ -19,6 +19,7 @@
   "license": "ISC",
   "devDependencies": {
     "@babel/node": "^7.12.13",
+    "@types/react": "^17.0.3",
     "@typescript-eslint/eslint-plugin": "^4.20.0",
     "@typescript-eslint/parser": "^4.20.0",
     "concurrently": "^5.3.0",
@@ -86,11 +87,11 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "lint-staged"
+      "pre-commit": "lint-staged && npm run type-check"
     }
   },
   "lint-staged": {
-    "**/*.{js,jsx}": [
+    "**/*.{js,jsx,ts,tsx}": [
       "eslint"
     ]
   }

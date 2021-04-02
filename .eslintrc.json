@@ -29,7 +29,10 @@
     "no-underscore-dangle": "off",
     "react-hooks/exhaustive-deps": "error",
     "react/prop-types": "warn",
-    "react/jsx-filename-extension": [1, { "extensions": [".js", ".jsx"] }],
+    "react/jsx-filename-extension": [
+      1,
+      { "extensions": [".js", ".jsx", ".tsx"] }
+    ],
     "semi": "off",
     "global-require": "off",
     "react/no-array-index-key": "warn",
@@ -48,7 +51,12 @@
       "files": ["*.ts", "*.tsx"],
       "parser": "@typescript-eslint/parser",
       "plugins": ["prettier", "@typescript-eslint/eslint-plugin"],
-      "extends": ["plugin:@typescript-eslint/recommended", "prettier"]
+      "extends": ["plugin:@typescript-eslint/recommended", "prettier"],
+      "rules": {
+        "react/prop-types": "off",
+        "no-empty-function": "off",
+        "@typescript-eslint/no-empty-function": ["off"]
+      }
     }
   ],
   "settings": {

@@ -72,12 +72,13 @@ const AssetListProvider = ({ children }) => {
           }
         })
         if (defaultUAsset && defaultQAsset) {
+          console.log('ASSETS ', defaultUAsset)
           setUAsset(defaultUAsset)
           setQAsset(defaultQAsset)
         }
       } else {
-        setUAsset()
-        setQAsset()
+        setUAsset(null)
+        setQAsset(null)
       }
     }
 

@@ -5,7 +5,7 @@
     "baseUrl": "." /* Base directory to resolve non-absolute module names. */,
     "esModuleInterop": true /* Enables emit interoperability between CommonJS and ES Modules via creation of namespace objects for all imports. Implies 'allowSyntheticDefaultImports'. */,
     "forceConsistentCasingInFileNames": true /* Disallow inconsistently-cased references to the same file. */,
-    "isolatedModules": false /* Transpile each file as a separate module (similar to 'ts.transpileModule'). */,
+    "isolatedModules": true /* Transpile each file as a separate module (similar to 'ts.transpileModule'). */,
     "jsx": "react" /* Specify JSX code generation: 'preserve', 'react-native', or 'react'. */,
     "lib": [
       "es6"

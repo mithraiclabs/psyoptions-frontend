@@ -170,6 +170,7 @@ const Markets = () => {
         precision={precision}
         uAssetDecimals={uAsset?.decimals || 0}
         qAssetDecimals={qAsset?.decimals || 0}
+        date={date}
       />
       <Box
         display="flex"

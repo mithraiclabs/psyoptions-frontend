@@ -16,7 +16,7 @@ import useOptionsMarkets from '../../hooks/useOptionsMarkets'
 import useOwnedTokenAccounts from '../../hooks/useOwnedTokenAccounts'
 import useNotifications from '../../hooks/useNotifications'
 import useAssetList from '../../hooks/useAssetList'
-import { WRAPPED_SOL_ADDRESS } from '../../utils/token';
+import { WRAPPED_SOL_ADDRESS } from '../../utils/token'
 
 const darkBorder = `1px solid ${theme.palette.background.main}`
 
@@ -102,6 +102,7 @@ const Mint = () => {
         mintedOptionAccount,
         ownedMintedOptionAccounts,
         mintedWriterTokenDestKey,
+        numberOfContracts: 1,
       })
       setLoading(false)
     } catch (err) {
@@ -179,7 +180,8 @@ const Mint = () => {
                     }}
                   />
                 </Box>
-                {ownedUAssetAccounts.length > 1 && uAsset.mintAddress !== WRAPPED_SOL_ADDRESS ? (
+                {ownedUAssetAccounts.length > 1 &&
+                uAsset.mintAddress !== WRAPPED_SOL_ADDRESS ? (
                   <Select
                     variant="filled"
                     label="Account"

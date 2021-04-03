@@ -6,28 +6,30 @@ import {
   withStyles,
   Button,
   CircularProgress,
-  Table,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableBody,
 } from '@material-ui/core'
 import Done from '@material-ui/icons/Done'
-import React, { useState, useEffect, memo } from 'react'
+import Tooltip from '@material-ui/core/Tooltip'
+import React, { useState, useEffect } from 'react'
 import propTypes from 'prop-types'
 import BigNumber from 'bignumber.js'
 import { PublicKey } from '@solana/web3.js'
 import BN from 'bn.js'
+import * as Sentry from '@sentry/react'
 
 import theme from '../utils/theme'
 import { createInitializeMarketTx } from '../utils/serum'
 import useConnection from '../hooks/useConnection'
 import useWallet from '../hooks/useWallet'
 import useSerum from '../hooks/useSerum'
+import useOwnedTokenAccounts from '../hooks/useOwnedTokenAccounts'
+import useOptionsMarkets from '../hooks/useOptionsMarkets'
+import useNotifications from '../hooks/useNotifications'
+
+import OrderBook from './OrderBook'
 
 const successColor = theme.palette.success.main
 const errorColor = theme.palette.error.main
-const primaryColor = theme.palette.primary.main
+// const primaryColor = theme.palette.primary.main
 const bgLighterColor = theme.palette.background.lighter
 
 const StyledFilledInput = withStyles({
@@ -81,113 +83,13 @@ const SellButton = withStyles({
   },
 })(Button)
 
-const BidAskCell = withStyles({
-  root: {
-    padding: '2px 6px',
-    borderRight: `1px solid ${bgLighterColor}`,
-    fontSize: '12px',
-    '&:last-child': {
-      borderRight: 'none',
-    },
-  },
-})(TableCell)
-
-const centerBorder = { borderRight: `1px solid ${primaryColor}` }
-const topRowBorder = { borderTop: `1px solid ${bgLighterColor}` }
-
-const bidOrAskType = propTypes.shape({
-  size: propTypes.number,
-  price: propTypes.number,
-})
-
-const orderBookPropTypes = {
-  bids: propTypes.arrayOf(bidOrAskType),
-  asks: propTypes.arrayOf(bidOrAskType),
-}
-
-const OrderBook = memo(({ bids = [[]], asks = [[]] }) => {
-  // Maybe we should do this zipping of the bids/asks elsewhere
-  // Doing it here for quick and dirty solution, don't over-engineer right? :)
-  const rows = []
-  const minRows = 4
-  let i = 0
-  while (
-    rows.length < bids.length ||
-    rows.length < asks.length ||
-    rows.length < minRows
-  ) {
-    rows.push({ bid: bids[i] || {}, ask: asks[i] || {}, key: i })
-    i += 1
-  }
-
-  return (
-    <>
-      <Box pb={2}>Order Book</Box>
-      <Box width="100%">
-        <Table>
-          <TableHead>
-            <TableRow style={topRowBorder}>
-              <BidAskCell
-                colSpan={2}
-                align="left"
-                style={{ ...centerBorder, fontSize: '16px' }}
-              >
-                Bids
-              </BidAskCell>
-              <BidAskCell
-                colSpan={2}
-                align="right"
-                style={{ fontSize: '16px' }}
-              >
-                Asks
-              </BidAskCell>
-            </TableRow>
-            <TableRow>
-              <BidAskCell width="25%">price</BidAskCell>
-              <BidAskCell width="25%" style={{ ...centerBorder }}>
-                size
-              </BidAskCell>
-              <BidAskCell width="25%" align="right">
-                size
-              </BidAskCell>
-              <BidAskCell width="25%" align="right">
-                price
-              </BidAskCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {rows.map(({ bid, ask, key }) => {
-              return (
-                <TableRow key={key}>
-                  <BidAskCell width="25%" style={{ color: successColor }}>
-                    {bid?.price || '\u00A0'}
-                  </BidAskCell>
-                  <BidAskCell width="25%" style={centerBorder}>
-                    {bid?.size || '\u00A0'}
-                  </BidAskCell>
-                  <BidAskCell width="25%" align="right">
-                    {ask?.size || '\u00A0'}
-                  </BidAskCell>
-                  <BidAskCell
-                    width="25%"
-                    align="right"
-                    style={{ color: errorColor }}
-                  >
-                    {ask?.price || '\u00A0'}
-                  </BidAskCell>
-                </TableRow>
-              )
-            })}
-          </TableBody>
-        </Table>
-      </Box>
-    </>
-  )
-})
-
-OrderBook.propTypes = orderBookPropTypes
-
 const orderTypes = ['limit', 'market']
+
+const getHighestAccount = (accounts) => {
+  if (accounts.length === 0) return {}
+  if (accounts.length === 1) return accounts[0]
+  return accounts.sort((a, b) => b.amount - a.amount)[0]
+}
 
 const proptypes = {
   open: propTypes.bool,
@@ -229,20 +131,42 @@ const BuySellDialog = ({
   precision,
   type,
   optionMintAddress,
+  writerTokenMintKey,
   serumKey,
+  date,
 }) => {
+  const { pushNotification } = useNotifications()
   const { connection, dexProgramId } = useConnection()
   const { wallet, pubKey } = useWallet()
+  const { createAccountsAndMint } = useOptionsMarkets()
   const { serumMarkets, fetchSerumMarket } = useSerum()
+  const {
+    ownedTokenAccounts,
+    loadingOwnedTokenAccounts,
+  } = useOwnedTokenAccounts()
   const [orderType, setOrderType] = useState('limit')
   const [orderSize, setOrderSize] = useState(1)
   const [limitPrice, setLimitPrice] = useState(0)
   const [initializingSerum, setInitializingSerum] = useState(false)
   const [orderbookLoaded, setOrderbookLoaded] = useState(false)
+  const [placeOrderLoading, setPlaceOrderLoading] = useState(false)
   const [orderbook, setOrderbook] = useState({
     bids: [],
     asks: [],
   })
+
+  const optionAccounts = ownedTokenAccounts[optionMintAddress] || []
+  const writerAccounts = ownedTokenAccounts[writerTokenMintKey] || []
+  const uAssetAccounts = ownedTokenAccounts[uAssetMint] || []
+
+  const contractsWritten = getHighestAccount(writerAccounts)?.amount
+  const openPositionSize = getHighestAccount(optionAccounts)?.amount
+  const uAssetBalance =
+    (getHighestAccount(uAssetAccounts)?.amount || 0) / 10 ** uAssetDecimals
+
+  const openPositionUAssetBalance = openPositionSize * amountPerContract
+  const sufficientFundsToSell =
+    openPositionSize + uAssetBalance / amountPerContract >= orderSize
 
   const serumMarketData = serumMarkets[serumKey]
   const serum = serumMarketData?.serumMarket
@@ -269,12 +193,13 @@ const BuySellDialog = ({
     Number.isNaN(parseFloat(limitPrice)) || limitPrice < 0 ? 0 : limitPrice,
   )
 
-  const collateralRequired =
-    amountPerContract &&
-    amountPerContract.multipliedBy(parsedOrderSize).toString()
-
-  const contractsWritten = 0
-  const openPositionSize = 0
+  const collateralRequired = amountPerContract
+    ? Math.max(
+        amountPerContract.multipliedBy(parsedOrderSize).toNumber() -
+          openPositionUAssetBalance,
+        0,
+      )
+    : 'N/A'
 
   const formatStrike = (sp) => {
     if (!sp) return '—'
@@ -341,6 +266,81 @@ const BuySellDialog = ({
     }
   }
 
+  const handleMint = async (numberOfContracts) => {
+    setPlaceOrderLoading(true)
+    try {
+      await createAccountsAndMint({
+        date: date.unix(),
+        uAsset: {
+          tokenSymbol: uAssetSymbol,
+          mintAddress: uAssetMint,
+          decimals: uAssetDecimals,
+        },
+        qAsset: {
+          tokenSymbol: qAssetSymbol,
+          mintAddress: qAssetMint,
+          decimals: qAssetDecimals,
+        },
+        size: amountPerContract.toNumber(),
+        price: strike.toString(),
+        uAssetAccount: getHighestAccount(uAssetAccounts)?.pubKey,
+        ownedUAssetAccounts: uAssetAccounts,
+        mintedOptionAccount: getHighestAccount(optionAccounts)?.pubKey,
+        ownedMintedOptionAccounts: optionAccounts,
+        mintedWriterTokenDestKey: getHighestAccount(writerAccounts)?.pubKey,
+        numberOfContracts,
+      })
+
+      // setPlaceOrderLoading(false)
+    } catch (err) {
+      setPlaceOrderLoading(false)
+      console.log(err)
+      Sentry.captureException(err)
+      pushNotification({
+        severity: 'error',
+        message: `${err}`,
+      })
+    }
+  }
+
+  const handlePlaceSellOrder = async () => {
+    // Mint and place order
+    if (parsedOrderSize <= openPositionSize) {
+      // Just place order with currently open position
+      console.log('TODO: place order with open position')
+      // TODO
+    } else {
+      // Mint missing contracs before placing order
+      const numberOfContracts = parsedOrderSize - openPositionSize
+      await handleMint(numberOfContracts)
+    }
+  }
+
+  // const buyTooltipLabel = null
+
+  const mintSellTooltipLabel =
+    openPositionSize >= parsedOrderSize
+      ? `Place sell order using: ${orderSize} owned option${
+          orderSize > 1 ? 's' : ''
+        }`
+      : openPositionSize + uAssetBalance / amountPerContract.toNumber() >=
+        parsedOrderSize
+      ? `Place sell order using: ${
+          openPositionSize > 0
+            ? `${openPositionSize} owned option${
+                openPositionSize > 1 && orderSize > 1 ? 's' : ''
+              } and `
+            : ''
+        }${
+          (parsedOrderSize - openPositionSize) * amountPerContract.toNumber()
+        } ${uAssetSymbol}`
+      : 'Collateral requirement not met to place sell order'
+
+  const isSellDisabled =
+    (!orderbook?.bids?.length && orderType === 'market') ||
+    (orderType === 'limit' && parsedLimitPrice.isLessThanOrEqualTo(0)) ||
+    !sufficientFundsToSell
+
   return (
     <Dialog open={open} onClose={onClose} maxWidth={'lg'}>
       <Box py={1} px={2} width="680px" maxWidth={['100%']}>
@@ -355,13 +355,24 @@ const BuySellDialog = ({
                 ? `${qAssetSymbol}/${uAssetSymbol}`
                 : `${uAssetSymbol}/${qAssetSymbol}`}
             </Box>
-            <Box pt={1}>Open Position: {openPositionSize}</Box>
+            <Box pt={1}>Mark Price: TODO</Box>
+            <Box pt={1}>
+              Open Position:{' '}
+              {loadingOwnedTokenAccounts ? 'Loading...' : openPositionSize}
+            </Box>
             <Box py={1}>
-              Written: {contractsWritten}{' '}
-              <span style={{ opacity: 0.5 }}>
-                ({contractsWritten * amountPerContract.toNumber()}{' '}
-                {uAssetSymbol} locked)
-              </span>
+              Written:{' '}
+              {loadingOwnedTokenAccounts ? (
+                'Loading...'
+              ) : (
+                <>
+                  {contractsWritten}{' '}
+                  <span style={{ opacity: 0.5 }}>
+                    ({contractsWritten * amountPerContract.toNumber()}{' '}
+                    {uAssetSymbol} locked)
+                  </span>
+                </>
+              )}
             </Box>
             <Box pb={1} pt={2}>
               Order Quantity:
@@ -388,13 +399,16 @@ const BuySellDialog = ({
                 </PlusMinusButton>
               </Box>
               <Box pt={1} style={{ fontSize: '12px' }}>
-                Collateral req to mint: {collateralRequired} {uAssetSymbol}
+                Collateral req to sell:{' '}
+                {loadingOwnedTokenAccounts
+                  ? 'Loading...'
+                  : `${collateralRequired} ${uAssetSymbol}`}
               </Box>
               <Box pt={'2px'} style={{ fontSize: '12px' }}>
-                Current Value: $TODO USD
-              </Box>
-              <Box pt={'2px'} style={{ fontSize: '12px' }}>
-                Available: TODO {uAssetSymbol}
+                Available:{' '}
+                {loadingOwnedTokenAccounts
+                  ? 'Loading...'
+                  : `${uAssetBalance} ${uAssetSymbol}`}
               </Box>
             </Box>
             <Box pb={1} pt={2}>
@@ -467,34 +481,54 @@ const BuySellDialog = ({
                     pb={1}
                     display="flex"
                     flexDirection="row"
+                    justifyContent="center"
                     width="100%"
                   >
-                    <Box pr={1} width="50%">
-                      <BuyButton
-                        fullWidth
-                        disabled={
-                          (!orderbook?.asks?.length &&
-                            orderType === 'market') ||
-                          (orderType === 'limit' &&
-                            parsedLimitPrice.isLessThanOrEqualTo(0))
-                        }
-                      >
-                        Buy
-                      </BuyButton>
-                    </Box>
-                    <Box pl={1} width="50%">
-                      <SellButton
-                        fullWidth
-                        disabled={
-                          (!orderbook?.bids?.length &&
-                            orderType === 'market') ||
-                          (orderType === 'limit' &&
-                            parsedLimitPrice.isLessThanOrEqualTo(0))
-                        }
-                      >
-                        Mint/Sell
-                      </SellButton>
-                    </Box>
+                    {placeOrderLoading ? (
+                      <CircularProgress />
+                    ) : (
+                      <>
+                        <Box pr={1} width="50%">
+                          {/* <Tooltip title={buyTooltipLabel} placement="top"> */}
+                          <BuyButton
+                            fullWidth
+                            disabled={
+                              (!orderbook?.asks?.length &&
+                                orderType === 'market') ||
+                              (orderType === 'limit' &&
+                                parsedLimitPrice.isLessThanOrEqualTo(0))
+                            }
+                          >
+                            Buy
+                          </BuyButton>
+                          {/* </Tooltip> */}
+                        </Box>
+                        <Box pl={1} width="50%">
+                          {/* Annoying thing I had to do to get MUI to stop clogging the console with "errors" that aren't real errors about how wrapping a disabled button in a tooltip won't show the tooltip... sigh */}
+                          {isSellDisabled ? (
+                            <SellButton
+                              fullWidth
+                              disabled
+                              onClick={handlePlaceSellOrder}
+                            >
+                              Mint/Sell
+                            </SellButton>
+                          ) : (
+                            <Tooltip
+                              title={mintSellTooltipLabel}
+                              placement="top"
+                            >
+                              <SellButton
+                                fullWidth
+                                onClick={handlePlaceSellOrder}
+                              >
+                                Mint/Sell
+                              </SellButton>
+                            </Tooltip>
+                          )}
+                        </Box>
+                      </>
+                    )}
                   </Box>
                   <Box pt={1} pb={2}>
                     {orderType === 'limit' &&

@@ -13,6 +13,9 @@ module.exports = [
     entry: './src/server.js',
     watch,
     mode,
+    resolve: {
+      extensions: ['.ts', '.tsx', '.js']
+    },
     output: {
       filename: 'index.js',
       assetModuleFilename: 'public/assets/[hash][ext][query]',
@@ -35,6 +38,11 @@ module.exports = [
             },
           },
         },
+        {
+          test: /\.tsx?/,
+          use: 'ts-loader',
+          exclude: /node_modules/,
+        },
       ],
     },
   },
@@ -43,6 +51,9 @@ module.exports = [
     entry: ['./src/client.js'],
     watch,
     mode,
+    resolve: {
+      extensions: ['.ts', '.tsx', '.js']
+    },
     output: {
       filename: 'public/bundle.[chunkhash].js',
       assetModuleFilename: 'public/assets/[hash][ext][query]',
@@ -62,6 +73,11 @@ module.exports = [
               presets: ['@babel/preset-env', '@babel/preset-react'],
             },
           },
+        },
+        {
+          test: /\.tsx?/,
+          use: 'ts-loader',
+          exclude: /node_modules/,
         },
       ],
     },

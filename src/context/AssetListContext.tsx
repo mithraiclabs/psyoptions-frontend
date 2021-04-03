@@ -1,11 +1,34 @@
 import React, { createContext, useEffect, useState } from 'react'
-import { Connection, PublicKey } from '@solana/web3.js'
+import { Account, Connection, PublicKey } from '@solana/web3.js'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import useConnection from '../hooks/useConnection'
 import useNotifications from '../hooks/useNotifications'
 import { getAssetsByNetwork } from '../utils/networkInfo'
 
-const defaultAssetPairsByNetworkName = {
+type TickerPair = {
+  uAssetSymbol?: string
+  qAssetSymbol?: string
+}
+
+type Asset = {
+  decimals: number
+  icon: string
+  mintAddress: string
+  tokenName: string
+  tokenSymbol: string
+}
+
+type AssetListContext = {
+  supportedAssets: Asset[]
+  setSupportedAssets: React.Dispatch<React.SetStateAction<Asset[]>>
+  uAsset: Asset | null
+  qAsset: Asset | null
+  setUAsset: React.Dispatch<React.SetStateAction<Asset | null>>
+  setQAsset: React.Dispatch<React.SetStateAction<Asset | null>>
+  assetListLoading: boolean
+}
+
+const defaultAssetPairsByNetworkName: Record<string, TickerPair> = {
   Mainnet: {
     uAssetSymbol: 'SOL',
     qAssetSymbol: 'USDC',
@@ -25,15 +48,19 @@ const defaultAssetPairsByNetworkName = {
 }
 
 // TODO see if we can query many accounts at once
-const mergeAssetsWithChainData = async (connection, assets) =>
+const mergeAssetsWithChainData = async (
+  connection: Connection,
+  assets: Asset[],
+) =>
   Promise.allSettled(
     assets.map(async (a) => {
       const asset = a
+      const _payer = new Account()
       const token = new Token(
         connection,
         new PublicKey(a.mintAddress),
         TOKEN_PROGRAM_ID,
-        null,
+        _payer,
       )
       const mintInfo = await token.getMintInfo()
       asset.decimals = mintInfo.decimals
@@ -41,13 +68,21 @@ const mergeAssetsWithChainData = async (connection, assets) =>
     }),
   )
 
-const AssetListContext = createContext([])
+const AssetListContext = createContext<AssetListContext>({
+  supportedAssets: [],
+  setSupportedAssets: () => {},
+  uAsset: null,
+  qAsset: null,
+  setUAsset: () => {},
+  setQAsset: () => {},
+  assetListLoading: true,
+})
 
-const AssetListProvider = ({ children }) => {
+const AssetListProvider: React.FC = ({ children }) => {
   const { connection, endpoint } = useConnection()
-  const [supportedAssets, setSupportedAssets] = useState([])
-  const [uAsset, setUAsset] = useState()
-  const [qAsset, setQAsset] = useState()
+  const [supportedAssets, setSupportedAssets] = useState<Asset[]>([])
+  const [uAsset, setUAsset] = useState<Asset | null>(null)
+  const [qAsset, setQAsset] = useState<Asset | null>(null)
   const [assetListLoading, setAssetListLoading] = useState(true)
   const { pushNotification } = useNotifications()
 
@@ -57,12 +92,12 @@ const AssetListProvider = ({ children }) => {
       return
     }
 
-    const setDefaultAssets = (assets) => {
+    const setDefaultAssets = (assets: Asset[]) => {
       if (assets && assets.length > 1) {
         const defaultAssetPair =
           defaultAssetPairsByNetworkName[endpoint.name] || {}
-        let defaultUAsset
-        let defaultQAsset
+        let defaultUAsset: Asset | null = null
+        let defaultQAsset: Asset | null = null
         assets.forEach((asset) => {
           if (asset.tokenSymbol === defaultAssetPair.uAssetSymbol) {
             defaultUAsset = asset
@@ -76,12 +111,12 @@ const AssetListProvider = ({ children }) => {
           setQAsset(defaultQAsset)
         }
       } else {
-        setUAsset()
-        setQAsset()
+        setUAsset(null)
+        setQAsset(null)
       }
     }
 
-    const loadAssets = async (basicAssets) => {
+    const loadAssets = async (basicAssets: Asset[]) => {
       setAssetListLoading(true)
       try {
         const mergedAssets = await mergeAssetsWithChainData(
@@ -89,15 +124,8 @@ const AssetListProvider = ({ children }) => {
           basicAssets,
         )
         const loadedAssets = mergedAssets
-          .filter((res) => {
-            if (res.status === 'rejected') {
-              // We could put a notificatiomn here but it would really fill up the screen if there were multiple failures
-              console.error(res.reason)
-              return false
-            }
-            return true
-          })
-          .map((res) => res.value)
+          .filter((res) => res.status === 'fulfilled')
+          .map((res) => (res.status === 'fulfilled' && res.value) as Asset) // fulfilled check for TS
         setSupportedAssets(loadedAssets)
         setDefaultAssets(loadedAssets)
         setAssetListLoading(false)
@@ -112,7 +140,7 @@ const AssetListProvider = ({ children }) => {
       }
     }
 
-    const basicAssets = getAssetsByNetwork(endpoint.name)
+    const basicAssets = getAssetsByNetwork(endpoint.name) as Asset[]
     loadAssets(basicAssets)
   }, [connection, endpoint.name, pushNotification])
 

@@ -72,6 +72,8 @@ const NavOptions = React.memo(() => {
           href="https://docs.psyoptions.io/"
           onClick={() => {}}
           style={{ minWidth: 0 }}
+          target="_blank"
+          rel="noopener"
         >
           Docs
         </Button>

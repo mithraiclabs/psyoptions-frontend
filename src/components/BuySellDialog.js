@@ -159,8 +159,8 @@ const BuySellDialog = ({
   const writerAccounts = ownedTokenAccounts[writerTokenMintKey] || []
   const uAssetAccounts = ownedTokenAccounts[uAssetMint] || []
 
-  const contractsWritten = getHighestAccount(writerAccounts)?.amount
-  const openPositionSize = getHighestAccount(optionAccounts)?.amount
+  const contractsWritten = getHighestAccount(writerAccounts)?.amount || 0
+  const openPositionSize = getHighestAccount(optionAccounts)?.amount || 0
   const uAssetBalance =
     (getHighestAccount(uAssetAccounts)?.amount || 0) / 10 ** uAssetDecimals
 
@@ -291,7 +291,7 @@ const BuySellDialog = ({
         numberOfContracts,
       })
 
-      // setPlaceOrderLoading(false)
+      setPlaceOrderLoading(false)
     } catch (err) {
       setPlaceOrderLoading(false)
       console.log(err)

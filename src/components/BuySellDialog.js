@@ -22,8 +22,8 @@ import useConnection from '../hooks/useConnection'
 import useWallet from '../hooks/useWallet'
 import useSerum from '../hooks/useSerum'
 import useOwnedTokenAccounts from '../hooks/useOwnedTokenAccounts'
-import useOptionsMarkets from '../hooks/useOptionsMarkets'
 import useNotifications from '../hooks/useNotifications'
+import usePlaceSellOrder from '../hooks/usePlaceSellOrder'
 
 import OrderBook from './OrderBook'
 
@@ -138,7 +138,7 @@ const BuySellDialog = ({
   const { pushNotification } = useNotifications()
   const { connection, dexProgramId } = useConnection()
   const { wallet, pubKey } = useWallet()
-  const { createAccountsAndMint } = useOptionsMarkets()
+  const placeSellOrder = usePlaceSellOrder();
   const { serumMarkets, fetchSerumMarket } = useSerum()
   const {
     ownedTokenAccounts,
@@ -266,10 +266,13 @@ const BuySellDialog = ({
     }
   }
 
-  const handleMint = async (numberOfContracts) => {
+  const handlePlaceSellOrder = async () => {
     setPlaceOrderLoading(true)
     try {
-      await createAccountsAndMint({
+      const numberOfContracts = parsedOrderSize - openPositionSize;
+
+      const optionTokenAddress = getHighestAccount(optionAccounts)?.pubKey;
+      const createAccountsAndMintArgs = {
         date: date.unix(),
         uAsset: {
           tokenSymbol: uAssetSymbol,
@@ -289,8 +292,26 @@ const BuySellDialog = ({
         ownedMintedOptionAccounts: optionAccounts,
         mintedWriterTokenDestKey: getHighestAccount(writerAccounts)?.pubKey,
         numberOfContracts,
-      })
-
+      };
+      const orderArgs = {
+        owner: pubKey,
+        // For Serum, the payer is really the account of the asset being sold
+        payer: new PublicKey(optionTokenAddress),
+        side: 'sell',
+        // Serum-ts handles adding the SPL Token decimals via their 
+        //  `maket.priceNumberToLots` function
+        price: parsedLimitPrice,
+        // Serum-ts handles adding the SPL Token decimals via their 
+        //  `maket.priceNumberToLots` function
+        size: parsedOrderSize,
+        // TODO create true mapping https://github.com/project-serum/serum-ts/blob/6803cb95056eb9b8beced9135d6956583ae5a222/packages/serum/src/market.ts#L1163
+        orderType: orderType === 'market' ? 'ioc' : orderType,
+        // TODO need to handle feeDiscountPubkey properly. This is hack for Devnet because
+        // otherwise it will fail since the SRM_MINT that is hard coded in serum-ts cannot
+        // be found on the network
+        opts: {feeDiscountPubkey: null}
+      };
+      await placeSellOrder(numberOfContracts, createAccountsAndMintArgs, {serumMarket: serum, orderArgs})
       setPlaceOrderLoading(false)
     } catch (err) {
       setPlaceOrderLoading(false)
@@ -300,19 +321,6 @@ const BuySellDialog = ({
         severity: 'error',
         message: `${err}`,
       })
-    }
-  }
-
-  const handlePlaceSellOrder = async () => {
-    // Mint and place order
-    if (parsedOrderSize <= openPositionSize) {
-      // Just place order with currently open position
-      console.log('TODO: place order with open position')
-      // TODO
-    } else {
-      // Mint missing contracs before placing order
-      const numberOfContracts = parsedOrderSize - openPositionSize
-      await handleMint(numberOfContracts)
     }
   }
 

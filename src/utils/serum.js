@@ -324,6 +324,7 @@ export class SerumMarket {
           : askOrderbook.getL2(depth).map(([price, size]) => ({ price, size })),
       }
     } catch (err) {
+      console.error(err);
       return {
         bids: [],
         asks: [],

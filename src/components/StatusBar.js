@@ -68,7 +68,11 @@ const NavOptions = React.memo(() => {
         </Button>
       </Box>
       <Box mx={2}>
-        <Button href="#" onClick={() => {}} style={{ minWidth: 0 }}>
+        <Button
+          href="https://docs.psyoptions.io/"
+          onClick={() => {}}
+          style={{ minWidth: 0 }}
+        >
           Docs
         </Button>
       </Box>

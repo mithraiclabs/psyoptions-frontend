@@ -30,6 +30,10 @@ const Footer = () => (
       >
         contact form
       </Link>
+      |{' '}
+      <Link color="primary" href="https://docs.psyoptions.io/">
+        docs
+      </Link>
     </Box>
   </Box>
 )

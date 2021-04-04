@@ -138,7 +138,7 @@ const BuySellDialog = ({
   const { pushNotification } = useNotifications()
   const { connection, dexProgramId } = useConnection()
   const { wallet, pubKey } = useWallet()
-  const placeSellOrder = usePlaceSellOrder();
+  const placeSellOrder = usePlaceSellOrder()
   const { serumMarkets, fetchSerumMarket } = useSerum()
   const {
     ownedTokenAccounts,
@@ -173,16 +173,16 @@ const BuySellDialog = ({
 
   // Load full orderbook if serum instance exists
   useEffect(() => {
-    ;(async () => {
-      if (serum && !orderbookLoaded) {
-        // console.log('getting order book')
+    if (open && serum && !orderbookLoaded) {
+      ;(async () => {
         const book = await serum.getOrderbook()
-        setOrderbook(book)
         setOrderbookLoaded(true)
-        // console.log(book)
-      }
-    })()
-  }, [serum, orderbookLoaded, setOrderbook, setOrderbookLoaded])
+        if (open) {
+          setOrderbook(book)
+        }
+      })()
+    }
+  }, [serum, orderbookLoaded, setOrderbook, setOrderbookLoaded, open])
 
   const parsedOrderSize =
     Number.isNaN(parseFloat(orderSize)) || orderSize < 1
@@ -269,9 +269,9 @@ const BuySellDialog = ({
   const handlePlaceSellOrder = async () => {
     setPlaceOrderLoading(true)
     try {
-      const numberOfContracts = parsedOrderSize - openPositionSize;
+      const numberOfContracts = parsedOrderSize - openPositionSize
 
-      const optionTokenAddress = getHighestAccount(optionAccounts)?.pubKey;
+      const optionTokenAddress = getHighestAccount(optionAccounts)?.pubKey
       const createAccountsAndMintArgs = {
         date: date.unix(),
         uAsset: {
@@ -292,16 +292,16 @@ const BuySellDialog = ({
         ownedMintedOptionAccounts: optionAccounts,
         mintedWriterTokenDestKey: getHighestAccount(writerAccounts)?.pubKey,
         numberOfContracts,
-      };
+      }
       const orderArgs = {
         owner: pubKey,
         // For Serum, the payer is really the account of the asset being sold
         payer: new PublicKey(optionTokenAddress),
         side: 'sell',
-        // Serum-ts handles adding the SPL Token decimals via their 
+        // Serum-ts handles adding the SPL Token decimals via their
         //  `maket.priceNumberToLots` function
         price: parsedLimitPrice,
-        // Serum-ts handles adding the SPL Token decimals via their 
+        // Serum-ts handles adding the SPL Token decimals via their
         //  `maket.priceNumberToLots` function
         size: parsedOrderSize,
         // TODO create true mapping https://github.com/project-serum/serum-ts/blob/6803cb95056eb9b8beced9135d6956583ae5a222/packages/serum/src/market.ts#L1163
@@ -309,9 +309,12 @@ const BuySellDialog = ({
         // TODO need to handle feeDiscountPubkey properly. This is hack for Devnet because
         // otherwise it will fail since the SRM_MINT that is hard coded in serum-ts cannot
         // be found on the network
-        opts: {feeDiscountPubkey: null}
-      };
-      await placeSellOrder(numberOfContracts, createAccountsAndMintArgs, {serumMarket: serum, orderArgs})
+        opts: { feeDiscountPubkey: null },
+      }
+      await placeSellOrder(numberOfContracts, createAccountsAndMintArgs, {
+        serumMarket: serum,
+        orderArgs,
+      })
       setPlaceOrderLoading(false)
     } catch (err) {
       setPlaceOrderLoading(false)
@@ -324,7 +327,16 @@ const BuySellDialog = ({
     }
   }
 
-  // const buyTooltipLabel = null
+  const handleClose = () => {
+    // Reset order book on close so that we fetch a new one when opening
+    // this dialog for a diff market
+    setOrderbook({
+      bids: [],
+      asks: [],
+    })
+    setOrderbookLoaded(false)
+    onClose()
+  }
 
   const mintSellTooltipLabel =
     openPositionSize >= parsedOrderSize
@@ -350,7 +362,7 @@ const BuySellDialog = ({
     !sufficientFundsToSell
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth={'lg'}>
+    <Dialog open={open} onClose={handleClose} maxWidth={'lg'}>
       <Box py={1} px={2} width="680px" maxWidth={['100%']}>
         <Box p={1} pt={2}>
           <h2 style={{ margin: '0' }}>{heading}</h2>

@@ -273,7 +273,7 @@ const BuySellDialog = ({
     try {
       const numberOfContracts = parsedOrderSize - openPositionSize
       const optionTokenAddress = getHighestAccount(optionAccounts)?.pubKey
-      const underlyingAssetSrcKey = getHighestAccount(uAssetAccounts)?.pubKey;
+      const underlyingAssetSrcKey = getHighestAccount(uAssetAccounts)?.pubKey
       const optionMarket = getMarket({
         date: date.unix(),
         uAssetSymbol,
@@ -281,7 +281,7 @@ const BuySellDialog = ({
         size: amountPerContract.toNumber(),
         price: strike.toString(),
       })
-      console.log('*** optionMarket = ', optionMarket, underlyingAssetSrcKey);
+
       await placeSellOrder({
         numberOfContractsToMint: numberOfContracts,
         serumMarket: serum,
@@ -312,13 +312,18 @@ const BuySellDialog = ({
         uAssetTokenAccount: {
           pubKey: underlyingAssetSrcKey,
           amount: new BigNumber(
-            uAssetAccounts.find((asset) => asset.pubKey === underlyingAssetSrcKey)
-              ?.amount || 0,
+            uAssetAccounts.find(
+              (asset) => asset.pubKey === underlyingAssetSrcKey,
+            )?.amount || 0,
           ),
           mint: new PublicKey(uAssetMint),
         },
-        mintedOptionDestinationKey: new PublicKey(getHighestAccount(optionAccounts)?.pubKey),
-        writerTokenDestinationKey: new PublicKey(getHighestAccount(writerAccounts)?.pubKey),
+        mintedOptionDestinationKey: new PublicKey(
+          getHighestAccount(optionAccounts)?.pubKey,
+        ),
+        writerTokenDestinationKey: new PublicKey(
+          getHighestAccount(writerAccounts)?.pubKey,
+        ),
       })
       setPlaceOrderLoading(false)
     } catch (err) {

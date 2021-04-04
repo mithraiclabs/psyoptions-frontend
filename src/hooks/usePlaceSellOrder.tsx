@@ -1,16 +1,23 @@
-import { useCallback } from 'react'
-import { PublicKey, Transaction } from '@solana/web3.js';
+import React, { useCallback } from 'react'
+import { PublicKey, Transaction } from '@solana/web3.js'
+import { Link } from '@material-ui/core'
 
-import { SerumMarket } from 'src/utils/serum';
-import { OrderParams } from '@mithraic-labs/serum/lib/market';
-import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import { Asset, OptionMarket, TokenAccount } from '../types';
-import { WRAPPED_SOL_ADDRESS } from '../utils/token';
+import { SerumMarket } from 'src/utils/serum'
+import { OrderParams } from '@mithraic-labs/serum/lib/market'
+import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import {
+  Asset,
+  NotificationSeverity,
+  OptionMarket,
+  TokenAccount,
+} from '../types'
+import { WRAPPED_SOL_ADDRESS } from '../utils/token'
 import useNotifications from './useNotifications'
 import { useSolanaMeta } from '../context/SolanaMetaContext'
 import useConnection from './useConnection'
 import useWallet from './useWallet'
 import { createMissingAccountsAndMint } from '../utils/instructions/index'
+import { buildSolanaExplorerUrl } from '../utils/solanaExplorer'
 
 const usePlaceSellOrder = () => {
   const { pushNotification } = useNotifications()
@@ -29,25 +36,24 @@ const usePlaceSellOrder = () => {
       mintedOptionDestinationKey,
       writerTokenDestinationKey,
     }: {
-      numberOfContractsToMint: number;
-      serumMarket: SerumMarket;
-      orderArgs: OrderParams;
-      optionMarket: OptionMarket;
-      uAsset: Asset;
-      uAssetTokenAccount: TokenAccount;
-      mintedOptionDestinationKey?: PublicKey;
-      writerTokenDestinationKey?: PublicKey;
+      numberOfContractsToMint: number
+      serumMarket: SerumMarket
+      orderArgs: OrderParams
+      optionMarket: OptionMarket
+      uAsset: Asset
+      uAssetTokenAccount: TokenAccount
+      mintedOptionDestinationKey?: PublicKey
+      writerTokenDestinationKey?: PublicKey
     }) => {
-      const transaction = new Transaction();
-      let signers = [];
+      const transaction = new Transaction()
+      let signers = []
       let _uAssetTokenAccount = uAssetTokenAccount
       let _optionTokenSrcKey = orderArgs.payer
 
       // Mint and place order
       if (numberOfContractsToMint > 0) {
-
         // Mint missing contracs before placing order
-        const {error, response} = await createMissingAccountsAndMint({
+        const { error, response } = await createMissingAccountsAndMint({
           optionsProgramId: new PublicKey(endpoint.programId),
           authorityPubkey: pubKey,
           owner: pubKey,
@@ -62,7 +68,7 @@ const usePlaceSellOrder = () => {
         if (error) {
           console.error(error)
           pushNotification(error)
-          return;
+          return
         }
         const {
           transaction: createAndMintTx,
@@ -71,11 +77,11 @@ const usePlaceSellOrder = () => {
           mintedOptionDestinationKey: _mintedOptionDestinationKey,
           writerTokenDestinationKey: _writerTokenDestinationKey,
           uAssetTokenAccount: __uAssetTokenAccount,
-        } = response;
+        } = response
         _uAssetTokenAccount = __uAssetTokenAccount
 
         // Add the create accounts and mint instructions to the TX
-        transaction.add(createAndMintTx);
+        transaction.add(createAndMintTx)
         signers = [...signers, ...createAndMintSigners]
         // must overwrite the original payer (aka option src) in case the
         // option(s) were minted to a new Account
@@ -85,8 +91,7 @@ const usePlaceSellOrder = () => {
       const {
         transaction: placeOrderTx,
         signers: placeOrderSigners,
-      } = await serumMarket.market.makePlaceOrderTransaction(connection,
-        {
+      } = await serumMarket.market.makePlaceOrderTransaction(connection, {
         ...orderArgs,
         payer: _optionTokenSrcKey,
       })
@@ -94,7 +99,6 @@ const usePlaceSellOrder = () => {
       transaction.add(placeOrderTx)
       signers = [...signers, ...placeOrderSigners]
 
-      
       // Close out the wrapped SOL account so it feels native
       if (optionMarket.uAssetMint === WRAPPED_SOL_ADDRESS) {
         transaction.add(
@@ -107,7 +111,6 @@ const usePlaceSellOrder = () => {
           ),
         )
       }
-      console.log('*** TX', transaction, signers);
 
       transaction.feePayer = pubKey
       const { blockhash } = await connection.getRecentBlockhash()
@@ -119,9 +122,40 @@ const usePlaceSellOrder = () => {
       const signed = await wallet.signTransaction(transaction)
       const txid = await connection.sendRawTransaction(signed.serialize())
 
+      pushNotification({
+        severity: NotificationSeverity.INFO,
+        message: `Processing: Write and sell ${numberOfContractsToMint} contract${
+          numberOfContractsToMint > 1 ? 's' : ''
+        }`,
+        link: (
+          <Link href={buildSolanaExplorerUrl(txid)} target="_new">
+            View on Solana Explorer
+          </Link>
+        ),
+      })
+
       await connection.confirmTransaction(txid)
+
+      pushNotification({
+        severity: NotificationSeverity.SUCCESS,
+        message: `Confirmed: Write and sell ${numberOfContractsToMint} contract${
+          numberOfContractsToMint > 1 ? 's' : ''
+        }`,
+        link: (
+          <Link href={buildSolanaExplorerUrl(txid)} target="_new">
+            View on Solana Explorer
+          </Link>
+        ),
+      })
     },
-    [connection, endpoint, pubKey, pushNotification, splTokenAccountRentBalance, wallet],
+    [
+      connection,
+      endpoint,
+      pubKey,
+      pushNotification,
+      splTokenAccountRentBalance,
+      wallet,
+    ],
   )
 }
 

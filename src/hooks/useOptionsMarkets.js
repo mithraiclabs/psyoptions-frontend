@@ -368,10 +368,7 @@ const useOptionsMarkets = () => {
 
     const writerTokenDestAddress = mintedWriterTokenDestKey
 
-    const {
-      response,
-      error,
-    } = createMissingMintAccounts({
+    const { response, error } = createMissingMintAccounts({
       owner: pubKey,
       market: marketData,
       uAsset,
@@ -402,7 +399,7 @@ const useOptionsMarkets = () => {
       mintedOptionDestinationKey,
       writerTokenDestinationKey,
       uAssetTokenAccount,
-    } = response;
+    } = response
 
     return mint({
       marketData,

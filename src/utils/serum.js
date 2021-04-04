@@ -5,7 +5,7 @@ import {
   SystemProgram,
 } from '@solana/web3.js'
 
-import { DexInstructions, Market, } from '@project-serum/serum'
+import { DexInstructions, Market, } from '@mithraic-labs/serum'
 import BN from 'bn.js'
 import { Token } from '@solana/spl-token'
 import { Buffer } from 'buffer'

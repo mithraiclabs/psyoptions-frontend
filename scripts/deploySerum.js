@@ -4,7 +4,7 @@ const util = require('util');
 const exec = util.promisify(require('child_process').exec);
 const argv = require('minimist')(process.argv.slice(2));
 const ScriptHelpers = require('./helpers');
-const SerumJs = require('@project-serum/serum');
+const SerumJs = require('@mithraic-labs/serum');
 
 const { MARKETS } = SerumJs;
 

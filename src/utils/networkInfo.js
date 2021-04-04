@@ -1,6 +1,6 @@
 import { clusterApiUrl, PublicKey } from '@solana/web3.js'
 import { TOKENS } from '@project-serum/tokens'
-import { MARKETS } from '@project-serum/serum'
+import { MARKETS } from '@mithraic-labs/serum'
 
 // Note these network values are used for determining the asset list.
 // Be sure to update that when modifying the order of this list.

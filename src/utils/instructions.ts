@@ -118,7 +118,6 @@ export const createMissingMintAccounts = ({
       amount: lamports,
     }
   }
-  console.log('*** uAsset', uAsset, uAsset.mintAddress === WRAPPED_SOL_ADDRESS, _uAssetTokenAccount, _uAssetTokenAccount.amount.toString(10), market.size, market.amountPerContract);
 
   // TODO use amount per contract as validation so we can leave most everything as a BigNumber.
   //  This will be easier to comprehend as it most similarly mirrors chain state. 
@@ -162,7 +161,7 @@ export const createMissingMintAccounts = ({
 
   return { 
     transaction: tx,
-    signers: signers,
+    signers,
     shouldRefreshTokenAccounts,
     mintedOptionDestinationKey: _mintedOptionDestinationKey,
     writerTokenDestinationKey: _writerTokenDestinationKey,

@@ -289,7 +289,7 @@ const useOptionsMarkets = () => {
 
     // Close out the wrapped SOL account so it feels native
     if (marketData.uAssetMint === WRAPPED_SOL_ADDRESS) {
-      transaction.add(
+      tx.add(
         Token.createCloseAccountInstruction(
           TOKEN_PROGRAM_ID,
           underlyingAssetSrcKey,
@@ -364,17 +364,16 @@ const useOptionsMarkets = () => {
     })
 
     // TODO - further optimization would be to remove the .find() here and just pass the whole object in
-    const uAssetDecimals = new BigNumber(10).pow(uAsset.decimals)
-    let uAssetBalance = new BigNumber(
+    const uAssetBalance = new BigNumber(
       ownedUAssetAccounts.find((asset) => asset.pubKey === uAssetAccount)
         ?.amount || 0,
     )
 
     // Fallback to first oowned minted option account
-    let mintedOptionDestAddress =
+    const mintedOptionDestAddress =
       mintedOptionAccount || ownedMintedOptionAccounts[0];
 
-    let writerTokenDestAddress = mintedWriterTokenDestKey
+    const writerTokenDestAddress = mintedWriterTokenDestKey
 
     const { 
       transaction,
@@ -388,22 +387,22 @@ const useOptionsMarkets = () => {
       owner: pubKey,
       market: marketData,
       uAsset,
-      uAssetTokenAccount: {
+      uAssetTokenAccount: uAssetAccount ? {
         amount: uAssetBalance,
         mint: new PublicKey(uAsset.mintAddress),
         pubKey: uAssetAccount,
-      },
+      } : undefined,
       splTokenAccountRentBalance,
-      mintedOptionDestinationKey: new PublicKey(mintedOptionDestAddress),
-      writerTokenDestinationKey: new PublicKey(writerTokenDestAddress),
+      mintedOptionDestinationKey: mintedOptionDestAddress ? new PublicKey(mintedOptionDestAddress) : undefined,
+      writerTokenDestinationKey:  writerTokenDestAddress ? new PublicKey(writerTokenDestAddress) : undefined,
     });
-    
+
     if (error) {
       pushNotification(error);
       return;
     }
 
-    return mint({
+    await mint({
       marketData,
       mintedOptionDestKey: mintedOptionDestinationKey,
       underlyingAssetSrcKey: uAssetKey,

@@ -21,7 +21,7 @@ import { OptionsMarketsContext } from '../context/OptionsMarketsContext'
 
 import { WRAPPED_SOL_ADDRESS } from '../utils/token'
 
-import { createMissingMintAccounts } from '../utils/instructions';
+import { createMissingMintAccounts } from '../utils/instructions'
 import { useSolanaMeta } from '../context/SolanaMetaContext'
 
 // Example of how markets data should look:
@@ -338,7 +338,7 @@ const useOptionsMarkets = () => {
 
     return {
       optionTokenDestKey: mintedOptionDestKey,
-      writerTokenDestKey
+      writerTokenDestKey,
     }
   }
 
@@ -374,11 +374,11 @@ const useOptionsMarkets = () => {
 
     // Fallback to first oowned minted option account
     const mintedOptionDestAddress =
-      mintedOptionAccount || ownedMintedOptionAccounts[0];
+      mintedOptionAccount || ownedMintedOptionAccounts[0]
 
     const writerTokenDestAddress = mintedWriterTokenDestKey
 
-    const { 
+    const {
       transaction,
       signers,
       shouldRefreshTokenAccounts,
@@ -390,19 +390,26 @@ const useOptionsMarkets = () => {
       owner: pubKey,
       market: marketData,
       uAsset,
-      uAssetTokenAccount: uAssetAccount ? {
-        amount: uAssetBalance,
-        mint: new PublicKey(uAsset.mintAddress),
-        pubKey: uAssetAccount,
-      } : undefined,
+      uAssetTokenAccount: uAssetAccount
+        ? {
+            amount: uAssetBalance,
+            mint: new PublicKey(uAsset.mintAddress),
+            pubKey: uAssetAccount,
+          }
+        : undefined,
       splTokenAccountRentBalance,
-      mintedOptionDestinationKey: mintedOptionDestAddress ? new PublicKey(mintedOptionDestAddress) : undefined,
-      writerTokenDestinationKey:  writerTokenDestAddress ? new PublicKey(writerTokenDestAddress) : undefined,
-    });
+      mintedOptionDestinationKey: mintedOptionDestAddress
+        ? new PublicKey(mintedOptionDestAddress)
+        : undefined,
+      writerTokenDestinationKey: writerTokenDestAddress
+        ? new PublicKey(writerTokenDestAddress)
+        : undefined,
+      numberOfContractsToMint: numberOfContracts,
+    })
 
     if (error) {
-      pushNotification(error);
-      return {};
+      pushNotification(error)
+      return {}
     }
 
     return mint({

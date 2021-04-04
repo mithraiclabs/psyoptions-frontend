@@ -66,6 +66,7 @@ const createNewTokenAccount = ({
 /**
  * Check that all the necessary accounts exist. If they're not provided then
  * instructions will be added to a transaction for creating them.
+ *
  */
 export const createMissingMintAccounts = ({
   owner,
@@ -75,6 +76,7 @@ export const createMissingMintAccounts = ({
   splTokenAccountRentBalance,
   mintedOptionDestinationKey,
   writerTokenDestinationKey,
+  numberOfContractsToMint = 1,
 }: {
   owner: PublicKey
   market: OptionMarket
@@ -84,6 +86,7 @@ export const createMissingMintAccounts = ({
   splTokenAccountRentBalance: number
   mintedOptionDestinationKey?: PublicKey
   writerTokenDestinationKey?: PublicKey
+  numberOfContractsToMint: number
 }): InstructionErrorResponse | CreateMissingMintAccountsRes => {
   const tx = new Transaction()
   const signers = []
@@ -108,7 +111,9 @@ export const createMissingMintAccounts = ({
 
   // Handle Wrapped SOL
   if (uAsset.mintAddress === WRAPPED_SOL_ADDRESS) {
-    const lamports = market.amountPerContract.times(uAssetDecimals)
+    const lamports = market.amountPerContract
+      .times(uAssetDecimals)
+      .times(new BigNumber(numberOfContractsToMint))
 
     const { transaction, newTokenAccount } = createNewTokenAccount({
       fromPubkey: owner,
@@ -129,19 +134,24 @@ export const createMissingMintAccounts = ({
 
   // TODO use amount per contract as validation so we can leave most everything as a BigNumber.
   //  This will be easier to comprehend as it most similarly mirrors chain state.
+  const requiredUnderlyingAmount = new BigNumber(market.size).times(
+    new BigNumber(numberOfContractsToMint),
+  )
   if (
     _uAssetTokenAccount.amount
       .div(uAssetDecimals)
-      .isLessThan(new BigNumber(market.size))
+      .isLessThan(requiredUnderlyingAmount)
   ) {
     return {
       error: {
         severity: NotificationSeverity.WARNING,
-        message: `You must have at least ${
-          market.size
-        } ${uAssetSymbol} in your ${uAssetSymbol} account ${truncatePublicKey(
+        message: `You must have at least ${requiredUnderlyingAmount.toString(
+          10,
+        )} ${uAssetSymbol} in your ${uAssetSymbol} account ${truncatePublicKey(
           _uAssetTokenAccount.pubKey,
-        )} to mint this contract`,
+        )} to mint ${numberOfContractsToMint} contract${
+          numberOfContractsToMint > 1 ? 's' : ''
+        }`,
       },
     }
   }

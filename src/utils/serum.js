@@ -3,18 +3,14 @@ import {
   PublicKey,
   Transaction,
   SystemProgram,
-  LAMPORTS_PER_SOL,
-  sendAndConfirmTransaction,
 } from '@solana/web3.js'
 
-import { DexInstructions, Market, OpenOrders } from '@project-serum/serum'
+import { DexInstructions, Market, } from '@project-serum/serum'
 import BN from 'bn.js'
 import { Token } from '@solana/spl-token'
 import { Buffer } from 'buffer'
 
 import { TOKEN_PROGRAM_ID } from './tokenInstructions'
-
-const SOL_MINT = new PublicKey('So11111111111111111111111111111111111111112')
 
 /**
  * Generate the TX to initialize a new market.
@@ -328,6 +324,7 @@ export class SerumMarket {
           : askOrderbook.getL2(depth).map(([price, size]) => ({ price, size })),
       }
     } catch (err) {
+      console.error(err);
       return {
         bids: [],
         asks: [],
@@ -368,7 +365,8 @@ export class SerumMarket {
    *  signers: placeOrderSigners
    * }}
    */
-  async createPlaceOrderTx(
+  async createPlaceOrderTx({
+    connection,
     owner,
     payer,
     side,
@@ -376,276 +374,20 @@ export class SerumMarket {
     size,
     orderType,
     opts = {},
-  ) {
-    const params = {
+  }) {
+    const {clientId, openOrdersAddressKey, openOrdersAccount, feeDiscountPubkey} = opts;
+
+    return this.market.makePlaceOrderTransaction(connection, {
       owner,
       payer,
       side,
       price,
       size,
       orderType,
-      feeDiscountPubkey: opts.feeDiscountPubkey || null,
-    }
-    return this.market.makePlaceOrderTransaction(
-      this.connection,
-      params,
-      120_000,
-      120_000,
-    )
-  }
-
-  async placeOrder(
-    connection,
-    {
-      owner,
-      payer,
-      side,
-      price,
-      size,
-      orderType = 'limit',
       clientId,
       openOrdersAddressKey,
       openOrdersAccount,
       feeDiscountPubkey,
-    },
-  ) {
-    const { transaction, signers } = await this.makePlaceOrderTransaction(
-      connection,
-      {
-        owner,
-        payer,
-        side,
-        price,
-        size,
-        orderType,
-        clientId,
-        openOrdersAddressKey,
-        openOrdersAccount,
-        feeDiscountPubkey,
-      },
-    )
-
-    await sendAndConfirmTransaction(
-      connection,
-      transaction,
-      [owner, ...signers],
-      {
-        skipPreflight: false,
-        commitment: 'max',
-        preflightCommitment: 'recent',
-      },
-    )
-    // return this.market._sendTransaction(connection, transaction, [
-    //   owner,
-    //   ...signers,
-    // ]);
-  }
-
-  async makePlaceOrderTransaction(
-    connection,
-    {
-      owner,
-      payer,
-      side,
-      price,
-      size,
-      orderType = 'limit',
-      clientId,
-      openOrdersAddressKey,
-      openOrdersAccount,
-    },
-    cacheDurationMs = 0,
-  ) {
-    // @ts-ignore
-    const ownerAddress = owner.publicKey ?? owner
-    const openOrdersAccounts = await this.market.findOpenOrdersAccountsForOwner(
-      connection,
-      ownerAddress,
-      cacheDurationMs,
-    )
-    const transaction = new Transaction()
-    const signers = []
-
-    // Fetch an SRM fee discount key if the market supports discounts and it is not supplied
-    // let useFeeDiscountPubkey;
-    // if (feeDiscountPubkey) {
-    //   useFeeDiscountPubkey = feeDiscountPubkey;
-    // } else if (
-    //   feeDiscountPubkey === undefined &&
-    //   this.market.supportsSrmFeeDiscounts
-    // ) {
-    //   useFeeDiscountPubkey = (
-    //     await this.findBestFeeDiscountKey(
-    //       connection,
-    //       ownerAddress,
-    //       feeDiscountPubkeyCacheDurationMs,
-    //     )
-    //   ).pubkey;
-    // } else {
-    const useFeeDiscountPubkey = null
-    // }
-
-    let openOrdersAddress
-    if (openOrdersAccounts.length === 0) {
-      let account
-      if (openOrdersAccount) {
-        account = openOrdersAccount
-      } else {
-        account = new Account()
-      }
-      transaction.add(
-        await OpenOrders.makeCreateAccountTransaction(
-          connection,
-          this.market.address,
-          ownerAddress,
-          account.publicKey,
-          this.market._programId,
-        ),
-      )
-      openOrdersAddress = account.publicKey
-      signers.push(account)
-      // refresh the cache of open order accounts on next fetch
-      this.market._openOrdersAccountsCache[ownerAddress.toBase58()].ts = 0
-    } else if (openOrdersAccount) {
-      openOrdersAddress = openOrdersAccount.publicKey
-    } else if (openOrdersAddressKey) {
-      openOrdersAddress = openOrdersAddressKey
-    } else {
-      openOrdersAddress = openOrdersAccounts[0].address
-    }
-
-    let wrappedSolAccount = null
-    if (payer.equals(ownerAddress)) {
-      if (
-        (side === 'buy' && this.market.quoteMintAddress.equals(SOL_MINT)) ||
-        (side === 'sell' && this.market.baseMintAddress.equals(SOL_MINT))
-      ) {
-        wrappedSolAccount = new Account()
-        let lamports
-        if (side === 'buy') {
-          lamports = Math.round(price * size * 1.01 * LAMPORTS_PER_SOL)
-          if (openOrdersAccounts.length > 0) {
-            lamports -= openOrdersAccounts[0].quoteTokenFree.toNumber()
-          }
-        } else {
-          lamports = Math.round(size * LAMPORTS_PER_SOL)
-          if (openOrdersAccounts.length > 0) {
-            lamports -= openOrdersAccounts[0].baseTokenFree.toNumber()
-          }
-        }
-        lamports = Math.max(lamports, 0) + 1e7
-        transaction.add(
-          SystemProgram.createAccount({
-            fromPubkey: ownerAddress,
-            newAccountPubkey: wrappedSolAccount.publicKey,
-            lamports,
-            space: 165,
-            programId: TOKEN_PROGRAM_ID,
-          }),
-        )
-        transaction.add(
-          Token.createInitAccountInstruction(
-            TOKEN_PROGRAM_ID,
-            SOL_MINT,
-            wrappedSolAccount.publicKey,
-            ownerAddress,
-          ),
-        )
-        signers.push(wrappedSolAccount)
-      } else {
-        throw new Error('Invalid payer account')
-      }
-    }
-
-    const placeOrderInstruction = this.makePlaceOrderInstruction(connection, {
-      owner,
-      payer: wrappedSolAccount?.publicKey ?? payer,
-      side,
-      price,
-      size,
-      orderType,
-      clientId,
-      openOrdersAddressKey: openOrdersAddress,
-      feeDiscountPubkey: useFeeDiscountPubkey,
-    })
-    transaction.add(placeOrderInstruction)
-
-    if (wrappedSolAccount) {
-      transaction.add(
-        Token.closeAccount(
-          wrappedSolAccount.publicKey,
-          ownerAddress,
-          ownerAddress,
-        ),
-      )
-    }
-
-    return { transaction, signers, payer: owner }
-  }
-
-  makePlaceOrderInstruction(
-    connection,
-    {
-      owner,
-      payer,
-      side,
-      price,
-      size,
-      orderType = 'limit',
-      clientId,
-      openOrdersAddressKey,
-      openOrdersAccount,
-      feeDiscountPubkey = null,
-    },
-  ) {
-    // @ts-ignore
-    const ownerAddress = owner.publicKey ?? owner
-    if (this.market.baseSizeNumberToLots(size).lte(new BN(0))) {
-      throw new Error('size too small')
-    }
-    if (this.market.priceNumberToLots(price).lte(new BN(0))) {
-      throw new Error('invalid price')
-    }
-
-    console.log(
-      'Using openOrdersAddress',
-      openOrdersAccount
-        ? openOrdersAccount.publicKey.toString()
-        : openOrdersAddressKey.toString(),
-    )
-    return DexInstructions.newOrder({
-      market: this.market.address,
-      requestQueue: this.market._decoded.requestQueue,
-      baseVault: this.market._decoded.baseVault,
-      quoteVault: this.market._decoded.quoteVault,
-      openOrders: openOrdersAccount
-        ? openOrdersAccount.publicKey
-        : openOrdersAddressKey,
-      owner: ownerAddress,
-      payer,
-      side,
-      limitPrice: this.market.priceNumberToLots(price),
-      maxQuantity: this.market.baseSizeNumberToLots(size),
-      orderType,
-      clientId,
-      programId: this.market._programId,
-      feeDiscountPubkey,
-    })
-  }
-
-  async consumeEvents(wallet, openOrdersAccounts, limit, programId) {
-    const tx = DexInstructions.consumeEvents({
-      market: this.market._decoded.ownAddress,
-      eventQueue: this.market._decoded.eventQueue,
-      openOrdersAccounts,
-      limit,
-      programId,
-    })
-
-    return sendAndConfirmTransaction(this.connection, tx, [wallet], {
-      skipPreflight: false,
-      commitment: 'max',
-      preflightCommitment: 'recent',
     })
   }
 }

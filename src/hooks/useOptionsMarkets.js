@@ -336,7 +336,10 @@ const useOptionsMarkets = () => {
       ),
     })
 
-    return txid
+    return {
+      optionTokenDestKey: mintedOptionDestKey,
+      writerTokenDestKey
+    }
   }
 
   const createAccountsAndMint = async ({
@@ -399,10 +402,10 @@ const useOptionsMarkets = () => {
 
     if (error) {
       pushNotification(error);
-      return;
+      return {};
     }
 
-    await mint({
+    return mint({
       marketData,
       mintedOptionDestKey: mintedOptionDestinationKey,
       underlyingAssetSrcKey: uAssetKey,

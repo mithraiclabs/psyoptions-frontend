@@ -13,6 +13,7 @@ import {
 } from '../types'
 import { WRAPPED_SOL_ADDRESS } from '../utils/token'
 import useNotifications from './useNotifications'
+import useOwnedTokenAccounts from './useOwnedTokenAccounts'
 import { useSolanaMeta } from '../context/SolanaMetaContext'
 import useConnection from './useConnection'
 import useWallet from './useWallet'
@@ -24,6 +25,10 @@ const usePlaceSellOrder = () => {
   const { wallet, pubKey } = useWallet()
   const { connection, endpoint } = useConnection()
   const { splTokenAccountRentBalance } = useSolanaMeta()
+  // Not happy about this, but it keeps TS from yelling
+  const { refreshTokenAccounts } = useOwnedTokenAccounts() as {
+    refreshTokenAccounts: () => void
+  }
 
   return useCallback(
     async ({
@@ -49,6 +54,7 @@ const usePlaceSellOrder = () => {
       let signers = []
       let _uAssetTokenAccount = uAssetTokenAccount
       let _optionTokenSrcKey = orderArgs.payer
+      let shouldRefreshTokenAccounts = false
 
       // Mint and place order
       if (numberOfContractsToMint > 0) {
@@ -73,7 +79,7 @@ const usePlaceSellOrder = () => {
         const {
           transaction: createAndMintTx,
           signers: createAndMintSigners,
-          shouldRefreshTokenAccounts,
+          shouldRefreshTokenAccounts: _shouldRefreshTokenAccounts,
           mintedOptionDestinationKey: _mintedOptionDestinationKey,
           writerTokenDestinationKey: _writerTokenDestinationKey,
           uAssetTokenAccount: __uAssetTokenAccount,
@@ -86,6 +92,7 @@ const usePlaceSellOrder = () => {
         // must overwrite the original payer (aka option src) in case the
         // option(s) were minted to a new Account
         _optionTokenSrcKey = _mintedOptionDestinationKey
+        shouldRefreshTokenAccounts = _shouldRefreshTokenAccounts
       }
 
       const {
@@ -136,6 +143,10 @@ const usePlaceSellOrder = () => {
 
       await connection.confirmTransaction(txid)
 
+      if (shouldRefreshTokenAccounts) {
+        refreshTokenAccounts()
+      }
+
       pushNotification({
         severity: NotificationSeverity.SUCCESS,
         message: `Confirmed: Write and sell ${numberOfContractsToMint} contract${
@@ -153,6 +164,7 @@ const usePlaceSellOrder = () => {
       endpoint,
       pubKey,
       pushNotification,
+      refreshTokenAccounts,
       splTokenAccountRentBalance,
       wallet,
     ],

@@ -21,7 +21,7 @@ import { OptionsMarketsContext } from '../context/OptionsMarketsContext'
 
 import { WRAPPED_SOL_ADDRESS } from '../utils/token'
 
-import { createMissingMintAccounts } from '../utils/instructions'
+import { createMissingMintAccounts } from '../utils/instructions/index'
 import { useSolanaMeta } from '../context/SolanaMetaContext'
 
 // Example of how markets data should look:

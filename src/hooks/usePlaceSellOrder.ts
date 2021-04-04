@@ -1,9 +1,11 @@
-import React, { useCallback } from 'react'
+import { useCallback } from 'react'
 import { PublicKey, Transaction } from '@solana/web3.js';
 
 import { SerumMarket } from 'src/utils/serum';
 import { OrderParams } from '@mithraic-labs/serum/lib/market';
-import { Asset, OptionMarket, TokenAccount } from 'src/types';
+import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { Asset, OptionMarket, TokenAccount } from '../types';
+import { WRAPPED_SOL_ADDRESS } from '../utils/token';
 import useNotifications from './useNotifications'
 import { useSolanaMeta } from '../context/SolanaMetaContext'
 import useConnection from './useConnection'
@@ -38,11 +40,12 @@ const usePlaceSellOrder = () => {
     }) => {
       const transaction = new Transaction();
       let signers = [];
+      let _uAssetTokenAccount = uAssetTokenAccount
       let _optionTokenSrcKey = orderArgs.payer
-      console.log('** original payer', orderArgs.payer);
+
       // Mint and place order
       if (numberOfContractsToMint > 0) {
-        console.log(`*** need to make ${numberOfContractsToMint} contracts`)
+
         // Mint missing contracs before placing order
         const {error, response} = await createMissingAccountsAndMint({
           optionsProgramId: new PublicKey(endpoint.programId),
@@ -50,7 +53,7 @@ const usePlaceSellOrder = () => {
           owner: pubKey,
           market: optionMarket,
           uAsset,
-          uAssetTokenAccount,
+          uAssetTokenAccount: _uAssetTokenAccount,
           splTokenAccountRentBalance,
           numberOfContractsToMint,
           mintedOptionDestinationKey,
@@ -67,9 +70,10 @@ const usePlaceSellOrder = () => {
           shouldRefreshTokenAccounts,
           mintedOptionDestinationKey: _mintedOptionDestinationKey,
           writerTokenDestinationKey: _writerTokenDestinationKey,
-          uAssetTokenAccount: _uAssetTokenAccount,
+          uAssetTokenAccount: __uAssetTokenAccount,
         } = response;
-        console.log('*** adding createAndMintTx TX', createAndMintTx);
+        _uAssetTokenAccount = __uAssetTokenAccount
+
         // Add the create accounts and mint instructions to the TX
         transaction.add(createAndMintTx);
         signers = [...signers, ...createAndMintSigners]
@@ -77,10 +81,6 @@ const usePlaceSellOrder = () => {
         // option(s) were minted to a new Account
         _optionTokenSrcKey = _mintedOptionDestinationKey
       }
-      console.log('*** orderArgs', _optionTokenSrcKey, {
-        ...orderArgs,
-        payer: _optionTokenSrcKey,
-      });
 
       const {
         transaction: placeOrderTx,
@@ -94,6 +94,19 @@ const usePlaceSellOrder = () => {
       transaction.add(placeOrderTx)
       signers = [...signers, ...placeOrderSigners]
 
+      
+      // Close out the wrapped SOL account so it feels native
+      if (optionMarket.uAssetMint === WRAPPED_SOL_ADDRESS) {
+        transaction.add(
+          Token.createCloseAccountInstruction(
+            TOKEN_PROGRAM_ID,
+            _uAssetTokenAccount.pubKey,
+            pubKey, // Send any remaining SOL to the owner
+            pubKey,
+            [],
+          ),
+        )
+      }
       console.log('*** TX', transaction, signers);
 
       transaction.feePayer = pubKey

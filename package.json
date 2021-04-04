@@ -54,7 +54,7 @@
     "@sentry/react": "^6.2.1",
     "@sentry/tracing": "^6.2.1",
     "@solana/spl-token": "^0.1.1",
-    "@solana/web3.js": "0.93.0",
+    "@solana/web3.js": "0.90.5",
     "axios": "^0.21.1",
     "babel-loader": "^8.2.2",
     "bignumber.js": "^9.0.1",

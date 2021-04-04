@@ -1,15 +1,22 @@
 /**
- * This file is for pure functions only. They are to extract some of the 
- * complexities out of the application code, while still allowing the application to 
+ * This file is for pure functions only. They are to extract some of the
+ * complexities out of the application code, while still allowing the application to
  * fetch and update data in their own manner.
  */
 
-import { AccountLayout, Token } from "@solana/spl-token";
-import { Account, PublicKey, SystemProgram, Transaction } from "@solana/web3.js"
-import BigNumber from "bignumber.js";
-import { Asset, OptionMarket, TokenAccount } from "../types";
-import { truncatePublicKey } from "./format";
-import { WRAPPED_SOL_ADDRESS } from "./token";
+import { AccountLayout, Token } from '@solana/spl-token'
+import { Account, PublicKey, SystemProgram, Transaction } from '@solana/web3.js'
+import BigNumber from 'bignumber.js'
+import {
+  Asset,
+  CreateMissingMintAccountsRes,
+  InstructionErrorResponse,
+  NotificationSeverity,
+  OptionMarket,
+  TokenAccount,
+} from '../types'
+import { truncatePublicKey } from './format'
+import { WRAPPED_SOL_ADDRESS } from './token'
 import { TOKEN_PROGRAM_ID } from './tokenInstructions'
 
 /**
@@ -21,13 +28,13 @@ const createNewTokenAccount = ({
   owner,
   mintPublicKey,
   splTokenAccountRentBalance,
-  extraLamports=0,
-} : {
-  fromPubkey: PublicKey;
-  owner: PublicKey;
-  mintPublicKey: PublicKey;
-  splTokenAccountRentBalance: number;
-  extraLamports?: number;
+  extraLamports = 0,
+}: {
+  fromPubkey: PublicKey
+  owner: PublicKey
+  mintPublicKey: PublicKey
+  splTokenAccountRentBalance: number
+  extraLamports?: number
 }) => {
   const newAccount = new Account()
   const transaction = new Transaction()
@@ -39,7 +46,7 @@ const createNewTokenAccount = ({
       lamports: splTokenAccountRentBalance + extraLamports,
       space: AccountLayout.span,
       programId: TOKEN_PROGRAM_ID,
-    })
+    }),
   )
 
   transaction.add(
@@ -47,13 +54,13 @@ const createNewTokenAccount = ({
       TOKEN_PROGRAM_ID,
       mintPublicKey,
       newAccount.publicKey,
-      owner
-    )
+      owner,
+    ),
   )
 
   const signers = [newAccount]
 
-  return {transaction, signers, newTokenAccount: newAccount}
+  return { transaction, signers, newTokenAccount: newAccount }
 }
 
 /**
@@ -68,31 +75,33 @@ export const createMissingMintAccounts = ({
   splTokenAccountRentBalance,
   mintedOptionDestinationKey,
   writerTokenDestinationKey,
-} : {
-  owner: PublicKey;
-  market: OptionMarket;
-  uAsset: Asset;
-  qAsset: Asset;
-  uAssetTokenAccount: TokenAccount;
-  splTokenAccountRentBalance: number;
-  mintedOptionDestinationKey?: PublicKey;
-  writerTokenDestinationKey?: PublicKey;
-}) => {
-  const tx = new Transaction();
+}: {
+  owner: PublicKey
+  market: OptionMarket
+  uAsset: Asset
+  qAsset: Asset
+  uAssetTokenAccount: TokenAccount
+  splTokenAccountRentBalance: number
+  mintedOptionDestinationKey?: PublicKey
+  writerTokenDestinationKey?: PublicKey
+}): InstructionErrorResponse | CreateMissingMintAccountsRes => {
+  const tx = new Transaction()
   const signers = []
   const uAssetSymbol = uAsset.tokenSymbol
   let _uAssetTokenAccount = uAssetTokenAccount
-  let _mintedOptionDestinationKey = mintedOptionDestinationKey;
-  let _writerTokenDestinationKey = writerTokenDestinationKey;
+  let _mintedOptionDestinationKey = mintedOptionDestinationKey
+  let _writerTokenDestinationKey = writerTokenDestinationKey
   let shouldRefreshTokenAccounts = false
 
   if (!_uAssetTokenAccount && uAsset.mintAddress !== WRAPPED_SOL_ADDRESS) {
     // TODO - figure out how to distinguish between "a" vs "an" in this message
     // Not that simple because "USDC" you say "A", but for "ETH" you say an, it depends on the pronunciation
-    return {error: {
-      severity: 'warning',
-      message: `You must have one or more ${uAssetSymbol} accounts in your wallet to mint this contract`,
-    }}
+    return {
+      error: {
+        severity: NotificationSeverity.WARNING,
+        message: `You must have one or more ${uAssetSymbol} accounts in your wallet to mint this contract`,
+      },
+    }
   }
 
   const uAssetDecimals = new BigNumber(10).pow(uAsset.decimals)
@@ -100,7 +109,6 @@ export const createMissingMintAccounts = ({
   // Handle Wrapped SOL
   if (uAsset.mintAddress === WRAPPED_SOL_ADDRESS) {
     const lamports = market.amountPerContract.times(uAssetDecimals)
-
 
     const { transaction, newTokenAccount } = createNewTokenAccount({
       fromPubkey: owner,
@@ -112,7 +120,7 @@ export const createMissingMintAccounts = ({
     tx.add(transaction)
     signers.push(newTokenAccount)
 
-    _uAssetTokenAccount = { 
+    _uAssetTokenAccount = {
       pubKey: newTokenAccount.publicKey,
       mint: new PublicKey(WRAPPED_SOL_ADDRESS),
       amount: lamports,
@@ -120,13 +128,21 @@ export const createMissingMintAccounts = ({
   }
 
   // TODO use amount per contract as validation so we can leave most everything as a BigNumber.
-  //  This will be easier to comprehend as it most similarly mirrors chain state. 
-  if (_uAssetTokenAccount.amount.div(uAssetDecimals).isLessThan(new BigNumber(market.size))) {
+  //  This will be easier to comprehend as it most similarly mirrors chain state.
+  if (
+    _uAssetTokenAccount.amount
+      .div(uAssetDecimals)
+      .isLessThan(new BigNumber(market.size))
+  ) {
     return {
-      severity: 'warning',
-      message: `You must have at least ${market.size} ${uAssetSymbol} in your ${uAssetSymbol} account ${truncatePublicKey(
-        _uAssetTokenAccount.pubKey,
-      )} to mint this contract`,
+      error: {
+        severity: NotificationSeverity.WARNING,
+        message: `You must have at least ${
+          market.size
+        } ${uAssetSymbol} in your ${uAssetSymbol} account ${truncatePublicKey(
+          _uAssetTokenAccount.pubKey,
+        )} to mint this contract`,
+      },
     }
   }
 
@@ -136,9 +152,9 @@ export const createMissingMintAccounts = ({
       fromPubkey: owner,
       owner,
       mintPublicKey: market.optionMintKey,
-      splTokenAccountRentBalance
+      splTokenAccountRentBalance,
     })
-    
+
     tx.add(transaction)
     signers.push(newTokenAccount)
     _mintedOptionDestinationKey = newTokenAccount.publicKey
@@ -151,7 +167,7 @@ export const createMissingMintAccounts = ({
       fromPubkey: owner,
       owner,
       mintPublicKey: market.writerTokenMintKey,
-      splTokenAccountRentBalance
+      splTokenAccountRentBalance,
     })
     tx.add(transaction)
     signers.push(newTokenAccount)
@@ -159,12 +175,12 @@ export const createMissingMintAccounts = ({
     shouldRefreshTokenAccounts = true
   }
 
-  return { 
+  return {
     transaction: tx,
     signers,
     shouldRefreshTokenAccounts,
     mintedOptionDestinationKey: _mintedOptionDestinationKey,
     writerTokenDestinationKey: _writerTokenDestinationKey,
-    uAssetKey: _uAssetTokenAccount.pubKey,
+    uAssetTokenAccount: _uAssetTokenAccount,
   }
 }

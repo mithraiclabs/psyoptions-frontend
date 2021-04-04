@@ -384,7 +384,7 @@ const useOptionsMarkets = () => {
       shouldRefreshTokenAccounts,
       mintedOptionDestinationKey,
       writerTokenDestinationKey,
-      uAssetKey,
+      uAssetTokenAccount,
       error,
     } = createMissingMintAccounts({
       owner: pubKey,
@@ -408,7 +408,7 @@ const useOptionsMarkets = () => {
     return mint({
       marketData,
       mintedOptionDestKey: mintedOptionDestinationKey,
-      underlyingAssetSrcKey: uAssetKey,
+      underlyingAssetSrcKey: uAssetTokenAccount.pubKey,
       writerTokenDestKey: writerTokenDestinationKey,
       existingTransaction: { transaction, signers },
       shouldRefreshTokenAccounts,

@@ -36,10 +36,10 @@ export type OptionMarket = {
   quoteAssetPoolKey: PublicKey,
 }
 
-enum NotificationSeverity {
-  'success',
-  'info',
-  'warning',
+export enum NotificationSeverity {
+  SUCCESS = 'success',
+  INFO = 'info',
+  WARNING = 'warning',
 }
 type NotificationData = {
   severity: NotificationSeverity;
@@ -52,4 +52,10 @@ export type InstructionResponse = {
   transaction: Transaction;
   signers: Account[];
   shouldRefreshTokenAccounts?: boolean;
+}
+
+export interface CreateMissingMintAccountsRes extends InstructionResponse {
+  mintedOptionDestinationKey: PublicKey,
+  writerTokenDestinationKey: PublicKey,
+  uAssetTokenAccount: TokenAccount,
 }

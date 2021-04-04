@@ -1,11 +1,7 @@
 import React, { useContext, useCallback } from 'react'
 import BigNumber from 'bignumber.js'
 import { Link } from '@material-ui/core'
-import {
-  initializeMarket,
-  mintCoveredCallInstruction,
-  Market,
-} from '@mithraic-labs/options-js-bindings'
+import { initializeMarket, Market } from '@mithraic-labs/options-js-bindings'
 
 import { Connection, PublicKey } from '@solana/web3.js'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
@@ -21,7 +17,10 @@ import { OptionsMarketsContext } from '../context/OptionsMarketsContext'
 
 import { WRAPPED_SOL_ADDRESS } from '../utils/token'
 
-import { createMissingMintAccounts } from '../utils/instructions/index'
+import {
+  createMissingMintAccounts,
+  mintInstructions,
+} from '../utils/instructions/index'
 import { useSolanaMeta } from '../context/SolanaMetaContext'
 
 // Example of how markets data should look:
@@ -267,26 +266,17 @@ const useOptionsMarkets = () => {
   }) => {
     const tx = transaction
 
-    await Promise.all(
-      Array(numberOfContracts)
-        .fill('')
-        .map(async () => {
-          const mintInstruction = await mintCoveredCallInstruction({
-            authorityPubkey: pubKey,
-            programId: new PublicKey(endpoint.programId),
-            optionMarketKey: marketData.optionMarketKey,
-            optionMintKey: marketData.optionMintKey,
-            mintedOptionDestKey,
-            writerTokenDestKey,
-            writerTokenMintKey: marketData.writerTokenMintKey,
-            underlyingAssetPoolKey: marketData.underlyingAssetPoolKey,
-            underlyingAssetSrcKey,
-          })
+    const { transaction: mintTx } = await mintInstructions({
+      numberOfContractsToMint: numberOfContracts,
+      authorityPubkey: pubKey,
+      programId: new PublicKey(endpoint.programId),
+      market: marketData,
+      mintedOptionDestKey,
+      writerTokenDestKey,
+      underlyingAssetSrcKey,
+    })
 
-          tx.add(mintInstruction)
-        }),
-    )
-
+    tx.add(mintTx)
     // Close out the wrapped SOL account so it feels native
     if (marketData.uAssetMint === WRAPPED_SOL_ADDRESS) {
       tx.add(

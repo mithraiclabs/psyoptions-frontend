@@ -1,9 +1,11 @@
+import { mintCoveredCallInstruction } from '@mithraic-labs/options-js-bindings'
 import { PublicKey, Transaction } from '@solana/web3.js'
 import BigNumber from 'bignumber.js'
 import {
   Asset,
   CreateMissingMintAccountsRes,
   InstructionErrorResponse,
+  InstructionResponse,
   NotificationSeverity,
   OptionMarket,
   TokenAccount,
@@ -142,4 +144,50 @@ export const createMissingMintAccounts = ({
     writerTokenDestinationKey: _writerTokenDestinationKey,
     uAssetTokenAccount: _uAssetTokenAccount,
   }
+}
+/**
+ * Generate a transaction containing 1 or more mint option instructions.
+ */
+export const mintInstructions = async ({
+  numberOfContractsToMint = 1,
+  authorityPubkey,
+  programId,
+  market,
+  mintedOptionDestKey,
+  writerTokenDestKey,
+  underlyingAssetSrcKey,
+}: {
+  numberOfContractsToMint: number
+  market: OptionMarket
+  authorityPubkey: PublicKey
+  programId: PublicKey
+  mintedOptionDestKey: PublicKey
+  writerTokenDestKey: PublicKey
+  underlyingAssetSrcKey: PublicKey
+}): Promise<InstructionResponse> => {
+  const transaction = new Transaction()
+  await Promise.all(
+    Array(numberOfContractsToMint)
+      .fill('')
+      .map(async () => {
+        const mintInstruction = await mintCoveredCallInstruction({
+          authorityPubkey,
+          programId,
+          optionMarketKey: market.optionMarketKey,
+          optionMintKey: market.optionMintKey,
+          mintedOptionDestKey,
+          writerTokenDestKey,
+          writerTokenMintKey: market.writerTokenMintKey,
+          underlyingAssetPoolKey: market.underlyingAssetPoolKey,
+          underlyingAssetSrcKey,
+        })
+
+        transaction.add(mintInstruction)
+      }),
+  )
+  // Not sure if we should add the authoirtyPubkey to signers or if it's safe to
+  //  make the assumption that the authority is the wallet.
+  const signers = []
+
+  return { transaction, signers }
 }

@@ -46,8 +46,12 @@ type NotificationData = {
   message: string
 }
 
-export type InstructionErrorResponse = {
-  error: NotificationData
+export interface InstructionErrorResponse extends NotificationData {
+  err?: Error
+}
+export type Result<T, E> = {
+  response?: T;
+  error?: E;
 }
 export type InstructionResponse = {
   transaction: Transaction

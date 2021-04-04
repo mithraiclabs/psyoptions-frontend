@@ -8,6 +8,7 @@ import {
   InstructionResponse,
   NotificationSeverity,
   OptionMarket,
+  Result,
   TokenAccount,
 } from '../../types'
 import { truncatePublicKey } from '../format'
@@ -32,13 +33,13 @@ export const createMissingMintAccounts = ({
   owner: PublicKey
   market: OptionMarket
   uAsset: Asset
-  qAsset: Asset
   uAssetTokenAccount: TokenAccount
   splTokenAccountRentBalance: number
   mintedOptionDestinationKey?: PublicKey
   writerTokenDestinationKey?: PublicKey
   numberOfContractsToMint: number
-}): InstructionErrorResponse | CreateMissingMintAccountsRes => {
+  // TODO create an optional return type
+}): Result<CreateMissingMintAccountsRes, InstructionErrorResponse> => {
   const tx = new Transaction()
   const signers = []
   const uAssetSymbol = uAsset.tokenSymbol
@@ -136,14 +137,14 @@ export const createMissingMintAccounts = ({
     shouldRefreshTokenAccounts = true
   }
 
-  return {
+  return {response: {
     transaction: tx,
     signers,
     shouldRefreshTokenAccounts,
     mintedOptionDestinationKey: _mintedOptionDestinationKey,
     writerTokenDestinationKey: _writerTokenDestinationKey,
     uAssetTokenAccount: _uAssetTokenAccount,
-  }
+  }}
 }
 /**
  * Generate a transaction containing 1 or more mint option instructions.
@@ -190,4 +191,80 @@ export const mintInstructions = async ({
   const signers = []
 
   return { transaction, signers }
+}
+
+export const createMissingAccountsAndMint = async ({
+  optionsProgramId,
+  authorityPubkey,
+  owner,
+  market,
+  uAsset,
+  uAssetTokenAccount,
+  splTokenAccountRentBalance,
+  mintedOptionDestinationKey,
+  writerTokenDestinationKey,
+  numberOfContractsToMint,
+}: {
+  optionsProgramId: PublicKey
+  authorityPubkey: PublicKey
+  owner: PublicKey
+  market: OptionMarket
+  uAsset: Asset
+  uAssetTokenAccount: TokenAccount
+  splTokenAccountRentBalance: number
+  mintedOptionDestinationKey?: PublicKey
+  writerTokenDestinationKey?: PublicKey
+  numberOfContractsToMint: number
+}): Promise<Result<CreateMissingMintAccountsRes, InstructionErrorResponse>> => {
+  const transaction = new Transaction()
+  let signers = []
+
+  // TODO fix typescript yelling with Either or Option return type from create missing accounts
+  const { response, error } = createMissingMintAccounts({
+    owner,
+    market,
+    uAsset,
+    uAssetTokenAccount,
+    splTokenAccountRentBalance,
+    mintedOptionDestinationKey,
+    writerTokenDestinationKey,
+    numberOfContractsToMint,
+  })
+  if (error) {
+    return { error }
+  }
+  const {
+    transaction: createAccountsTx,
+    signers: createAccountsSigners,
+    shouldRefreshTokenAccounts,
+    mintedOptionDestinationKey: _mintedOptionDestinationKey,
+    writerTokenDestinationKey: _writerTokenDestinationKey,
+    uAssetTokenAccount: _uAssetTokenAccount,
+  } = response
+
+  transaction.add(createAccountsTx)
+  signers = [...signers, ...createAccountsSigners]
+
+  const { transaction: mintTx } = await mintInstructions({
+    numberOfContractsToMint,
+    authorityPubkey,
+    programId: optionsProgramId,
+    market,
+    mintedOptionDestKey: _mintedOptionDestinationKey,
+    writerTokenDestKey: _writerTokenDestinationKey,
+    underlyingAssetSrcKey: _uAssetTokenAccount.pubKey,
+  })
+
+  transaction.add(mintTx)
+
+  return {
+    response: {
+      transaction,
+      signers,
+      shouldRefreshTokenAccounts,
+      mintedOptionDestinationKey: _mintedOptionDestinationKey,
+      writerTokenDestinationKey: _writerTokenDestinationKey,
+      uAssetTokenAccount: _uAssetTokenAccount,
+    },
+  }
 }

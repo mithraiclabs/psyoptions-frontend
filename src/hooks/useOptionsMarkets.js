@@ -369,12 +369,7 @@ const useOptionsMarkets = () => {
     const writerTokenDestAddress = mintedWriterTokenDestKey
 
     const {
-      transaction,
-      signers,
-      shouldRefreshTokenAccounts,
-      mintedOptionDestinationKey,
-      writerTokenDestinationKey,
-      uAssetTokenAccount,
+      response,
       error,
     } = createMissingMintAccounts({
       owner: pubKey,
@@ -396,11 +391,18 @@ const useOptionsMarkets = () => {
         : undefined,
       numberOfContractsToMint: numberOfContracts,
     })
-
     if (error) {
       pushNotification(error)
       return {}
     }
+    const {
+      transaction,
+      signers,
+      shouldRefreshTokenAccounts,
+      mintedOptionDestinationKey,
+      writerTokenDestinationKey,
+      uAssetTokenAccount,
+    } = response;
 
     return mint({
       marketData,

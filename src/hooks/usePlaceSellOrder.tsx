@@ -95,6 +95,10 @@ const usePlaceSellOrder = () => {
         shouldRefreshTokenAccounts = _shouldRefreshTokenAccounts
       }
 
+      console.log('order args ', {
+        ...orderArgs,
+        payer: _optionTokenSrcKey,
+      })
       const {
         transaction: placeOrderTx,
         signers: placeOrderSigners,

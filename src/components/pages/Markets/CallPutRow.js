@@ -13,6 +13,7 @@ import useWallet from '../../../hooks/useWallet'
 import useOwnedTokenAccounts from '../../../hooks/useOwnedTokenAccounts'
 import useNotifications from '../../../hooks/useNotifications'
 import Loading from '../../Loading'
+import { useSerumOrderBook } from '../../../hooks/useSerumOrderbook';
 
 const TCell = withStyles({
   root: {
@@ -52,6 +53,12 @@ const CallPutRow = ({
   const { pushNotification } = useNotifications()
   const { ownedTokenAccounts } = useOwnedTokenAccounts()
   const { serumMarkets } = useSerum()
+  const callOrderbook = useSerumOrderBook(row.call?.serumKey)
+  const putOrderbook = useSerumOrderBook(row.put?.serumKey)
+  const callHighestBid = callOrderbook.bids[0]?.price
+  const callLowestAsk = callOrderbook.asks[0]?.price
+  const putHighestBid = putOrderbook.bids[0]?.price
+  const putLowestAsk = putOrderbook.asks[0]?.price
 
   const [loading, setLoading] = useState({ call: false, put: false })
 
@@ -221,8 +228,8 @@ const CallPutRow = ({
         </TCellLoading>
       ) : (
         <>
-          <TCell align="left">{row.call?.bid || '—'}</TCell>
-          <TCell align="left">{row.call?.ask || '—'}</TCell>
+          <TCell align="left">{callHighestBid || '—'}</TCell>
+          <TCell align="left">{callLowestAsk || '—'}</TCell>
           <TCell align="left">{row.call?.change || '—'}</TCell>
           <TCell align="left">{row.call?.volume || '—'}</TCell>
           <TCell align="left">{row.call?.openInterest || '—'}</TCell>
@@ -249,8 +256,8 @@ const CallPutRow = ({
         </TCellLoading>
       ) : (
         <>
-          <TCell align="left">{row.put?.bid || '—'}</TCell>
-          <TCell align="left">{row.put?.ask || '—'}</TCell>
+          <TCell align="left">{putHighestBid || '—'}</TCell>
+          <TCell align="left">{putLowestAsk || '—'}</TCell>
           <TCell align="left">{row.put?.change || '—'}</TCell>
           <TCell align="left">{row.put?.volume || '—'}</TCell>
           <TCell align="left">{row.put?.openInterest || '—'}</TCell>

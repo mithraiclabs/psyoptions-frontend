@@ -22,6 +22,7 @@ import useConnection from '../hooks/useConnection'
 import useWallet from '../hooks/useWallet'
 import useSerum from '../hooks/useSerum'
 import useOwnedTokenAccounts from '../hooks/useOwnedTokenAccounts'
+import useOptionsMarkets from '../hooks/useOptionsMarkets'
 import useNotifications from '../hooks/useNotifications'
 import usePlaceSellOrder from '../hooks/usePlaceSellOrder'
 
@@ -138,6 +139,7 @@ const BuySellDialog = ({
   const { pushNotification } = useNotifications()
   const { connection, dexProgramId } = useConnection()
   const { wallet, pubKey } = useWallet()
+  const { getMarket } = useOptionsMarkets()
   const placeSellOrder = usePlaceSellOrder()
   const { serumMarkets, fetchSerumMarket } = useSerum()
   const {
@@ -270,50 +272,58 @@ const BuySellDialog = ({
     setPlaceOrderLoading(true)
     try {
       const numberOfContracts = parsedOrderSize - openPositionSize
-
       const optionTokenAddress = getHighestAccount(optionAccounts)?.pubKey
-      const createAccountsAndMintArgs = {
+      const underlyingAssetSrcKey = getHighestAccount(uAssetAccounts)?.pubKey
+      const optionMarket = getMarket({
         date: date.unix(),
+        uAssetSymbol,
+        qAssetSymbol,
+        size: amountPerContract.toNumber(),
+        price: strike.toString(),
+      })
+
+      await placeSellOrder({
+        numberOfContractsToMint: numberOfContracts,
+        serumMarket: serum,
+        orderArgs: {
+          owner: pubKey,
+          // For Serum, the payer is really the account of the asset being sold
+          payer: new PublicKey(optionTokenAddress),
+          side: 'sell',
+          // Serum-ts handles adding the SPL Token decimals via their
+          //  `maket.priceNumberToLots` function
+          price: parsedLimitPrice,
+          // Serum-ts handles adding the SPL Token decimals via their
+          //  `maket.priceNumberToLots` function
+          size: parsedOrderSize,
+          // TODO create true mapping https://github.com/project-serum/serum-ts/blob/6803cb95056eb9b8beced9135d6956583ae5a222/packages/serum/src/market.ts#L1163
+          orderType: orderType === 'market' ? 'ioc' : orderType,
+          // TODO need to handle feeDiscountPubkey properly. This is hack for Devnet because
+          // otherwise it will fail since the SRM_MINT that is hard coded in serum-ts cannot
+          // be found on the network
+          feeDiscountPubkey: null,
+        },
         uAsset: {
           tokenSymbol: uAssetSymbol,
           mintAddress: uAssetMint,
           decimals: uAssetDecimals,
         },
-        qAsset: {
-          tokenSymbol: qAssetSymbol,
-          mintAddress: qAssetMint,
-          decimals: qAssetDecimals,
+        optionMarket,
+        uAssetTokenAccount: {
+          pubKey: underlyingAssetSrcKey,
+          amount: new BigNumber(
+            uAssetAccounts.find(
+              (asset) => asset.pubKey === underlyingAssetSrcKey,
+            )?.amount || 0,
+          ),
+          mint: new PublicKey(uAssetMint),
         },
-        size: amountPerContract.toNumber(),
-        price: strike.toString(),
-        uAssetAccount: getHighestAccount(uAssetAccounts)?.pubKey,
-        ownedUAssetAccounts: uAssetAccounts,
-        mintedOptionAccount: getHighestAccount(optionAccounts)?.pubKey,
-        ownedMintedOptionAccounts: optionAccounts,
-        mintedWriterTokenDestKey: getHighestAccount(writerAccounts)?.pubKey,
-        numberOfContracts,
-      }
-      const orderArgs = {
-        owner: pubKey,
-        // For Serum, the payer is really the account of the asset being sold
-        payer: new PublicKey(optionTokenAddress),
-        side: 'sell',
-        // Serum-ts handles adding the SPL Token decimals via their
-        //  `maket.priceNumberToLots` function
-        price: parsedLimitPrice,
-        // Serum-ts handles adding the SPL Token decimals via their
-        //  `maket.priceNumberToLots` function
-        size: parsedOrderSize,
-        // TODO create true mapping https://github.com/project-serum/serum-ts/blob/6803cb95056eb9b8beced9135d6956583ae5a222/packages/serum/src/market.ts#L1163
-        orderType: orderType === 'market' ? 'ioc' : orderType,
-        // TODO need to handle feeDiscountPubkey properly. This is hack for Devnet because
-        // otherwise it will fail since the SRM_MINT that is hard coded in serum-ts cannot
-        // be found on the network
-        opts: { feeDiscountPubkey: null },
-      }
-      await placeSellOrder(numberOfContracts, createAccountsAndMintArgs, {
-        serumMarket: serum,
-        orderArgs,
+        mintedOptionDestinationKey: new PublicKey(
+          getHighestAccount(optionAccounts)?.pubKey,
+        ),
+        writerTokenDestinationKey: new PublicKey(
+          getHighestAccount(writerAccounts)?.pubKey,
+        ),
       })
       setPlaceOrderLoading(false)
     } catch (err) {

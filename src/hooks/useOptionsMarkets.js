@@ -1,13 +1,9 @@
 import React, { useContext, useCallback } from 'react'
 import BigNumber from 'bignumber.js'
 import { Link } from '@material-ui/core'
-import {
-  initializeMarket,
-  mintCoveredCallInstruction,
-  Market,
-} from '@mithraic-labs/options-js-bindings'
+import { initializeMarket, Market } from '@mithraic-labs/options-js-bindings'
 
-import { Connection, PublicKey, Transaction } from '@solana/web3.js'
+import { Connection, PublicKey } from '@solana/web3.js'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 
 import { buildSolanaExplorerUrl } from '../utils/solanaExplorer'
@@ -19,9 +15,12 @@ import useOwnedTokenAccounts from './useOwnedTokenAccounts'
 
 import { OptionsMarketsContext } from '../context/OptionsMarketsContext'
 
-import { initializeTokenAccountTx, WRAPPED_SOL_ADDRESS } from '../utils/token'
+import { WRAPPED_SOL_ADDRESS } from '../utils/token'
 
-import { truncatePublicKey } from '../utils/format'
+import {
+  createMissingMintAccounts,
+  mintInstructions,
+} from '../utils/instructions/index'
 import { useSolanaMeta } from '../context/SolanaMetaContext'
 
 // Example of how markets data should look:
@@ -259,7 +258,7 @@ const useOptionsMarkets = () => {
   const mint = async ({
     marketData,
     mintedOptionDestKey, // address in user's wallet to send minted Option Token to
-    underlyingAssetSrcAddress, // account in user's wallet to post uAsset collateral from
+    underlyingAssetSrcKey, // account in user's wallet to post uAsset collateral from
     writerTokenDestKey, // address in user's wallet to send the minted Writer Token
     existingTransaction: { transaction, signers }, // existing transaction and signers
     shouldRefreshTokenAccounts,
@@ -267,32 +266,23 @@ const useOptionsMarkets = () => {
   }) => {
     const tx = transaction
 
-    await Promise.all(
-      Array(numberOfContracts)
-        .fill('')
-        .map(async () => {
-          const mintInstruction = await mintCoveredCallInstruction({
-            authorityPubkey: pubKey,
-            programId: new PublicKey(endpoint.programId),
-            optionMarketKey: marketData.optionMarketKey,
-            optionMintKey: marketData.optionMintKey,
-            mintedOptionDestKey,
-            writerTokenDestKey,
-            writerTokenMintKey: marketData.writerTokenMintKey,
-            underlyingAssetPoolKey: marketData.underlyingAssetPoolKey,
-            underlyingAssetSrcKey: new PublicKey(underlyingAssetSrcAddress),
-          })
+    const { transaction: mintTx } = await mintInstructions({
+      numberOfContractsToMint: numberOfContracts,
+      authorityPubkey: pubKey,
+      programId: new PublicKey(endpoint.programId),
+      market: marketData,
+      mintedOptionDestKey,
+      writerTokenDestKey,
+      underlyingAssetSrcKey,
+    })
 
-          tx.add(mintInstruction)
-        }),
-    )
-
+    tx.add(mintTx)
     // Close out the wrapped SOL account so it feels native
     if (marketData.uAssetMint === WRAPPED_SOL_ADDRESS) {
-      transaction.add(
+      tx.add(
         Token.createCloseAccountInstruction(
           TOKEN_PROGRAM_ID,
-          new PublicKey(underlyingAssetSrcAddress),
+          underlyingAssetSrcKey,
           pubKey, // Send any remaining SOL to the owner
           pubKey,
           [],
@@ -336,7 +326,10 @@ const useOptionsMarkets = () => {
       ),
     })
 
-    return txid
+    return {
+      optionTokenDestKey: mintedOptionDestKey,
+      writerTokenDestKey,
+    }
   }
 
   const createAccountsAndMint = async ({
@@ -352,29 +345,8 @@ const useOptionsMarkets = () => {
     mintedWriterTokenDestKey,
     numberOfContracts,
   }) => {
-    const tx = new Transaction()
-    const signers = []
     const uAssetSymbol = uAsset.tokenSymbol
     const qAssetSymbol = qAsset.tokenSymbol
-    let _uAssetAccount = uAssetAccount
-    let shouldRefreshTokenAccounts = false
-
-    if (!_uAssetAccount && uAsset.mintAddress !== WRAPPED_SOL_ADDRESS) {
-      // TODO - figure out how to distinguish between "a" vs "an" in this message
-      // Not that simple because "USDC" you say "A", but for "ETH" you say an, it depends on the pronunciation
-      pushNotification({
-        severity: 'warning',
-        message: `You must have one or more ${uAssetSymbol} accounts in your wallet to mint this contract`,
-      })
-      return true
-    }
-
-    // TODO - further optimization would be to remove the .find() here and just pass the whole object in
-    const uAssetDecimals = new BigNumber(10).pow(uAsset.decimals)
-    let uAssetBalance = new BigNumber(
-      ownedUAssetAccounts.find((asset) => asset.pubKey === _uAssetAccount)
-        ?.amount || 0,
-    )
 
     const marketData = getMarket({
       date,
@@ -384,77 +356,57 @@ const useOptionsMarkets = () => {
       price,
     })
 
-    // Handle Wrapped SOL
-    if (uAsset.mintAddress === WRAPPED_SOL_ADDRESS) {
-      const lamports = marketData.amountPerContract
-        .times(uAssetDecimals)
-        .toNumber()
-
-      const { transaction, newTokenAccount } = await initializeTokenAccountTx({
-        connection,
-        payer: { publicKey: pubKey },
-        mintPublicKey: new PublicKey(WRAPPED_SOL_ADDRESS),
-        owner: pubKey,
-        extraLamports: lamports,
-        rentBalance: splTokenAccountRentBalance,
-      })
-      tx.add(transaction)
-      signers.push(newTokenAccount)
-
-      _uAssetAccount = newTokenAccount.publicKey.toString()
-      uAssetBalance = new BigNumber(lamports)
-    }
-
-    if (uAssetBalance.div(uAssetDecimals).isLessThan(size)) {
-      pushNotification({
-        severity: 'warning',
-        message: `You must have at least ${size} ${uAssetSymbol} in your ${uAssetSymbol} account ${truncatePublicKey(
-          _uAssetAccount,
-        )} to mint this contract`,
-      })
-      return true
-    }
+    // TODO - further optimization would be to remove the .find() here and just pass the whole object in
+    const uAssetBalance = new BigNumber(
+      ownedUAssetAccounts.find((asset) => asset.pubKey === uAssetAccount)
+        ?.amount || 0,
+    )
 
     // Fallback to first oowned minted option account
-    let mintedOptionDestAddress =
+    const mintedOptionDestAddress =
       mintedOptionAccount || ownedMintedOptionAccounts[0]
-    if (!mintedOptionDestAddress) {
-      // Create token account for minted option if the user doesn't have one yet
-      const { transaction, newTokenAccount } = await initializeTokenAccountTx({
-        connection,
-        payer: { publicKey: pubKey },
-        mintPublicKey: new PublicKey(marketData.optionMintAddress),
-        owner: pubKey,
-        rentBalance: splTokenAccountRentBalance,
-      })
-      tx.add(transaction)
-      signers.push(newTokenAccount)
-      mintedOptionDestAddress = newTokenAccount.publicKey.toString()
-      shouldRefreshTokenAccounts = true
-    }
 
-    let writerTokenDestAddress = mintedWriterTokenDestKey
-    if (!writerTokenDestAddress) {
-      // Create token account for minted Writer Token if the user doesn't have one yet
-      const { transaction, newTokenAccount } = await initializeTokenAccountTx({
-        connection,
-        payer: { publicKey: pubKey },
-        mintPublicKey: marketData.writerTokenMintKey,
-        owner: pubKey,
-        rentBalance: splTokenAccountRentBalance,
-      })
-      tx.add(transaction)
-      signers.push(newTokenAccount)
-      writerTokenDestAddress = newTokenAccount.publicKey.toString()
-      shouldRefreshTokenAccounts = true
+    const writerTokenDestAddress = mintedWriterTokenDestKey
+
+    const { response, error } = createMissingMintAccounts({
+      owner: pubKey,
+      market: marketData,
+      uAsset,
+      uAssetTokenAccount: uAssetAccount
+        ? {
+            amount: uAssetBalance,
+            mint: new PublicKey(uAsset.mintAddress),
+            pubKey: uAssetAccount,
+          }
+        : undefined,
+      splTokenAccountRentBalance,
+      mintedOptionDestinationKey: mintedOptionDestAddress
+        ? new PublicKey(mintedOptionDestAddress)
+        : undefined,
+      writerTokenDestinationKey: writerTokenDestAddress
+        ? new PublicKey(writerTokenDestAddress)
+        : undefined,
+      numberOfContractsToMint: numberOfContracts,
+    })
+    if (error) {
+      pushNotification(error)
+      return {}
     }
+    const {
+      transaction,
+      signers,
+      shouldRefreshTokenAccounts,
+      mintedOptionDestinationKey,
+      writerTokenDestinationKey,
+      uAssetTokenAccount,
+    } = response
 
     return mint({
       marketData,
-      mintedOptionDestKey: new PublicKey(mintedOptionDestAddress),
-      underlyingAssetSrcAddress: _uAssetAccount,
-      writerTokenDestKey: new PublicKey(writerTokenDestAddress),
-      existingTransaction: { transaction: tx, signers },
+      mintedOptionDestKey: mintedOptionDestinationKey,
+      underlyingAssetSrcKey: uAssetTokenAccount.pubKey,
+      writerTokenDestKey: writerTokenDestinationKey,
+      existingTransaction: { transaction, signers },
       shouldRefreshTokenAccounts,
       numberOfContracts,
     })

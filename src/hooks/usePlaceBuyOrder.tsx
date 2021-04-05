@@ -34,7 +34,6 @@ const usePlaceBuyOrder = () => {
       orderArgs: OrderParams
       optionDestinationKey?: PublicKey
     }) => {
-
       const transaction = new Transaction()
       let signers = []
       const _optionDestinationKey = optionDestinationKey
@@ -61,7 +60,7 @@ const usePlaceBuyOrder = () => {
         transaction: placeOrderTx,
         signers: placeOrderSigners,
       } = await serumMarket.market.makePlaceOrderTransaction(connection, {
-        ...orderArgs
+        ...orderArgs,
       })
       transaction.add(placeOrderTx)
       signers = [...signers, ...placeOrderSigners]

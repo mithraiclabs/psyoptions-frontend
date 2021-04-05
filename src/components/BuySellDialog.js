@@ -142,7 +142,7 @@ const BuySellDialog = ({
   const { wallet, pubKey } = useWallet()
   const { getMarket } = useOptionsMarkets()
   const placeSellOrder = usePlaceSellOrder()
-  const placeBuyOrder = usePlaceBuyOrder();
+  const placeBuyOrder = usePlaceBuyOrder()
   const { serumMarkets, fetchSerumMarket } = useSerum()
   const {
     ownedTokenAccounts,
@@ -276,7 +276,8 @@ const BuySellDialog = ({
       const numberOfContracts = parsedOrderSize - openPositionSize
       const optionTokenAddress = getHighestAccount(optionAccounts)?.pubKey
       const underlyingAssetSrcKey = getHighestAccount(uAssetAccounts)?.pubKey
-      const writerTokenDestinationKey = getHighestAccount(writerAccounts)?.pubKey
+      const writerTokenDestinationKey = getHighestAccount(writerAccounts)
+        ?.pubKey
       const optionMarket = getMarket({
         date: date.unix(),
         uAssetSymbol,
@@ -291,7 +292,9 @@ const BuySellDialog = ({
         orderArgs: {
           owner: pubKey,
           // For Serum, the payer is really the account of the asset being sold
-          payer: optionTokenAddress ? new PublicKey(optionTokenAddress) : undefined,
+          payer: optionTokenAddress
+            ? new PublicKey(optionTokenAddress)
+            : undefined,
           side: 'sell',
           // Serum-ts handles adding the SPL Token decimals via their
           //  `maket.priceNumberToLots` function
@@ -321,12 +324,12 @@ const BuySellDialog = ({
           ),
           mint: new PublicKey(uAssetMint),
         },
-        mintedOptionDestinationKey: optionTokenAddress ? new PublicKey(
-          optionTokenAddress
-        ) : undefined,
-        writerTokenDestinationKey: writerTokenDestinationKey ? new PublicKey(
-          writerTokenDestinationKey
-        ) : undefined,
+        mintedOptionDestinationKey: optionTokenAddress
+          ? new PublicKey(optionTokenAddress)
+          : undefined,
+        writerTokenDestinationKey: writerTokenDestinationKey
+          ? new PublicKey(writerTokenDestinationKey)
+          : undefined,
       })
       setPlaceOrderLoading(false)
     } catch (err) {
@@ -343,8 +346,10 @@ const BuySellDialog = ({
   const handleBuyOrder = async () => {
     setPlaceOrderLoading(true)
     try {
-      const serumQuoteTokenAccounts = ownedTokenAccounts[serum.market._decoded.quoteMint.toString()] || []
-      const serumQuoteTokenAddress = getHighestAccount(serumQuoteTokenAccounts)?.pubKey
+      const serumQuoteTokenAccounts =
+        ownedTokenAccounts[serum.market._decoded.quoteMint.toString()] || []
+      const serumQuoteTokenAddress = getHighestAccount(serumQuoteTokenAccounts)
+        ?.pubKey
       const optionTokenAddress = getHighestAccount(optionAccounts)?.pubKey
       // TODO get the users token account with the most Serum Market base asset.
       const optionMarket = getMarket({
@@ -357,11 +362,15 @@ const BuySellDialog = ({
       await placeBuyOrder({
         optionMarket,
         serumMarket: serum,
-        optionDestinationKey: optionTokenAddress ? new PublicKey(optionTokenAddress) : undefined,
+        optionDestinationKey: optionTokenAddress
+          ? new PublicKey(optionTokenAddress)
+          : undefined,
         orderArgs: {
           owner: pubKey,
           // For Serum, the payer is really the account of the asset being sold
-          payer: serumQuoteTokenAddress ? new PublicKey(serumQuoteTokenAddress) : null, 
+          payer: serumQuoteTokenAddress
+            ? new PublicKey(serumQuoteTokenAddress)
+            : null,
           side: 'buy',
           // Serum-ts handles adding the SPL Token decimals via their
           //  `maket.priceNumberToLots` function

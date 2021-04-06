@@ -1,25 +1,21 @@
 import { Market, Orderbook } from '@mithraic-labs/serum'
-import { useEffect, useState } from 'react'
-import useConnection from './useConnection'
-import useSerum from './useSerum'
+import { useEffect } from 'react'
+import {
+  DEFAULT_DEPTH,
+  useSerumOrderbooks,
+} from '../../context/SerumOrderbookContext'
+import useConnection from '../useConnection'
+import useSerum from '../useSerum'
 
-type Order = {
-  price: number
-  size: number
-}
-const depth = 20
-export const useSerumOrderBook = (
-  key: string,
-): {
-  asks: Order[]
-  bids: Order[]
-  loading: boolean
-} => {
+/**
+ * Handle subscription to serum orderbook updates for a specific market.
+ *
+ * Subscribes on mount
+ */
+export const useSubscribeSerumOrderbook = (key: string): void => {
   const { connection } = useConnection()
   const { serumMarkets } = useSerum()
-  const [bids, setBids] = useState([])
-  const [asks, setAsks] = useState([])
-  const [loading, setLoading] = useState(false)
+  const [, setOrderbooks] = useSerumOrderbooks()
   const serumMarket = serumMarkets[key]?.serumMarket
 
   useEffect(() => {
@@ -27,24 +23,21 @@ export const useSerumOrderBook = (
     let asksSubscription
     let bidsSubscription
     if (market) {
-      // initial load of the orderbook
-      ;(async () => {
-        setLoading(true)
-        const { asks: _asks, bids: _bids } = await serumMarket.getOrderbook()
-        setLoading(false)
-        setAsks(_asks)
-        setBids(_bids)
-      })()
-
       // subscribe to bid/ask on chain updates
       bidsSubscription = connection.onAccountChange(
         market.bidsAddress,
         (bidsAccount) => {
           const book = Orderbook.decode(market, bidsAccount.data)
           const _bids = book
-            .getL2(depth)
+            .getL2(DEFAULT_DEPTH)
             .map(([price, size]) => ({ price, size }))
-          setBids(_bids)
+          setOrderbooks((prevOrderbooks) => ({
+            ...prevOrderbooks,
+            [key]: {
+              asks: prevOrderbooks[key]?.asks ?? [],
+              bids: _bids,
+            },
+          }))
         },
       )
       asksSubscription = connection.onAccountChange(
@@ -52,9 +45,15 @@ export const useSerumOrderBook = (
         (asksAccount) => {
           const book = Orderbook.decode(market, asksAccount.data)
           const _asks = book
-            .getL2(depth)
+            .getL2(DEFAULT_DEPTH)
             .map(([price, size]) => ({ price, size }))
-          setAsks(_asks)
+          setOrderbooks((prevOrderbooks) => ({
+            ...prevOrderbooks,
+            [key]: {
+              asks: _asks,
+              bids: prevOrderbooks[key]?.bids ?? [],
+            },
+          }))
         },
       )
     }
@@ -67,11 +66,5 @@ export const useSerumOrderBook = (
         connection.removeAccountChangeListener(bidsSubscription)
       }
     }
-  }, [connection, serumMarket])
-
-  return {
-    asks,
-    bids,
-    loading,
-  }
+  }, [connection, key, serumMarket, setOrderbooks])
 }

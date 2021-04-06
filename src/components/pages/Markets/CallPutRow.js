@@ -13,7 +13,7 @@ import useWallet from '../../../hooks/useWallet'
 import useOwnedTokenAccounts from '../../../hooks/useOwnedTokenAccounts'
 import useNotifications from '../../../hooks/useNotifications'
 import Loading from '../../Loading'
-import { useSerumOrderBook } from '../../../hooks/useSerumOrderbook';
+import { useSerumOrderbook, useSubscribeSerumOrderbook } from '../../../hooks/SerumOrderbooks';
 
 const TCell = withStyles({
   root: {
@@ -53,12 +53,14 @@ const CallPutRow = ({
   const { pushNotification } = useNotifications()
   const { ownedTokenAccounts } = useOwnedTokenAccounts()
   const { serumMarkets } = useSerum()
-  const callOrderbook = useSerumOrderBook(row.call?.serumKey)
-  const putOrderbook = useSerumOrderBook(row.put?.serumKey)
-  const callHighestBid = callOrderbook.bids[0]?.price
-  const callLowestAsk = callOrderbook.asks[0]?.price
-  const putHighestBid = putOrderbook.bids[0]?.price
-  const putLowestAsk = putOrderbook.asks[0]?.price
+  const { orderbook: callOrderbook } = useSerumOrderbook(row.call?.serumKey)
+  const { orderbook: putOrderbook } = useSerumOrderbook(row.put?.serumKey)
+  useSubscribeSerumOrderbook(row.call?.serumKey)
+  useSubscribeSerumOrderbook(row.put?.serumKey)
+  const callHighestBid = callOrderbook?.bids[0]?.price
+  const callLowestAsk = callOrderbook?.asks[0]?.price
+  const putHighestBid = putOrderbook?.bids[0]?.price
+  const putLowestAsk = putOrderbook?.asks[0]?.price
 
   const [loading, setLoading] = useState({ call: false, put: false })
 

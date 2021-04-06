@@ -9,7 +9,7 @@ import {
 } from '@material-ui/core'
 import Done from '@material-ui/icons/Done'
 import Tooltip from '@material-ui/core/Tooltip'
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import propTypes from 'prop-types'
 import BigNumber from 'bignumber.js'
 import { PublicKey } from '@solana/web3.js'
@@ -27,6 +27,7 @@ import useNotifications from '../hooks/useNotifications'
 import usePlaceSellOrder from '../hooks/usePlaceSellOrder'
 
 import OrderBook from './OrderBook'
+import { useSerumOrderbook } from '../hooks/SerumOrderbooks';
 
 const successColor = theme.palette.success.main
 const errorColor = theme.palette.error.main
@@ -150,12 +151,8 @@ const BuySellDialog = ({
   const [orderSize, setOrderSize] = useState(1)
   const [limitPrice, setLimitPrice] = useState(0)
   const [initializingSerum, setInitializingSerum] = useState(false)
-  const [orderbookLoaded, setOrderbookLoaded] = useState(false)
   const [placeOrderLoading, setPlaceOrderLoading] = useState(false)
-  const [orderbook, setOrderbook] = useState({
-    bids: [],
-    asks: [],
-  })
+  const { orderbook } = useSerumOrderbook(serumKey)
 
   const optionAccounts = ownedTokenAccounts[optionMintAddress] || []
   const writerAccounts = ownedTokenAccounts[writerTokenMintKey] || []
@@ -172,19 +169,6 @@ const BuySellDialog = ({
 
   const serumMarketData = serumMarkets[serumKey]
   const serum = serumMarketData?.serumMarket
-
-  // Load full orderbook if serum instance exists
-  useEffect(() => {
-    if (open && serum && !orderbookLoaded) {
-      ;(async () => {
-        const book = await serum.getOrderbook()
-        setOrderbookLoaded(true)
-        if (open) {
-          setOrderbook(book)
-        }
-      })()
-    }
-  }, [serum, orderbookLoaded, setOrderbook, setOrderbookLoaded, open])
 
   const parsedOrderSize =
     Number.isNaN(parseFloat(orderSize)) || orderSize < 1
@@ -337,17 +321,6 @@ const BuySellDialog = ({
     }
   }
 
-  const handleClose = () => {
-    // Reset order book on close so that we fetch a new one when opening
-    // this dialog for a diff market
-    setOrderbook({
-      bids: [],
-      asks: [],
-    })
-    setOrderbookLoaded(false)
-    onClose()
-  }
-
   const mintSellTooltipLabel =
     openPositionSize >= parsedOrderSize
       ? `Place sell order using: ${orderSize} owned option${
@@ -372,7 +345,7 @@ const BuySellDialog = ({
     !sufficientFundsToSell
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth={'lg'}>
+    <Dialog open={open} onClose={onClose} maxWidth={'lg'}>
       <Box py={1} px={2} width="680px" maxWidth={['100%']}>
         <Box p={1} pt={2}>
           <h2 style={{ margin: '0' }}>{heading}</h2>

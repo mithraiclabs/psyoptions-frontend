@@ -4,6 +4,7 @@ import { WalletContext } from '../context/WalletContext'
 
 const useWallet = () => {
   const {
+    balance,
     loading,
     setLoading,
     url,
@@ -41,6 +42,7 @@ const useWallet = () => {
   }
 
   return {
+    balance,
     url,
     setUrl,
     wallet,

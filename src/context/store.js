@@ -14,6 +14,7 @@ import { SolanaMetaProvider } from './SolanaMetaContext'
 import { PasswordProvider } from './PasswordContext'
 import theme from '../utils/theme'
 import { SerumOrderbooksProvider } from './SerumOrderbookContext';
+import { SPLTokenMintsProvider } from './SPLTokenMintsContext';
 
 const _providers = [
   // eslint-disable-next-line react/no-children-prop
@@ -25,6 +26,7 @@ const _providers = [
   <WalletProvider />,
   <OwnedTokenAccountsProvider />,
   <OptionsMarketsProvider />,
+  <SPLTokenMintsProvider />,
   <OptionsChainProvider />,
   <SerumProvider />,
   <SerumOrderbooksProvider />,

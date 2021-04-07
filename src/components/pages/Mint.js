@@ -38,13 +38,13 @@ const Mint = () => {
 
   const [date, setDate] = useState(dates[0])
   const { uAsset, qAsset, setUAsset } = useAssetList()
-  const [size, setSize] = useState(100)
+  const [size, setSize] = useState('')
   const [price, setPrice] = useState('')
   const [uAssetAccount, setUAssetAccount] = useState('')
   const [mintedOptionAccount, setMintedOptionAccount] = useState('')
   const [mintedWriterTokenDestKey, setMintedWriterTokenDestKey] = useState('')
   const [loading, setLoading] = useState(false)
-
+  
   const allParams = {
     date: date.unix(),
     uAssetSymbol: uAsset?.tokenSymbol,
@@ -52,7 +52,7 @@ const Mint = () => {
     size,
     price,
   }
-
+  
   const contractSizes = getSizes(allParams)
   const strikePrices = getStrikePrices(allParams).sort((a, b) => a - b)
   const marketData = getMarket(allParams)

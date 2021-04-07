@@ -67,7 +67,8 @@ const Notifications = () => {
       position="fixed"
       bottom="0"
       right="0"
-      zIndex="10"
+      // dialog has a zIndex of 1300, this must be higher
+      zIndex="1500"
       p="6px"
       width={['100%', '370px']}
     >

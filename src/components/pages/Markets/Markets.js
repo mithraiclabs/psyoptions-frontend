@@ -1,5 +1,5 @@
 import { Box, FormControlLabel, Switch } from '@material-ui/core'
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import Table from '@material-ui/core/Table'
 import TableBody from '@material-ui/core/TableBody'
 import TableCell from '@material-ui/core/TableCell'
@@ -118,7 +118,7 @@ const Markets = () => {
     }
   }
 
-  const rows = [
+  const rows = useMemo(() => [
     ...chain,
     ...Array(Math.max(9 - chain.length, 0))
       .fill(rowTemplate)
@@ -126,7 +126,7 @@ const Markets = () => {
         ...row,
         key: `empty-${i}`,
       })),
-  ]
+  ], [chain])
 
   useEffect(() => {
     fetchOptionsChain(date.unix())

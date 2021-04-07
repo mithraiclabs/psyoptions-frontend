@@ -1,7 +1,9 @@
-import React, { useState, createContext } from 'react'
+import React, { useState, createContext, useContext } from 'react'
 import PropTypes from 'prop-types'
 
 const SerumContext = createContext()
+
+export const useSerumContext = () => useContext(SerumContext)
 
 const SerumProvider = ({ children }) => {
   const [serumMarkets, setSerumMarkets] = useState({})

@@ -10,10 +10,10 @@ import theme from '../../../utils/theme'
 import useOptionsMarkets from '../../../hooks/useOptionsMarkets'
 import useSerum from '../../../hooks/useSerum'
 import useWallet from '../../../hooks/useWallet'
-import useOwnedTokenAccounts from '../../../hooks/useOwnedTokenAccounts'
 import useNotifications from '../../../hooks/useNotifications'
 import Loading from '../../Loading'
-import { useSerumOrderbook, useSubscribeSerumOrderbook } from '../../../hooks/SerumOrderbooks';
+import { useSerumOrderbook, useSubscribeSerumOrderbook } from '../../../hooks/Serum';
+import { useSPLTokenMintInfo, useSubscribeSPLTokenMint } from '../../../hooks/SPLToken';
 
 const TCell = withStyles({
   root: {
@@ -51,8 +51,11 @@ const CallPutRow = ({
 }) => {
   const { connect, connected } = useWallet()
   const { pushNotification } = useNotifications()
-  const { ownedTokenAccounts } = useOwnedTokenAccounts()
   const { serumMarkets } = useSerum()
+  const {
+    initializeMarkets,
+    getMarket,
+  } = useOptionsMarkets()
   const { orderbook: callOrderbook } = useSerumOrderbook(row.call?.serumKey)
   const { orderbook: putOrderbook } = useSerumOrderbook(row.put?.serumKey)
   useSubscribeSerumOrderbook(row.call?.serumKey)
@@ -61,6 +64,24 @@ const CallPutRow = ({
   const callLowestAsk = callOrderbook?.asks[0]?.price
   const putHighestBid = putOrderbook?.bids[0]?.price
   const putLowestAsk = putOrderbook?.asks[0]?.price
+  const callMarket = getMarket({
+    date: date.unix(),
+    uAssetSymbol: uAsset.tokenSymbol,
+    qAssetSymbol: qAsset.tokenSymbol,
+    size: row.call?.size,
+    price: row.strike
+  })
+  const putMarket = getMarket({
+    date: date.unix(),
+    uAssetSymbol: uAsset.tokenSymbol,
+    qAssetSymbol: qAsset.tokenSymbol,
+    size: row.put?.size,
+    price: 1 / row.strike
+  })
+  const callOptionMintInfo = useSPLTokenMintInfo(callMarket?.optionMintKey)
+  const putOptionMintInfo = useSPLTokenMintInfo(putMarket?.optionMintKey)
+  useSubscribeSPLTokenMint(callMarket?.optionMintKey)
+  useSubscribeSPLTokenMint(putMarket?.optionMintKey)
 
   const [loading, setLoading] = useState({ call: false, put: false })
 
@@ -69,11 +90,6 @@ const CallPutRow = ({
     return round ? sp.toFixed(precision) : sp.toString(10)
   }
 
-  const {
-    initializeMarkets,
-    getMarket,
-    createAccountsAndMint,
-  } = useOptionsMarkets()
 
   const handleInitialize = useCallback(
     async ({ type }) => {
@@ -116,68 +132,6 @@ const CallPutRow = ({
       }
     },
     [uAsset, qAsset, initializeMarkets, date, row, pushNotification],
-  )
-
-  // TODO -- move this to the modal
-  // eslint-disable-next-line
-  const handleMint = useCallback(
-    async ({ type }) => {
-      setLoading((prevState) => ({ ...prevState, [type]: true }))
-      try {
-        const ua = type === 'call' ? uAsset : qAsset
-        const qa = type === 'call' ? qAsset : uAsset
-
-        const marketParams = {
-          date: date.unix(),
-          uAssetSymbol: ua.tokenSymbol,
-          qAssetSymbol: qa.tokenSymbol,
-          size: type === 'call' ? row.call?.size : row.put?.size, // TODO -- deal with FP imprecision
-          price: type === 'call' ? row.strike : 1 / row.strike, // TODO -- deal with FP imprecision
-        }
-
-        const marketData = getMarket(marketParams)
-        const ownedMintedOptionAccounts =
-          (marketData && ownedTokenAccounts[marketData.optionMintAddress]) || []
-        const ownedUAssetAccounts =
-          (uAsset && ownedTokenAccounts[uAsset.mintAddress]) || []
-        const ownedQAssetAccounts =
-          (qAsset && ownedTokenAccounts[qAsset.mintAddress]) || []
-        const ownedWriterTokenMintAccounts =
-          (marketData && ownedTokenAccounts[marketData.writerTokenMintKey]) ||
-          []
-
-        await createAccountsAndMint({
-          ...marketParams,
-          uAsset: ua,
-          qAsset: qa,
-          uAssetAccount: ownedUAssetAccounts[0]?.pubKey || '',
-          qAssetAccount: ownedQAssetAccounts[0]?.pubKey || '',
-          ownedUAssetAccounts,
-          ownedQAssetAccounts,
-          mintedOptionAccount: ownedMintedOptionAccounts[0]?.pubKey || '',
-          ownedMintedOptionAccounts,
-          mintedWriterTokenDestKey: ownedWriterTokenMintAccounts[0]?.pubKey,
-        })
-      } catch (err) {
-        console.log(err)
-        pushNotification({
-          severity: 'error',
-          message: `${err}`,
-        })
-      } finally {
-        setLoading((prevState) => ({ ...prevState, [type]: false }))
-      }
-    },
-    [
-      createAccountsAndMint,
-      date,
-      getMarket,
-      ownedTokenAccounts,
-      pushNotification,
-      qAsset,
-      row,
-      uAsset,
-    ],
   )
 
   return (
@@ -234,7 +188,7 @@ const CallPutRow = ({
           <TCell align="left">{callLowestAsk || '—'}</TCell>
           <TCell align="left">{row.call?.change || '—'}</TCell>
           <TCell align="left">{row.call?.volume || '—'}</TCell>
-          <TCell align="left">{row.call?.openInterest || '—'}</TCell>
+          <TCell align="left">{callOptionMintInfo?.supply.toString() || '—'}</TCell>
         </>
       )}
 
@@ -262,7 +216,7 @@ const CallPutRow = ({
           <TCell align="left">{putLowestAsk || '—'}</TCell>
           <TCell align="left">{row.put?.change || '—'}</TCell>
           <TCell align="left">{row.put?.volume || '—'}</TCell>
-          <TCell align="left">{row.put?.openInterest || '—'}</TCell>
+          <TCell align="left">{putOptionMintInfo?.supply.toString() || '—'}</TCell>
         </>
       )}
       <TCell align="right">

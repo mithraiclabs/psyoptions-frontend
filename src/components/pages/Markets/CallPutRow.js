@@ -14,6 +14,7 @@ import useOwnedTokenAccounts from '../../../hooks/useOwnedTokenAccounts'
 import useNotifications from '../../../hooks/useNotifications'
 import Loading from '../../Loading'
 import { useSerumOrderbook, useSubscribeSerumOrderbook } from '../../../hooks/Serum';
+import { useSPLTokenMintInfo, useSubscribeSPLTokenMint } from '../../../hooks/SPLToken';
 
 const TCell = withStyles({
   root: {
@@ -53,6 +54,11 @@ const CallPutRow = ({
   const { pushNotification } = useNotifications()
   const { ownedTokenAccounts } = useOwnedTokenAccounts()
   const { serumMarkets } = useSerum()
+  const {
+    initializeMarkets,
+    getMarket,
+    createAccountsAndMint,
+  } = useOptionsMarkets()
   const { orderbook: callOrderbook } = useSerumOrderbook(row.call?.serumKey)
   const { orderbook: putOrderbook } = useSerumOrderbook(row.put?.serumKey)
   useSubscribeSerumOrderbook(row.call?.serumKey)
@@ -61,6 +67,24 @@ const CallPutRow = ({
   const callLowestAsk = callOrderbook?.asks[0]?.price
   const putHighestBid = putOrderbook?.bids[0]?.price
   const putLowestAsk = putOrderbook?.asks[0]?.price
+  const callMarket = getMarket({
+    date: date.unix(),
+    uAssetSymbol: uAsset.tokenSymbol,
+    qAssetSymbol: qAsset.tokenSymbol,
+    size: row.call?.size,
+    price: row.strike
+  })
+  const putMarket = getMarket({
+    date: date.unix(),
+    uAssetSymbol: uAsset.tokenSymbol,
+    qAssetSymbol: qAsset.tokenSymbol,
+    size: row.put?.size,
+    price: 1 / row.strike
+  })
+  const callOptionMintInfo = useSPLTokenMintInfo(callMarket?.optionMintKey)
+  const putOptionMintInfo = useSPLTokenMintInfo(putMarket?.optionMintKey)
+  useSubscribeSPLTokenMint(callMarket?.optionMintKey)
+  useSubscribeSPLTokenMint(putMarket?.optionMintKey)
 
   const [loading, setLoading] = useState({ call: false, put: false })
 
@@ -69,11 +93,6 @@ const CallPutRow = ({
     return round ? sp.toFixed(precision) : sp.toString(10)
   }
 
-  const {
-    initializeMarkets,
-    getMarket,
-    createAccountsAndMint,
-  } = useOptionsMarkets()
 
   const handleInitialize = useCallback(
     async ({ type }) => {
@@ -234,7 +253,7 @@ const CallPutRow = ({
           <TCell align="left">{callLowestAsk || '—'}</TCell>
           <TCell align="left">{row.call?.change || '—'}</TCell>
           <TCell align="left">{row.call?.volume || '—'}</TCell>
-          <TCell align="left">{row.call?.openInterest || '—'}</TCell>
+          <TCell align="left">{callOptionMintInfo?.supply.toString() || '—'}</TCell>
         </>
       )}
 
@@ -262,7 +281,7 @@ const CallPutRow = ({
           <TCell align="left">{putLowestAsk || '—'}</TCell>
           <TCell align="left">{row.put?.change || '—'}</TCell>
           <TCell align="left">{row.put?.volume || '—'}</TCell>
-          <TCell align="left">{row.put?.openInterest || '—'}</TCell>
+          <TCell align="left">{putOptionMintInfo?.supply.toString() || '—'}</TCell>
         </>
       )}
       <TCell align="right">

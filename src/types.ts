@@ -26,10 +26,10 @@ export type OptionMarket = {
   uAssetMint: string
   qAssetMint: string
   strikePrice: string
-  // optionMintAddress is deprecated and references should be removed
+  /** @deprecated */
   optionMintAddress: string
   optionMintKey: PublicKey
-  // optionMarketDataAddress is deprecated and references should be removed
+  /** @deprecated */
   optionMarketDataAddress: string
   optionMarketKey: PublicKey
   writerTokenMintKey: PublicKey

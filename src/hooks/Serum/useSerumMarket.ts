@@ -1,10 +1,10 @@
 import { PublicKey } from '@solana/web3.js'
 import { useEffect } from 'react'
 import * as Sentry from '@sentry/react'
-import { useSerumContext } from '../../context/SerumContext'
 import { SerumMarket } from '../../utils/serum'
 import useConnection from '../useConnection'
 import { LocalSerumMarket } from '../../types'
+import { useSerumContext } from '../../context/SerumContext'
 
 /**
  * Fetch and return a serum market

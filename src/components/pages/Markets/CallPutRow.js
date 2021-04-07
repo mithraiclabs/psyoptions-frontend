@@ -13,7 +13,7 @@ import useWallet from '../../../hooks/useWallet'
 import useOwnedTokenAccounts from '../../../hooks/useOwnedTokenAccounts'
 import useNotifications from '../../../hooks/useNotifications'
 import Loading from '../../Loading'
-import { useSerumOrderbook, useSubscribeSerumOrderbook } from '../../../hooks/SerumOrderbooks';
+import { useSerumOrderbook, useSubscribeSerumOrderbook } from '../../../hooks/Serum';
 
 const TCell = withStyles({
   root: {

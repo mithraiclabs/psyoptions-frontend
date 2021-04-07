@@ -5,7 +5,6 @@ import Table from '@material-ui/core/Table'
 import TableBody from '@material-ui/core/TableBody'
 import TableCell from '@material-ui/core/TableCell'
 import TableRow from '@material-ui/core/TableRow'
-import PropTypes from 'prop-types'
 import * as Sentry from '@sentry/react'
 import KeyboardArrowDown from '@material-ui/icons/KeyboardArrowDown'
 import { makeStyles } from '@material-ui/core/styles'
@@ -13,6 +12,10 @@ import useExerciseOpenPosition from '../../../hooks/useExerciseOpenPosition'
 import useOwnedTokenAccounts from '../../../hooks/useOwnedTokenAccounts'
 import useNotifications from '../../../hooks/useNotifications'
 import { formatExpirationTimestamp } from '../../../utils/format'
+import { OptionMarket, TokenAccount } from '../../../types'
+import useAssetList from '../../../hooks/useAssetList'
+import { useSerumMarket, useSerumOrderbook } from '../../../hooks/Serum'
+import { getPriceFromSerumOrderbook } from '../../../utils/orderbook'
 
 const useStyles = makeStyles({
   dropdownOpen: {
@@ -23,13 +26,29 @@ const useStyles = makeStyles({
   },
 })
 
-const PositionRow = ({ row }) => {
+const PositionRow: React.VFC<{
+  row: {
+    accounts: TokenAccount[]
+    assetPair: string
+    expiration: number
+    market: OptionMarket
+    optionContractTokenKey: string
+    optionMarketKey: string
+    quoteAssetKey: string
+    size: number
+    strike: string
+    underlyingAssetKey: string
+  }
+}> = ({ row }) => {
   const classes = useStyles()
   const [visible, setVisible] = useState(false)
-  const {
-    ownedTokenAccounts,
-  } = useOwnedTokenAccounts()
-  const { pushNotification } = useNotifications
+  const { qAsset } = useAssetList()
+  const { ownedTokenAccounts } = useOwnedTokenAccounts()
+  const { pushNotification } = useNotifications()
+  const serumMarketKey = `${row.market.optionMintAddress}-${qAsset.mintAddress}`
+  useSerumMarket(serumMarketKey)
+  const { orderbook } = useSerumOrderbook(serumMarketKey)
+  const price = getPriceFromSerumOrderbook(orderbook)
 
   const onRowClick = () => {
     if (row.accounts.length > 1) {
@@ -37,10 +56,8 @@ const PositionRow = ({ row }) => {
     }
   }
 
-  const ownedQAssetKey =
-    ownedTokenAccounts[row.quoteAssetKey]?.[0]?.pubKey
-  const ownedUAssetKey =
-    ownedTokenAccounts[row.underlyingAssetKey]?.[0]?.pubKey
+  const ownedQAssetKey = ownedTokenAccounts[row.quoteAssetKey]?.[0]?.pubKey
+  const ownedUAssetKey = ownedTokenAccounts[row.underlyingAssetKey]?.[0]?.pubKey
   const ownedOAssetKey =
     ownedTokenAccounts[row.optionContractTokenKey]?.[0]?.pubKey
 
@@ -84,7 +101,7 @@ const PositionRow = ({ row }) => {
         </TableCell>
         <TableCell width="15%">{row.assetPair}</TableCell>
         <TableCell width="15%">{row.strike}</TableCell>
-        <TableCell width="15%">TODO</TableCell>
+        <TableCell width="15%">{price ?? '-'}</TableCell>
         <TableCell width="15%">{row.size}</TableCell>
         <TableCell width="20%">
           {formatExpirationTimestamp(row.expiration)}
@@ -110,7 +127,7 @@ const PositionRow = ({ row }) => {
               <TableBody>
                 {row.accounts.map((account) => (
                   <TableRow
-                    key={account.pubKey}
+                    key={account.pubKey.toString()}
                     hover
                     role="checkbox"
                     tabIndex={-1}
@@ -118,7 +135,7 @@ const PositionRow = ({ row }) => {
                     <TableCell width="5%" />
                     <TableCell width="15%" />
                     <TableCell width="15%">{row.strike}</TableCell>
-                    <TableCell width="15%">TODO</TableCell>
+                    <TableCell width="15%" />
                     <TableCell width="15%">{account.amount}</TableCell>
                     <TableCell width="20%">
                       {formatExpirationTimestamp(row.expiration)}
@@ -142,20 +159,6 @@ const PositionRow = ({ row }) => {
       </TableRow>
     </>
   )
-}
-
-PositionRow.propTypes = {
-  row: PropTypes.shape({
-    accounts: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-    assetPair: PropTypes.string.isRequired,
-    expiration: PropTypes.number.isRequired,
-    optionContractTokenKey: PropTypes.string.isRequired,
-    optionMarketKey: PropTypes.string.isRequired,
-    quoteAssetKey: PropTypes.string.isRequired,
-    size: PropTypes.number.isRequired,
-    strike: PropTypes.string.isRequired,
-    underlyingAssetKey: PropTypes.string.isRequired,
-  }).isRequired,
 }
 
 export default PositionRow

@@ -1,5 +1,6 @@
 import { Account, PublicKey, Transaction } from '@solana/web3.js'
 import BigNumber from 'bignumber.js'
+import { SerumMarket } from './utils/serum'
 
 export type Asset = {
   tokenSymbol: string
@@ -50,8 +51,8 @@ export interface InstructionErrorResponse extends NotificationData {
   err?: Error
 }
 export type Result<T, E> = {
-  response?: T;
-  error?: E;
+  response?: T
+  error?: E
 }
 export type InstructionResponse = {
   transaction: Transaction
@@ -65,4 +66,10 @@ export interface CreateMissingMintAccountsRes extends InstructionResponse {
   mintedOptionDestinationKey: PublicKey
   writerTokenDestinationKey: PublicKey
   uAssetTokenAccount: TokenAccount
+}
+
+export type LocalSerumMarket = {
+  loading: boolean
+  error: Error | string | undefined
+  serumMarket: SerumMarket
 }

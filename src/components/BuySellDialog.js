@@ -28,7 +28,7 @@ import usePlaceSellOrder from '../hooks/usePlaceSellOrder'
 import usePlaceBuyOrder from '../hooks/usePlaceBuyOrder'
 
 import OrderBook from './OrderBook'
-import { useSerumOrderbook } from '../hooks/SerumOrderbooks';
+import { useSerumOrderbook } from '../hooks/Serum';
 
 const successColor = theme.palette.success.main
 const errorColor = theme.palette.error.main

@@ -10,7 +10,6 @@ import theme from '../../../utils/theme'
 import useOptionsMarkets from '../../../hooks/useOptionsMarkets'
 import useSerum from '../../../hooks/useSerum'
 import useWallet from '../../../hooks/useWallet'
-import useOwnedTokenAccounts from '../../../hooks/useOwnedTokenAccounts'
 import useNotifications from '../../../hooks/useNotifications'
 import Loading from '../../Loading'
 import { useSerumOrderbook, useSubscribeSerumOrderbook } from '../../../hooks/Serum';
@@ -52,12 +51,10 @@ const CallPutRow = ({
 }) => {
   const { connect, connected } = useWallet()
   const { pushNotification } = useNotifications()
-  const { ownedTokenAccounts } = useOwnedTokenAccounts()
   const { serumMarkets } = useSerum()
   const {
     initializeMarkets,
     getMarket,
-    createAccountsAndMint,
   } = useOptionsMarkets()
   const { orderbook: callOrderbook } = useSerumOrderbook(row.call?.serumKey)
   const { orderbook: putOrderbook } = useSerumOrderbook(row.put?.serumKey)
@@ -135,68 +132,6 @@ const CallPutRow = ({
       }
     },
     [uAsset, qAsset, initializeMarkets, date, row, pushNotification],
-  )
-
-  // TODO -- move this to the modal
-  // eslint-disable-next-line
-  const handleMint = useCallback(
-    async ({ type }) => {
-      setLoading((prevState) => ({ ...prevState, [type]: true }))
-      try {
-        const ua = type === 'call' ? uAsset : qAsset
-        const qa = type === 'call' ? qAsset : uAsset
-
-        const marketParams = {
-          date: date.unix(),
-          uAssetSymbol: ua.tokenSymbol,
-          qAssetSymbol: qa.tokenSymbol,
-          size: type === 'call' ? row.call?.size : row.put?.size, // TODO -- deal with FP imprecision
-          price: type === 'call' ? row.strike : 1 / row.strike, // TODO -- deal with FP imprecision
-        }
-
-        const marketData = getMarket(marketParams)
-        const ownedMintedOptionAccounts =
-          (marketData && ownedTokenAccounts[marketData.optionMintAddress]) || []
-        const ownedUAssetAccounts =
-          (uAsset && ownedTokenAccounts[uAsset.mintAddress]) || []
-        const ownedQAssetAccounts =
-          (qAsset && ownedTokenAccounts[qAsset.mintAddress]) || []
-        const ownedWriterTokenMintAccounts =
-          (marketData && ownedTokenAccounts[marketData.writerTokenMintKey]) ||
-          []
-
-        await createAccountsAndMint({
-          ...marketParams,
-          uAsset: ua,
-          qAsset: qa,
-          uAssetAccount: ownedUAssetAccounts[0]?.pubKey || '',
-          qAssetAccount: ownedQAssetAccounts[0]?.pubKey || '',
-          ownedUAssetAccounts,
-          ownedQAssetAccounts,
-          mintedOptionAccount: ownedMintedOptionAccounts[0]?.pubKey || '',
-          ownedMintedOptionAccounts,
-          mintedWriterTokenDestKey: ownedWriterTokenMintAccounts[0]?.pubKey,
-        })
-      } catch (err) {
-        console.log(err)
-        pushNotification({
-          severity: 'error',
-          message: `${err}`,
-        })
-      } finally {
-        setLoading((prevState) => ({ ...prevState, [type]: false }))
-      }
-    },
-    [
-      createAccountsAndMint,
-      date,
-      getMarket,
-      ownedTokenAccounts,
-      pushNotification,
-      qAsset,
-      row,
-      uAsset,
-    ],
   )
 
   return (

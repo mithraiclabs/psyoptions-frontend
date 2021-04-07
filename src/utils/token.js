@@ -45,4 +45,10 @@ export async function initializeTokenAccountTx({
   return {transaction, newTokenAccount: newAccount}
 }
 
+export const getHighestAccount = (accounts) => {
+  if (accounts.length === 0) return {}
+  if (accounts.length === 1) return accounts[0]
+  return accounts.sort((a, b) => b.amount - a.amount)[0]
+}
+
 // return await signAndSendTransaction(connection, transaction, payer, signers)

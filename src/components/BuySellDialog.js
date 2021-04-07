@@ -30,6 +30,7 @@ import usePlaceBuyOrder from '../hooks/usePlaceBuyOrder'
 import OrderBook from './OrderBook'
 import { useSerumOrderbook } from '../hooks/Serum';
 import { WRAPPED_SOL_ADDRESS } from '../utils/token';
+import { useSerumFeeDiscountKey } from '../hooks/Serum/useSerumFeeDiscountKey';
 
 const successColor = theme.palette.success.main
 const errorColor = theme.palette.error.main
@@ -156,6 +157,7 @@ const BuySellDialog = ({
   const [initializingSerum, setInitializingSerum] = useState(false)
   const [placeOrderLoading, setPlaceOrderLoading] = useState(false)
   const { orderbook } = useSerumOrderbook(serumKey)
+  const serumDiscountFeeKey = useSerumFeeDiscountKey()
 
   const optionAccounts = ownedTokenAccounts[optionMintAddress] || []
   const writerAccounts = ownedTokenAccounts[writerTokenMintKey] || []
@@ -290,10 +292,9 @@ const BuySellDialog = ({
           size: parsedOrderSize,
           // TODO create true mapping https://github.com/project-serum/serum-ts/blob/6803cb95056eb9b8beced9135d6956583ae5a222/packages/serum/src/market.ts#L1163
           orderType: orderType === 'market' ? 'ioc' : orderType,
-          // TODO need to handle feeDiscountPubkey properly. This is hack for Devnet because
-          // otherwise it will fail since the SRM_MINT that is hard coded in serum-ts cannot
-          // be found on the network
-          feeDiscountPubkey: null,
+          // This will be null if a token with the symbol SRM does
+          // not exist in the supported asset list
+          feeDiscountPubkey: serumDiscountFeeKey,
         },
         uAsset: {
           tokenSymbol: uAssetSymbol,

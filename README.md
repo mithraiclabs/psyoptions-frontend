@@ -79,3 +79,7 @@ Amount: 1000000000000 (or whatever you feel)
 ```
 
 DEV cloud run url: https://solana-options-frontend-ckpgwptysa-uc.a.run.app/
+
+### Deploying the app to dev and prod:
+
+See <a href="https://github.com/mithraiclabs/solana-options-frontend/blob/master/docs/Deploying.md">Deploy Docs</a>

@@ -22,7 +22,6 @@ import { buildSolanaExplorerUrl } from '../utils/solanaExplorer'
 
 type MintOptionsArgs = {
   numberOfContractsToMint: number
-  orderArgs: OrderParams
   optionMarket: OptionMarket
   uAsset: Asset
   uAssetTokenAccount: TokenAccount
@@ -30,7 +29,11 @@ type MintOptionsArgs = {
   writerTokenDestinationKey?: PublicKey
 }
 
-// TODO expand orderArgs because it doesn't make sense here
+/**
+ * Hook to create the function used to mint options from the UI.
+ *
+ * @returns key of option account the options were minted to (new or existing)
+ */
 export const useMintOptions = (): ((
   obj: MintOptionsArgs,
 ) => Promise<PublicKey | null>) => {
@@ -46,7 +49,6 @@ export const useMintOptions = (): ((
   return useCallback(
     async ({
       numberOfContractsToMint,
-      orderArgs,
       optionMarket,
       uAsset,
       uAssetTokenAccount,
@@ -56,7 +58,6 @@ export const useMintOptions = (): ((
       const transaction = new Transaction()
       let signers = []
       let _uAssetTokenAccount = uAssetTokenAccount
-      let _optionTokenSrcKey = orderArgs.payer
       let shouldRefreshTokenAccounts = false
 
       // Mint missing contracs before placing order
@@ -81,7 +82,7 @@ export const useMintOptions = (): ((
         transaction: createAndMintTx,
         signers: createAndMintSigners,
         shouldRefreshTokenAccounts: _shouldRefreshTokenAccounts,
-        mintedOptionDestinationKey: _mintedOptionDestinationKey,
+        mintedOptionDestinationKey: optionTokenKey,
         uAssetTokenAccount: __uAssetTokenAccount,
       } = response
       _uAssetTokenAccount = __uAssetTokenAccount
@@ -89,9 +90,6 @@ export const useMintOptions = (): ((
       // Add the create accounts and mint instructions to the TX
       transaction.add(createAndMintTx)
       signers = [...signers, ...createAndMintSigners]
-      // must overwrite the original payer (aka option src) in case the
-      // option(s) were minted to a new Account
-      _optionTokenSrcKey = _mintedOptionDestinationKey
       shouldRefreshTokenAccounts = _shouldRefreshTokenAccounts
 
       // Close out the wrapped SOL account so it feels native
@@ -146,7 +144,7 @@ export const useMintOptions = (): ((
         refreshTokenAccounts()
       }
 
-      return _optionTokenSrcKey
+      return optionTokenKey
     },
     [
       connection,

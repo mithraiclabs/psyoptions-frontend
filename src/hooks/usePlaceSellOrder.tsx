@@ -53,7 +53,6 @@ const usePlaceSellOrder = (): ((obj: PlaceSellOrderArgs) => Promise<void>) => {
         // Mint missing contracs before placing order
         _optionTokenSrcKey = await mintOptions({
           numberOfContractsToMint,
-          orderArgs,
           optionMarket,
           uAsset,
           uAssetTokenAccount,

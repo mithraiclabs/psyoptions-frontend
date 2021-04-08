@@ -35,8 +35,8 @@ const defaultAssetPairsByNetworkName: Record<string, TickerPair> = {
     qAssetSymbol: 'USDC',
   },
   Devnet: {
-    uAssetSymbol: 'PSYA',
-    qAssetSymbol: 'USDCT', // TODO add this
+    uAssetSymbol: 'BTC',
+    qAssetSymbol: 'USDC',
   },
   Testnet: {
     uAssetSymbol: 'SOL',

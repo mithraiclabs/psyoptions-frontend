@@ -1,4 +1,4 @@
-import React, { createContext, useEffect, useState } from 'react'
+import React, { createContext, useEffect, useMemo, useState } from 'react'
 import { Account, Connection, PublicKey } from '@solana/web3.js'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import useConnection from '../hooks/useConnection'
@@ -19,6 +19,7 @@ type Asset = {
 }
 
 type AssetListContext = {
+  srmPublicKey: PublicKey | null
   supportedAssets: Asset[]
   setSupportedAssets: React.Dispatch<React.SetStateAction<Asset[]>>
   uAsset: Asset | null
@@ -69,6 +70,7 @@ const mergeAssetsWithChainData = async (
   )
 
 const AssetListContext = createContext<AssetListContext>({
+  srmPublicKey: null,
   supportedAssets: [],
   setSupportedAssets: () => {},
   uAsset: null,
@@ -85,6 +87,10 @@ const AssetListProvider: React.FC = ({ children }) => {
   const [qAsset, setQAsset] = useState<Asset | null>(null)
   const [assetListLoading, setAssetListLoading] = useState(true)
   const { pushNotification } = useNotifications()
+  const srmPublicKey = useMemo(() => {
+    const srm = supportedAssets.find((asset) => asset.tokenSymbol === 'SRM')
+    return srm ? new PublicKey(srm.mintAddress) : null
+  }, [supportedAssets])
 
   useEffect(() => {
     if (!(connection instanceof Connection)) {
@@ -147,6 +153,7 @@ const AssetListProvider: React.FC = ({ children }) => {
   const value = {
     supportedAssets,
     setSupportedAssets,
+    srmPublicKey,
     uAsset,
     qAsset,
     setUAsset,

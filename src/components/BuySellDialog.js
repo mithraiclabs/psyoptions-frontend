@@ -12,7 +12,7 @@ import Tooltip from '@material-ui/core/Tooltip'
 import React, { useState } from 'react'
 import propTypes from 'prop-types'
 import BigNumber from 'bignumber.js'
-import { PublicKey } from '@solana/web3.js'
+import { LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js'
 import BN from 'bn.js'
 import * as Sentry from '@sentry/react'
 
@@ -29,6 +29,8 @@ import usePlaceBuyOrder from '../hooks/usePlaceBuyOrder'
 
 import OrderBook from './OrderBook'
 import { useSerumOrderbook } from '../hooks/Serum';
+import { WRAPPED_SOL_ADDRESS } from '../utils/token';
+import { useSerumFeeDiscountKey } from '../hooks/Serum/useSerumFeeDiscountKey';
 
 const successColor = theme.palette.success.main
 const errorColor = theme.palette.error.main
@@ -140,7 +142,7 @@ const BuySellDialog = ({
 }) => {
   const { pushNotification } = useNotifications()
   const { connection, dexProgramId } = useConnection()
-  const { wallet, pubKey } = useWallet()
+  const { balance, wallet, pubKey } = useWallet()
   const { getMarket } = useOptionsMarkets()
   const placeSellOrder = usePlaceSellOrder()
   const placeBuyOrder = usePlaceBuyOrder()
@@ -155,6 +157,7 @@ const BuySellDialog = ({
   const [initializingSerum, setInitializingSerum] = useState(false)
   const [placeOrderLoading, setPlaceOrderLoading] = useState(false)
   const { orderbook } = useSerumOrderbook(serumKey)
+  const serumDiscountFeeKey = useSerumFeeDiscountKey()
 
   const optionAccounts = ownedTokenAccounts[optionMintAddress] || []
   const writerAccounts = ownedTokenAccounts[writerTokenMintKey] || []
@@ -162,8 +165,13 @@ const BuySellDialog = ({
 
   const contractsWritten = getHighestAccount(writerAccounts)?.amount || 0
   const openPositionSize = getHighestAccount(optionAccounts)?.amount || 0
-  const uAssetBalance =
+  let uAssetBalance =
     (getHighestAccount(uAssetAccounts)?.amount || 0) / 10 ** uAssetDecimals
+
+  if (uAssetMint === WRAPPED_SOL_ADDRESS) {
+    // if asset is wrapped Sol, use balance of wallet account
+    uAssetBalance = balance / LAMPORTS_PER_SOL
+  }
 
   const openPositionUAssetBalance = openPositionSize * amountPerContract
   const sufficientFundsToSell =
@@ -218,7 +226,7 @@ const BuySellDialog = ({
       // baseLotSize should be 1 -- the options market token doesn't have decimals
       const baseLotSize = new BN('1')
 
-      const { tx1, tx2, market } = await createInitializeMarketTx({
+      const { tx1, tx2 } = await createInitializeMarketTx({
         connection,
         payer: pubKey,
         baseMint: new PublicKey(optionMintAddress),
@@ -235,13 +243,9 @@ const BuySellDialog = ({
 
       const txid1 = await connection.sendRawTransaction(signed[0].serialize())
       await connection.confirmTransaction(txid1)
-      console.log('confirmed', txid1)
 
       const txid2 = await connection.sendRawTransaction(signed[1].serialize())
       await connection.confirmTransaction(txid2)
-      console.log('confirmed', txid2)
-
-      console.log('market created', market.publicKey.toString())
 
       // Load the market instance into serum context state
       // There may be a more efficient way to do this part since we have the keypair here
@@ -288,10 +292,9 @@ const BuySellDialog = ({
           size: parsedOrderSize,
           // TODO create true mapping https://github.com/project-serum/serum-ts/blob/6803cb95056eb9b8beced9135d6956583ae5a222/packages/serum/src/market.ts#L1163
           orderType: orderType === 'market' ? 'ioc' : orderType,
-          // TODO need to handle feeDiscountPubkey properly. This is hack for Devnet because
-          // otherwise it will fail since the SRM_MINT that is hard coded in serum-ts cannot
-          // be found on the network
-          feeDiscountPubkey: null,
+          // This will be null if a token with the symbol SRM does
+          // not exist in the supported asset list
+          feeDiscountPubkey: serumDiscountFeeKey,
         },
         uAsset: {
           tokenSymbol: uAssetSymbol,

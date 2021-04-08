@@ -30,7 +30,9 @@ In both dev or prod, you can configure the environment variables of the app with
 2. From the details page about this cloud run instance, click on Edit & Deploy New Revision:
    <img src="https://github.com/mithraiclabs/solana-options-frontend/blob/master/docs/cloud-run-details.png?raw=true" alt="edit and deploy" />
 
-3. Add / Remove / Change any variables you need to change, then click "Deploy":
+3. Go to the "Variables" tab
+
+4. Add / Remove / Change any variables you need to change, then click "Deploy":
    <img src="https://github.com/mithraiclabs/solana-options-frontend/blob/master/docs/cloud-run-variables.png?raw=true" alt="cloud run variables" />
 
 The app will be re-deployed with the updated environment variables, that's it!

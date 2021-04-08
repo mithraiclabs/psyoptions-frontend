@@ -5,7 +5,7 @@ Copy `.env-example` and rename it `.env`
 OR run `touch .env` and add the following lines to it:
 
 ```
-DEVNET_PROGRAM_ID='CgetkVhjkbdB3sYpAHZBTWVzojroqKqsZjkXxSP3kF3g'
+DEVNET_PROGRAM_ID='7UkUQY1gqYyumhyoDy73D5JoThqGY9SJw21k6QveesfP'
 DEVNET_DEX_PROGRAM_ID='DESVgJVGajEgKGXhb6XmqDHGz3VjdgP7rEVESBgxmroY'
 APP_ENABLED=true
 ```

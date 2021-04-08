@@ -44,6 +44,8 @@ NOTE: After many hours failing to intiialize on local net due to the following e
 We use a couple SPL Token faucets to interact on devnet. To use the faucets visit this community built site and be sure to set the network to **devnet**.
 https://spl-token-ui.netlify.app/#/token-faucets
 
+We use the same BTC, SRM, etc addresses that Mango Markets uses. You can find the faucet addresses [here](https://github.com/blockworks-foundation/mango-client-ts/blob/main/src/ids.json#L10)
+
 ```
 Token Symbol: PSYA
 Faucet Address: 7jJJnHWagPPG544FtxSVp8eD52FwCsARcqqup1q3XVio

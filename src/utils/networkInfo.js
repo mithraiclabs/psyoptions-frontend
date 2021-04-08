@@ -84,6 +84,7 @@ const getAssetsByNetwork = (name) => {
     case networks[0].name:
       return TOKENS.mainnet
     case networks[1].name:
+      // Devnet tokens and faucets can be found [here](https://github.com/blockworks-foundation/mango-client-ts/blob/main/src/ids.json#L10)
       return [
         {
           tokenSymbol: 'SOL',
@@ -93,16 +94,23 @@ const getAssetsByNetwork = (name) => {
             'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/solana/info/logo.png',
         },
         {
-          tokenSymbol: 'PSYA',
+          tokenSymbol: 'BTC',
+          mintAddress: 'C6kYXcaRUMqeBF5fhg165RWU7AnpT9z92fvKNoMqjmz6',
+          tokenName: 'Bitcoin',
+          icon:
+            'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/bitcoin/info/logo.png',
+        },
+        {
+          tokenSymbol: 'PSY',
           mintAddress: 'BzwRWwr1kCLJVUUM14fQthP6FJKrGpXjw3ZHTZ6PQsYa',
-          tokenName: 'PSYA Test',
+          tokenName: 'PSY Test',
           icon:
             'https://raw.githubusercontent.com/trustwallet/assets/08d734b5e6ec95227dc50efef3a9cdfea4c398a1/blockchains/ethereum/assets/0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984/logo.png',
         },
         {
-          tokenSymbol: 'USDCT',
+          tokenSymbol: 'USDC',
           mintAddress: 'HinfVnJuzMtJsyuLE2ArYCChDZB6FCxEu2p3CQeMcDiF',
-          tokenName: 'USDC Test',
+          tokenName: 'USDC',
           icon:
             'https://raw.githubusercontent.com/trustwallet/assets/f3ffd0b9ae2165336279ce2f8db1981a55ce30f8/blockchains/ethereum/assets/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48/logo.png',
         },

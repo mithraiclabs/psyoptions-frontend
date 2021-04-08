@@ -31,6 +31,7 @@ import OrderBook from './OrderBook'
 import { useSerumOrderbook } from '../hooks/Serum';
 import { WRAPPED_SOL_ADDRESS } from '../utils/token';
 import { useSerumFeeDiscountKey } from '../hooks/Serum/useSerumFeeDiscountKey';
+import { getPriceFromSerumOrderbook } from '../utils/orderbook';
 
 const successColor = theme.palette.success.main
 const errorColor = theme.palette.error.main
@@ -158,6 +159,7 @@ const BuySellDialog = ({
   const [placeOrderLoading, setPlaceOrderLoading] = useState(false)
   const { orderbook } = useSerumOrderbook(serumKey)
   const serumDiscountFeeKey = useSerumFeeDiscountKey()
+  const price = getPriceFromSerumOrderbook(orderbook)
 
   const optionAccounts = ownedTokenAccounts[optionMintAddress] || []
   const writerAccounts = ownedTokenAccounts[writerTokenMintKey] || []
@@ -422,7 +424,7 @@ const BuySellDialog = ({
                 ? `${qAssetSymbol}/${uAssetSymbol}`
                 : `${uAssetSymbol}/${qAssetSymbol}`}
             </Box>
-            <Box pt={1}>Mark Price: TODO</Box>
+            <Box pt={1}>Mark Price: {price ?? '-'}</Box>
             <Box pt={1}>
               Open Position:{' '}
               {loadingOwnedTokenAccounts ? 'Loading...' : openPositionSize}

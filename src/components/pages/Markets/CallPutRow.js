@@ -12,8 +12,14 @@ import useSerum from '../../../hooks/useSerum'
 import useWallet from '../../../hooks/useWallet'
 import useNotifications from '../../../hooks/useNotifications'
 import Loading from '../../Loading'
-import { useSerumOrderbook, useSubscribeSerumOrderbook } from '../../../hooks/Serum';
-import { useSPLTokenMintInfo, useSubscribeSPLTokenMint } from '../../../hooks/SPLToken';
+import {
+  useSerumOrderbook,
+  useSubscribeSerumOrderbook,
+} from '../../../hooks/Serum'
+import {
+  useSPLTokenMintInfo,
+  useSubscribeSPLTokenMint,
+} from '../../../hooks/SPLToken'
 
 const TCell = withStyles({
   root: {
@@ -52,10 +58,7 @@ const CallPutRow = ({
   const { connect, connected } = useWallet()
   const { pushNotification } = useNotifications()
   const { serumMarkets } = useSerum()
-  const {
-    initializeMarkets,
-    getMarket,
-  } = useOptionsMarkets()
+  const { initializeMarkets, getMarket } = useOptionsMarkets()
   const { orderbook: callOrderbook } = useSerumOrderbook(row.call?.serumKey)
   const { orderbook: putOrderbook } = useSerumOrderbook(row.put?.serumKey)
   useSubscribeSerumOrderbook(row.call?.serumKey)
@@ -66,17 +69,17 @@ const CallPutRow = ({
   const putLowestAsk = putOrderbook?.asks[0]?.price
   const callMarket = getMarket({
     date: date.unix(),
-    uAssetSymbol: uAsset.tokenSymbol,
-    qAssetSymbol: qAsset.tokenSymbol,
+    uAssetSymbol: uAsset?.tokenSymbol,
+    qAssetSymbol: qAsset?.tokenSymbol,
     size: row.call?.size,
-    price: row.strike
+    price: row.strike,
   })
   const putMarket = getMarket({
     date: date.unix(),
-    uAssetSymbol: uAsset.tokenSymbol,
-    qAssetSymbol: qAsset.tokenSymbol,
+    uAssetSymbol: uAsset?.tokenSymbol,
+    qAssetSymbol: qAsset?.tokenSymbol,
     size: row.put?.size,
-    price: 1 / row.strike
+    price: 1 / row.strike,
   })
   const callOptionMintInfo = useSPLTokenMintInfo(callMarket?.optionMintKey)
   const putOptionMintInfo = useSPLTokenMintInfo(putMarket?.optionMintKey)
@@ -89,7 +92,6 @@ const CallPutRow = ({
     if (!sp) return '—'
     return round ? sp.toFixed(precision) : sp.toString(10)
   }
-
 
   const handleInitialize = useCallback(
     async ({ type }) => {
@@ -188,7 +190,9 @@ const CallPutRow = ({
           <TCell align="left">{callLowestAsk || '—'}</TCell>
           <TCell align="left">{row.call?.change || '—'}</TCell>
           <TCell align="left">{row.call?.volume || '—'}</TCell>
-          <TCell align="left">{callOptionMintInfo?.supply.toString() || '—'}</TCell>
+          <TCell align="left">
+            {callOptionMintInfo?.supply.toString() || '—'}
+          </TCell>
         </>
       )}
 
@@ -216,7 +220,9 @@ const CallPutRow = ({
           <TCell align="left">{putLowestAsk || '—'}</TCell>
           <TCell align="left">{row.put?.change || '—'}</TCell>
           <TCell align="left">{row.put?.volume || '—'}</TCell>
-          <TCell align="left">{putOptionMintInfo?.supply.toString() || '—'}</TCell>
+          <TCell align="left">
+            {putOptionMintInfo?.supply.toString() || '—'}
+          </TCell>
         </>
       )}
       <TCell align="right">

@@ -158,7 +158,7 @@ const BuySellDialog = ({
   const [initializingSerum, setInitializingSerum] = useState(false)
   const [placeOrderLoading, setPlaceOrderLoading] = useState(false)
   const { orderbook } = useSerumOrderbook(serumKey)
-  const serumDiscountFeeKey = useSerumFeeDiscountKey()
+  const { feeRates: serumFeeRates, publicKey: serumDiscountFeeKey } = useSerumFeeDiscountKey()
   const price = getPriceFromSerumOrderbook(orderbook)
 
   const optionAccounts = ownedTokenAccounts[optionMintAddress] || []
@@ -288,7 +288,7 @@ const BuySellDialog = ({
           side: 'sell',
           // Serum-ts handles adding the SPL Token decimals via their
           //  `maket.priceNumberToLots` function
-          price: parsedLimitPrice,
+          price: orderType === 'market' ? orderbook?.bids?.[0]?.price : parsedLimitPrice,
           // Serum-ts handles adding the SPL Token decimals via their
           //  `maket.priceNumberToLots` function
           size: parsedOrderSize,
@@ -297,6 +297,8 @@ const BuySellDialog = ({
           // This will be null if a token with the symbol SRM does
           // not exist in the supported asset list
           feeDiscountPubkey: serumDiscountFeeKey,
+          // serum fee rate
+          feeRate: orderType === 'market' ? serumFeeRates?.taker : undefined
         },
         uAsset: {
           tokenSymbol: uAssetSymbol,
@@ -358,21 +360,22 @@ const BuySellDialog = ({
           owner: pubKey,
           // For Serum, the payer is really the account of the asset being sold
           payer: serumQuoteTokenAddress
-            ? new PublicKey(serumQuoteTokenAddress)
-            : null,
+          ? new PublicKey(serumQuoteTokenAddress)
+          : null,
           side: 'buy',
           // Serum-ts handles adding the SPL Token decimals via their
           //  `maket.priceNumberToLots` function
-          price: parsedLimitPrice,
+          price: orderType === 'market' ? orderbook?.asks?.[0]?.price : parsedLimitPrice,
           // Serum-ts handles adding the SPL Token decimals via their
           //  `maket.priceNumberToLots` function
           size: parsedOrderSize,
           // TODO create true mapping https://github.com/project-serum/serum-ts/blob/6803cb95056eb9b8beced9135d6956583ae5a222/packages/serum/src/market.ts#L1163
           orderType: orderType === 'market' ? 'ioc' : orderType,
-          // TODO need to handle feeDiscountPubkey properly. This is hack for Devnet because
-          // otherwise it will fail since the SRM_MINT that is hard coded in serum-ts cannot
-          // be found on the network
-          feeDiscountPubkey: null,
+          // This will be null if a token with the symbol SRM does
+          // not exist in the supported asset list
+          feeDiscountPubkey: serumDiscountFeeKey,
+          // serum fee rate
+          feeRate: orderType === 'market' ? serumFeeRates?.taker : undefined
         },
       })
       setPlaceOrderLoading(false)

@@ -60,6 +60,7 @@ const usePlaceSellOrder = () => {
       const mintSigners = []
       let _uAssetTokenAccount = uAssetTokenAccount
       let _optionTokenSrcKey = mintedOptionDestinationKey
+      let _writerTokenDestinationKey = writerTokenDestinationKey;
       let shouldRefreshTokenAccounts = false
       let numberOfContractsDistribution
 
@@ -91,7 +92,7 @@ const usePlaceSellOrder = () => {
               splTokenAccountRentBalance,
               numberOfContractsToMint: contractsToMint,
               mintedOptionDestinationKey: _optionTokenSrcKey,
-              writerTokenDestinationKey,
+              writerTokenDestinationKey: _writerTokenDestinationKey,
             })
             if (error) {
               console.error(error)
@@ -103,7 +104,7 @@ const usePlaceSellOrder = () => {
               signers: createAndMintSigners,
               shouldRefreshTokenAccounts: _shouldRefreshTokenAccounts,
               mintedOptionDestinationKey: _mintedOptionDestinationKey,
-              writerTokenDestinationKey: _writerTokenDestinationKey,
+              writerTokenDestinationKey: __writerTokenDestinationKey,
               uAssetTokenAccount: __uAssetTokenAccount,
             } = response
             _uAssetTokenAccount = __uAssetTokenAccount
@@ -114,6 +115,7 @@ const usePlaceSellOrder = () => {
             // must overwrite the original payer (aka option src) in case the
             // option(s) were minted to a new Account
             _optionTokenSrcKey = _mintedOptionDestinationKey
+            _writerTokenDestinationKey = __writerTokenDestinationKey
             shouldRefreshTokenAccounts = _shouldRefreshTokenAccounts
 
             // Close out the wrapped SOL account so it feels native

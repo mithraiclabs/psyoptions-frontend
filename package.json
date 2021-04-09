@@ -5,6 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "npx webpack",
+    "clean": "rm -rf ./dist",
     "lint": "npx eslint .",
     "seed": "node ./scripts/seedLocalNet.js",
     "seed:mintTokens": "node ./scripts/mintLocalNetTokens.js",

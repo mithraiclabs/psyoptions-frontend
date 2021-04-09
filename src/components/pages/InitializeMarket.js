@@ -23,6 +23,7 @@ import useSerumMarketInfo from '../../hooks/useSerumMarketInfo'
 import { generateStrikePrices } from '../../utils/generateStrikePrices'
 import { getLastFridayOfMonths } from '../../utils/dates'
 import useAssetList from '../../hooks/useAssetList'
+import { useOptionMarket } from '../../hooks/useOptionMarket';
 
 const darkBorder = `1px solid ${theme.palette.background.main}`
 
@@ -31,7 +32,7 @@ const expirations = getLastFridayOfMonths(10)
 const InitializeMarket = () => {
   const { pushNotification } = useNotifications()
   const { connect, connected } = useWallet()
-  const { getMarket, initializeMarkets } = useOptionsMarkets()
+  const { initializeMarkets } = useOptionsMarkets()
   const [multiple, setMultiple] = useState(false)
   const [basePrice, setBasePrice] = useState(0)
   const [date, setDate] = useState(expirations[0])
@@ -61,15 +62,16 @@ const InitializeMarket = () => {
   } else if (parsedBasePrice || marketPrice) {
     strikePrices = [parsedBasePrice || marketPrice]
   }
-
-  const assetsSelected = uAsset && qAsset
-  const canInitialize = !getMarket({
+  const market = useOptionMarket({
     date: date.unix(),
     uAssetSymbol: uAsset?.tokenSymbol,
     qAssetSymbol: qAsset?.tokenSymbol,
     size,
     price: strikePrices[0],
   })
+  const canInitialize = !market;
+
+  const assetsSelected = uAsset && qAsset
   const parametersValid = size && !Number.isNaN(size) && strikePrices.length > 0
 
   const handleChangeBasePrice = (e) => {

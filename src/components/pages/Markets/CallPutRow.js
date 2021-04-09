@@ -20,6 +20,7 @@ import {
   useSPLTokenMintInfo,
   useSubscribeSPLTokenMint,
 } from '../../../hooks/SPLToken'
+import { useOptionMarket } from '../../../hooks/useOptionMarket';
 
 const TCell = withStyles({
   root: {
@@ -58,7 +59,7 @@ const CallPutRow = ({
   const { connect, connected } = useWallet()
   const { pushNotification } = useNotifications()
   const { serumMarkets } = useSerum()
-  const { initializeMarkets, getMarket } = useOptionsMarkets()
+  const { initializeMarkets } = useOptionsMarkets()
   const { orderbook: callOrderbook } = useSerumOrderbook(row.call?.serumKey)
   const { orderbook: putOrderbook } = useSerumOrderbook(row.put?.serumKey)
   useSubscribeSerumOrderbook(row.call?.serumKey)
@@ -67,14 +68,14 @@ const CallPutRow = ({
   const callLowestAsk = callOrderbook?.asks[0]?.price
   const putHighestBid = putOrderbook?.bids[0]?.price
   const putLowestAsk = putOrderbook?.asks[0]?.price
-  const callMarket = getMarket({
+  const callMarket = useOptionMarket({
     date: date.unix(),
     uAssetSymbol: uAsset?.tokenSymbol,
     qAssetSymbol: qAsset?.tokenSymbol,
     size: row.call?.size,
     price: row.strike,
   })
-  const putMarket = getMarket({
+  const putMarket = useOptionMarket({
     date: date.unix(),
     uAssetSymbol: uAsset?.tokenSymbol,
     qAssetSymbol: qAsset?.tokenSymbol,

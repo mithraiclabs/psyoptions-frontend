@@ -20,6 +20,10 @@ import useWallet from './useWallet'
 import { createMissingAccountsAndMint } from '../utils/instructions/index'
 import { buildSolanaExplorerUrl } from '../utils/solanaExplorer'
 
+// Solana has a maximum packet size when sending a transaction.
+// As of writing 40 mints is a good round number that won't breach that limit.
+const MAX_MINTS_PER_TX = 40
+
 type PlaceSellOrderArgs = {
   numberOfContractsToMint: number
   serumMarket: SerumMarket
@@ -52,62 +56,81 @@ const usePlaceSellOrder = () => {
       mintedOptionDestinationKey,
       writerTokenDestinationKey,
     }: PlaceSellOrderArgs) => {
-      const tx1 = new Transaction()
-      const tx2 = new Transaction()
-      let mintSigners = []
+      const mintTXs = []
+      const mintSigners = []
       let _uAssetTokenAccount = uAssetTokenAccount
-      let _optionTokenSrcKey = orderArgs.payer
+      let _optionTokenSrcKey = mintedOptionDestinationKey
       let shouldRefreshTokenAccounts = false
+      let numberOfContractsDistribution
 
       // Mint and place order
       if (numberOfContractsToMint > 0) {
-        // Mint missing contracs before placing order
-        const { error, response } = await createMissingAccountsAndMint({
-          optionsProgramId: new PublicKey(endpoint.programId),
-          authorityPubkey: pubKey,
-          owner: pubKey,
-          market: optionMarket,
-          uAsset,
-          uAssetTokenAccount: _uAssetTokenAccount,
-          splTokenAccountRentBalance,
-          numberOfContractsToMint,
-          mintedOptionDestinationKey,
-          writerTokenDestinationKey,
-        })
-        if (error) {
-          console.error(error)
-          pushNotification(error)
-          return
-        }
-        const {
-          transaction: createAndMintTx,
-          signers: createAndMintSigners,
-          shouldRefreshTokenAccounts: _shouldRefreshTokenAccounts,
-          mintedOptionDestinationKey: _mintedOptionDestinationKey,
-          writerTokenDestinationKey: _writerTokenDestinationKey,
-          uAssetTokenAccount: __uAssetTokenAccount,
-        } = response
-        _uAssetTokenAccount = __uAssetTokenAccount
+        /* Transactions are limited to certain packet size, so we must chunk the transactions
+         * if the user wants to mint many contracts at once. */
+        const numberOfMintTxs = Math.ceil(
+          numberOfContractsToMint / MAX_MINTS_PER_TX,
+        )
 
-        // Add the create accounts and mint instructions to the TX
-        tx1.add(createAndMintTx)
-        mintSigners = [...mintSigners, ...createAndMintSigners]
-        // must overwrite the original payer (aka option src) in case the
-        // option(s) were minted to a new Account
-        _optionTokenSrcKey = _mintedOptionDestinationKey
-        shouldRefreshTokenAccounts = _shouldRefreshTokenAccounts
-      }
+        numberOfContractsDistribution = new Array(numberOfMintTxs - 1).fill(
+          MAX_MINTS_PER_TX,
+        )
+        numberOfContractsDistribution.push(
+          numberOfContractsToMint % MAX_MINTS_PER_TX,
+        )
+        await Promise.all(
+          numberOfContractsDistribution.map(async (contractsToMint) => {
+            const tx = new Transaction()
+            // Mint missing contracs before placing order
+            const { error, response } = await createMissingAccountsAndMint({
+              optionsProgramId: new PublicKey(endpoint.programId),
+              authorityPubkey: pubKey,
+              owner: pubKey,
+              market: optionMarket,
+              uAsset,
+              uAssetTokenAccount: _uAssetTokenAccount,
+              splTokenAccountRentBalance,
+              numberOfContractsToMint: contractsToMint,
+              mintedOptionDestinationKey: _optionTokenSrcKey,
+              writerTokenDestinationKey,
+            })
+            if (error) {
+              console.error(error)
+              pushNotification(error)
+              return
+            }
+            const {
+              transaction: createAndMintTx,
+              signers: createAndMintSigners,
+              shouldRefreshTokenAccounts: _shouldRefreshTokenAccounts,
+              mintedOptionDestinationKey: _mintedOptionDestinationKey,
+              writerTokenDestinationKey: _writerTokenDestinationKey,
+              uAssetTokenAccount: __uAssetTokenAccount,
+            } = response
+            _uAssetTokenAccount = __uAssetTokenAccount
 
-      // Close out the wrapped SOL account so it feels native
-      if (optionMarket.uAssetMint === WRAPPED_SOL_ADDRESS) {
-        tx1.add(
-          Token.createCloseAccountInstruction(
-            TOKEN_PROGRAM_ID,
-            _uAssetTokenAccount.pubKey,
-            pubKey, // Send any remaining SOL to the owner
-            pubKey,
-            [],
-          ),
+            // Add the create accounts and mint instructions to the TX
+            tx.add(createAndMintTx)
+
+            // must overwrite the original payer (aka option src) in case the
+            // option(s) were minted to a new Account
+            _optionTokenSrcKey = _mintedOptionDestinationKey
+            shouldRefreshTokenAccounts = _shouldRefreshTokenAccounts
+
+            // Close out the wrapped SOL account so it feels native
+            if (optionMarket.uAssetMint === WRAPPED_SOL_ADDRESS) {
+              tx.add(
+                Token.createCloseAccountInstruction(
+                  TOKEN_PROGRAM_ID,
+                  _uAssetTokenAccount.pubKey,
+                  pubKey, // Send any remaining SOL to the owner
+                  pubKey,
+                  [],
+                ),
+              )
+            }
+            mintTXs.push(tx)
+            mintSigners.push(createAndMintSigners)
+          }),
         )
       }
 
@@ -119,62 +142,75 @@ const usePlaceSellOrder = () => {
         payer: _optionTokenSrcKey,
       })
 
-      tx2.add(placeOrderTx)
-
-      tx1.feePayer = pubKey
-      tx2.feePayer = pubKey
       const { blockhash } = await connection.getRecentBlockhash()
-      tx1.recentBlockhash = blockhash
-      tx2.recentBlockhash = blockhash
 
-      if (mintSigners.length) {
-        tx1.partialSign(...mintSigners)
-      }
+      mintTXs.forEach((_mintTx, index) => {
+        mintTXs[index].feePayer = pubKey
+        mintTXs[index].recentBlockhash = blockhash
+        if (mintSigners[index].length) {
+          mintTXs[index].partialSign(...mintSigners[index])
+        }
+      })
+      placeOrderTx.feePayer = pubKey
+      placeOrderTx.recentBlockhash = blockhash
+
       if (placeOrderSigners.length) {
-        tx2.partialSign(...placeOrderSigners)
+        placeOrderTx.partialSign(...placeOrderSigners)
       }
 
-      const signed = await wallet.signAllTransactions([tx1, tx2])
+      const signed = await wallet.signAllTransactions([
+        ...mintTXs,
+        placeOrderTx,
+      ])
 
-      const txid1 = await connection.sendRawTransaction(signed[0].serialize())
-      pushNotification({
-        severity: NotificationSeverity.INFO,
-        message: `Processing: Write ${numberOfContractsToMint} contract${
-          numberOfContractsToMint > 1 ? 's' : ''
-        }`,
-        link: (
-          <Link href={buildSolanaExplorerUrl(txid1)} target="_new">
-            View on Solana Explorer
-          </Link>
-        ),
-      })
-      await connection.confirmTransaction(txid1)
+      await Promise.all(
+        mintTXs.map(async (_mintTx, index) => {
+          const txid = await connection.sendRawTransaction(
+            signed[index].serialize(),
+          )
+          pushNotification({
+            severity: NotificationSeverity.INFO,
+            message: `Processing: Write ${
+              numberOfContractsDistribution[index]
+            } contract${numberOfContractsToMint > 1 ? 's' : ''}`,
+            link: (
+              <Link href={buildSolanaExplorerUrl(txid)} target="_new">
+                View on Solana Explorer
+              </Link>
+            ),
+          })
+          await connection.confirmTransaction(txid)
 
-      pushNotification({
-        severity: NotificationSeverity.SUCCESS,
-        message: `Confirmed: Write ${numberOfContractsToMint} contract${
-          numberOfContractsToMint > 1 ? 's' : ''
-        }`,
-        link: (
-          <Link href={buildSolanaExplorerUrl(txid1)} target="_new">
-            View on Solana Explorer
-          </Link>
-        ),
-      })
+          pushNotification({
+            severity: NotificationSeverity.SUCCESS,
+            message: `Confirmed: Write ${
+              numberOfContractsDistribution[index]
+            } contract${numberOfContractsToMint > 1 ? 's' : ''}`,
+            link: (
+              <Link href={buildSolanaExplorerUrl(txid)} target="_new">
+                View on Solana Explorer
+              </Link>
+            ),
+          })
+        }),
+      )
 
-      const txid2 = await connection.sendRawTransaction(signed[1].serialize())
+      const placeOrderTxIndex = mintTXs.length
+      const placeOrderTxId = await connection.sendRawTransaction(
+        signed[placeOrderTxIndex].serialize(),
+      )
       pushNotification({
         severity: NotificationSeverity.INFO,
         message: `Processing: Sell ${numberOfContractsToMint} contract${
           numberOfContractsToMint > 1 ? 's' : ''
         }`,
         link: (
-          <Link href={buildSolanaExplorerUrl(txid2)} target="_new">
+          <Link href={buildSolanaExplorerUrl(placeOrderTxId)} target="_new">
             View on Solana Explorer
           </Link>
         ),
       })
-      await connection.confirmTransaction(txid2)
+      await connection.confirmTransaction(placeOrderTxId)
 
       pushNotification({
         severity: NotificationSeverity.SUCCESS,
@@ -182,7 +218,7 @@ const usePlaceSellOrder = () => {
           numberOfContractsToMint > 1 ? 's' : ''
         }`,
         link: (
-          <Link href={buildSolanaExplorerUrl(txid2)} target="_new">
+          <Link href={buildSolanaExplorerUrl(placeOrderTxId)} target="_new">
             View on Solana Explorer
           </Link>
         ),

@@ -22,7 +22,6 @@ import useConnection from '../hooks/useConnection'
 import useWallet from '../hooks/useWallet'
 import useSerum from '../hooks/useSerum'
 import useOwnedTokenAccounts from '../hooks/useOwnedTokenAccounts'
-import useOptionsMarkets from '../hooks/useOptionsMarkets'
 import useNotifications from '../hooks/useNotifications'
 import usePlaceSellOrder from '../hooks/usePlaceSellOrder'
 import usePlaceBuyOrder from '../hooks/usePlaceBuyOrder'
@@ -32,6 +31,7 @@ import { useSerumOrderbook } from '../hooks/Serum';
 import { WRAPPED_SOL_ADDRESS } from '../utils/token';
 import { useSerumFeeDiscountKey } from '../hooks/Serum/useSerumFeeDiscountKey';
 import { getPriceFromSerumOrderbook } from '../utils/orderbook';
+import { useOptionMarket } from '../hooks/useOptionMarket';
 
 const successColor = theme.palette.success.main
 const errorColor = theme.palette.error.main
@@ -144,7 +144,6 @@ const BuySellDialog = ({
   const { pushNotification } = useNotifications()
   const { connection, dexProgramId } = useConnection()
   const { balance, wallet, pubKey } = useWallet()
-  const { getMarket } = useOptionsMarkets()
   const placeSellOrder = usePlaceSellOrder()
   const placeBuyOrder = usePlaceBuyOrder()
   const { serumMarkets, fetchSerumMarket } = useSerum()
@@ -160,6 +159,13 @@ const BuySellDialog = ({
   const { orderbook } = useSerumOrderbook(serumKey)
   const { feeRates: serumFeeRates, publicKey: serumDiscountFeeKey } = useSerumFeeDiscountKey()
   const price = getPriceFromSerumOrderbook(orderbook)
+  const optionMarket = useOptionMarket({
+    date: date.unix(),
+    uAssetSymbol,
+    qAssetSymbol,
+    size: amountPerContract.toNumber(),
+    price: strike.toString(),
+  })
 
   const optionAccounts = ownedTokenAccounts[optionMintAddress] || []
   const writerAccounts = ownedTokenAccounts[writerTokenMintKey] || []
@@ -268,13 +274,6 @@ const BuySellDialog = ({
       const underlyingAssetSrcKey = getHighestAccount(uAssetAccounts)?.pubKey
       const writerTokenDestinationKey = getHighestAccount(writerAccounts)
         ?.pubKey
-      const optionMarket = getMarket({
-        date: date.unix(),
-        uAssetSymbol,
-        qAssetSymbol,
-        size: amountPerContract.toNumber(),
-        price: strike.toString(),
-      })
 
       await placeSellOrder({
         numberOfContractsToMint: numberOfContracts,
@@ -343,13 +342,6 @@ const BuySellDialog = ({
         ?.pubKey
       const optionTokenAddress = getHighestAccount(optionAccounts)?.pubKey
       // TODO get the users token account with the most Serum Market base asset.
-      const optionMarket = getMarket({
-        date: date.unix(),
-        uAssetSymbol,
-        qAssetSymbol,
-        size: amountPerContract.toNumber(),
-        price: strike.toString(),
-      })
       await placeBuyOrder({
         optionMarket,
         serumMarket: serum,
@@ -389,6 +381,8 @@ const BuySellDialog = ({
       })
     }
   }
+  console.log('market ', optionMarket)
+  console.log('serum ', serum?.marketAddress?.toString(), serum?.market?._programId?.toString())
 
   const mintSellTooltipLabel =
     openPositionSize >= parsedOrderSize

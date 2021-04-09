@@ -150,11 +150,6 @@ const useOptionsMarkets = () => {
       .map((key) => markets[key].strikePrice)
   }
 
-  const getMarket = ({ uAssetSymbol, qAssetSymbol, date, size, price }) => {
-    const key = `${date}-${uAssetSymbol}-${qAssetSymbol}-${size}-${price}`
-    return markets[key]
-  }
-
   const getDates = () => {
     const dates = Object.values(markets).map((m) => m.expiration)
     const deduped = [...new Set(dates)]
@@ -348,13 +343,7 @@ const useOptionsMarkets = () => {
     const uAssetSymbol = uAsset.tokenSymbol
     const qAssetSymbol = qAsset.tokenSymbol
 
-    const marketData = getMarket({
-      date,
-      uAssetSymbol,
-      qAssetSymbol,
-      size,
-      price,
-    })
+    const marketData = markets[`${date}-${uAssetSymbol}-${qAssetSymbol}-${size}-${price}`]
 
     // TODO - further optimization would be to remove the .find() here and just pass the whole object in
     const uAssetBalance = new BigNumber(
@@ -418,7 +407,6 @@ const useOptionsMarkets = () => {
     marketsLoading,
     setMarkets,
     setMarketsLoading,
-    getMarket,
     getStrikePrices,
     getSizes,
     getDates,

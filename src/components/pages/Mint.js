@@ -17,6 +17,7 @@ import useOwnedTokenAccounts from '../../hooks/useOwnedTokenAccounts'
 import useNotifications from '../../hooks/useNotifications'
 import useAssetList from '../../hooks/useAssetList'
 import { WRAPPED_SOL_ADDRESS } from '../../utils/token'
+import { useOptionMarket } from '../../hooks/useOptionMarket';
 
 const darkBorder = `1px solid ${theme.palette.background.main}`
 
@@ -26,7 +27,6 @@ const Mint = () => {
   const { pushNotification } = useNotifications()
   const { connect, connected } = useWallet()
   const {
-    getMarket,
     getStrikePrices,
     getSizes,
     createAccountsAndMint,
@@ -52,10 +52,10 @@ const Mint = () => {
     size,
     price,
   }
+  const marketData = useOptionMarket(allParams)
   
   const contractSizes = getSizes(allParams)
   const strikePrices = getStrikePrices(allParams).sort((a, b) => a - b)
-  const marketData = getMarket(allParams)
 
   const ownedUAssetAccounts = useMemo(
     () => (uAsset && ownedTokenAccounts[uAsset.mintAddress]) || [],

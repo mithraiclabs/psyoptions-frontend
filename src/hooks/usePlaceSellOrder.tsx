@@ -201,7 +201,7 @@ const usePlaceSellOrder = () => {
       )
       pushNotification({
         severity: NotificationSeverity.INFO,
-        message: `Processing: Sell ${numberOfContractsToMint} contract${
+        message: `Processing: Sell ${orderArgs.size} contract${
           numberOfContractsToMint > 1 ? 's' : ''
         }`,
         link: (
@@ -214,7 +214,7 @@ const usePlaceSellOrder = () => {
 
       pushNotification({
         severity: NotificationSeverity.SUCCESS,
-        message: `Confirmed: Sell ${numberOfContractsToMint} contract${
+        message: `Confirmed: Sell ${orderArgs.size} contract${
           numberOfContractsToMint > 1 ? 's' : ''
         }`,
         link: (

@@ -323,7 +323,7 @@ const BuySellDialog = ({
       setPlaceOrderLoading(false)
     } catch (err) {
       setPlaceOrderLoading(false)
-      console.log(err)
+      console.error(err)
       Sentry.captureException(err)
       pushNotification({
         severity: 'error',

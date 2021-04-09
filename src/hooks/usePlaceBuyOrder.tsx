@@ -12,7 +12,14 @@ import useOwnedTokenAccounts from './useOwnedTokenAccounts'
 import { SerumMarket } from '../utils/serum'
 import { buildSolanaExplorerUrl } from '../utils/solanaExplorer'
 
-const usePlaceBuyOrder = () => {
+type PlaceBuyOrderArgs = {
+  optionMarket: OptionMarket
+  serumMarket: SerumMarket
+  orderArgs: OrderParams
+  optionDestinationKey?: PublicKey
+}
+
+const usePlaceBuyOrder = (): ((obj: PlaceBuyOrderArgs) => Promise<void>) => {
   const { pushNotification } = useNotifications()
   const { wallet, pubKey } = useWallet()
   const { connection } = useConnection()
@@ -28,12 +35,7 @@ const usePlaceBuyOrder = () => {
       serumMarket,
       orderArgs,
       optionDestinationKey,
-    }: {
-      optionMarket: OptionMarket
-      serumMarket: SerumMarket
-      orderArgs: OrderParams
-      optionDestinationKey?: PublicKey
-    }) => {
+    }: PlaceBuyOrderArgs) => {
       const transaction = new Transaction()
       let signers = []
       const _optionDestinationKey = optionDestinationKey

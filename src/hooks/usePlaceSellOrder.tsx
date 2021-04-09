@@ -60,7 +60,7 @@ const usePlaceSellOrder = () => {
       const mintSigners = []
       let _uAssetTokenAccount = uAssetTokenAccount
       let _optionTokenSrcKey = mintedOptionDestinationKey
-      let _writerTokenDestinationKey = writerTokenDestinationKey;
+      let _writerTokenDestinationKey = writerTokenDestinationKey
       let shouldRefreshTokenAccounts = false
       let numberOfContractsDistribution
 

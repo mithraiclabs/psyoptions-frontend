@@ -27,7 +27,7 @@ import usePlaceSellOrder from '../hooks/usePlaceSellOrder'
 import usePlaceBuyOrder from '../hooks/usePlaceBuyOrder'
 
 import OrderBook from './OrderBook'
-import { useSerumOrderbook } from '../hooks/Serum'
+import { useSerumOrderbook, useSettleFunds } from '../hooks/Serum'
 import { WRAPPED_SOL_ADDRESS } from '../utils/token'
 import { useSerumFeeDiscountKey } from '../hooks/Serum/useSerumFeeDiscountKey'
 import { getPriceFromSerumOrderbook } from '../utils/orderbook'
@@ -171,6 +171,7 @@ const BuySellDialog = ({
     price: strike.toString(),
   })
   const unsettledFunds = useUnsettledFundsForMarket(serumKey)
+  const settleFunds = useSettleFunds(serumKey)
 
   const optionAccounts = ownedTokenAccounts[optionMintAddress] || []
   const writerAccounts = ownedTokenAccounts[writerTokenMintKey] || []
@@ -651,7 +652,7 @@ const BuySellDialog = ({
                       </Box>
                       <Button
                         color="primary"
-                        onClick={() => alert('Settle')}
+                        onClick={settleFunds}
                         variant="outlined"
                       >
                         Settle Funds

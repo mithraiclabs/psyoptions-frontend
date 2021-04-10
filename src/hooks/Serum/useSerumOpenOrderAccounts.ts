@@ -10,6 +10,7 @@ import useWallet from '../useWallet'
  */
 export const useSerumOpenOrderAccounts = (
   key: string,
+  skipFetch = false,
 ): OpenOrders[] | undefined => {
   const { connection } = useConnection()
   const { serumMarkets } = useSerum()
@@ -19,7 +20,7 @@ export const useSerumOpenOrderAccounts = (
 
   useEffect(() => {
     const market = serumMarket?.market as Market | undefined
-    if (market) {
+    if (market && !skipFetch) {
       ;(async () => {
         const openOrders = await market.findOpenOrdersAccountsForOwner(
           connection,
@@ -31,7 +32,14 @@ export const useSerumOpenOrderAccounts = (
         }))
       })()
     }
-  }, [connection, key, pubKey, serumMarket?.market, setSerumOpenOrders])
+  }, [
+    connection,
+    key,
+    pubKey,
+    serumMarket?.market,
+    setSerumOpenOrders,
+    skipFetch,
+  ])
 
   return serumOpenOrders[key]
 }

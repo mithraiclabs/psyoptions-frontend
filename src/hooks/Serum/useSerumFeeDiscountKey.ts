@@ -1,3 +1,4 @@
+import { getFeeRates, getFeeTier } from '@mithraic-labs/serum'
 import { PublicKey } from '@solana/web3.js'
 import { useMemo } from 'react'
 import { getHighestAccount } from '../../utils/token'
@@ -9,16 +10,26 @@ import useOwnedTokenAccounts from '../useOwnedTokenAccounts'
  *
  * @returns SRMFeePublicKey
  */
-export const useSerumFeeDiscountKey = (): PublicKey | null => {
+export const useSerumFeeDiscountKey = (): {
+  feeRates: {
+    maker: number
+    taker: number
+  }
+  publicKey: PublicKey | null
+} => {
   const { srmPublicKey } = useAssetList()
   const { ownedTokenAccounts } = useOwnedTokenAccounts()
 
   return useMemo(() => {
-    if (!srmPublicKey) {
-      return null
-    }
-    const srmAccounts = ownedTokenAccounts[srmPublicKey.toString()] ?? []
+    const srmAccounts = ownedTokenAccounts[srmPublicKey?.toString()] ?? []
     const highestSRMAccount = getHighestAccount(srmAccounts)
-    return highestSRMAccount ? new PublicKey(highestSRMAccount.pubKey) : null
+    const feeTier = getFeeTier(0, highestSRMAccount?.amount ?? 0)
+    const feeRates = getFeeRates(feeTier)
+    return {
+      feeRates,
+      publicKey: Object.keys(highestSRMAccount).length
+        ? new PublicKey(highestSRMAccount.pubKey)
+        : null,
+    }
   }, [ownedTokenAccounts, srmPublicKey])
 }

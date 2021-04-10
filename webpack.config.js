@@ -6,6 +6,7 @@ const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
 const watch = process.env.NODE_ENV !== 'production'
 const mode =
   process.env.NODE_ENV === 'production' ? 'production' : 'development'
+const devtool = process.env.NODE_ENV !== 'production' ? 'inline-source-map' : undefined
 
 module.exports = [
   {
@@ -49,6 +50,7 @@ module.exports = [
   {
     // Client
     entry: ['./src/client.js'],
+    devtool,
     watch,
     mode,
     resolve: {

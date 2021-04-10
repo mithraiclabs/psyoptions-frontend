@@ -22,7 +22,6 @@ import useConnection from '../hooks/useConnection'
 import useWallet from '../hooks/useWallet'
 import useSerum from '../hooks/useSerum'
 import useOwnedTokenAccounts from '../hooks/useOwnedTokenAccounts'
-import useOptionsMarkets from '../hooks/useOptionsMarkets'
 import useNotifications from '../hooks/useNotifications'
 import usePlaceSellOrder from '../hooks/usePlaceSellOrder'
 import usePlaceBuyOrder from '../hooks/usePlaceBuyOrder'
@@ -31,6 +30,8 @@ import OrderBook from './OrderBook'
 import { useSerumOrderbook } from '../hooks/Serum';
 import { WRAPPED_SOL_ADDRESS } from '../utils/token';
 import { useSerumFeeDiscountKey } from '../hooks/Serum/useSerumFeeDiscountKey';
+import { getPriceFromSerumOrderbook } from '../utils/orderbook';
+import { useOptionMarket } from '../hooks/useOptionMarket';
 
 const successColor = theme.palette.success.main
 const errorColor = theme.palette.error.main
@@ -143,7 +144,6 @@ const BuySellDialog = ({
   const { pushNotification } = useNotifications()
   const { connection, dexProgramId } = useConnection()
   const { balance, wallet, pubKey } = useWallet()
-  const { getMarket } = useOptionsMarkets()
   const placeSellOrder = usePlaceSellOrder()
   const placeBuyOrder = usePlaceBuyOrder()
   const { serumMarkets, fetchSerumMarket } = useSerum()
@@ -157,7 +157,15 @@ const BuySellDialog = ({
   const [initializingSerum, setInitializingSerum] = useState(false)
   const [placeOrderLoading, setPlaceOrderLoading] = useState(false)
   const { orderbook } = useSerumOrderbook(serumKey)
-  const serumDiscountFeeKey = useSerumFeeDiscountKey()
+  const { feeRates: serumFeeRates, publicKey: serumDiscountFeeKey } = useSerumFeeDiscountKey()
+  const price = getPriceFromSerumOrderbook(orderbook)
+  const optionMarket = useOptionMarket({
+    date: date.unix(),
+    uAssetSymbol,
+    qAssetSymbol,
+    size: amountPerContract.toNumber(),
+    price: strike.toString(),
+  })
 
   const optionAccounts = ownedTokenAccounts[optionMintAddress] || []
   const writerAccounts = ownedTokenAccounts[writerTokenMintKey] || []
@@ -266,13 +274,6 @@ const BuySellDialog = ({
       const underlyingAssetSrcKey = getHighestAccount(uAssetAccounts)?.pubKey
       const writerTokenDestinationKey = getHighestAccount(writerAccounts)
         ?.pubKey
-      const optionMarket = getMarket({
-        date: date.unix(),
-        uAssetSymbol,
-        qAssetSymbol,
-        size: amountPerContract.toNumber(),
-        price: strike.toString(),
-      })
 
       await placeSellOrder({
         numberOfContractsToMint: numberOfContracts,
@@ -286,7 +287,7 @@ const BuySellDialog = ({
           side: 'sell',
           // Serum-ts handles adding the SPL Token decimals via their
           //  `maket.priceNumberToLots` function
-          price: parsedLimitPrice,
+          price: orderType === 'market' ? orderbook?.bids?.[0]?.price : parsedLimitPrice,
           // Serum-ts handles adding the SPL Token decimals via their
           //  `maket.priceNumberToLots` function
           size: parsedOrderSize,
@@ -295,6 +296,8 @@ const BuySellDialog = ({
           // This will be null if a token with the symbol SRM does
           // not exist in the supported asset list
           feeDiscountPubkey: serumDiscountFeeKey,
+          // serum fee rate
+          feeRate: orderType === 'market' ? serumFeeRates?.taker : undefined
         },
         uAsset: {
           tokenSymbol: uAssetSymbol,
@@ -321,7 +324,7 @@ const BuySellDialog = ({
       setPlaceOrderLoading(false)
     } catch (err) {
       setPlaceOrderLoading(false)
-      console.log(err)
+      console.error(err)
       Sentry.captureException(err)
       pushNotification({
         severity: 'error',
@@ -339,13 +342,6 @@ const BuySellDialog = ({
         ?.pubKey
       const optionTokenAddress = getHighestAccount(optionAccounts)?.pubKey
       // TODO get the users token account with the most Serum Market base asset.
-      const optionMarket = getMarket({
-        date: date.unix(),
-        uAssetSymbol,
-        qAssetSymbol,
-        size: amountPerContract.toNumber(),
-        price: strike.toString(),
-      })
       await placeBuyOrder({
         optionMarket,
         serumMarket: serum,
@@ -356,21 +352,22 @@ const BuySellDialog = ({
           owner: pubKey,
           // For Serum, the payer is really the account of the asset being sold
           payer: serumQuoteTokenAddress
-            ? new PublicKey(serumQuoteTokenAddress)
-            : null,
+          ? new PublicKey(serumQuoteTokenAddress)
+          : null,
           side: 'buy',
           // Serum-ts handles adding the SPL Token decimals via their
           //  `maket.priceNumberToLots` function
-          price: parsedLimitPrice,
+          price: orderType === 'market' ? orderbook?.asks?.[0]?.price : parsedLimitPrice,
           // Serum-ts handles adding the SPL Token decimals via their
           //  `maket.priceNumberToLots` function
           size: parsedOrderSize,
           // TODO create true mapping https://github.com/project-serum/serum-ts/blob/6803cb95056eb9b8beced9135d6956583ae5a222/packages/serum/src/market.ts#L1163
           orderType: orderType === 'market' ? 'ioc' : orderType,
-          // TODO need to handle feeDiscountPubkey properly. This is hack for Devnet because
-          // otherwise it will fail since the SRM_MINT that is hard coded in serum-ts cannot
-          // be found on the network
-          feeDiscountPubkey: null,
+          // This will be null if a token with the symbol SRM does
+          // not exist in the supported asset list
+          feeDiscountPubkey: serumDiscountFeeKey,
+          // serum fee rate
+          feeRate: orderType === 'market' ? serumFeeRates?.taker : undefined
         },
       })
       setPlaceOrderLoading(false)
@@ -384,6 +381,8 @@ const BuySellDialog = ({
       })
     }
   }
+  console.log('market ', optionMarket)
+  console.log('serum ', serum?.marketAddress?.toString(), serum?.market?._programId?.toString())
 
   const mintSellTooltipLabel =
     openPositionSize >= parsedOrderSize
@@ -422,7 +421,7 @@ const BuySellDialog = ({
                 ? `${qAssetSymbol}/${uAssetSymbol}`
                 : `${uAssetSymbol}/${qAssetSymbol}`}
             </Box>
-            <Box pt={1}>Mark Price: TODO</Box>
+            <Box pt={1}>Mark Price: {price ?? '-'}</Box>
             <Box pt={1}>
               Open Position:{' '}
               {loadingOwnedTokenAccounts ? 'Loading...' : openPositionSize}

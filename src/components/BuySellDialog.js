@@ -27,11 +27,12 @@ import usePlaceSellOrder from '../hooks/usePlaceSellOrder'
 import usePlaceBuyOrder from '../hooks/usePlaceBuyOrder'
 
 import OrderBook from './OrderBook'
-import { useSerumOrderbook } from '../hooks/Serum';
-import { WRAPPED_SOL_ADDRESS } from '../utils/token';
-import { useSerumFeeDiscountKey } from '../hooks/Serum/useSerumFeeDiscountKey';
-import { getPriceFromSerumOrderbook } from '../utils/orderbook';
-import { useOptionMarket } from '../hooks/useOptionMarket';
+import { useSerumOrderbook } from '../hooks/Serum'
+import { WRAPPED_SOL_ADDRESS } from '../utils/token'
+import { useSerumFeeDiscountKey } from '../hooks/Serum/useSerumFeeDiscountKey'
+import { getPriceFromSerumOrderbook } from '../utils/orderbook'
+import { useOptionMarket } from '../hooks/useOptionMarket'
+import { useUnsettledFundsForMarket } from '../hooks/Serum/useUnsettledFundsForMarket'
 
 const successColor = theme.palette.success.main
 const errorColor = theme.palette.error.main
@@ -157,7 +158,10 @@ const BuySellDialog = ({
   const [initializingSerum, setInitializingSerum] = useState(false)
   const [placeOrderLoading, setPlaceOrderLoading] = useState(false)
   const { orderbook } = useSerumOrderbook(serumKey)
-  const { feeRates: serumFeeRates, publicKey: serumDiscountFeeKey } = useSerumFeeDiscountKey()
+  const {
+    feeRates: serumFeeRates,
+    publicKey: serumDiscountFeeKey,
+  } = useSerumFeeDiscountKey()
   const price = getPriceFromSerumOrderbook(orderbook)
   const optionMarket = useOptionMarket({
     date: date.unix(),
@@ -166,6 +170,7 @@ const BuySellDialog = ({
     size: amountPerContract.toNumber(),
     price: strike.toString(),
   })
+  const unsettledFunds = useUnsettledFundsForMarket(serumKey)
 
   const optionAccounts = ownedTokenAccounts[optionMintAddress] || []
   const writerAccounts = ownedTokenAccounts[writerTokenMintKey] || []
@@ -287,7 +292,10 @@ const BuySellDialog = ({
           side: 'sell',
           // Serum-ts handles adding the SPL Token decimals via their
           //  `maket.priceNumberToLots` function
-          price: orderType === 'market' ? orderbook?.bids?.[0]?.price : parsedLimitPrice,
+          price:
+            orderType === 'market'
+              ? orderbook?.bids?.[0]?.price
+              : parsedLimitPrice,
           // Serum-ts handles adding the SPL Token decimals via their
           //  `maket.priceNumberToLots` function
           size: parsedOrderSize,
@@ -297,7 +305,7 @@ const BuySellDialog = ({
           // not exist in the supported asset list
           feeDiscountPubkey: serumDiscountFeeKey,
           // serum fee rate
-          feeRate: orderType === 'market' ? serumFeeRates?.taker : undefined
+          feeRate: orderType === 'market' ? serumFeeRates?.taker : undefined,
         },
         uAsset: {
           tokenSymbol: uAssetSymbol,
@@ -352,12 +360,15 @@ const BuySellDialog = ({
           owner: pubKey,
           // For Serum, the payer is really the account of the asset being sold
           payer: serumQuoteTokenAddress
-          ? new PublicKey(serumQuoteTokenAddress)
-          : null,
+            ? new PublicKey(serumQuoteTokenAddress)
+            : null,
           side: 'buy',
           // Serum-ts handles adding the SPL Token decimals via their
           //  `maket.priceNumberToLots` function
-          price: orderType === 'market' ? orderbook?.asks?.[0]?.price : parsedLimitPrice,
+          price:
+            orderType === 'market'
+              ? orderbook?.asks?.[0]?.price
+              : parsedLimitPrice,
           // Serum-ts handles adding the SPL Token decimals via their
           //  `maket.priceNumberToLots` function
           size: parsedOrderSize,
@@ -367,7 +378,7 @@ const BuySellDialog = ({
           // not exist in the supported asset list
           feeDiscountPubkey: serumDiscountFeeKey,
           // serum fee rate
-          feeRate: orderType === 'market' ? serumFeeRates?.taker : undefined
+          feeRate: orderType === 'market' ? serumFeeRates?.taker : undefined,
         },
       })
       setPlaceOrderLoading(false)
@@ -620,6 +631,33 @@ const BuySellDialog = ({
                       type === 'call' ? uAssetSymbol : qAssetSymbol
                     }) until the contract expires or is exercised.`}
                   </Box>
+                  {(unsettledFunds.baseFree.toNumber() > 0 ||
+                    unsettledFunds.quoteFree.toNumber() > 0) && (
+                    <Box
+                      justifyContent="flex-end"
+                      textAlign="center"
+                      width="100%"
+                    >
+                      Unsettled Funds
+                      <Box
+                        display="flex"
+                        flex="1"
+                        justifyContent="space-between"
+                      >
+                        <Box>Options: {unsettledFunds.baseFree.toString()}</Box>
+                        <Box>
+                          {qAssetSymbol}: {unsettledFunds.quoteFree.toString()}
+                        </Box>
+                      </Box>
+                      <Button
+                        color="primary"
+                        onClick={() => alert('Settle')}
+                        variant="outlined"
+                      >
+                        Settle Funds
+                      </Button>
+                    </Box>
+                  )}
                 </>
               ) : (
                 <>

@@ -97,6 +97,7 @@ const AssetListProvider: React.FC = ({ children }) => {
       setSupportedAssets([])
       return
     }
+    let unmounted = false
 
     const setDefaultAssets = (assets: Asset[]) => {
       if (assets && assets.length > 1) {
@@ -132,10 +133,16 @@ const AssetListProvider: React.FC = ({ children }) => {
         const loadedAssets = mergedAssets
           .filter((res) => res.status === 'fulfilled')
           .map((res) => (res.status === 'fulfilled' && res.value) as Asset) // fulfilled check for TS
+        if (unmounted) {
+          return
+        }
         setSupportedAssets(loadedAssets)
         setDefaultAssets(loadedAssets)
         setAssetListLoading(false)
       } catch (error) {
+        if (unmounted) {
+          return
+        }
         pushNotification({
           severity: 'error',
           message: `${error}`,
@@ -148,6 +155,11 @@ const AssetListProvider: React.FC = ({ children }) => {
 
     const basicAssets = getAssetsByNetwork(endpoint.name) as Asset[]
     loadAssets(basicAssets)
+
+    // eslint-disable-next-line consistent-return
+    return () => {
+      unmounted = true
+    }
   }, [connection, endpoint.name, pushNotification])
 
   const value = {

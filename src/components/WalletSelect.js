@@ -1,0 +1,71 @@
+import React from 'react'
+import { Dialog, Box, Button } from '@material-ui/core'
+
+import wallets from '../utils/wallet/wallets'
+import useWallet from '../hooks/useWallet'
+
+const WalletSelect = ({ open, onClose, handleConnect }) => {
+  const { pubKey, connected, disconnect } = useWallet()
+
+  return (
+    <Dialog open={open} onClose={onClose} aria-labelledby={'Choose Wallet'}>
+      <Box px={3}>
+        <Box
+          width="350px"
+          maxWidth="100%"
+          display="flex"
+          flexDirection="column"
+        >
+          <Box my={1} overflow="auto">
+            {connected ? (
+              <Box
+                p={2}
+                display="flex"
+                flexDirection="column"
+                justifyContent="center"
+                alignItems="center"
+              >
+                <h3 style={{ margin: 0 }}>Wallet Connected:</h3>
+                <Box fontSize={12} my={2}>{`${pubKey}`}</Box>
+                <Button variant="outlined" color="primary" onClick={disconnect}>
+                  Disconnect
+                </Button>
+              </Box>
+            ) : (
+              <>
+                {wallets.map((wallet) => {
+                  const adapter = wallet.getAdapter()
+                  const isAvailable = !!adapter
+
+                  return (
+                    <Box my={2} key={wallet.name}>
+                      <Button
+                        variant="outlined"
+                        color="primary"
+                        fullWidth
+                        disabled={!isAvailable}
+                        onClick={
+                          isAvailable ? () => handleConnect(adapter) : null
+                        }
+                      >
+                        <Box
+                          display="flex"
+                          flexDirection="row"
+                          justifyContent="space-between"
+                        >
+                          <Box>{wallet.name}</Box>
+                        </Box>
+                      </Button>
+                    </Box>
+                  )
+                })}
+              </>
+            )}
+          </Box>
+        </Box>
+      </Box>
+    </Dialog>
+  )
+}
+
+export default WalletSelect

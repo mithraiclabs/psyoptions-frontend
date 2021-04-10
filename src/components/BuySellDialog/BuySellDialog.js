@@ -145,8 +145,8 @@ const BuySellDialog = ({
   const { pushNotification } = useNotifications()
   const { connection, dexProgramId } = useConnection()
   const { balance, wallet, pubKey } = useWallet()
-  const placeSellOrder = usePlaceSellOrder()
-  const placeBuyOrder = usePlaceBuyOrder()
+  const placeSellOrder = usePlaceSellOrder(serumKey)
+  const placeBuyOrder = usePlaceBuyOrder(serumKey)
   const { serumMarkets, fetchSerumMarket } = useSerum()
   const {
     ownedTokenAccounts,

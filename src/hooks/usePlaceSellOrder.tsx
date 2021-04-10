@@ -203,7 +203,10 @@ const usePlaceSellOrder = (
       /* If the user did not have an OptionToken or WriterToken account then we need to pull the 
       first TX out of the iteration so we can guarantee the accounts are created and initialized 
       before the other TXs execute */
-      if (!mintedOptionDestinationKey || !writerTokenDestinationKey) {
+      if (
+        !mintedOptionDestinationKey ||
+        (!writerTokenDestinationKey && numberOfContractsDistribution?.length)
+      ) {
         const contractsMinted = numberOfContractsDistribution.shift()
         mintTXs.shift()
         const tx = signed.shift()

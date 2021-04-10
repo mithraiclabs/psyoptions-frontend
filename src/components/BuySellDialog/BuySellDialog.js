@@ -16,23 +16,23 @@ import { LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js'
 import BN from 'bn.js'
 import * as Sentry from '@sentry/react'
 
-import theme from '../utils/theme'
-import { createInitializeMarketTx } from '../utils/serum'
-import useConnection from '../hooks/useConnection'
-import useWallet from '../hooks/useWallet'
-import useSerum from '../hooks/useSerum'
-import useOwnedTokenAccounts from '../hooks/useOwnedTokenAccounts'
-import useNotifications from '../hooks/useNotifications'
-import usePlaceSellOrder from '../hooks/usePlaceSellOrder'
-import usePlaceBuyOrder from '../hooks/usePlaceBuyOrder'
+import theme from '../../utils/theme'
+import { createInitializeMarketTx } from '../../utils/serum'
+import useConnection from '../../hooks/useConnection'
+import useWallet from '../../hooks/useWallet'
+import useSerum from '../../hooks/useSerum'
+import useOwnedTokenAccounts from '../../hooks/useOwnedTokenAccounts'
+import useNotifications from '../../hooks/useNotifications'
+import usePlaceSellOrder from '../../hooks/usePlaceSellOrder'
+import usePlaceBuyOrder from '../../hooks/usePlaceBuyOrder'
 
-import OrderBook from './OrderBook'
-import { useSerumOrderbook, useSettleFunds } from '../hooks/Serum'
-import { WRAPPED_SOL_ADDRESS } from '../utils/token'
-import { useSerumFeeDiscountKey } from '../hooks/Serum/useSerumFeeDiscountKey'
-import { getPriceFromSerumOrderbook } from '../utils/orderbook'
-import { useOptionMarket } from '../hooks/useOptionMarket'
-import { useUnsettledFundsForMarket } from '../hooks/Serum/useUnsettledFundsForMarket'
+import OrderBook from '../OrderBook'
+import { useSerumOrderbook } from '../../hooks/Serum'
+import { WRAPPED_SOL_ADDRESS } from '../../utils/token'
+import { useSerumFeeDiscountKey } from '../../hooks/Serum/useSerumFeeDiscountKey'
+import { getPriceFromSerumOrderbook } from '../../utils/orderbook'
+import { useOptionMarket } from '../../hooks/useOptionMarket'
+import { UnsettledFunds } from './UnsettledFunds'
 
 const successColor = theme.palette.success.main
 const errorColor = theme.palette.error.main
@@ -170,8 +170,6 @@ const BuySellDialog = ({
     size: amountPerContract.toNumber(),
     price: strike.toString(),
   })
-  const unsettledFunds = useUnsettledFundsForMarket(serumKey)
-  const settleFunds = useSettleFunds(serumKey)
 
   const optionAccounts = ownedTokenAccounts[optionMintAddress] || []
   const writerAccounts = ownedTokenAccounts[writerTokenMintKey] || []
@@ -632,33 +630,10 @@ const BuySellDialog = ({
                       type === 'call' ? uAssetSymbol : qAssetSymbol
                     }) until the contract expires or is exercised.`}
                   </Box>
-                  {(unsettledFunds.baseFree.toNumber() > 0 ||
-                    unsettledFunds.quoteFree.toNumber() > 0) && (
-                    <Box
-                      justifyContent="flex-end"
-                      textAlign="center"
-                      width="100%"
-                    >
-                      Unsettled Funds
-                      <Box
-                        display="flex"
-                        flex="1"
-                        justifyContent="space-between"
-                      >
-                        <Box>Options: {unsettledFunds.baseFree.toString()}</Box>
-                        <Box>
-                          {qAssetSymbol}: {unsettledFunds.quoteFree.toString()}
-                        </Box>
-                      </Box>
-                      <Button
-                        color="primary"
-                        onClick={settleFunds}
-                        variant="outlined"
-                      >
-                        Settle Funds
-                      </Button>
-                    </Box>
-                  )}
+                  <UnsettledFunds
+                    qAssetSymbol={qAssetSymbol}
+                    serumKey={serumKey}
+                  />
                 </>
               ) : (
                 <>

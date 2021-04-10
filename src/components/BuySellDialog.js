@@ -381,8 +381,6 @@ const BuySellDialog = ({
       })
     }
   }
-  console.log('market ', optionMarket)
-  console.log('serum ', serum?.marketAddress?.toString(), serum?.market?._programId?.toString())
 
   const mintSellTooltipLabel =
     openPositionSize >= parsedOrderSize

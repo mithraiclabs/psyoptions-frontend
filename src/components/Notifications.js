@@ -17,7 +17,12 @@ const SimpleSnackbar = ({
   <Snackbar
     open
     autoHideDuration={6000}
-    onClose={closeNotification}
+    onClose={(event, reason) => {
+      if (reason === 'clickaway') {
+        return;
+      }
+      closeNotification // eslint-disable-line
+    }}
     style={{
       position: 'relative',
       margin: '10px',

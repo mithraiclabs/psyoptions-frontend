@@ -91,7 +91,7 @@ export const useSettleFunds = (key: string): (() => Promise<void>) => {
         quoteTokenAccountKey,
       )
       transaction.add(settleTx)
-      signers = [...signers, settleSigners]
+      signers = [...signers, ...settleSigners]
 
       transaction.feePayer = pubKey
       const { blockhash } = await connection.getRecentBlockhash()

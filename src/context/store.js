@@ -13,8 +13,9 @@ import { AssetListProvider } from './AssetListContext'
 import { SolanaMetaProvider } from './SolanaMetaContext'
 import { PasswordProvider } from './PasswordContext'
 import theme from '../utils/theme'
-import { SerumOrderbooksProvider } from './SerumOrderbookContext';
-import { SPLTokenMintsProvider } from './SPLTokenMintsContext';
+import { SerumOrderbooksProvider } from './SerumOrderbookContext'
+import { SPLTokenMintsProvider } from './SPLTokenMintsContext'
+import { SerumOpenOrdersProvider } from './SerumOpenOrdersContext'
 
 const _providers = [
   // eslint-disable-next-line react/no-children-prop
@@ -30,6 +31,7 @@ const _providers = [
   <OptionsChainProvider />,
   <SerumProvider />,
   <SerumOrderbooksProvider />,
+  <SerumOpenOrdersProvider />,
   <PasswordProvider />,
 ]
 

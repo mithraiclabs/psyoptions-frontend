@@ -1,8 +1,14 @@
-import { SystemProgram, Transaction, Account } from '@solana/web3.js'
+import {
+  SystemProgram,
+  Transaction,
+  Account,
+  Connection,
+  PublicKey,
+} from '@solana/web3.js'
 import { AccountLayout, Token } from '@solana/spl-token'
 import { TOKEN_PROGRAM_ID } from './tokenInstructions'
 
-export const WRAPPED_SOL_ADDRESS = 'So11111111111111111111111111111111111111112';
+export const WRAPPED_SOL_ADDRESS = 'So11111111111111111111111111111111111111112'
 
 export async function initializeTokenAccountTx({
   connection,
@@ -11,16 +17,22 @@ export async function initializeTokenAccountTx({
   mintPublicKey,
   owner,
   rentBalance,
-}) {
+}: {
+  connection: Connection
+  extraLamports: number
+  payer: Account
+  mintPublicKey: PublicKey
+  owner: PublicKey
+  rentBalance: number
+}): Promise<{ transaction: Transaction; newTokenAccount: Account }> {
   const newAccount = new Account()
   const transaction = new Transaction()
 
   let _rentBalance = rentBalance
   if (!rentBalance) {
     _rentBalance = await connection.getMinimumBalanceForRentExemption(
-      AccountLayout.span
+      AccountLayout.span,
     )
-
   }
 
   transaction.add(
@@ -30,7 +42,7 @@ export async function initializeTokenAccountTx({
       lamports: _rentBalance + extraLamports,
       space: AccountLayout.span,
       programId: TOKEN_PROGRAM_ID,
-    })
+    }),
   )
 
   transaction.add(
@@ -38,11 +50,11 @@ export async function initializeTokenAccountTx({
       TOKEN_PROGRAM_ID,
       mintPublicKey,
       newAccount.publicKey,
-      owner
-    )
+      owner,
+    ),
   )
 
-  return {transaction, newTokenAccount: newAccount}
+  return { transaction, newTokenAccount: newAccount }
 }
 
 export const getHighestAccount = (accounts) => {

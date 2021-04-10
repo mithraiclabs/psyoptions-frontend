@@ -16,22 +16,23 @@ import { LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js'
 import BN from 'bn.js'
 import * as Sentry from '@sentry/react'
 
-import theme from '../utils/theme'
-import { createInitializeMarketTx } from '../utils/serum'
-import useConnection from '../hooks/useConnection'
-import useWallet from '../hooks/useWallet'
-import useSerum from '../hooks/useSerum'
-import useOwnedTokenAccounts from '../hooks/useOwnedTokenAccounts'
-import useNotifications from '../hooks/useNotifications'
-import usePlaceSellOrder from '../hooks/usePlaceSellOrder'
-import usePlaceBuyOrder from '../hooks/usePlaceBuyOrder'
+import theme from '../../utils/theme'
+import { createInitializeMarketTx } from '../../utils/serum'
+import useConnection from '../../hooks/useConnection'
+import useWallet from '../../hooks/useWallet'
+import useSerum from '../../hooks/useSerum'
+import useOwnedTokenAccounts from '../../hooks/useOwnedTokenAccounts'
+import useNotifications from '../../hooks/useNotifications'
+import usePlaceSellOrder from '../../hooks/usePlaceSellOrder'
+import usePlaceBuyOrder from '../../hooks/usePlaceBuyOrder'
 
-import OrderBook from './OrderBook'
-import { useSerumOrderbook } from '../hooks/Serum';
-import { WRAPPED_SOL_ADDRESS } from '../utils/token';
-import { useSerumFeeDiscountKey } from '../hooks/Serum/useSerumFeeDiscountKey';
-import { getPriceFromSerumOrderbook } from '../utils/orderbook';
-import { useOptionMarket } from '../hooks/useOptionMarket';
+import OrderBook from '../OrderBook'
+import { useSerumOrderbook } from '../../hooks/Serum'
+import { WRAPPED_SOL_ADDRESS } from '../../utils/token'
+import { useSerumFeeDiscountKey } from '../../hooks/Serum/useSerumFeeDiscountKey'
+import { getPriceFromSerumOrderbook } from '../../utils/orderbook'
+import { useOptionMarket } from '../../hooks/useOptionMarket'
+import { UnsettledFunds } from './UnsettledFunds'
 
 const successColor = theme.palette.success.main
 const errorColor = theme.palette.error.main
@@ -144,8 +145,8 @@ const BuySellDialog = ({
   const { pushNotification } = useNotifications()
   const { connection, dexProgramId } = useConnection()
   const { balance, wallet, pubKey } = useWallet()
-  const placeSellOrder = usePlaceSellOrder()
-  const placeBuyOrder = usePlaceBuyOrder()
+  const placeSellOrder = usePlaceSellOrder(serumKey)
+  const placeBuyOrder = usePlaceBuyOrder(serumKey)
   const { serumMarkets, fetchSerumMarket } = useSerum()
   const {
     ownedTokenAccounts,
@@ -157,7 +158,10 @@ const BuySellDialog = ({
   const [initializingSerum, setInitializingSerum] = useState(false)
   const [placeOrderLoading, setPlaceOrderLoading] = useState(false)
   const { orderbook } = useSerumOrderbook(serumKey)
-  const { feeRates: serumFeeRates, publicKey: serumDiscountFeeKey } = useSerumFeeDiscountKey()
+  const {
+    feeRates: serumFeeRates,
+    publicKey: serumDiscountFeeKey,
+  } = useSerumFeeDiscountKey()
   const price = getPriceFromSerumOrderbook(orderbook)
   const optionMarket = useOptionMarket({
     date: date.unix(),
@@ -287,7 +291,10 @@ const BuySellDialog = ({
           side: 'sell',
           // Serum-ts handles adding the SPL Token decimals via their
           //  `maket.priceNumberToLots` function
-          price: orderType === 'market' ? orderbook?.bids?.[0]?.price : parsedLimitPrice,
+          price:
+            orderType === 'market'
+              ? orderbook?.bids?.[0]?.price
+              : parsedLimitPrice,
           // Serum-ts handles adding the SPL Token decimals via their
           //  `maket.priceNumberToLots` function
           size: parsedOrderSize,
@@ -297,7 +304,7 @@ const BuySellDialog = ({
           // not exist in the supported asset list
           feeDiscountPubkey: serumDiscountFeeKey,
           // serum fee rate
-          feeRate: orderType === 'market' ? serumFeeRates?.taker : undefined
+          feeRate: orderType === 'market' ? serumFeeRates?.taker : undefined,
         },
         uAsset: {
           tokenSymbol: uAssetSymbol,
@@ -352,12 +359,15 @@ const BuySellDialog = ({
           owner: pubKey,
           // For Serum, the payer is really the account of the asset being sold
           payer: serumQuoteTokenAddress
-          ? new PublicKey(serumQuoteTokenAddress)
-          : null,
+            ? new PublicKey(serumQuoteTokenAddress)
+            : null,
           side: 'buy',
           // Serum-ts handles adding the SPL Token decimals via their
           //  `maket.priceNumberToLots` function
-          price: orderType === 'market' ? orderbook?.asks?.[0]?.price : parsedLimitPrice,
+          price:
+            orderType === 'market'
+              ? orderbook?.asks?.[0]?.price
+              : parsedLimitPrice,
           // Serum-ts handles adding the SPL Token decimals via their
           //  `maket.priceNumberToLots` function
           size: parsedOrderSize,
@@ -367,7 +377,7 @@ const BuySellDialog = ({
           // not exist in the supported asset list
           feeDiscountPubkey: serumDiscountFeeKey,
           // serum fee rate
-          feeRate: orderType === 'market' ? serumFeeRates?.taker : undefined
+          feeRate: orderType === 'market' ? serumFeeRates?.taker : undefined,
         },
       })
       setPlaceOrderLoading(false)
@@ -620,6 +630,10 @@ const BuySellDialog = ({
                       type === 'call' ? uAssetSymbol : qAssetSymbol
                     }) until the contract expires or is exercised.`}
                   </Box>
+                  <UnsettledFunds
+                    qAssetSymbol={qAssetSymbol}
+                    serumKey={serumKey}
+                  />
                 </>
               ) : (
                 <>

@@ -19,6 +19,7 @@ import useConnection from './useConnection'
 import useWallet from './useWallet'
 import { createMissingAccountsAndMint } from '../utils/instructions/index'
 import { buildSolanaExplorerUrl } from '../utils/solanaExplorer'
+import { useCreateAdHocOpenOrdersSubscription } from './Serum'
 
 // Solana has a maximum packet size when sending a transaction.
 // As of writing 25 mints is a good round number that won't
@@ -37,7 +38,9 @@ type PlaceSellOrderArgs = {
   writerTokenDestinationKey?: PublicKey
 }
 
-const usePlaceSellOrder = () => {
+const usePlaceSellOrder = (
+  serumKey: string,
+): ((obj: PlaceSellOrderArgs) => Promise<void>) => {
   const { pushNotification } = useNotifications()
   const { wallet, pubKey } = useWallet()
   const { connection, endpoint } = useConnection()
@@ -46,6 +49,9 @@ const usePlaceSellOrder = () => {
   const { refreshTokenAccounts } = useOwnedTokenAccounts() as {
     refreshTokenAccounts: () => void
   }
+  const createAdHocOpenOrdersSub = useCreateAdHocOpenOrdersSubscription(
+    serumKey,
+  )
 
   return useCallback(
     async ({
@@ -161,12 +167,17 @@ const usePlaceSellOrder = () => {
       }
 
       const {
+        createdOpenOrdersKey,
         transaction: placeOrderTx,
         signers: placeOrderSigners,
       } = await serumMarket.market.makePlaceOrderTransaction(connection, {
         ...orderArgs,
         payer: _optionTokenSrcKey,
       })
+
+      if (createdOpenOrdersKey) {
+        createAdHocOpenOrdersSub(createdOpenOrdersKey)
+      }
 
       const { blockhash } = await connection.getRecentBlockhash()
 
@@ -289,7 +300,8 @@ const usePlaceSellOrder = () => {
     },
     [
       connection,
-      endpoint,
+      createAdHocOpenOrdersSub,
+      endpoint.programId,
       pubKey,
       pushNotification,
       refreshTokenAccounts,

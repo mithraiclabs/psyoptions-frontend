@@ -11,6 +11,7 @@ import useConnection from './useConnection'
 import useOwnedTokenAccounts from './useOwnedTokenAccounts'
 import { SerumMarket } from '../utils/serum'
 import { buildSolanaExplorerUrl } from '../utils/solanaExplorer'
+import { useCreateAdHocOpenOrdersSubscription } from './Serum'
 
 type PlaceBuyOrderArgs = {
   optionMarket: OptionMarket
@@ -19,7 +20,9 @@ type PlaceBuyOrderArgs = {
   optionDestinationKey?: PublicKey
 }
 
-const usePlaceBuyOrder = (): ((obj: PlaceBuyOrderArgs) => Promise<void>) => {
+const usePlaceBuyOrder = (
+  serumKey: string,
+): ((obj: PlaceBuyOrderArgs) => Promise<void>) => {
   const { pushNotification } = useNotifications()
   const { wallet, pubKey } = useWallet()
   const { connection } = useConnection()
@@ -28,6 +31,9 @@ const usePlaceBuyOrder = (): ((obj: PlaceBuyOrderArgs) => Promise<void>) => {
   const { refreshTokenAccounts } = useOwnedTokenAccounts() as {
     refreshTokenAccounts: () => void
   }
+  const createAdHocOpenOrdersSub = useCreateAdHocOpenOrdersSubscription(
+    serumKey,
+  )
 
   return useCallback(
     async ({
@@ -59,6 +65,7 @@ const usePlaceBuyOrder = (): ((obj: PlaceBuyOrderArgs) => Promise<void>) => {
       }
       // place the buy order
       const {
+        createdOpenOrdersKey,
         transaction: placeOrderTx,
         signers: placeOrderSigners,
       } = await serumMarket.market.makePlaceOrderTransaction(connection, {
@@ -66,6 +73,10 @@ const usePlaceBuyOrder = (): ((obj: PlaceBuyOrderArgs) => Promise<void>) => {
       })
       transaction.add(placeOrderTx)
       signers = [...signers, ...placeOrderSigners]
+
+      if (createdOpenOrdersKey) {
+        createAdHocOpenOrdersSub(createdOpenOrdersKey)
+      }
 
       transaction.feePayer = pubKey
       const { blockhash } = await connection.getRecentBlockhash()
@@ -105,6 +116,7 @@ const usePlaceBuyOrder = (): ((obj: PlaceBuyOrderArgs) => Promise<void>) => {
     },
     [
       connection,
+      createAdHocOpenOrdersSub,
       pubKey,
       pushNotification,
       refreshTokenAccounts,

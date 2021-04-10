@@ -21,7 +21,7 @@ const SimpleSnackbar = ({
       if (reason === 'clickaway') {
         return;
       }
-      closeNotification // eslint-disable-line
+      closeNotification() // eslint-disable-line
     }}
     style={{
       position: 'relative',

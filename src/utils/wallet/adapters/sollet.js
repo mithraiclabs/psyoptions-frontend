@@ -4,7 +4,7 @@ import { isBrowser } from '../../isNode'
 let sollet
 
 if (isBrowser) {
-  sollet = new Wallet('https://sollet.io')
+  sollet = new Wallet('https://www.sollet.io')
 }
 
 const getAdapter = () => {

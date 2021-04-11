@@ -9,7 +9,7 @@ export type Asset = {
 }
 
 export type TokenAccount = {
-  amount: BigNumber
+  amount: number
   mint: PublicKey
   // public key for the specific token account (NOT the wallet)
   pubKey: PublicKey

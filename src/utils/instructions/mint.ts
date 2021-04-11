@@ -80,7 +80,7 @@ export const createMissingMintAccounts = ({
     _uAssetTokenAccount = {
       pubKey: newTokenAccount.publicKey,
       mint: new PublicKey(WRAPPED_SOL_ADDRESS),
-      amount: lamports,
+      amount: lamports.toNumber(),
     }
   }
 
@@ -90,7 +90,7 @@ export const createMissingMintAccounts = ({
     new BigNumber(numberOfContractsToMint),
   )
   if (
-    _uAssetTokenAccount.amount
+    new BigNumber(_uAssetTokenAccount.amount)
       .div(uAssetDecimals)
       .isLessThan(requiredUnderlyingAmount)
   ) {
@@ -137,14 +137,16 @@ export const createMissingMintAccounts = ({
     shouldRefreshTokenAccounts = true
   }
 
-  return {response: {
-    transaction: tx,
-    signers,
-    shouldRefreshTokenAccounts,
-    mintedOptionDestinationKey: _mintedOptionDestinationKey,
-    writerTokenDestinationKey: _writerTokenDestinationKey,
-    uAssetTokenAccount: _uAssetTokenAccount,
-  }}
+  return {
+    response: {
+      transaction: tx,
+      signers,
+      shouldRefreshTokenAccounts,
+      mintedOptionDestinationKey: _mintedOptionDestinationKey,
+      writerTokenDestinationKey: _writerTokenDestinationKey,
+      uAssetTokenAccount: _uAssetTokenAccount,
+    },
+  }
 }
 /**
  * Generate a transaction containing 1 or more mint option instructions.

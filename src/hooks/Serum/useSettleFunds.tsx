@@ -71,7 +71,7 @@ export const useSettleFunds = (key: string): (() => Promise<void>) => {
         } = createNewTokenAccount({
           fromPubkey: pubKey,
           owner: pubKey,
-          mintPublicKey: new PublicKey(baseMintAddress),
+          mintPublicKey: new PublicKey(quoteMintAddress),
           splTokenAccountRentBalance,
         })
 
@@ -136,6 +136,7 @@ export const useSettleFunds = (key: string): (() => Promise<void>) => {
     openOrders,
     pubKey,
     pushNotification,
+    quoteMintAddress,
     quoteTokenAccountAddress,
     refreshTokenAccounts,
     serumMarket?.market,

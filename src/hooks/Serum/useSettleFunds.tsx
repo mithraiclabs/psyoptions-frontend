@@ -42,8 +42,8 @@ export const useSettleFunds = (key: string): (() => Promise<void>) => {
       const transaction = new Transaction()
       let signers = []
       let shouldRefreshTokenAccounts = false
-      let baseTokenAccountKey = new PublicKey(baseTokenAccountAddress)
-      let quoteTokenAccountKey = new PublicKey(quoteTokenAccountAddress)
+      let baseTokenAccountKey = baseTokenAccountAddress
+      let quoteTokenAccountKey = quoteTokenAccountAddress
 
       if (!baseTokenAccountAddress) {
         // Create a SPL Token account for this base account if the wallet doesn't have one

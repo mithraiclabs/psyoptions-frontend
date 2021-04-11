@@ -63,9 +63,10 @@ const PositionRow: React.VFC<{
 
   const { exercise } = useExerciseOpenPosition(
     row.market,
-    ownedQAssetKey,
-    ownedUAssetKey,
-    ownedOAssetKey,
+    // TODO remove `toString` when useExerciseOpenPosition is refactored
+    ownedQAssetKey.toString(),
+    ownedUAssetKey.toString(),
+    ownedOAssetKey.toString(),
   )
 
   const handleExercisePosition = async () => {

@@ -23,7 +23,7 @@ async function ledgerSend(
   instruction: number,
   p1: number,
   payload: Buffer,
-) {
+): Promise<Buffer> {
   let p2 = 0
   let payloadOffset = 0
 
@@ -60,11 +60,14 @@ async function ledgerSend(
 }
 
 const BIP32_HARDENED_BIT = (1 << 31) >>> 0 // eslint-disable-line
-function harden(n: 0) {
+function harden(n: number) {
   return (n | BIP32_HARDENED_BIT) >>> 0 // eslint-disable-line
 }
 
-export function getSolanaDerivationPath(account?: number, change?: number) {
+export function getSolanaDerivationPath(
+  account?: number,
+  change?: number,
+): Buffer {
   let length
   if (account !== undefined) {
     if (change !== undefined) {
@@ -97,7 +100,7 @@ export async function signBytes(
   transport: Transport,
   bytes: Buffer,
   derivationPath: Buffer = getSolanaDerivationPath(),
-) {
+): Promise<Buffer> {
   const numPaths = Buffer.alloc(1)
   numPaths.writeUInt8(1, 0)
 
@@ -112,7 +115,7 @@ export async function signTransaction(
   transport: Transport,
   transaction: Transaction,
   derivationPath: Buffer = getSolanaDerivationPath(),
-) {
+): Promise<Buffer> {
   const messageBytes = transaction.serializeMessage()
   return signBytes(transport, messageBytes, derivationPath)
 }
@@ -120,7 +123,7 @@ export async function signTransaction(
 export async function getPublicKey(
   transport: Transport,
   derivationPath: Buffer = getSolanaDerivationPath(),
-) {
+): Promise<PublicKey> {
   const publicKeyBytes = await ledgerSend(
     transport,
     INS_GET_PUBKEY,

@@ -1,6 +1,7 @@
 import EventEmitter from 'eventemitter3'
 import { PublicKey, Transaction } from '@solana/web3.js'
 import type WalletAdapter from '../walletAdapter'
+import { MathAdapter } from '../../../..'
 
 class MathWalletAdapter extends EventEmitter implements WalletAdapter {
   _publicKey?: PublicKey
@@ -36,7 +37,7 @@ class MathWalletAdapter extends EventEmitter implements WalletAdapter {
   }
 
   // eslint-disable-next-line
-  private get _provider(): WalletAdapter | undefined {
+  private get _provider(): MathAdapter | undefined {
     if (typeof window !== 'undefined' && window?.solana?.isMathWallet) {
       return window.solana
     }

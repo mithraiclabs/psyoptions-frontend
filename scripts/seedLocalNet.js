@@ -143,7 +143,7 @@ const trustWalletERC20Icon = (address) =>
     },
     {
       mintAddress: splMint1.publicKey.toString(),
-      tokenSymbol: 'SRM',
+      tokenSymbol: 'LSRM',
       tokenName: 'Serum',
       icon:
         'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0x476c5E26a75bd202a9683ffD34359C0CC15be0fF/logo.png',

@@ -2,13 +2,24 @@ const nodeExternals = require('webpack-node-externals')
 const NodePolyfillPlugin = require('node-polyfill-webpack-plugin')
 const WebpackAssetsManifest = require('webpack-assets-manifest')
 const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
-const WebpackShellPluginNext = require('webpack-shell-plugin-next')
 
 const isDev = process.env.NODE_ENV !== 'production'
 
 const watch = isDev
 const mode = isDev ? 'development' : 'production'
 const devtool = isDev ? 'inline-source-map' : undefined
+
+const serverPlugins = isDev
+  ? [
+      new (require('webpack-shell-plugin-next'))({
+        onBuildEnd: {
+          scripts: ['nodemon dist/index.js'],
+          blocking: false,
+          parallel: true,
+        },
+      }),
+    ]
+  : []
 
 module.exports = [
   {
@@ -48,17 +59,7 @@ module.exports = [
         },
       ],
     },
-    plugins: isDev
-      ? [
-          new WebpackShellPluginNext({
-            onBuildEnd: {
-              scripts: ['nodemon dist/index.js'],
-              blocking: false,
-              parallel: true,
-            },
-          }),
-        ]
-      : [],
+    plugins: serverPlugins,
   },
   {
     // Client

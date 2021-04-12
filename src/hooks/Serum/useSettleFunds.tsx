@@ -29,12 +29,8 @@ export const useSettleFunds = (key: string): (() => Promise<void>) => {
   const [baseMintAddress, quoteMintAddress] = key?.split('-') ?? []
   const baseTokenAccounts = ownedTokenAccounts[baseMintAddress] ?? []
   const quoteTokenAccounts = ownedTokenAccounts[quoteMintAddress] ?? []
-  const { pubKey: baseTokenAccountAddress } = getHighestAccount(
-    baseTokenAccounts,
-  )
-  const { pubKey: quoteTokenAccountAddress } = getHighestAccount(
-    quoteTokenAccounts,
-  )
+  const { pubKey: baseTokenAccountKey } = getHighestAccount(baseTokenAccounts)
+  const { pubKey: quoteTokenAccountKey } = getHighestAccount(quoteTokenAccounts)
 
   return useCallback(async () => {
     const market = serumMarket?.market as Market | undefined
@@ -42,10 +38,10 @@ export const useSettleFunds = (key: string): (() => Promise<void>) => {
       const transaction = new Transaction()
       let signers = []
       let shouldRefreshTokenAccounts = false
-      let baseTokenAccountKey = new PublicKey(baseTokenAccountAddress)
-      let quoteTokenAccountKey = new PublicKey(quoteTokenAccountAddress)
+      let _baseTokenAccountKey = baseTokenAccountKey
+      let _quoteTokenAccountKey = quoteTokenAccountKey
 
-      if (!baseTokenAccountAddress) {
+      if (!_baseTokenAccountKey) {
         // Create a SPL Token account for this base account if the wallet doesn't have one
         const {
           transaction: createOptAccountTx,
@@ -59,11 +55,11 @@ export const useSettleFunds = (key: string): (() => Promise<void>) => {
 
         transaction.add(createOptAccountTx)
         signers.push(newTokenAccount)
-        baseTokenAccountKey = newTokenAccount.publicKey
+        _baseTokenAccountKey = newTokenAccount.publicKey
         shouldRefreshTokenAccounts = true
       }
 
-      if (!quoteTokenAccountAddress) {
+      if (!quoteTokenAccountKey) {
         // Create a SPL Token account for this quote account if the wallet doesn't have one
         const {
           transaction: createOptAccountTx,
@@ -77,7 +73,7 @@ export const useSettleFunds = (key: string): (() => Promise<void>) => {
 
         transaction.add(createOptAccountTx)
         signers.push(newTokenAccount)
-        quoteTokenAccountKey = newTokenAccount.publicKey
+        _quoteTokenAccountKey = newTokenAccount.publicKey
         shouldRefreshTokenAccounts = true
       }
 
@@ -87,8 +83,8 @@ export const useSettleFunds = (key: string): (() => Promise<void>) => {
       } = await market.makeSettleFundsTransaction(
         connection,
         openOrders[0],
-        baseTokenAccountKey,
-        quoteTokenAccountKey,
+        _baseTokenAccountKey,
+        _quoteTokenAccountKey,
       )
       transaction.add(settleTx)
       signers = [...signers, ...settleSigners]
@@ -131,13 +127,13 @@ export const useSettleFunds = (key: string): (() => Promise<void>) => {
     }
   }, [
     baseMintAddress,
-    baseTokenAccountAddress,
+    baseTokenAccountKey,
     connection,
     openOrders,
     pubKey,
     pushNotification,
     quoteMintAddress,
-    quoteTokenAccountAddress,
+    quoteTokenAccountKey,
     refreshTokenAccounts,
     serumMarket?.market,
     splTokenAccountRentBalance,

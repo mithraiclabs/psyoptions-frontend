@@ -28,7 +28,7 @@ export const useSerumFeeDiscountKey = (): {
     return {
       feeRates,
       publicKey: Object.keys(highestSRMAccount).length
-        ? new PublicKey(highestSRMAccount.pubKey)
+        ? highestSRMAccount.pubKey
         : null,
     }
   }, [ownedTokenAccounts, srmPublicKey])

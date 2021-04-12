@@ -79,15 +79,15 @@ const Mint = () => {
   }, [fetchMarketData])
 
   useEffect(() => {
-    setUAssetAccount(ownedUAssetAccounts[0]?.pubKey || '')
+    setUAssetAccount(ownedUAssetAccounts[0]?.pubKey)
   }, [ownedUAssetAccounts])
 
   useEffect(() => {
-    setMintedOptionAccount(ownedMintedOptionAccounts[0]?.pubKey || '')
+    setMintedOptionAccount(ownedMintedOptionAccounts[0]?.pubKey)
   }, [ownedMintedOptionAccounts])
 
   useEffect(() => {
-    setMintedWriterTokenDestKey(ownedWriterTokenMintAccounts[0]?.pubKey || '')
+    setMintedWriterTokenDestKey(ownedWriterTokenMintAccounts[0]?.pubKey)
   }, [ownedWriterTokenMintAccounts])
 
   const handleMint = async () => {
@@ -190,8 +190,8 @@ const Mint = () => {
                     value={uAssetAccount}
                     onChange={(e) => setUAssetAccount(e.target.value)}
                     options={ownedUAssetAccounts.map((acct) => ({
-                      value: acct.pubKey,
-                      text: `${truncatePublicKey(acct.pubKey)} (${
+                      value: acct.pubKey.toString(),
+                      text: `${truncatePublicKey(acct.pubKey.toString())} (${
                         acct.amount
                       } ${uAsset?.tokenSymbol})`,
                     }))}

@@ -334,7 +334,6 @@ const useOptionsMarkets = () => {
     size,
     price,
     uAssetAccount,
-    ownedUAssetAccounts,
     mintedOptionAccount,
     ownedMintedOptionAccounts,
     mintedWriterTokenDestKey,
@@ -343,13 +342,8 @@ const useOptionsMarkets = () => {
     const uAssetSymbol = uAsset.tokenSymbol
     const qAssetSymbol = qAsset.tokenSymbol
 
-    const marketData = markets[`${date}-${uAssetSymbol}-${qAssetSymbol}-${size}-${price}`]
-
-    // TODO - further optimization would be to remove the .find() here and just pass the whole object in
-    const uAssetBalance = new BigNumber(
-      ownedUAssetAccounts.find((asset) => asset.pubKey === uAssetAccount)
-        ?.amount || 0,
-    )
+    const marketData =
+      markets[`${date}-${uAssetSymbol}-${qAssetSymbol}-${size}-${price}`]
 
     // Fallback to first oowned minted option account
     const mintedOptionDestAddress =
@@ -361,20 +355,10 @@ const useOptionsMarkets = () => {
       owner: pubKey,
       market: marketData,
       uAsset,
-      uAssetTokenAccount: uAssetAccount
-        ? {
-            amount: uAssetBalance,
-            mint: new PublicKey(uAsset.mintAddress),
-            pubKey: uAssetAccount,
-          }
-        : undefined,
+      uAssetTokenAccount: uAssetAccount,
       splTokenAccountRentBalance,
-      mintedOptionDestinationKey: mintedOptionDestAddress
-        ? new PublicKey(mintedOptionDestAddress)
-        : undefined,
-      writerTokenDestinationKey: writerTokenDestAddress
-        ? new PublicKey(writerTokenDestAddress)
-        : undefined,
+      mintedOptionDestinationKey: mintedOptionDestAddress,
+      writerTokenDestinationKey: writerTokenDestAddress,
       numberOfContractsToMint: numberOfContracts,
     })
     if (error) {

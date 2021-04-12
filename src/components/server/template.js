@@ -1,6 +1,6 @@
 import React from 'react'
 import theme from '../../utils/theme'
-import favicon from '../../../assets/psyoptions-logo-secondary.png'
+import favicon from '../../../assets/psyoptions-logo-small.png'
 
 const baseCss = `
   * {

@@ -214,6 +214,8 @@ const Landing = () => {
                 color="primary"
                 variant="outlined"
                 style={{ whiteSpace: 'nowrap' }}
+                href="https://docs.psyoptions.io"
+                target="_blank"
               >
                 Read Docs
               </Button>

@@ -61,7 +61,8 @@ class SolongWalletAdapter extends EventEmitter implements WalletAdapter {
     }
 
     if (window.solong === undefined) {
-      throw new Error('Solong wallet not detected')
+      window.open('https://solongwallet.com/', '_blank')
+      return
     }
 
     this._onProcess = true
@@ -92,9 +93,6 @@ class SolongWalletAdapter extends EventEmitter implements WalletAdapter {
 const adapter = new SolongWalletAdapter()
 
 const getAdapter = (): WalletAdapter | undefined => {
-  if (isNode || !window.solong) {
-    return undefined
-  }
   return adapter
 }
 

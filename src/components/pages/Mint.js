@@ -17,7 +17,9 @@ import useOwnedTokenAccounts from '../../hooks/useOwnedTokenAccounts'
 import useNotifications from '../../hooks/useNotifications'
 import useAssetList from '../../hooks/useAssetList'
 import { WRAPPED_SOL_ADDRESS } from '../../utils/token'
-import { useOptionMarket } from '../../hooks/useOptionMarket';
+import { useOptionMarket } from '../../hooks/useOptionMarket'
+
+import ConnectButton from '../ConnectButton'
 
 const darkBorder = `1px solid ${theme.palette.background.main}`
 
@@ -25,7 +27,7 @@ const expirations = getLastFridayOfMonths(10)
 
 const Mint = () => {
   const { pushNotification } = useNotifications()
-  const { connect, connected } = useWallet()
+  const { connected } = useWallet()
   const {
     getStrikePrices,
     getSizes,
@@ -44,7 +46,7 @@ const Mint = () => {
   const [mintedOptionAccount, setMintedOptionAccount] = useState('')
   const [mintedWriterTokenDestKey, setMintedWriterTokenDestKey] = useState('')
   const [loading, setLoading] = useState(false)
-  
+
   const allParams = {
     date: date.unix(),
     uAssetSymbol: uAsset?.tokenSymbol,
@@ -53,7 +55,7 @@ const Mint = () => {
     price,
   }
   const marketData = useOptionMarket(allParams)
-  
+
   const contractSizes = getSizes(allParams)
   const strikePrices = getStrikePrices(allParams).sort((a, b) => a - b)
 
@@ -264,18 +266,24 @@ const Mint = () => {
                   <CircularProgress />
                 </Box>
               ) : marketData ? (
-                <Button
-                  fullWidth
-                  variant="outlined"
-                  color="primary"
-                  onClick={connected ? handleMint : connect}
-                >
-                  <Box py={1}>
-                    {connected
-                      ? `Mint (${size} ${uAsset?.tokenSymbol} @ ${price} ${qAsset?.tokenSymbol}/${uAsset?.tokenSymbol})`
-                      : 'Connect Wallet To Mint'}
-                  </Box>
-                </Button>
+                <>
+                  {!connected ? (
+                    <ConnectButton fullWidth>
+                      <Box py={1}>Connect Wallet To Mint</Box>
+                    </ConnectButton>
+                  ) : (
+                    <Button
+                      fullWidth
+                      variant="outlined"
+                      color="primary"
+                      onClick={handleMint}
+                    >
+                      <Box py={1}>
+                        {`Mint (${size} ${uAsset?.tokenSymbol} @ ${price} ${qAsset?.tokenSymbol}/${uAsset?.tokenSymbol})`}
+                      </Box>
+                    </Button>
+                  )}
+                </>
               ) : (
                 <Button fullWidth variant="outlined" color="primary" disabled>
                   <Box py={1}>Select Parameters to Mint</Box>

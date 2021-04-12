@@ -20,7 +20,9 @@ import {
   useSPLTokenMintInfo,
   useSubscribeSPLTokenMint,
 } from '../../../hooks/SPLToken'
-import { useOptionMarket } from '../../../hooks/useOptionMarket';
+import { useOptionMarket } from '../../../hooks/useOptionMarket'
+
+import ConnectButton from '../../ConnectButton'
 
 const TCell = withStyles({
   root: {
@@ -145,9 +147,7 @@ const CallPutRow = ({
         ) : loading.call ? (
           <CircularProgress size={32} />
         ) : !connected ? (
-          <Button variant="outlined" color="primary" p="8px" onClick={connect}>
-            Connect
-          </Button>
+          <ConnectButton>Connect</ConnectButton>
         ) : row.call?.initialized ? (
           <Button
             variant="outlined"

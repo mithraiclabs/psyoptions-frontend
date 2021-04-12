@@ -1,10 +1,19 @@
 import React from 'react'
 import { Dialog, Box, Button } from '@material-ui/core'
+import { makeStyles } from '@material-ui/core/styles'
 
 import wallets from '../utils/wallet/wallets'
 import useWallet from '../hooks/useWallet'
 
+const useStyles = makeStyles({
+  icon: {
+    width: '32px',
+    height: '32px',
+  },
+})
+
 const WalletSelect = ({ open, onClose, handleConnect }) => {
+  const classes = useStyles()
   const { pubKey, connected, disconnect } = useWallet()
 
   return (
@@ -49,11 +58,20 @@ const WalletSelect = ({ open, onClose, handleConnect }) => {
                         }
                       >
                         <Box
+                          width="100%"
                           display="flex"
                           flexDirection="row"
                           justifyContent="space-between"
+                          alignItems="center"
                         >
                           <Box>{wallet.name}</Box>
+                          <Box>
+                            <img
+                              src={wallet.icon}
+                              alt={`${wallet.name} icon`}
+                              className={classes.icon}
+                            />
+                          </Box>
                         </Box>
                       </Button>
                     </Box>

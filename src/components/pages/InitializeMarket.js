@@ -23,7 +23,9 @@ import useSerumMarketInfo from '../../hooks/useSerumMarketInfo'
 import { generateStrikePrices } from '../../utils/generateStrikePrices'
 import { getLastFridayOfMonths } from '../../utils/dates'
 import useAssetList from '../../hooks/useAssetList'
-import { useOptionMarket } from '../../hooks/useOptionMarket';
+import { useOptionMarket } from '../../hooks/useOptionMarket'
+
+import ConnectButton from '../ConnectButton'
 
 const darkBorder = `1px solid ${theme.palette.background.main}`
 
@@ -31,7 +33,7 @@ const expirations = getLastFridayOfMonths(10)
 
 const InitializeMarket = () => {
   const { pushNotification } = useNotifications()
-  const { connect, connected } = useWallet()
+  const { connected } = useWallet()
   const { initializeMarkets } = useOptionsMarkets()
   const [multiple, setMultiple] = useState(false)
   const [basePrice, setBasePrice] = useState(0)
@@ -69,7 +71,7 @@ const InitializeMarket = () => {
     size,
     price: strikePrices[0],
   })
-  const canInitialize = !market;
+  const canInitialize = !market
 
   const assetsSelected = uAsset && qAsset
   const parametersValid = size && !Number.isNaN(size) && strikePrices.length > 0
@@ -249,18 +251,22 @@ const InitializeMarket = () => {
                 <CircularProgress />
               </Box>
             ) : canInitialize && assetsSelected && parametersValid ? (
-              <Button
-                fullWidth
-                variant="outlined"
-                color="primary"
-                onClick={connected ? handleInitialize : connect}
-              >
-                <Box py={1}>
-                  {connected
-                    ? 'Initialize Market'
-                    : 'Connect Wallet To Initialize'}
-                </Box>
-              </Button>
+              <>
+                {!connected ? (
+                  <ConnectButton fullWidth>
+                    <Box py={1}>Connect Wallet To Initialize</Box>
+                  </ConnectButton>
+                ) : (
+                  <Button
+                    fullWidth
+                    variant="outlined"
+                    color="primary"
+                    onClick={handleInitialize}
+                  >
+                    <Box py={1}>Initialize Market</Box>
+                  </Button>
+                )}
+              </>
             ) : (
               <Button fullWidth variant="outlined" color="primary" disabled>
                 <Box py={1}>

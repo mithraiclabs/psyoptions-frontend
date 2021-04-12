@@ -83,3 +83,6 @@ DEV cloud run url: https://solana-options-frontend-ckpgwptysa-uc.a.run.app/
 ### Deploying the app to dev and prod:
 
 See <a href="https://github.com/mithraiclabs/solana-options-frontend/blob/master/docs/Deploying.md">Deploy Docs</a>
+
+### Troubleshooting
+If a build fails in google cloud, you can run `npm run build-docker` locally to simulate a cloud build and debug errors.

@@ -2,11 +2,13 @@ const nodeExternals = require('webpack-node-externals')
 const NodePolyfillPlugin = require('node-polyfill-webpack-plugin')
 const WebpackAssetsManifest = require('webpack-assets-manifest')
 const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
+const WebpackShellPluginNext = require('webpack-shell-plugin-next')
 
-const watch = process.env.NODE_ENV !== 'production'
-const mode =
-  process.env.NODE_ENV === 'production' ? 'production' : 'development'
-const devtool = process.env.NODE_ENV !== 'production' ? 'inline-source-map' : undefined
+const isDev = process.env.NODE_ENV !== 'production'
+
+const watch = isDev
+const mode = isDev ? 'development' : 'production'
+const devtool = isDev ? 'inline-source-map' : undefined
 
 module.exports = [
   {
@@ -15,7 +17,7 @@ module.exports = [
     watch,
     mode,
     resolve: {
-      extensions: ['.ts', '.tsx', '.js']
+      extensions: ['.ts', '.tsx', '.js'],
     },
     output: {
       filename: 'index.js',
@@ -46,6 +48,17 @@ module.exports = [
         },
       ],
     },
+    plugins: isDev
+      ? [
+          new WebpackShellPluginNext({
+            onBuildEnd: {
+              scripts: ['nodemon dist/index.js'],
+              blocking: false,
+              parallel: true,
+            },
+          }),
+        ]
+      : [],
   },
   {
     // Client
@@ -54,7 +67,7 @@ module.exports = [
     watch,
     mode,
     resolve: {
-      extensions: ['.ts', '.tsx', '.js']
+      extensions: ['.ts', '.tsx', '.js'],
     },
     output: {
       filename: 'public/bundle.[chunkhash].js',

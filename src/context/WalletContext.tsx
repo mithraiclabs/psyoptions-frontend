@@ -8,7 +8,6 @@ const WalletContext = createContext({})
 const WalletProvider: React.FC = ({ children }) => {
   const { connection } = useConnection()
   const [loading, setLoading] = useState(false)
-  const [url, setUrl] = useState('https://www.sollet.io')
   const [wallet, setWallet] = useState()
   const [connected, setConnected] = useState(false)
   const [pubKey, setPubKey] = useState<PublicKey | null>(null)
@@ -48,14 +47,12 @@ const WalletProvider: React.FC = ({ children }) => {
     balance,
     loading,
     setLoading,
-    url,
-    setUrl,
     wallet,
     setWallet,
     connected,
     setConnected,
     pubKey,
-    setPubKey,
+    setPubKey
   }
 
   return (

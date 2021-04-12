@@ -8,6 +8,7 @@
     "isolatedModules": true /* Transpile each file as a separate module (similar to 'ts.transpileModule'). */,
     "jsx": "react" /* Specify JSX code generation: 'preserve', 'react-native', or 'react'. */,
     "lib": [
+      "dom",
       "es6",
       "ES2020"
     ] /* Specify library files to be included in the compilation. */,

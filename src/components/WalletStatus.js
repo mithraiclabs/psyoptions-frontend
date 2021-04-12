@@ -1,29 +1,18 @@
 import React from 'react'
 import Brightness1 from '@material-ui/icons/Brightness1'
 import Box from '@material-ui/core/Box'
-import Button from '@material-ui/core/Button'
 
 import useWallet from '../hooks/useWallet'
 import theme from '../utils/theme'
 
-const WalletStatus = () => {
-  const { pubKey, connect, connected } = useWallet()
+import ConnectButton from './ConnectButton'
 
+const WalletStatus = () => {
+  const { pubKey, connected } = useWallet()
   const pubKeyB58 = pubKey && pubKey.toBase58 && pubKey.toBase58().slice(0, 5)
 
-  const handleConnect = () => {
-    if (!connected) {
-      connect()
-    }
-  }
-
   return (
-    <Button
-      color="primary"
-      onClick={handleConnect}
-      variant="outlined"
-      style={{ whiteSpace: 'nowrap' }}
-    >
+    <ConnectButton>
       <Box pr={2}>
         <Brightness1
           style={{
@@ -35,7 +24,7 @@ const WalletStatus = () => {
         />
       </Box>
       {connected ? `Connected ${pubKeyB58}...` : 'Connect Wallet'}
-    </Button>
+    </ConnectButton>
   )
 }
 

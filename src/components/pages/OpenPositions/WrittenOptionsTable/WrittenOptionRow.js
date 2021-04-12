@@ -33,17 +33,17 @@ export const WrittenOptionRow = ({
   const market = markets[marketKey]
   // TODO handle multiple wallets for the same Writer Token
   const initialWriterTokenAccount = writerTokenAccounts[0]
-  const ownedUAssetAddress = ownedTokenAccounts[market.uAssetMint]?.[0]?.pubKey
-  const ownedQAssetAddress = ownedTokenAccounts[market.qAssetMint]?.[0]?.pubKey
+  const ownedUAssetKey = ownedTokenAccounts[market.uAssetMint]?.[0]?.pubKey
+  const ownedQAssetKey = ownedTokenAccounts[market.qAssetMint]?.[0]?.pubKey
   const { closeOptionPostExpiration } = useCloseWrittenOptionPostExpiration(
     market,
-    ownedUAssetAddress,
+    ownedUAssetKey,
     initialWriterTokenAccount.pubKey,
   )
   const { exchangeWriterTokenForQuote } = useExchangeWriterTokenForQuote(
     market,
     initialWriterTokenAccount.pubKey,
-    ownedQAssetAddress,
+    ownedQAssetKey,
   )
   const holdsContracts = !!heldContracts.length
   // TODO handle multiple wallets for same Option Token
@@ -52,7 +52,7 @@ export const WrittenOptionRow = ({
     market,
     // initialOptionTokenAccount can be undefined if there are no held contracts
     initialOptionTokenAccount?.pubKey,
-    ownedUAssetAddress,
+    ownedUAssetKey,
     initialWriterTokenAccount.pubKey,
   )
 

@@ -274,7 +274,7 @@ const BuySellDialog = ({
     setPlaceOrderLoading(true)
     try {
       const numberOfContracts = parsedOrderSize - openPositionSize
-      const optionTokenAddress = getHighestAccount(optionAccounts)?.pubKey
+      const optionTokenKey = getHighestAccount(optionAccounts)?.pubKey
       const underlyingAssetSrcKey = getHighestAccount(uAssetAccounts)?.pubKey
       const writerTokenDestinationKey = getHighestAccount(writerAccounts)
         ?.pubKey
@@ -285,7 +285,7 @@ const BuySellDialog = ({
         orderArgs: {
           owner: pubKey,
           // For Serum, the payer is really the account of the asset being sold
-          payer: optionTokenAddress,
+          payer: optionTokenKey,
           side: 'sell',
           // Serum-ts handles adding the SPL Token decimals via their
           //  `maket.priceNumberToLots` function
@@ -319,7 +319,7 @@ const BuySellDialog = ({
           ),
           mint: new PublicKey(uAssetMint),
         },
-        mintedOptionDestinationKey: optionTokenAddress,
+        mintedOptionDestinationKey: optionTokenKey,
         writerTokenDestinationKey,
       })
       setPlaceOrderLoading(false)
@@ -339,17 +339,17 @@ const BuySellDialog = ({
     try {
       const serumQuoteTokenAccounts =
         ownedTokenAccounts[serum.market._decoded.quoteMint.toString()] || []
-      const serumQuoteTokenAddress = getHighestAccount(serumQuoteTokenAccounts)
+      const serumQuoteTokenKey = getHighestAccount(serumQuoteTokenAccounts)
         ?.pubKey
-      const optionTokenAddress = getHighestAccount(optionAccounts)?.pubKey
+      const optionTokenKey = getHighestAccount(optionAccounts)?.pubKey
       await placeBuyOrder({
         optionMarket,
         serumMarket: serum,
-        optionDestinationKey: optionTokenAddress,
+        optionDestinationKey: optionTokenKey,
         orderArgs: {
           owner: pubKey,
           // For Serum, the payer is really the account of the asset being sold
-          payer: serumQuoteTokenAddress || null,
+          payer: serumQuoteTokenKey || null,
           side: 'buy',
           // Serum-ts handles adding the SPL Token decimals via their
           //  `maket.priceNumberToLots` function

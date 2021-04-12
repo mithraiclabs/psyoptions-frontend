@@ -42,7 +42,9 @@ const OwnedTokenAccountsProvider: React.FC = ({ children }) => {
   const { connection } = useConnection()
   const { connected, pubKey } = useWallet()
   const [loadingOwnedTokenAccounts, setLoading] = useState(false)
-  const [ownedTokenAccounts, setOwnedTokenAccounts] = useState({})
+  const [ownedTokenAccounts, setOwnedTokenAccounts] = useState<
+    Record<string, TokenAccount[]>
+  >({})
   const [refreshCount, setRefreshCount] = useState(0)
   const refreshTokenAccounts = useCallback(() => {
     setRefreshCount((count) => count + 1)
@@ -90,7 +92,7 @@ const OwnedTokenAccountsProvider: React.FC = ({ children }) => {
             const mintAsString = listenerAccount.mint.toString()
             const prevMintState = prevOwnedTokenAccounts[mintAsString]
             const index = prevMintState.findIndex(
-              (prevAccount) => prevAccount.pubKey === pubkey,
+              (prevAccount) => prevAccount.pubKey.toString() === pubkey,
             )
             // replace prev state with updated state
             const mintState = Object.assign([], prevMintState, {

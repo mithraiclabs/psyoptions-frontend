@@ -12,7 +12,8 @@ const networks = [
   },
   {
     name: 'Devnet',
-    url: clusterApiUrl('devnet'),
+    // url: clusterApiUrl('devnet'),
+    url: 'https://devnet.psyoptions.io',
     programId: process.env.DEVNET_PROGRAM_ID,
   },
   {

@@ -23,7 +23,10 @@ export const useSettleFunds = (key: string): (() => Promise<void>) => {
   const { serumMarkets } = useSerum()
   const { splTokenAccountRentBalance } = useSolanaMeta()
   const { wallet, pubKey } = useWallet()
-  const { ownedTokenAccounts, refreshTokenAccounts } = useOwnedTokenAccounts()
+  const {
+    ownedTokenAccounts,
+    subscribeToTokenAccount,
+  } = useOwnedTokenAccounts()
   const openOrders = useSerumOpenOrderAccounts(key, true)
   const serumMarket = serumMarkets[key]?.serumMarket
   const [baseMintAddress, quoteMintAddress] = key?.split('-') ?? []
@@ -37,7 +40,6 @@ export const useSettleFunds = (key: string): (() => Promise<void>) => {
     if (openOrders.length && market) {
       const transaction = new Transaction()
       let signers = []
-      let shouldRefreshTokenAccounts = false
       let _baseTokenAccountKey = baseTokenAccountKey
       let _quoteTokenAccountKey = quoteTokenAccountKey
 
@@ -56,7 +58,7 @@ export const useSettleFunds = (key: string): (() => Promise<void>) => {
         transaction.add(createOptAccountTx)
         signers.push(newTokenAccount)
         _baseTokenAccountKey = newTokenAccount.publicKey
-        shouldRefreshTokenAccounts = true
+        subscribeToTokenAccount(newTokenAccount.publicKey)
       }
 
       if (!quoteTokenAccountKey) {
@@ -74,7 +76,7 @@ export const useSettleFunds = (key: string): (() => Promise<void>) => {
         transaction.add(createOptAccountTx)
         signers.push(newTokenAccount)
         _quoteTokenAccountKey = newTokenAccount.publicKey
-        shouldRefreshTokenAccounts = true
+        subscribeToTokenAccount(newTokenAccount.publicKey)
       }
 
       const {
@@ -111,10 +113,6 @@ export const useSettleFunds = (key: string): (() => Promise<void>) => {
 
       await connection.confirmTransaction(txid)
 
-      if (shouldRefreshTokenAccounts) {
-        refreshTokenAccounts()
-      }
-
       pushNotification({
         severity: NotificationSeverity.SUCCESS,
         message: 'Confirmed: Settle funds',
@@ -134,9 +132,9 @@ export const useSettleFunds = (key: string): (() => Promise<void>) => {
     pushNotification,
     quoteMintAddress,
     quoteTokenAccountKey,
-    refreshTokenAccounts,
     serumMarket?.market,
     splTokenAccountRentBalance,
+    subscribeToTokenAccount,
     wallet,
   ])
 }

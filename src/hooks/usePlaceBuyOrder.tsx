@@ -27,10 +27,7 @@ const usePlaceBuyOrder = (
   const { wallet, pubKey } = useWallet()
   const { connection } = useConnection()
   const { splTokenAccountRentBalance } = useSolanaMeta()
-  // Not happy about this, but it keeps TS from yelling
-  const { refreshTokenAccounts } = useOwnedTokenAccounts() as {
-    refreshTokenAccounts: () => void
-  }
+  const { subscribeToTokenAccount } = useOwnedTokenAccounts()
   const createAdHocOpenOrdersSub = useCreateAdHocOpenOrdersSubscription(
     serumKey,
   )
@@ -45,7 +42,6 @@ const usePlaceBuyOrder = (
       const transaction = new Transaction()
       let signers = []
       const _optionDestinationKey = optionDestinationKey
-      let shouldRefreshTokenAccounts = false
 
       if (!_optionDestinationKey) {
         // Create a SPL Token account for this option market if the wallet doesn't have one
@@ -61,7 +57,7 @@ const usePlaceBuyOrder = (
 
         transaction.add(createOptAccountTx)
         signers.push(newTokenAccount)
-        shouldRefreshTokenAccounts = true
+        subscribeToTokenAccount(newTokenAccount.publicKey)
       }
       // place the buy order
       const {
@@ -100,10 +96,6 @@ const usePlaceBuyOrder = (
 
       await connection.confirmTransaction(txid)
 
-      if (shouldRefreshTokenAccounts) {
-        refreshTokenAccounts()
-      }
-
       pushNotification({
         severity: NotificationSeverity.SUCCESS,
         message: 'Confirmed: Buy contracts',
@@ -119,8 +111,8 @@ const usePlaceBuyOrder = (
       createAdHocOpenOrdersSub,
       pubKey,
       pushNotification,
-      refreshTokenAccounts,
       splTokenAccountRentBalance,
+      subscribeToTokenAccount,
       wallet,
     ],
   )

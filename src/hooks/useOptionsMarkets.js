@@ -11,7 +11,6 @@ import useNotifications from './useNotifications'
 import useWallet from './useWallet'
 import useConnection from './useConnection'
 import useAssetList from './useAssetList'
-import useOwnedTokenAccounts from './useOwnedTokenAccounts'
 
 import { OptionsMarketsContext } from '../context/OptionsMarketsContext'
 
@@ -45,7 +44,6 @@ const useOptionsMarkets = () => {
   const { pushNotification } = useNotifications()
   const { wallet, pubKey } = useWallet()
   const { connection, endpoint } = useConnection()
-  const { refreshTokenAccounts } = useOwnedTokenAccounts()
   const { splTokenAccountRentBalance } = useSolanaMeta()
   const { markets, setMarkets, marketsLoading, setMarketsLoading } = useContext(
     OptionsMarketsContext,
@@ -256,7 +254,6 @@ const useOptionsMarkets = () => {
     underlyingAssetSrcKey, // account in user's wallet to post uAsset collateral from
     writerTokenDestKey, // address in user's wallet to send the minted Writer Token
     existingTransaction: { transaction, signers }, // existing transaction and signers
-    shouldRefreshTokenAccounts,
     numberOfContracts,
   }) => {
     const tx = transaction
@@ -306,10 +303,6 @@ const useOptionsMarkets = () => {
     })
 
     await connection.confirmTransaction(txid)
-
-    if (shouldRefreshTokenAccounts) {
-      refreshTokenAccounts()
-    }
 
     pushNotification({
       severity: 'success',
@@ -368,7 +361,6 @@ const useOptionsMarkets = () => {
     const {
       transaction,
       signers,
-      shouldRefreshTokenAccounts,
       mintedOptionDestinationKey,
       writerTokenDestinationKey,
       uAssetTokenAccount,
@@ -380,7 +372,6 @@ const useOptionsMarkets = () => {
       underlyingAssetSrcKey: uAssetTokenAccount.pubKey,
       writerTokenDestKey: writerTokenDestinationKey,
       existingTransaction: { transaction, signers },
-      shouldRefreshTokenAccounts,
       numberOfContracts,
     })
   }

@@ -106,7 +106,7 @@ export const WrittenOptionRow = ({
             color="primary"
             variant="outlined"
             onClick={exchangeWriterTokenForQuote}
-            style={holdsContracts && { marginLeft: 8 }}
+            style={{ marginLeft: holdsContracts ? 8 : 0 }}
           />
         )}
       </Box>
@@ -138,7 +138,7 @@ const TokenAccounts = PropTypes.arrayOf(
     // supplied to `WrittenOptionRow`, expected instance of `PublicKey`
     amount: PropTypes.number.isRequired,
     mint: PropTypes.object.isRequired,
-    pubKey: PropTypes.string.isRequired,
+    pubKey: PropTypes.object.isRequired,
   }).isRequired,
 ).isRequired
 

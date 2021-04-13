@@ -57,7 +57,6 @@ export type Result<T, E> = {
 export type InstructionResponse = {
   transaction: Transaction
   signers: Account[]
-  shouldRefreshTokenAccounts?: boolean
 }
 export interface CreateNewTokenAccountResponse extends InstructionResponse {
   newTokenAccount: Account

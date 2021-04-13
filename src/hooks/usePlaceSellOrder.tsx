@@ -45,10 +45,7 @@ const usePlaceSellOrder = (
   const { wallet, pubKey } = useWallet()
   const { connection, endpoint } = useConnection()
   const { splTokenAccountRentBalance } = useSolanaMeta()
-  // Not happy about this, but it keeps TS from yelling
-  const { refreshTokenAccounts } = useOwnedTokenAccounts() as {
-    refreshTokenAccounts: () => void
-  }
+  const { subscribeToTokenAccount } = useOwnedTokenAccounts()
   const createAdHocOpenOrdersSub = useCreateAdHocOpenOrdersSubscription(
     serumKey,
   )
@@ -69,7 +66,6 @@ const usePlaceSellOrder = (
       let _uAssetTokenAccount = uAssetTokenAccount
       let _optionTokenSrcKey = mintedOptionDestinationKey
       let _writerTokenDestinationKey = writerTokenDestinationKey
-      let shouldRefreshTokenAccounts = false
       let numberOfContractsDistribution
 
       // Mint and place order
@@ -109,6 +105,7 @@ const usePlaceSellOrder = (
             writerTokenDestinationKey: _writerTokenDestinationKey,
           })
           if (error) {
+            // eslint-disable-next-line no-console
             console.error(error)
             pushNotification(error)
             return
@@ -116,12 +113,13 @@ const usePlaceSellOrder = (
           const {
             transaction: createAndMintTx,
             signers: createAndMintSigners,
-            shouldRefreshTokenAccounts: _shouldRefreshTokenAccounts,
             mintedOptionDestinationKey: _mintedOptionDestinationKey,
             writerTokenDestinationKey: __writerTokenDestinationKey,
             uAssetTokenAccount: __uAssetTokenAccount,
           } = response
           _uAssetTokenAccount = __uAssetTokenAccount
+          subscribeToTokenAccount(__writerTokenDestinationKey)
+          subscribeToTokenAccount(_mintedOptionDestinationKey)
 
           // Add the create accounts and mint instructions to the TX
           tx.add(createAndMintTx)
@@ -130,7 +128,6 @@ const usePlaceSellOrder = (
           // option(s) were minted to a new Account
           _optionTokenSrcKey = _mintedOptionDestinationKey
           _writerTokenDestinationKey = __writerTokenDestinationKey
-          shouldRefreshTokenAccounts = _shouldRefreshTokenAccounts
 
           // Close out the wrapped SOL account so it feels native
           if (optionMarket.uAssetMint === WRAPPED_SOL_ADDRESS) {
@@ -296,10 +293,6 @@ const usePlaceSellOrder = (
           </Link>
         ),
       })
-
-      if (shouldRefreshTokenAccounts) {
-        refreshTokenAccounts()
-      }
     },
     [
       connection,
@@ -307,8 +300,8 @@ const usePlaceSellOrder = (
       endpoint.programId,
       pubKey,
       pushNotification,
-      refreshTokenAccounts,
       splTokenAccountRentBalance,
+      subscribeToTokenAccount,
       wallet,
     ],
   )

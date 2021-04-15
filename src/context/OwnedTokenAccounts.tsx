@@ -1,4 +1,10 @@
-import React, { createContext, useCallback, useEffect, useState } from 'react'
+import React, {
+  createContext,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react'
 import { AccountLayout, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { PublicKey } from '@solana/web3.js'
 import bs58 from 'bs58'
@@ -6,7 +12,21 @@ import useConnection from '../hooks/useConnection'
 import useWallet from '../hooks/useWallet'
 import { TokenAccount } from '../types'
 
-const OwnedTokenAccountsContext = createContext({})
+export type OwnedTokenAccountsContextT = {
+  loadingOwnedTokenAccounts: boolean
+  ownedTokenAccounts: Record<string, TokenAccount[]>
+  refreshTokenAccounts: () => void
+  subscribeToTokenAccount: (pk: PublicKey) => void
+}
+
+export const OwnedTokenAccountsContext = createContext<OwnedTokenAccountsContextT>(
+  {
+    loadingOwnedTokenAccounts: false,
+    ownedTokenAccounts: {},
+    refreshTokenAccounts: () => {},
+    subscribeToTokenAccount: () => {},
+  },
+)
 
 const getOwnedTokenAccountsFilter = (publicKey) => [
   {
@@ -22,7 +42,7 @@ const getOwnedTokenAccountsFilter = (publicKey) => [
 
 const convertAccountInfoToLocalStruct = (
   _accountInfo,
-  pubkey,
+  pubkey: PublicKey,
 ): TokenAccount => {
   const amountBuffer = Buffer.from(_accountInfo.amount)
   const amount = amountBuffer.readUIntLE(0, 8)
@@ -30,15 +50,16 @@ const convertAccountInfoToLocalStruct = (
     amount,
     mint: new PublicKey(_accountInfo.mint),
     // public key for the specific token account (NOT the wallet)
-    pubKey: new PublicKey(pubkey),
+    pubKey: pubkey,
   }
 }
 
 /**
- * State for the Wallet's SPL accounts and solana account
+ * State for the Wallet's SPL accounts and solana account.
  *
+ * Fetches and subscribes to all of the user's SPL Tokens on mount
  */
-const OwnedTokenAccountsProvider: React.FC = ({ children }) => {
+export const OwnedTokenAccountsProvider: React.FC = ({ children }) => {
   const { connection } = useConnection()
   const { connected, pubKey } = useWallet()
   const [loadingOwnedTokenAccounts, setLoading] = useState(false)
@@ -46,17 +67,73 @@ const OwnedTokenAccountsProvider: React.FC = ({ children }) => {
     Record<string, TokenAccount[]>
   >({})
   const [refreshCount, setRefreshCount] = useState(0)
+  const subscriptionsRef = useRef<Record<string, number>>({})
   const refreshTokenAccounts = useCallback(() => {
     setRefreshCount((count) => count + 1)
   }, [])
 
+  /**
+   * Subscribes to the Public Key of a Token Account if it's not currently
+   * subscribed to
+   */
+  const subscribeToTokenAccount = useCallback(
+    (publicKey: PublicKey) => {
+      if (subscriptionsRef.current[publicKey.toString()]) {
+        // short circuit if a subscription already exists
+        return
+      }
+      const subscriptionId = connection.onAccountChange(
+        publicKey,
+        (_account) => {
+          const listenerAccountInfo = AccountLayout.decode(_account.data)
+          const listenerAccount = convertAccountInfoToLocalStruct(
+            listenerAccountInfo,
+            publicKey,
+          )
+          setOwnedTokenAccounts((prevOwnedTokenAccounts) => {
+            const mintAsString = listenerAccount.mint.toString()
+            const prevMintState = prevOwnedTokenAccounts[mintAsString]
+            let index = prevMintState?.findIndex((prevAccount) =>
+              prevAccount.pubKey.equals(publicKey),
+            )
+            // index may be -1 if the Token Account does not yet exist in our state.
+            // In this case, we must set the index to 0 so it will be at the beginning of the array.
+            if (index == null || index < 0) {
+              index = 0
+            }
+            // replace prev state with updated state
+            const mintState = Object.assign([], prevMintState, {
+              [index]: listenerAccount,
+            })
+            return {
+              ...prevOwnedTokenAccounts,
+              [mintAsString]: mintState,
+            }
+          })
+        },
+      )
+      subscriptionsRef.current[publicKey.toString()] = subscriptionId
+    },
+    [connection],
+  )
+
   useEffect(() => {
+    // Clean up subscriptions when component unmounts
+    return () => {
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      Object.values(subscriptionsRef.current).forEach(
+        connection.removeAccountChangeListener,
+      )
+    }
+  }, [connection.removeAccountChangeListener])
+
+  useEffect(() => {
+    // Fetch and subscribe to Token Account updates on mount
     if (!connected || !pubKey) {
       // short circuit when there is no wallet connected
-      return () => {}
+      return
     }
 
-    let subscriptionIds
     ;(async () => {
       const filters = getOwnedTokenAccountsFilter(pubKey)
       setLoading(true)
@@ -69,11 +146,11 @@ const OwnedTokenAccountsProvider: React.FC = ({ children }) => {
         },
       ])
       const _ownedTokenAccounts = {}
-      subscriptionIds = resp.result?.map(({ account, pubkey }) => {
+      resp.result?.forEach(({ account, pubkey }) => {
         const accountInfo = AccountLayout.decode(bs58.decode(account.data))
         const initialAccount = convertAccountInfoToLocalStruct(
           accountInfo,
-          pubkey,
+          new PublicKey(pubkey),
         )
         const mint = initialAccount.mint.toString()
         if (_ownedTokenAccounts[mint]) {
@@ -81,40 +158,15 @@ const OwnedTokenAccountsProvider: React.FC = ({ children }) => {
         } else {
           _ownedTokenAccounts[mint] = [initialAccount]
         }
-        // subscribe to the SPL token account updates
-        return connection.onAccountChange(new PublicKey(pubkey), (_account) => {
-          const listenerAccountInfo = AccountLayout.decode(_account.data)
-          const listenerAccount = convertAccountInfoToLocalStruct(
-            listenerAccountInfo,
-            pubkey,
-          )
-          setOwnedTokenAccounts((prevOwnedTokenAccounts) => {
-            const mintAsString = listenerAccount.mint.toString()
-            const prevMintState = prevOwnedTokenAccounts[mintAsString]
-            const index = prevMintState.findIndex(
-              (prevAccount) => prevAccount.pubKey.toString() === pubkey,
-            )
-            // replace prev state with updated state
-            const mintState = Object.assign([], prevMintState, {
-              [index]: listenerAccount,
-            })
-            return {
-              ...prevOwnedTokenAccounts,
-              [mintAsString]: mintState,
-            }
-          })
-        })
+        if (!subscriptionsRef.current[pubkey]) {
+          // Subscribe to the SPL token account updates only if no subscription exists for this token.
+          subscribeToTokenAccount(new PublicKey(pubkey))
+        }
       })
       setOwnedTokenAccounts(_ownedTokenAccounts)
       setLoading(false)
     })()
-
-    return () => {
-      if (subscriptionIds) {
-        subscriptionIds.forEach(connection.removeAccountChangeListener)
-      }
-    }
-  }, [connected, connection, pubKey, refreshCount])
+  }, [connected, connection, pubKey, refreshCount, subscribeToTokenAccount])
 
   return (
     <OwnedTokenAccountsContext.Provider
@@ -122,11 +174,10 @@ const OwnedTokenAccountsProvider: React.FC = ({ children }) => {
         loadingOwnedTokenAccounts,
         ownedTokenAccounts,
         refreshTokenAccounts,
+        subscribeToTokenAccount,
       }}
     >
       {children}
     </OwnedTokenAccountsContext.Provider>
   )
 }
-
-export { OwnedTokenAccountsContext, OwnedTokenAccountsProvider }

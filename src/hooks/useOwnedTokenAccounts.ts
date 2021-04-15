@@ -1,13 +1,10 @@
 import { useContext } from 'react'
-import { OwnedTokenAccountsContext } from '../context/OwnedTokenAccounts'
-import { TokenAccount } from '../types'
+import {
+  OwnedTokenAccountsContext,
+  OwnedTokenAccountsContextT,
+} from '../context/OwnedTokenAccounts'
 
-type OwnedTokenAccountsContext = {
-  loadingOwnedTokenAccounts: boolean
-  ownedTokenAccounts: Record<string, TokenAccount[]>
-  refreshTokenAccounts: () => void
-}
-const useOwnedTokenAccounts = (): OwnedTokenAccountsContext =>
-  useContext(OwnedTokenAccountsContext) as OwnedTokenAccountsContext
+const useOwnedTokenAccounts = (): OwnedTokenAccountsContextT =>
+  useContext(OwnedTokenAccountsContext)
 
 export default useOwnedTokenAccounts

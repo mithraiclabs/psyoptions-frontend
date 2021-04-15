@@ -38,7 +38,9 @@ export const WrittenOptionsTable = () => {
           <TableBody>
             {Object.keys(writtenOptions).map((marketKey) => {
               const market = markets[marketKey]
-              const heldContracts = positions[marketKey] ? positions[marketKey].filter(position => position.amount > 0) : [];
+              const heldContracts = positions[marketKey]
+                ? positions[marketKey].filter((position) => position.amount > 0)
+                : []
               return (
                 <WrittenOptionRow
                   expired={nowInSeconds > market.expiration}

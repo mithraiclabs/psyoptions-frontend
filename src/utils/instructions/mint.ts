@@ -46,7 +46,6 @@ export const createMissingMintAccounts = ({
   let _uAssetTokenAccount = uAssetTokenAccount
   let _mintedOptionDestinationKey = mintedOptionDestinationKey
   let _writerTokenDestinationKey = writerTokenDestinationKey
-  let shouldRefreshTokenAccounts = false
 
   if (!_uAssetTokenAccount && uAsset.mintAddress !== WRAPPED_SOL_ADDRESS) {
     // TODO - figure out how to distinguish between "a" vs "an" in this message
@@ -120,7 +119,6 @@ export const createMissingMintAccounts = ({
     tx.add(transaction)
     signers.push(newTokenAccount)
     _mintedOptionDestinationKey = newTokenAccount.publicKey
-    shouldRefreshTokenAccounts = true
   }
 
   if (!_writerTokenDestinationKey) {
@@ -134,14 +132,12 @@ export const createMissingMintAccounts = ({
     tx.add(transaction)
     signers.push(newTokenAccount)
     _writerTokenDestinationKey = newTokenAccount.publicKey
-    shouldRefreshTokenAccounts = true
   }
 
   return {
     response: {
       transaction: tx,
       signers,
-      shouldRefreshTokenAccounts,
       mintedOptionDestinationKey: _mintedOptionDestinationKey,
       writerTokenDestinationKey: _writerTokenDestinationKey,
       uAssetTokenAccount: _uAssetTokenAccount,
@@ -238,7 +234,6 @@ export const createMissingAccountsAndMint = async ({
   const {
     transaction: createAccountsTx,
     signers: createAccountsSigners,
-    shouldRefreshTokenAccounts,
     mintedOptionDestinationKey: _mintedOptionDestinationKey,
     writerTokenDestinationKey: _writerTokenDestinationKey,
     uAssetTokenAccount: _uAssetTokenAccount,
@@ -263,7 +258,6 @@ export const createMissingAccountsAndMint = async ({
     response: {
       transaction,
       signers,
-      shouldRefreshTokenAccounts,
       mintedOptionDestinationKey: _mintedOptionDestinationKey,
       writerTokenDestinationKey: _writerTokenDestinationKey,
       uAssetTokenAccount: _uAssetTokenAccount,

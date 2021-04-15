@@ -23,6 +23,7 @@ import {
 import { useOptionMarket } from '../../../hooks/useOptionMarket'
 
 import ConnectButton from '../../ConnectButton'
+import { getPriceFromSerumOrderbook } from '../../../utils/orderbook'
 
 const TCell = withStyles({
   root: {
@@ -63,9 +64,15 @@ const CallPutRow = ({
   const { serumMarkets } = useSerum()
   const { initializeMarkets } = useOptionsMarkets()
   const { orderbook: callOrderbook } = useSerumOrderbook(row.call?.serumKey)
-  const { orderbook: putOrderbook } = useSerumOrderbook(row.put?.serumKey)
   useSubscribeSerumOrderbook(row.call?.serumKey)
+  const { orderbook: putOrderbook } = useSerumOrderbook(row.put?.serumKey)
   useSubscribeSerumOrderbook(row.put?.serumKey)
+  const underlyingSerumMarketKey = `${uAsset.mintAddress}-${qAsset.mintAddress}`
+  const { orderbook: underlyingOrderbook } = useSerumOrderbook(
+    underlyingSerumMarketKey,
+  )
+  useSubscribeSerumOrderbook(underlyingSerumMarketKey)
+
   const callHighestBid = callOrderbook?.bids[0]?.price
   const callLowestAsk = callOrderbook?.asks[0]?.price
   const putHighestBid = putOrderbook?.bids[0]?.price
@@ -88,6 +95,7 @@ const CallPutRow = ({
   const putOptionMintInfo = useSPLTokenMintInfo(putMarket?.optionMintKey)
   useSubscribeSPLTokenMint(callMarket?.optionMintKey)
   useSubscribeSPLTokenMint(putMarket?.optionMintKey)
+  const price = getPriceFromSerumOrderbook(underlyingOrderbook)
 
   const [loading, setLoading] = useState({ call: false, put: false })
 
@@ -139,9 +147,16 @@ const CallPutRow = ({
     [uAsset, qAsset, initializeMarkets, date, row, pushNotification],
   )
 
+  const callCellStyle = row.strike?.lte(price)
+    ? { backgroundColor: theme.palette.background.light }
+    : undefined
+  const putCellStyle = row.strike?.gte(price)
+    ? { backgroundColor: theme.palette.background.light }
+    : undefined
+
   return (
     <TableRow hover role="checkbox" tabIndex={-1}>
-      <TCell align="left">
+      <TCell align="left" style={callCellStyle}>
         {row.call?.emptyRow ? (
           '—'
         ) : loading.call ? (
@@ -178,7 +193,7 @@ const CallPutRow = ({
           </Button>
         )}
       </TCell>
-      <TCell align="left">
+      <TCell align="left" style={callCellStyle}>
         {row.call?.size ? `${row.call.size} ${uAsset?.tokenSymbol || ''}` : '—'}
       </TCell>
       {row.call?.serumKey && serumMarkets[row.call?.serumKey]?.loading ? (
@@ -187,11 +202,19 @@ const CallPutRow = ({
         </TCellLoading>
       ) : (
         <>
-          <TCell align="left">{callHighestBid || '—'}</TCell>
-          <TCell align="left">{callLowestAsk || '—'}</TCell>
-          <TCell align="left">{row.call?.change || '—'}</TCell>
-          <TCell align="left">{row.call?.volume || '—'}</TCell>
-          <TCell align="left">
+          <TCell align="left" style={callCellStyle}>
+            {callHighestBid || '—'}
+          </TCell>
+          <TCell align="left" style={callCellStyle}>
+            {callLowestAsk || '—'}
+          </TCell>
+          <TCell align="left" style={callCellStyle}>
+            {row.call?.change || '—'}
+          </TCell>
+          <TCell align="left" style={callCellStyle}>
+            {row.call?.volume || '—'}
+          </TCell>
+          <TCell align="left" style={callCellStyle}>
             {callOptionMintInfo?.supply.toString() || '—'}
           </TCell>
         </>
@@ -208,7 +231,7 @@ const CallPutRow = ({
         <h4 style={{ margin: 0 }}>{formatStrike(row.strike, precision)}</h4>
       </TCell>
 
-      <TCell align="right">
+      <TCell align="right" style={putCellStyle}>
         {row.put?.size ? `${row.put.size} ${qAsset?.tokenSymbol || ''}` : '—'}
       </TCell>
       {row.put?.serumKey && serumMarkets[row.put?.serumKey]?.loading ? (
@@ -217,16 +240,24 @@ const CallPutRow = ({
         </TCellLoading>
       ) : (
         <>
-          <TCell align="left">{putHighestBid || '—'}</TCell>
-          <TCell align="left">{putLowestAsk || '—'}</TCell>
-          <TCell align="left">{row.put?.change || '—'}</TCell>
-          <TCell align="left">{row.put?.volume || '—'}</TCell>
-          <TCell align="left">
+          <TCell align="right" style={putCellStyle}>
+            {putHighestBid || '—'}
+          </TCell>
+          <TCell align="right" style={putCellStyle}>
+            {putLowestAsk || '—'}
+          </TCell>
+          <TCell align="right" style={putCellStyle}>
+            {row.put?.change || '—'}
+          </TCell>
+          <TCell align="right" style={putCellStyle}>
+            {row.put?.volume || '—'}
+          </TCell>
+          <TCell align="right" style={putCellStyle}>
             {putOptionMintInfo?.supply.toString() || '—'}
           </TCell>
         </>
       )}
-      <TCell align="right">
+      <TCell align="right" style={putCellStyle}>
         {row.put?.emptyRow ? (
           '—'
         ) : loading.put ? (

@@ -147,18 +147,18 @@ const CallPutRow = ({
     [uAsset, qAsset, initializeMarkets, date, row, pushNotification],
   )
 
-  const callCellBackgroundColor =
+  const callCellStyle =
     price > row.strike
-      ? theme.palette.background.light
-      : theme.palette.background.medium
-  const putCellBackgroundColor =
+      ? { backgroundColor: theme.palette.background.light }
+      : undefined
+  const putCellStyle =
     price < row.strike
-      ? theme.palette.background.light
-      : theme.palette.background.medium
+      ? { backgroundColor: theme.palette.background.light }
+      : undefined
 
   return (
     <TableRow hover role="checkbox" tabIndex={-1}>
-      <TCell align="left" style={{ backgroundColor: callCellBackgroundColor }}>
+      <TCell align="left" style={callCellStyle}>
         {row.call?.emptyRow ? (
           '—'
         ) : loading.call ? (
@@ -195,7 +195,7 @@ const CallPutRow = ({
           </Button>
         )}
       </TCell>
-      <TCell align="left" style={{ backgroundColor: callCellBackgroundColor }}>
+      <TCell align="left" style={callCellStyle}>
         {row.call?.size ? `${row.call.size} ${uAsset?.tokenSymbol || ''}` : '—'}
       </TCell>
       {row.call?.serumKey && serumMarkets[row.call?.serumKey]?.loading ? (
@@ -204,34 +204,19 @@ const CallPutRow = ({
         </TCellLoading>
       ) : (
         <>
-          <TCell
-            align="left"
-            style={{ backgroundColor: callCellBackgroundColor }}
-          >
+          <TCell align="left" style={callCellStyle}>
             {callHighestBid || '—'}
           </TCell>
-          <TCell
-            align="left"
-            style={{ backgroundColor: callCellBackgroundColor }}
-          >
+          <TCell align="left" style={callCellStyle}>
             {callLowestAsk || '—'}
           </TCell>
-          <TCell
-            align="left"
-            style={{ backgroundColor: callCellBackgroundColor }}
-          >
+          <TCell align="left" style={callCellStyle}>
             {row.call?.change || '—'}
           </TCell>
-          <TCell
-            align="left"
-            style={{ backgroundColor: callCellBackgroundColor }}
-          >
+          <TCell align="left" style={callCellStyle}>
             {row.call?.volume || '—'}
           </TCell>
-          <TCell
-            align="left"
-            style={{ backgroundColor: callCellBackgroundColor }}
-          >
+          <TCell align="left" style={callCellStyle}>
             {callOptionMintInfo?.supply.toString() || '—'}
           </TCell>
         </>
@@ -248,7 +233,7 @@ const CallPutRow = ({
         <h4 style={{ margin: 0 }}>{formatStrike(row.strike, precision)}</h4>
       </TCell>
 
-      <TCell align="right" style={{ backgroundColor: putCellBackgroundColor }}>
+      <TCell align="right" style={putCellStyle}>
         {row.put?.size ? `${row.put.size} ${qAsset?.tokenSymbol || ''}` : '—'}
       </TCell>
       {row.put?.serumKey && serumMarkets[row.put?.serumKey]?.loading ? (
@@ -257,39 +242,24 @@ const CallPutRow = ({
         </TCellLoading>
       ) : (
         <>
-          <TCell
-            align="right"
-            style={{ backgroundColor: putCellBackgroundColor }}
-          >
+          <TCell align="right" style={putCellStyle}>
             {putHighestBid || '—'}
           </TCell>
-          <TCell
-            align="right"
-            style={{ backgroundColor: putCellBackgroundColor }}
-          >
+          <TCell align="right" style={putCellStyle}>
             {putLowestAsk || '—'}
           </TCell>
-          <TCell
-            align="right"
-            style={{ backgroundColor: putCellBackgroundColor }}
-          >
+          <TCell align="right" style={putCellStyle}>
             {row.put?.change || '—'}
           </TCell>
-          <TCell
-            align="right"
-            style={{ backgroundColor: putCellBackgroundColor }}
-          >
+          <TCell align="right" style={putCellStyle}>
             {row.put?.volume || '—'}
           </TCell>
-          <TCell
-            align="right"
-            style={{ backgroundColor: putCellBackgroundColor }}
-          >
+          <TCell align="right" style={putCellStyle}>
             {putOptionMintInfo?.supply.toString() || '—'}
           </TCell>
         </>
       )}
-      <TCell align="right" style={{ backgroundColor: putCellBackgroundColor }}>
+      <TCell align="right" style={putCellStyle}>
         {row.put?.emptyRow ? (
           '—'
         ) : loading.put ? (

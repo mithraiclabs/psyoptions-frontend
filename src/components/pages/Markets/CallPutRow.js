@@ -147,14 +147,12 @@ const CallPutRow = ({
     [uAsset, qAsset, initializeMarkets, date, row, pushNotification],
   )
 
-  const callCellStyle =
-    price > row.strike
-      ? { backgroundColor: theme.palette.background.light }
-      : undefined
-  const putCellStyle =
-    price < row.strike
-      ? { backgroundColor: theme.palette.background.light }
-      : undefined
+  const callCellStyle = row.strike?.lte(price)
+    ? { backgroundColor: theme.palette.background.light }
+    : undefined
+  const putCellStyle = row.strike?.gte(price)
+    ? { backgroundColor: theme.palette.background.light }
+    : undefined
 
   return (
     <TableRow hover role="checkbox" tabIndex={-1}>

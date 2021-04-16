@@ -59,7 +59,7 @@ const CallPutRow = ({
   onClickBuySellPut,
   markPrice,
 }) => {
-  const { connect, connected } = useWallet()
+  const { connected } = useWallet()
   const { pushNotification } = useNotifications()
   const { serumMarkets } = useSerum()
   const { initializeMarkets } = useOptionsMarkets()
@@ -257,9 +257,7 @@ const CallPutRow = ({
         ) : loading.put ? (
           <CircularProgress size={32} />
         ) : !connected ? (
-          <Button variant="outlined" color="primary" p="8px" onClick={connect}>
-            Connect
-          </Button>
+          <ConnectButton>Connect</ConnectButton>
         ) : row.put?.initialized ? (
           <Button
             variant="outlined"

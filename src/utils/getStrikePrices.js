@@ -30,7 +30,7 @@ const intervals = [
 ]
 
 /**
- * @returns BigNumber
+ * @returns BigNumber[]
  */
 const getStrikePrices = (markPrice, rangeAbove = 4, rangeBelow = 4) => {
   let midpointRoundedUp = new BigNumber(0)

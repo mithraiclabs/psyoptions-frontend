@@ -1,16 +1,25 @@
 import BigNumber from 'bignumber.js'
 
+// TODO: make the "half intervals", aka 4.5, 5.5, 6.5, 7.5 programmatically generated for a few strikes close to market price
+// Would be done in the getStrikePrices function
+// For now, they're hard coded to match Deribit's BTC options chain
+
 const baseIntervals = [
   new BigNumber(1),
-  new BigNumber(1.25),
-  new BigNumber(1.5),
-  new BigNumber(1.75),
+  new BigNumber(1.2),
+  new BigNumber(1.4),
+  new BigNumber(1.6),
+  new BigNumber(1.8),
   new BigNumber(2),
   new BigNumber(3),
   new BigNumber(4),
+  new BigNumber(4.5),
   new BigNumber(5),
+  new BigNumber(5.5),
   new BigNumber(6),
+  new BigNumber(6.5),
   new BigNumber(7),
+  new BigNumber(7.5),
   new BigNumber(8),
   new BigNumber(9),
 ]

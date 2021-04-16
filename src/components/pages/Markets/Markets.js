@@ -10,7 +10,7 @@ import { withStyles } from '@material-ui/core/styles'
 
 import theme from '../../../utils/theme'
 import { getLastFridayOfMonths } from '../../../utils/dates'
-import getStrikePrices from '../../../utils/getStrikePrices'
+import { getStrikePrices, intervals } from '../../../utils/getStrikePrices'
 import { getPriceFromSerumOrderbook } from '../../../utils/orderbook'
 
 import useAssetList from '../../../hooks/useAssetList'
@@ -119,8 +119,11 @@ const Markets = () => {
   const markPrice = getPriceFromSerumOrderbook(underlyingOrderbook)
 
   const supportedStrikePrices = useMemo(() => {
-    return getStrikePrices(markPrice).map((price) => price.toNumber())
-  }, [markPrice])
+    if (markPrice && showAllStrikes === false) {
+      return getStrikePrices(markPrice).map((price) => price.toNumber())
+    }
+    return intervals.map((price) => price.toNumber())
+  }, [markPrice, showAllStrikes])
 
   const fullPageLoading = assetListLoading || marketsLoading
 
@@ -136,24 +139,25 @@ const Markets = () => {
     }
   }
 
+  const filteredChain = useMemo(
+    () =>
+      chain.filter((row) => {
+        return supportedStrikePrices.includes(row.strike.toNumber())
+      }),
+    [chain, supportedStrikePrices],
+  )
+
   const rows = useMemo(
     () => [
-      ...chain.filter((row) => {
-        console.log(row.strike.toNumber())
-        return (
-          showAllStrikes ||
-          !markPrice ||
-          supportedStrikePrices.includes(row.strike.toNumber())
-        )
-      }),
-      ...Array(Math.max(9 - chain.length, 0))
+      ...filteredChain,
+      ...Array(Math.max(9 - filteredChain.length, 0))
         .fill(rowTemplate)
         .map((row, i) => ({
           ...row,
           key: `empty-${i}`,
         })),
     ],
-    [chain, supportedStrikePrices, showAllStrikes, markPrice],
+    [filteredChain],
   )
 
   useEffect(() => {

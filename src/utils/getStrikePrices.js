@@ -48,4 +48,4 @@ const getStrikePrices = (markPrice, rangeAbove = 4, rangeBelow = 4) => {
   ]
 }
 
-export default getStrikePrices
+export { getStrikePrices, intervals }

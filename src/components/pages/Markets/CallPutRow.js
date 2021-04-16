@@ -23,7 +23,6 @@ import {
 import { useOptionMarket } from '../../../hooks/useOptionMarket'
 
 import ConnectButton from '../../ConnectButton'
-import { getPriceFromSerumOrderbook } from '../../../utils/orderbook'
 
 const TCell = withStyles({
   root: {
@@ -58,8 +57,9 @@ const CallPutRow = ({
   date,
   onClickBuySellCall,
   onClickBuySellPut,
+  markPrice,
 }) => {
-  const { connect, connected } = useWallet()
+  const { connected } = useWallet()
   const { pushNotification } = useNotifications()
   const { serumMarkets } = useSerum()
   const { initializeMarkets } = useOptionsMarkets()
@@ -67,11 +67,6 @@ const CallPutRow = ({
   useSubscribeSerumOrderbook(row.call?.serumKey)
   const { orderbook: putOrderbook } = useSerumOrderbook(row.put?.serumKey)
   useSubscribeSerumOrderbook(row.put?.serumKey)
-  const underlyingSerumMarketKey = `${uAsset.mintAddress}-${qAsset.mintAddress}`
-  const { orderbook: underlyingOrderbook } = useSerumOrderbook(
-    underlyingSerumMarketKey,
-  )
-  useSubscribeSerumOrderbook(underlyingSerumMarketKey)
 
   const callHighestBid = callOrderbook?.bids[0]?.price
   const callLowestAsk = callOrderbook?.asks[0]?.price
@@ -95,7 +90,6 @@ const CallPutRow = ({
   const putOptionMintInfo = useSPLTokenMintInfo(putMarket?.optionMintKey)
   useSubscribeSPLTokenMint(callMarket?.optionMintKey)
   useSubscribeSPLTokenMint(putMarket?.optionMintKey)
-  const price = getPriceFromSerumOrderbook(underlyingOrderbook)
 
   const [loading, setLoading] = useState({ call: false, put: false })
 
@@ -147,10 +141,10 @@ const CallPutRow = ({
     [uAsset, qAsset, initializeMarkets, date, row, pushNotification],
   )
 
-  const callCellStyle = row.strike?.lte(price)
+  const callCellStyle = row.strike?.lte(markPrice)
     ? { backgroundColor: theme.palette.background.light }
     : undefined
-  const putCellStyle = row.strike?.gte(price)
+  const putCellStyle = row.strike?.gte(markPrice)
     ? { backgroundColor: theme.palette.background.light }
     : undefined
 
@@ -263,9 +257,7 @@ const CallPutRow = ({
         ) : loading.put ? (
           <CircularProgress size={32} />
         ) : !connected ? (
-          <Button variant="outlined" color="primary" p="8px" onClick={connect}>
-            Connect
-          </Button>
+          <ConnectButton>Connect</ConnectButton>
         ) : row.put?.initialized ? (
           <Button
             variant="outlined"
@@ -334,6 +326,8 @@ CallPutRow.propTypes = {
   // Precision for strike price rounding with .toFixed
   precision: PropTypes.number,
   round: PropTypes.bool,
+  // Current market price of the underlying asset on serum
+  markPrice: PropTypes.number,
 }
 
 CallPutRow.defaultProps = {

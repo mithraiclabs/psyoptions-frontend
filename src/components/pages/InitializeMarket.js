@@ -20,7 +20,7 @@ import useNotifications from '../../hooks/useNotifications'
 import useWallet from '../../hooks/useWallet'
 import useOptionsMarkets from '../../hooks/useOptionsMarkets'
 import useSerumMarketInfo from '../../hooks/useSerumMarketInfo'
-import { generateStrikePrices } from '../../utils/generateStrikePrices'
+import { getStrikePrices } from '../../utils/getStrikePrices'
 import { getLastFridayOfMonths } from '../../utils/dates'
 import useAssetList from '../../hooks/useAssetList'
 import { useOptionMarket } from '../../hooks/useOptionMarket'
@@ -40,7 +40,6 @@ const InitializeMarket = () => {
   const [date, setDate] = useState(expirations[0])
   const { uAsset, qAsset, setUAsset } = useAssetList()
   const [size, setSize] = useState(0)
-  const [priceInterval, setPriceInterval] = useState(0)
   const { marketPrice } = useSerumMarketInfo({
     uAssetMint: uAsset?.mintAddress,
     qAssetMint: qAsset?.mintAddress,
@@ -51,25 +50,17 @@ const InitializeMarket = () => {
     basePrice && basePrice.replace(/^\./, '0.'),
   )
   let strikePrices = []
-  if (
-    multiple &&
-    (parsedBasePrice || marketPrice) &&
-    priceInterval &&
-    !Number.isNaN(priceInterval)
-  ) {
-    strikePrices = generateStrikePrices(
-      parsedBasePrice || marketPrice,
-      priceInterval,
-    )
+  if (multiple && (parsedBasePrice || marketPrice)) {
+    strikePrices = getStrikePrices(parsedBasePrice || marketPrice)
   } else if (parsedBasePrice || marketPrice) {
-    strikePrices = [parsedBasePrice || marketPrice]
+    strikePrices = getStrikePrices(parsedBasePrice || marketPrice, 1, 0)
   }
   const market = useOptionMarket({
     date: date.unix(),
     uAssetSymbol: uAsset?.tokenSymbol,
     qAssetSymbol: qAsset?.tokenSymbol,
     size,
-    price: strikePrices[0],
+    price: strikePrices[0] && strikePrices[0].toNumber(),
   })
   const canInitialize = !market
 
@@ -87,7 +78,7 @@ const InitializeMarket = () => {
       await initializeMarkets({
         amountPerContract: new BigNumber(size),
         quoteAmountsPerContract: strikePrices.map((sp) =>
-          new BigNumber(sp).multipliedBy(size),
+          sp.multipliedBy(size),
         ),
         uAssetSymbol: uAsset.tokenSymbol,
         qAssetSymbol: qAsset.tokenSymbol,
@@ -217,16 +208,9 @@ const InitializeMarket = () => {
               />
             </Box>
             <Box width="50%" p={2}>
-              {multiple ? (
-                <TextField
-                  label="Price Interval"
-                  variant="filled"
-                  onChange={(e) => setPriceInterval(parseFloat(e.target.value))}
-                  helperText={
-                    Number.isNaN(priceInterval) ? 'Must be a number' : null
-                  }
-                />
-              ) : null}
+              {!multiple
+                ? 'Strike price will be rounded up to nearest supported price'
+                : null}
             </Box>
           </Box>
 
@@ -240,7 +224,7 @@ const InitializeMarket = () => {
               ) : null}
               <Box p={1}>
                 Strike Prices to Initialize: <br />
-                {strikePrices.map((n) => `${n.toFixed(qAsset.decimals)} `)}
+                {strikePrices.map((n, i) => (i === 0 ? `${n}` : `, ${n}`))}
               </Box>
             </Box>
           ) : null}

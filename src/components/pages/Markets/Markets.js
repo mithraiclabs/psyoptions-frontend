@@ -8,12 +8,19 @@ import TableHead from '@material-ui/core/TableHead'
 import TableRow from '@material-ui/core/TableRow'
 import { withStyles } from '@material-ui/core/styles'
 
-import { getLastFridayOfMonths } from '../../../utils/dates'
 import theme from '../../../utils/theme'
+import { getLastFridayOfMonths } from '../../../utils/dates'
+import { getStrikePrices, intervals } from '../../../utils/getStrikePrices'
+import { getPriceFromSerumOrderbook } from '../../../utils/orderbook'
 
 import useAssetList from '../../../hooks/useAssetList'
 import useOptionsMarkets from '../../../hooks/useOptionsMarkets'
 import useOptionsChain from '../../../hooks/useOptionsChain'
+import useSerum from '../../../hooks/useSerum'
+import {
+  useSerumOrderbook,
+  useSubscribeSerumOrderbook,
+} from '../../../hooks/Serum'
 
 import Page from '../Page'
 import Select from '../../Select'
@@ -22,7 +29,6 @@ import CallPutRow from './CallPutRow'
 import BuySellDialog from '../../BuySellDialog'
 import Loading from '../../Loading'
 import RefreshButton from '../../RefreshButton'
-import useSerum from '../../../hooks/useSerum'
 
 const dblsp = `${'\u00A0'}${'\u00A0'}`
 
@@ -103,6 +109,21 @@ const Markets = () => {
   const [round, setRound] = useState(true)
   const [buySellDialogOpen, setBuySellDialogOpen] = useState(false)
   const [callPutData, setCallPutData] = useState({ type: 'call' })
+  const [showAllStrikes] = useState(false) // TODO: let user configure this
+
+  const underlyingSerumMarketKey = `${uAsset?.mintAddress}-${qAsset?.mintAddress}`
+  const { orderbook: underlyingOrderbook } = useSerumOrderbook(
+    underlyingSerumMarketKey,
+  )
+  useSubscribeSerumOrderbook(underlyingSerumMarketKey)
+  const markPrice = getPriceFromSerumOrderbook(underlyingOrderbook)
+
+  const supportedStrikePrices = useMemo(() => {
+    if (markPrice && showAllStrikes === false) {
+      return getStrikePrices(markPrice).map((price) => price.toNumber())
+    }
+    return intervals.map((price) => price.toNumber())
+  }, [markPrice, showAllStrikes])
 
   const fullPageLoading = assetListLoading || marketsLoading
 
@@ -118,15 +139,26 @@ const Markets = () => {
     }
   }
 
-  const rows = useMemo(() => [
-    ...chain,
-    ...Array(Math.max(9 - chain.length, 0))
-      .fill(rowTemplate)
-      .map((row, i) => ({
-        ...row,
-        key: `empty-${i}`,
-      })),
-  ], [chain])
+  const filteredChain = useMemo(
+    () =>
+      chain.filter((row) => {
+        return supportedStrikePrices.includes(row.strike.toNumber())
+      }),
+    [chain, supportedStrikePrices],
+  )
+
+  const rows = useMemo(
+    () => [
+      ...filteredChain,
+      ...Array(Math.max(9 - filteredChain.length, 0))
+        .fill(rowTemplate)
+        .map((row, i) => ({
+          ...row,
+          key: `empty-${i}`,
+        })),
+    ],
+    [filteredChain],
+  )
 
   useEffect(() => {
     fetchOptionsChain(date.unix())

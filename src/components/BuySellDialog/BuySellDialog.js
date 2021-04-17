@@ -92,6 +92,8 @@ const SellButton = withStyles({
 
 const orderTypes = ['limit', 'market']
 
+const BIG_NUM_ONE = new BigNumber(1)
+
 const getHighestAccount = (accounts) => {
   if (accounts.length === 0) return {}
   if (accounts.length === 1) return accounts[0]
@@ -168,7 +170,8 @@ const BuySellDialog = ({
     uAssetSymbol,
     qAssetSymbol,
     size: amountPerContract.toNumber(),
-    price: strike.toString(),
+    price:
+      type === 'put' ? BIG_NUM_ONE.div(strike).toNumber() : strike.toNumber(),
   })
 
   const optionAccounts = ownedTokenAccounts[optionMintAddress] || []

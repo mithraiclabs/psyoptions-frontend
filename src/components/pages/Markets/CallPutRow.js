@@ -81,8 +81,8 @@ const CallPutRow = ({
   })
   const putMarket = useOptionMarket({
     date: date.unix(),
-    uAssetSymbol: uAsset?.tokenSymbol,
-    qAssetSymbol: qAsset?.tokenSymbol,
+    uAssetSymbol: qAsset?.tokenSymbol,
+    qAssetSymbol: uAsset?.tokenSymbol,
     size: row.put?.size,
     price: 1 / row.strike,
   })

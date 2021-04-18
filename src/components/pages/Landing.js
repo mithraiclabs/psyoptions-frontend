@@ -1,8 +1,7 @@
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import { useHistory } from 'react-router-dom'
 import { Box, Button } from '@material-ui/core'
 import { makeStyles } from '@material-ui/core/styles'
-import { PublicKey } from '@solana/web3.js'
 
 import Page from './Page'
 
@@ -11,7 +10,6 @@ import theme from '../../utils/theme'
 import useOptionsMarkets from '../../hooks/useOptionsMarkets'
 import useOpenPositions from '../../hooks/useOpenPositions'
 import WalletStatus from '../WalletStatus'
-import useConnection from '../../hooks/useConnection'
 
 const useStyles = makeStyles({
   logoH1: {
@@ -69,38 +67,10 @@ const LandingCard = ({ title = '', text = '', button = '' } = {}) => {
 
 const Landing = () => {
   const history = useHistory()
-  const { connection } = useConnection()
   const { markets } = useOptionsMarkets()
   const positions = useOpenPositions()
   const { logoH1 } = useStyles()
   const { landingCard } = useStyles()
-
-  const [numberOfTokens, setNumberOfTokens] = useState()
-
-  const getNumberOfTokensMinted = async () => {
-    if (!numberOfTokens ?? Object.keys(markets).length > 0) {
-      const results = await Promise.allSettled(
-        Object.values(markets).map(async (market) => {
-          const result = await connection.getTokenSupply(
-            new PublicKey(market.optionMintAddress),
-          )
-          return result.value
-        }),
-      )
-
-      const tokenSupply = results
-        .filter((res) => res.status !== 'rejected')
-        .reduce((sum, res) => sum + (res.value?.uiAmount || 0), 0)
-
-      if (tokenSupply > 0) {
-        setNumberOfTokens(`${tokenSupply.toFixed(0)}`)
-      }
-    }
-  }
-
-  useEffect(() => {
-    getNumberOfTokensMinted()
-  }, [markets]) // eslint-disable-line
 
   return (
     <Page background={pageBg}>
@@ -153,34 +123,14 @@ const Landing = () => {
               }
             />
             <LandingCard
-              title={numberOfTokens || '0'}
-              text={`options contract${
-                numberOfTokens === 1 ? '' : 's'
-              } in circulation`}
-              button={
-                <Button
-                  color="primary"
-                  variant="outlined"
-                  style={{ whiteSpace: 'nowrap' }}
-                  href="/markets"
-                  onClick={(e) => {
-                    e.preventDefault()
-                    history.push('/mint')
-                  }}
-                >
-                  Mint Options
-                </Button>
-              }
-            />
-          </Box>
-          <Box display="flex" flexDirection={['column', 'row', 'row']}>
-            <LandingCard
               title={`${Object.keys(positions).length}`}
               text={`open position${
                 Object.keys(positions).length === 1 ? '' : 's'
               } in wallet`}
               button={<WalletStatus />}
             />
+          </Box>
+          <Box display="flex" flexDirection={['column', 'row', 'row']}>
             <Box
               px={2}
               pt={1}

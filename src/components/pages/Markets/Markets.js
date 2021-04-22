@@ -29,6 +29,7 @@ import CallPutRow from './CallPutRow'
 import BuySellDialog from '../../BuySellDialog'
 import Loading from '../../Loading'
 import RefreshButton from '../../RefreshButton'
+import { OpenOrders } from '../../OpenOrders'
 
 const dblsp = `${'\u00A0'}${'\u00A0'}`
 
@@ -366,7 +367,7 @@ const Markets = () => {
             </Table>
           </TableContainer>
           <Box
-            pt={1}
+            py={1}
             px={[1, 1, 0]}
             display="flex"
             justifyContent="flex-end"
@@ -388,6 +389,9 @@ const Markets = () => {
               }
               style={{ margin: '0' }}
             />
+          </Box>
+          <Box>
+            <OpenOrders />
           </Box>
         </Box>
       </Box>

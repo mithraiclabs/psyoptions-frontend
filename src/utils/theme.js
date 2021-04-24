@@ -11,7 +11,7 @@ const theme = createMuiTheme({
   },
   glow: '0px 0px 20px #1D4DC9',
   typography: {
-    fontFamily: 'JetBrains Mono, sans-serif',
+    fontFamily: 'JetBrains Mono, monospace',
   },
   palette: {
     type: 'dark',

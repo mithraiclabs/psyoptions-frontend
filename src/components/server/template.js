@@ -89,6 +89,7 @@ const Template = ({
         href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300&family=Major+Mono+Display&display=swap"
         rel="stylesheet"
       />
+
       <style>{baseCss}</style>
       <style>{cssString}</style>
     </head>

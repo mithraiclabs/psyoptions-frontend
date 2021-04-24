@@ -28,7 +28,7 @@ const TCell = withStyles({
   root: {
     padding: '8px',
     whiteSpace: 'nowrap',
-    fontSize: '11px',
+    fontSize: '14px',
     border: 'none',
     height: '52px',
     background: theme.palette.background.medium,
@@ -39,7 +39,7 @@ const TCellLoading = withStyles({
   root: {
     padding: '16px',
     whiteSpace: 'nowrap',
-    fontSize: '11px',
+    fontSize: '14px',
     height: '52px',
     border: 'none',
     background: theme.palette.background.medium,

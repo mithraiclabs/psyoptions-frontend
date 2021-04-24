@@ -35,9 +35,9 @@ const dblsp = `${'\u00A0'}${'\u00A0'}`
 
 const THeadCell = withStyles({
   root: {
-    padding: '4px',
+    padding: '4px 12px',
     whiteSpace: 'nowrap',
-    fontSize: '11px',
+    fontSize: '14px',
     height: '48px',
     border: 'none',
   },
@@ -45,9 +45,9 @@ const THeadCell = withStyles({
 
 const THeadCellStrike = withStyles({
   root: {
-    padding: '4px',
+    padding: '4px 12px',
     whiteSpace: 'nowrap',
-    fontSize: '11px',
+    fontSize: '14px',
     height: '48px',
     border: 'none',
   },
@@ -57,7 +57,7 @@ const TCellLoading = withStyles({
   root: {
     padding: '16px',
     whiteSpace: 'nowrap',
-    fontSize: '11px',
+    fontSize: '14px',
     height: '52px',
     border: 'none',
   },
@@ -67,7 +67,7 @@ const TCellStrike = withStyles({
   root: {
     padding: '16px',
     whiteSpace: 'nowrap',
-    fontSize: '11px',
+    fontSize: '14px',
     height: '52px',
     border: 'none',
     background: theme.palette.background.default,
@@ -160,6 +160,15 @@ const Markets = () => {
     ],
     [filteredChain],
   )
+
+  // Flat markets object for open orders component
+  const marketsFlat = filteredChain
+    .map((row) => [
+      { ...row.call, type: 'call' },
+      { ...row.put, type: 'put' },
+    ])
+    .filter((callOrPut) => !!callOrPut)
+    .reduce((a, b) => [...a, ...b], [])
 
   useEffect(() => {
     fetchOptionsChain(date.unix())
@@ -391,7 +400,7 @@ const Markets = () => {
             />
           </Box>
           <Box>
-            <OpenOrders />
+            <OpenOrders optionMarkets={marketsFlat} />
           </Box>
         </Box>
       </Box>

@@ -115,7 +115,8 @@ export const WrittenOptionRow = ({
 
   return (
     <TableRow key={marketKey}>
-      <TableCell width="20%">{`${market.uAssetSymbol}${market.qAssetSymbol}`}</TableCell>
+      <TableCell width="5%" />
+      <TableCell width="15%">{`${market.uAssetSymbol}${market.qAssetSymbol}`}</TableCell>
       <TableCell width="15%">{market.strikePrice}</TableCell>
       <TableCell width="15%">
         {market.size} {market.uAssetSymbol}

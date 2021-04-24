@@ -25,7 +25,8 @@ export const WrittenOptionsTable = () => {
         <Table stickyHeader>
           <TableHead>
             <TableRow>
-              <TableCell width="20%">Asset Pair</TableCell>
+              <TableCell width="5%" />
+              <TableCell width="15%">Asset Pair</TableCell>
               <TableCell width="15%">Strike</TableCell>
               <TableCell width="15%">Locked</TableCell>
               <TableCell width="15%">Size</TableCell>

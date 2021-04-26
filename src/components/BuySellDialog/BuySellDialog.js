@@ -624,6 +624,7 @@ const BuySellDialog = ({
                   </Box>
                   <UnsettledFunds
                     qAssetSymbol={qAssetSymbol}
+                    qAssetDecimals={qAssetDecimals}
                     serumKey={serumKey}
                   />
                 </>

@@ -619,12 +619,13 @@ const BuySellDialog = ({
                     {`This is a ${
                       type === 'call' ? 'covered call' : 'secured put'
                     }. Mint/Sell will lock the required collateral (${collateralRequired} ${
-                      type === 'call' ? qAssetSymbol : uAssetSymbol
+                      uAssetSymbol
                     }) until the contract expires or is exercised.`}
                   </Box>
                   <UnsettledFunds
                     qAssetSymbol={qAssetSymbol}
                     serumKey={serumKey}
+                    qAssetDecimals={qAssetDecimals}
                   />
                 </>
               ) : (

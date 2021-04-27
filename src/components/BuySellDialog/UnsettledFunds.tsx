@@ -2,6 +2,7 @@ import { CircularProgress } from '@material-ui/core'
 import Box from '@material-ui/core/Box'
 import Button from '@material-ui/core/Button'
 import React, { useCallback, useState } from 'react'
+import BigNumber from 'bignumber.js'
 import {
   useSettleFunds,
   useSubscribeOpenOrders,
@@ -14,7 +15,8 @@ import {
 export const UnsettledFunds: React.VFC<{
   qAssetSymbol: string
   serumKey: string
-}> = ({ qAssetSymbol, serumKey }) => {
+  qAssetDecimals: number
+}> = ({ qAssetSymbol, serumKey, qAssetDecimals }) => {
   const unsettledFunds = useUnsettledFundsForMarket(serumKey)
   const _settleFunds = useSettleFunds(serumKey)
   useSubscribeOpenOrders(serumKey)
@@ -37,13 +39,14 @@ export const UnsettledFunds: React.VFC<{
     return <CircularProgress />
   }
 
+  const valueUnsettled = new BigNumber(unsettledFunds.quoteFree.toString())
   return (
     <Box justifyContent="flex-end" textAlign="center" width="100%">
       Unsettled Funds
       <Box display="flex" flex="1" justifyContent="space-between" my={2}>
         <Box>Options: {unsettledFunds.baseFree.toString()}</Box>
         <Box>
-          {qAssetSymbol}: {unsettledFunds.quoteFree.toString()}
+          {qAssetSymbol}: {valueUnsettled.dividedBy(10 ** qAssetDecimals).toString()}
         </Box>
       </Box>
       <Button color="primary" onClick={settleFunds} variant="outlined">

@@ -29,7 +29,7 @@ import CallPutRow from './CallPutRow'
 import BuySellDialog from '../../BuySellDialog'
 import Loading from '../../Loading'
 import RefreshButton from '../../RefreshButton'
-import { OpenOrders } from '../../OpenOrders'
+import OpenOrders from '../../OpenOrders'
 
 const dblsp = `${'\u00A0'}${'\u00A0'}`
 
@@ -167,8 +167,8 @@ const Markets = () => {
       { ...row.call, type: 'call' },
       { ...row.put, type: 'put' },
     ])
-    .filter((callOrPut) => !!callOrPut)
     .reduce((a, b) => [...a, ...b], [])
+    .filter((callOrPut) => !!callOrPut)
 
   useEffect(() => {
     fetchOptionsChain(date.unix())

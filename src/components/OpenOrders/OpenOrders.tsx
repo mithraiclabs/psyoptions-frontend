@@ -7,6 +7,7 @@ import TableHead from '@material-ui/core/TableHead'
 import TableRow from '@material-ui/core/TableRow'
 import TableBody from '@material-ui/core/TableBody'
 import Button from '@material-ui/core/Button'
+import Link from '@material-ui/core/Link'
 import { withStyles } from '@material-ui/core/styles'
 
 import moment from 'moment'
@@ -16,8 +17,10 @@ import type { Market } from '@mithraic-labs/serum'
 import useSerum from '../../hooks/useSerum'
 import useWallet from '../../hooks/useWallet'
 import useConnection from '../../hooks/useConnection'
+import useNotifications from '../../hooks/useNotifications'
 
 import theme from '../../utils/theme'
+import { buildSolanaExplorerUrl } from '../../utils/solanaExplorer'
 import ConnectButton from '../ConnectButton'
 import Loading from '../Loading'
 
@@ -43,7 +46,7 @@ const TCell = withStyles({
     fontSize: '14px',
     border: 'none',
     height: '52px',
-    background: theme.palette.background.medium,
+    background: (theme.palette.background as any).medium, // Todo fix this type
   },
 })(TableCell)
 
@@ -61,23 +64,26 @@ const OpenOrders: React.FC<{
   optionMarkets: CallOrPut[]
 }> = ({ optionMarkets }) => {
   const { connection } = useConnection()
-  const { pubKey, connected } = useWallet()
+  const { pushNotification } = useNotifications()
+  const { wallet, pubKey, connected } = useWallet()
   const { serumMarkets } = useSerum()
   const [openOrdersLoading, setOpenOrdersLoading] = useState(false)
   const [openOrders, setOpenOrders] = useState({})
 
-  const serumMarketsLoading = optionMarkets
-    .map((optionMarket) => serumMarkets[optionMarket?.serumKey])
-    .some((market: MarketObject) => market?.loading === true)
+  const serumMarketsLoading = Object.values(serumMarkets).some(
+    (serumMarket: MarketObject) => serumMarket?.loading === true,
+  )
+
+  console.log('rerendered Open Orders')
 
   const loadOpenOrders = useCallback(() => {
-    if (!connected || !pubKey || !connection) return
-
-    // Wait until all markets are done loading initially to load open orders
-    if (serumMarketsLoading) return
-
+    if (!connected || !pubKey || !connection || serumMarketsLoading) {
+      return
+    }
+    console.log('loading open orders')
     setOpenOrdersLoading(true)
-    ;(async () => {
+    const fetchOrders = async () => {
+      const newOrders = {}
       await Promise.all(
         optionMarkets.map(async (optionMarket) => {
           const key = optionMarket?.serumKey
@@ -90,16 +96,14 @@ const OpenOrders: React.FC<{
           )
 
           if (orders.length > 0) {
-            setOpenOrders((prevState) => ({
-              ...prevState,
-              [key]: orders,
-            }))
+            newOrders[key] = orders
           }
         }),
       )
-
+      setOpenOrders(newOrders)
       setOpenOrdersLoading(false)
-    })()
+    }
+    fetchOrders()
   }, [
     optionMarkets,
     serumMarkets,
@@ -112,6 +116,58 @@ const OpenOrders: React.FC<{
   useEffect(() => {
     loadOpenOrders()
   }, [loadOpenOrders])
+
+  const handleCancel = async ({ order, serumKey }) => {
+    const { serumMarket } = serumMarkets[serumKey]
+    if (serumMarket?.market) {
+      try {
+        const tx = await serumMarket.market.makeCancelOrderTransaction(
+          connection,
+          pubKey,
+          order,
+        )
+        const { blockhash } = await connection.getRecentBlockhash()
+        tx.recentBlockhash = blockhash
+        tx.feePayer = pubKey
+        const signed = await wallet.signTransaction(tx)
+        const txid = await connection.sendRawTransaction(signed.serialize())
+
+        pushNotification({
+          severity: 'info',
+          message: `Submitted Transaction: Cancel Order`,
+          link: (
+            <Link href={buildSolanaExplorerUrl(txid)} target="_new">
+              View on Solana Explorer
+            </Link>
+          ),
+        })
+
+        await connection.confirmTransaction(txid)
+
+        pushNotification({
+          severity: 'success',
+          message: `Transaction Confirmed: Cancel Order`,
+          link: (
+            <Link href={buildSolanaExplorerUrl(txid)} target="_new">
+              View on Solana Explorer
+            </Link>
+          ),
+        })
+
+        setOpenOrders((prevState) => ({
+          ...prevState,
+          [serumKey]: prevState[serumKey].filter(
+            (prevOrder) => prevOrder !== order,
+          ),
+        }))
+      } catch (err) {
+        pushNotification({
+          severity: 'error',
+          message: `Transaction Failed: Cancel Order | Error: ${err}`,
+        })
+      }
+    }
+  }
 
   return (
     <Box>
@@ -184,7 +240,16 @@ const OpenOrders: React.FC<{
                       <TCell>{order?.price}</TCell>
                       <TCell>TODO</TCell>
                       <TCell align="right">
-                        <Button variant="outlined" color="primary">
+                        <Button
+                          variant="outlined"
+                          color="primary"
+                          onClick={() =>
+                            handleCancel({
+                              order,
+                              serumKey,
+                            })
+                          }
+                        >
                           Cancel
                         </Button>
                       </TCell>
@@ -200,4 +265,4 @@ const OpenOrders: React.FC<{
   )
 }
 
-export { OpenOrders }
+export default React.memo(OpenOrders)

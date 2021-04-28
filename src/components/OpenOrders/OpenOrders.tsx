@@ -11,22 +11,17 @@ import { withStyles } from '@material-ui/core/styles'
 
 import moment from 'moment'
 
-import type { Market } from '@mithraic-labs/serum'
-
 import useSerum from '../../hooks/useSerum'
 import useWallet from '../../hooks/useWallet'
 import useConnection from '../../hooks/useConnection'
 import useNotifications from '../../hooks/useNotifications'
-
 import { useSerumOpenOrders } from '../../context/SerumOpenOrdersContext'
-
-import theme from '../../utils/theme'
-import { buildSolanaExplorerUrl } from '../../utils/solanaExplorer'
-import ConnectButton from '../ConnectButton'
-
 import { useSerumOrderbooks } from '../../context/SerumOrderbookContext'
 
-// import Loading from '../Loading'
+import { buildSolanaExplorerUrl } from '../../utils/solanaExplorer'
+import theme from '../../utils/theme'
+
+import ConnectButton from '../ConnectButton'
 
 type CallOrPut = {
   expiration: number
@@ -35,12 +30,6 @@ type CallOrPut = {
   type: string
   qAssetSymbol: string
   uAssetSymbol: string
-}
-
-type MarketObject = {
-  loading: boolean
-  error: string | undefined
-  serumMarket: Market | null
 }
 
 const TCell = withStyles({
@@ -65,6 +54,9 @@ const THeadCell = withStyles({
 })(TableCell)
 
 const OpenOrders: React.FC<{
+  /**
+   * Which options markets to display the open orders for
+   */
   optionMarkets: CallOrPut[]
 }> = ({ optionMarkets }) => {
   const { connection } = useConnection()
@@ -72,11 +64,52 @@ const OpenOrders: React.FC<{
   const { wallet, pubKey, connected } = useWallet()
   const { serumMarkets } = useSerum()
 
-  const [orderbooks, setOrderbooks] = useSerumOrderbooks()
+  const [orderbooks] = useSerumOrderbooks()
   const [openOrders, setOpenOrders] = useSerumOpenOrders()
 
-  console.log('openOrders', openOrders)
-  console.log('orderbooks', orderbooks)
+  /**
+   * Load open orders for each serum market if we haven't already done so
+   */
+  useEffect(() => {
+    if (connection && serumMarkets && pubKey && openOrders) {
+      const serumKeys = Object.keys(serumMarkets)
+
+      const fetchOpenOrders = async (key) => {
+        const { serumMarket } = serumMarkets[key]
+        if (serumMarket?.market) {
+          const orders = await serumMarket.market.findOpenOrdersAccountsForOwner(
+            connection,
+            pubKey,
+          )
+          setOpenOrders((prevOpenOrders) => ({
+            ...prevOpenOrders,
+            [key]: {
+              error: null,
+              loading: false,
+              orders,
+            },
+          }))
+        }
+      }
+
+      serumKeys.forEach((key) => {
+        const { loading, error } = serumMarkets[key]
+        if (!openOrders[key] && !loading && !error) {
+          // We have to set something here immediately
+          // Or else it will try to load the open orders many extra times
+          setOpenOrders((prev) => ({
+            ...prev,
+            [key]: {
+              loading: true,
+              error: null,
+              orders: [],
+            },
+          }))
+          fetchOpenOrders(key)
+        }
+      })
+    }
+  }, [connection, serumMarkets, wallet, pubKey, openOrders, setOpenOrders])
 
   const handleCancel = async ({ order, serumKey }) => {
     const { serumMarket } = serumMarkets[serumKey]
@@ -115,12 +148,8 @@ const OpenOrders: React.FC<{
           ),
         })
 
-        setOpenOrders((prevState) => ({
-          ...prevState,
-          [serumKey]: prevState[serumKey].filter(
-            (prevOrder) => prevOrder !== order,
-          ),
-        }))
+        // TODO - subscribe to open orders so that after someone cancels an order here, it gets removed from the openOrders
+        // Gonna have to refactor the subscribe hooks a little to not just be on-mount for a single serum market
       } catch (err) {
         pushNotification({
           severity: 'error',
@@ -174,19 +203,22 @@ const OpenOrders: React.FC<{
 
               const serumMarket = serumMarkets[serumKey]?.serumMarket?.market
 
-              if (!serumMarket || !openOrders[serumKey]) {
+              if (
+                !serumMarket ||
+                !openOrders[serumKey]?.orders ||
+                !orderbooks[serumKey]
+              ) {
                 return null
               }
 
-              const { bidOrderbook, askOrderbook } = orderbooks[serumKey]
-
+              const { bidOrderbook = [], askOrderbook = [] } = orderbooks[
+                serumKey
+              ]
               const actualOpenOrders = serumMarket.filterForOpenOrders(
                 bidOrderbook,
                 askOrderbook,
-                openOrders[serumKey],
+                openOrders[serumKey].orders,
               )
-
-              console.log(actualOpenOrders)
 
               return (
                 actualOpenOrders &&

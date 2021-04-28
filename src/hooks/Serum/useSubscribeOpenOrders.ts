@@ -14,8 +14,8 @@ export const useSubscribeOpenOrders = (key: string): void => {
 
   useEffect(() => {
     let subscriptions: number[]
-    if (openOrders) {
-      subscriptions = openOrders.map((openOrder) =>
+    if (openOrders?.orders) {
+      subscriptions = openOrders.orders.map((openOrder) =>
         connection.onAccountChange(openOrder.address, (accountInfo) => {
           const _openOrder = OpenOrders.fromAccountInfo(
             openOrder.address,
@@ -23,21 +23,24 @@ export const useSubscribeOpenOrders = (key: string): void => {
             dexProgramId,
           )
           setSerumOpenOrders((prevSerumOpenOrders) => {
+            const orders = prevSerumOpenOrders[key]?.orders || []
+
             // find the index of the OpenOrders instance that should be replaced
-            const index = prevSerumOpenOrders[key]?.findIndex((prevOpenOrder) =>
+            const index = orders.findIndex((prevOpenOrder) =>
               prevOpenOrder.address.equals(openOrder.address),
             )
             // immutably replace the OpenOrders instance with the matching address
-            const updatedOpenOrders = Object.assign(
-              [],
-              prevSerumOpenOrders[key],
-              {
-                [index]: _openOrder,
-              },
-            )
+            const updatedOpenOrders = Object.assign([], orders, {
+              [index]: _openOrder,
+            })
+
             return {
               ...prevSerumOpenOrders,
-              [key]: updatedOpenOrders,
+              [key]: {
+                loading: false,
+                error: null,
+                orders: updatedOpenOrders,
+              },
             }
           })
         }),
@@ -83,8 +86,9 @@ export const useCreateAdHocOpenOrdersSubscription = (
           dexProgramId,
         )
         setSerumOpenOrders((prevSerumOpenOrders) => {
+          const orders = prevSerumOpenOrders[key]?.orders || []
           // find the index of the OpenOrders instance that should be replaced
-          let index = prevSerumOpenOrders[key]?.findIndex((prevOpenOrder) =>
+          let index = orders.findIndex((prevOpenOrder) =>
             prevOpenOrder.address.equals(publicKey),
           )
           // if used to listen to an account before it's initialized,
@@ -93,16 +97,17 @@ export const useCreateAdHocOpenOrdersSubscription = (
             index = 0
           }
           // immutably replace the OpenOrders instance with the matching address
-          const updatedOpenOrders = Object.assign(
-            [],
-            prevSerumOpenOrders[key],
-            {
-              [index]: _openOrder,
-            },
-          )
+          const updatedOpenOrders = Object.assign([], orders, {
+            [index]: _openOrder,
+          })
+
           return {
             ...prevSerumOpenOrders,
-            [key]: updatedOpenOrders,
+            [key]: {
+              loading: false,
+              error: null,
+              orders: updatedOpenOrders,
+            },
           }
         })
       })

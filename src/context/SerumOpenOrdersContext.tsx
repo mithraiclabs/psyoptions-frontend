@@ -1,7 +1,13 @@
 import { OpenOrders } from '@mithraic-labs/serum'
 import React, { createContext, useContext, useState } from 'react'
 
-type SerumOpenOrders = Record<string, OpenOrders[]>
+type OpenOrdersData = {
+  loading: boolean
+  error: string | null
+  orders: OpenOrders[]
+}
+
+type SerumOpenOrders = Record<string, OpenOrdersData>
 type SerumOpenOrdersContext = [
   SerumOpenOrders,
   React.Dispatch<React.SetStateAction<SerumOpenOrders>>,

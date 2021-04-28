@@ -28,7 +28,11 @@ export const useSerumOpenOrderAccounts = (
         )
         setSerumOpenOrders((prevSerumOpenOrders) => ({
           ...prevSerumOpenOrders,
-          [key]: openOrders,
+          [key]: {
+            error: null,
+            loading: false,
+            orders: openOrders,
+          },
         }))
       })()
     }
@@ -41,5 +45,5 @@ export const useSerumOpenOrderAccounts = (
     skipFetch,
   ])
 
-  return serumOpenOrders[key]
+  return serumOpenOrders[key]?.orders
 }

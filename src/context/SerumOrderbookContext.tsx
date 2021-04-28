@@ -1,15 +1,19 @@
 import React, { createContext, useContext, useState } from 'react'
 
+import type { Orderbook } from '@mithraic-labs/serum'
+
 export type Order = {
   price: number
   size: number
 }
-export type Orderbook = {
+export type OrderbookData = {
   asks: Order[]
   bids: Order[]
+  bidOrderbook: Orderbook
+  askOrderbook: Orderbook
 }
 
-type SerumOrderbooks = Record<string, Orderbook>
+type SerumOrderbooks = Record<string, OrderbookData>
 
 type SerumOrderbookContext = [
   SerumOrderbooks,

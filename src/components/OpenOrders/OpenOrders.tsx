@@ -1,6 +1,5 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState, useContext } from 'react'
 import Box from '@material-ui/core/Box'
-import Paper from '@material-ui/core/Paper'
 import Table from '@material-ui/core/Table'
 import TableCell from '@material-ui/core/TableCell'
 import TableHead from '@material-ui/core/TableHead'
@@ -19,10 +18,15 @@ import useWallet from '../../hooks/useWallet'
 import useConnection from '../../hooks/useConnection'
 import useNotifications from '../../hooks/useNotifications'
 
+import { useSerumOpenOrders } from '../../context/SerumOpenOrdersContext'
+
 import theme from '../../utils/theme'
 import { buildSolanaExplorerUrl } from '../../utils/solanaExplorer'
 import ConnectButton from '../ConnectButton'
-import Loading from '../Loading'
+
+import { useSerumOrderbooks } from '../../context/SerumOrderbookContext'
+
+// import Loading from '../Loading'
 
 type CallOrPut = {
   expiration: number
@@ -67,55 +71,12 @@ const OpenOrders: React.FC<{
   const { pushNotification } = useNotifications()
   const { wallet, pubKey, connected } = useWallet()
   const { serumMarkets } = useSerum()
-  const [openOrdersLoading, setOpenOrdersLoading] = useState(false)
-  const [openOrders, setOpenOrders] = useState({})
 
-  const serumMarketsLoading = Object.values(serumMarkets).some(
-    (serumMarket: MarketObject) => serumMarket?.loading === true,
-  )
+  const [orderbooks, setOrderbooks] = useSerumOrderbooks()
+  const [openOrders, setOpenOrders] = useSerumOpenOrders()
 
-  console.log('rerendered Open Orders')
-
-  const loadOpenOrders = useCallback(() => {
-    if (!connected || !pubKey || !connection || serumMarketsLoading) {
-      return
-    }
-    console.log('loading open orders')
-    setOpenOrdersLoading(true)
-    const fetchOrders = async () => {
-      const newOrders = {}
-      await Promise.all(
-        optionMarkets.map(async (optionMarket) => {
-          const key = optionMarket?.serumKey
-          const { loading, error, serumMarket } = serumMarkets[key] || {}
-          if (loading || error || !serumMarket?.market) return
-
-          const orders = await serumMarket.market.loadOrdersForOwner(
-            connection,
-            pubKey,
-          )
-
-          if (orders.length > 0) {
-            newOrders[key] = orders
-          }
-        }),
-      )
-      setOpenOrders(newOrders)
-      setOpenOrdersLoading(false)
-    }
-    fetchOrders()
-  }, [
-    optionMarkets,
-    serumMarkets,
-    pubKey,
-    connected,
-    connection,
-    serumMarketsLoading,
-  ])
-
-  useEffect(() => {
-    loadOpenOrders()
-  }, [loadOpenOrders])
+  console.log('openOrders', openOrders)
+  console.log('orderbooks', orderbooks)
 
   const handleCancel = async ({ order, serumKey }) => {
     const { serumMarket } = serumMarkets[serumKey]
@@ -200,12 +161,6 @@ const OpenOrders: React.FC<{
                 </Box>
               </TCell>
             </TableRow>
-          ) : openOrdersLoading || serumMarketsLoading ? (
-            <TableRow>
-              <TCell colSpan={10}>
-                <Loading />
-              </TCell>
-            </TableRow>
           ) : (
             optionMarkets.map((optionMarket) => {
               const {
@@ -217,11 +172,25 @@ const OpenOrders: React.FC<{
                 serumKey,
               } = optionMarket
 
-              const orders = openOrders[serumKey]
+              const serumMarket = serumMarkets[serumKey]?.serumMarket?.market
+
+              if (!serumMarket || !openOrders[serumKey]) {
+                return null
+              }
+
+              const { bidOrderbook, askOrderbook } = orderbooks[serumKey]
+
+              const actualOpenOrders = serumMarket.filterForOpenOrders(
+                bidOrderbook,
+                askOrderbook,
+                openOrders[serumKey],
+              )
+
+              console.log(actualOpenOrders)
 
               return (
-                orders &&
-                orders.map((order) => {
+                actualOpenOrders &&
+                actualOpenOrders.map((order) => {
                   return (
                     <TableRow key={JSON.stringify(order)}>
                       <TCell>{order?.side}</TCell>

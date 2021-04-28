@@ -104,7 +104,7 @@ const expirations = getLastFridayOfMonths(10)
 const Markets = () => {
   const { uAsset, qAsset, setUAsset, assetListLoading } = useAssetList()
   const [date, setDate] = useState(expirations[0])
-  const { chain, fetchOptionsChain } = useOptionsChain()
+  const { chain, buildOptionsChain } = useOptionsChain()
   const { marketsLoading, fetchMarketData } = useOptionsMarkets()
   const { serumMarkets, fetchSerumMarket } = useSerum()
   const [round, setRound] = useState(true)
@@ -171,8 +171,8 @@ const Markets = () => {
     .filter((callOrPut) => !!callOrPut)
 
   useEffect(() => {
-    fetchOptionsChain(date.unix())
-  }, [fetchOptionsChain, date])
+    buildOptionsChain(date.unix())
+  }, [buildOptionsChain, date])
 
   useEffect(() => {
     // Load serum markets when the options chain changes

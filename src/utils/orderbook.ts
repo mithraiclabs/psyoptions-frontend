@@ -1,7 +1,7 @@
-import { Orderbook } from '../context/SerumOrderbookContext'
+import { OrderbookData } from '../context/SerumOrderbookContext'
 
 export const getPriceFromSerumOrderbook = (
-  orderbook: Orderbook,
+  orderbook: OrderbookData,
 ): number | null => {
   const highestBid = orderbook?.bids[0]?.price
   const lowestAsk = orderbook?.asks[0]?.price

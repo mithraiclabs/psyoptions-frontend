@@ -35,9 +35,9 @@ const dblsp = `${'\u00A0'}${'\u00A0'}`
 
 const THeadCell = withStyles({
   root: {
-    padding: '4px 12px',
+    padding: '4px',
     whiteSpace: 'nowrap',
-    fontSize: '14px',
+    fontSize: '11px',
     height: '48px',
     border: 'none',
   },
@@ -45,9 +45,9 @@ const THeadCell = withStyles({
 
 const THeadCellStrike = withStyles({
   root: {
-    padding: '4px 12px',
+    padding: '4px',
     whiteSpace: 'nowrap',
-    fontSize: '14px',
+    fontSize: '11px',
     height: '48px',
     border: 'none',
   },
@@ -57,7 +57,7 @@ const TCellLoading = withStyles({
   root: {
     padding: '16px',
     whiteSpace: 'nowrap',
-    fontSize: '14px',
+    fontSize: '11px',
     height: '52px',
     border: 'none',
   },
@@ -67,7 +67,7 @@ const TCellStrike = withStyles({
   root: {
     padding: '16px',
     whiteSpace: 'nowrap',
-    fontSize: '14px',
+    fontSize: '11px',
     height: '52px',
     border: 'none',
     background: theme.palette.background.default,

@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useCallback } from 'react'
 import TableRow from '@material-ui/core/TableRow'
 import Button from '@material-ui/core/Button'
 import moment from 'moment'
@@ -6,7 +6,7 @@ import moment from 'moment'
 import useSerum from '../../hooks/useSerum'
 import { useSerumOpenOrders } from '../../context/SerumOpenOrdersContext'
 import { useSerumOrderbooks } from '../../context/SerumOrderbookContext'
-import { useSubscribeOpenOrders } from '../../hooks/Serum'
+import { useSubscribeOpenOrders, useSettleFunds } from '../../hooks/Serum'
 
 import { TCell } from './OpenOrderStyles'
 
@@ -33,11 +33,18 @@ const OpenOrdersForMarket: React.FC<{
   const { serumMarkets } = useSerum()
   const [orderbooks] = useSerumOrderbooks()
   const [openOrders] = useSerumOpenOrders()
-  const { serumMarket, loading, error } = serumMarkets[serumKey] || {}
+  const { serumMarket } = serumMarkets[serumKey] || {}
+  const settleFunds = useSettleFunds(serumKey)
 
-  if (serumMarket?.market && !loading && !error) {
-    useSubscribeOpenOrders(serumKey)
-  }
+  useSubscribeOpenOrders(serumKey)
+
+  const cancelOrderAndSettle = useCallback(
+    async ({ order }) => {
+      await handleCancelOrder({ order, serumKey })
+      await settleFunds()
+    },
+    [serumKey, settleFunds, handleCancelOrder],
+  )
 
   if (
     !serumMarket?.market ||
@@ -76,7 +83,7 @@ const OpenOrdersForMarket: React.FC<{
               variant="outlined"
               color="primary"
               onClick={() =>
-                handleCancelOrder({
+                cancelOrderAndSettle({
                   order,
                   serumKey,
                 })

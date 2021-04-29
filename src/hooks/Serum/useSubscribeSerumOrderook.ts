@@ -34,10 +34,8 @@ export const useSubscribeSerumOrderbook = (key: string): void => {
           setOrderbooks((prevOrderbooks) => ({
             ...prevOrderbooks,
             [key]: {
-              // TODO do we need to update the raw orderbook data here
-              // And is it possible to even do? Maybe not cuz we're not subscribing to the whole orderbook's changes... ugh
               askOrderbook: prevOrderbooks[key]?.askOrderbook,
-              bidOrderbook: prevOrderbooks[key]?.bidOrderbook,
+              bidOrderbook: book,
               asks: prevOrderbooks[key]?.asks ?? [],
               bids: _bids,
             },
@@ -54,7 +52,7 @@ export const useSubscribeSerumOrderbook = (key: string): void => {
           setOrderbooks((prevOrderbooks) => ({
             ...prevOrderbooks,
             [key]: {
-              askOrderbook: prevOrderbooks[key]?.askOrderbook,
+              askOrderbook: book,
               bidOrderbook: prevOrderbooks[key]?.bidOrderbook,
               asks: _asks,
               bids: prevOrderbooks[key]?.bids ?? [],

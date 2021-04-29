@@ -1,70 +1,41 @@
-import React, { useCallback, useEffect, useState, useContext } from 'react'
+import React, { useEffect } from 'react'
 import Box from '@material-ui/core/Box'
 import Table from '@material-ui/core/Table'
 import TableCell from '@material-ui/core/TableCell'
 import TableHead from '@material-ui/core/TableHead'
 import TableRow from '@material-ui/core/TableRow'
 import TableBody from '@material-ui/core/TableBody'
-import Button from '@material-ui/core/Button'
 import Link from '@material-ui/core/Link'
-import { withStyles } from '@material-ui/core/styles'
-
-import moment from 'moment'
 
 import useSerum from '../../hooks/useSerum'
 import useWallet from '../../hooks/useWallet'
 import useConnection from '../../hooks/useConnection'
 import useNotifications from '../../hooks/useNotifications'
 import { useSerumOpenOrders } from '../../context/SerumOpenOrdersContext'
-import { useSerumOrderbooks } from '../../context/SerumOrderbookContext'
-
 import { buildSolanaExplorerUrl } from '../../utils/solanaExplorer'
-import theme from '../../utils/theme'
 
 import ConnectButton from '../ConnectButton'
+import OpenOrdersForMarket from './OpenOrdersForMarket'
+import { TCell, THeadCell } from './OpenOrderStyles'
 
 type CallOrPut = {
   expiration: number
   serumKey: string
   size: number
+  strikePrice: string
   type: string
   qAssetSymbol: string
   uAssetSymbol: string
 }
 
-const TCell = withStyles({
-  root: {
-    padding: '8px 16px',
-    whiteSpace: 'nowrap',
-    fontSize: '11px',
-    border: 'none',
-    height: '52px',
-    background: (theme.palette.background as any).medium, // Todo fix this type
-  },
-})(TableCell)
-
-const THeadCell = withStyles({
-  root: {
-    padding: '4px 16px',
-    whiteSpace: 'nowrap',
-    fontSize: '11px',
-    height: '48px',
-    border: 'none',
-  },
-})(TableCell)
-
+// Render all open orders for all optionMarkets specified in props
 const OpenOrders: React.FC<{
-  /**
-   * Which options markets to display the open orders for
-   */
   optionMarkets: CallOrPut[]
 }> = ({ optionMarkets }) => {
   const { connection } = useConnection()
   const { pushNotification } = useNotifications()
   const { wallet, pubKey, connected } = useWallet()
   const { serumMarkets } = useSerum()
-
-  const [orderbooks] = useSerumOrderbooks()
   const [openOrders, setOpenOrders] = useSerumOpenOrders()
 
   /**
@@ -111,7 +82,8 @@ const OpenOrders: React.FC<{
     }
   }, [connection, serumMarkets, wallet, pubKey, openOrders, setOpenOrders])
 
-  const handleCancel = async ({ order, serumKey }) => {
+  // TODO: maybe move this handleCancelOrder function to a hook
+  const handleCancelOrder = async ({ order, serumKey }) => {
     const { serumMarket } = serumMarkets[serumKey]
     if (serumMarket?.market) {
       try {
@@ -148,8 +120,7 @@ const OpenOrders: React.FC<{
           ),
         })
 
-        // TODO - subscribe to open orders so that after someone cancels an order here, it gets removed from the openOrders
-        // Gonna have to refactor the subscribe hooks a little to not just be on-mount for a single serum market
+        // We shouldn't have to update open orders state here because we will subscribe to changes
       } catch (err) {
         pushNotification({
           severity: 'error',
@@ -177,7 +148,7 @@ const OpenOrders: React.FC<{
             <THeadCell>Contract Size</THeadCell>
             <THeadCell>Order Size</THeadCell>
             <THeadCell>Limit Price</THeadCell>
-            <THeadCell>Filled</THeadCell>
+            {/* <THeadCell>Filled</THeadCell> */}
             <THeadCell align="right">Action</THeadCell>
           </TableRow>
         </TableHead>
@@ -192,71 +163,12 @@ const OpenOrders: React.FC<{
             </TableRow>
           ) : (
             optionMarkets.map((optionMarket) => {
-              const {
-                expiration,
-                size: contractSize,
-                type,
-                qAssetSymbol,
-                uAssetSymbol,
-                serumKey,
-              } = optionMarket
-
-              const serumMarket = serumMarkets[serumKey]?.serumMarket?.market
-
-              if (
-                !serumMarket ||
-                !openOrders[serumKey]?.orders ||
-                !orderbooks[serumKey]
-              ) {
-                return null
-              }
-
-              const { bidOrderbook = [], askOrderbook = [] } = orderbooks[
-                serumKey
-              ]
-              const actualOpenOrders = serumMarket.filterForOpenOrders(
-                bidOrderbook,
-                askOrderbook,
-                openOrders[serumKey].orders,
-              )
-
               return (
-                actualOpenOrders &&
-                actualOpenOrders.map((order) => {
-                  return (
-                    <TableRow key={JSON.stringify(order)}>
-                      <TCell>{order?.side}</TCell>
-                      <TCell>{type}</TCell>
-                      <TCell>{`${qAssetSymbol}/${uAssetSymbol}`}</TCell>
-                      <TCell>
-                        {`${moment
-                          .utc(expiration * 1000)
-                          .format('LL')} 23:59:59 UTC`}
-                      </TCell>
-                      <TCell>
-                        {type === 'put' ? contractSize : 1 / contractSize}
-                      </TCell>
-                      <TCell>{`${contractSize} ${uAssetSymbol}`}</TCell>
-                      <TCell>{order?.size}</TCell>
-                      <TCell>{order?.price}</TCell>
-                      <TCell>TODO</TCell>
-                      <TCell align="right">
-                        <Button
-                          variant="outlined"
-                          color="primary"
-                          onClick={() =>
-                            handleCancel({
-                              order,
-                              serumKey,
-                            })
-                          }
-                        >
-                          Cancel
-                        </Button>
-                      </TCell>
-                    </TableRow>
-                  )
-                })
+                <OpenOrdersForMarket
+                  {...optionMarket}
+                  handleCancelOrder={handleCancelOrder}
+                  key={`${optionMarket.serumKey}`}
+                />
               )
             })
           )}

@@ -164,8 +164,20 @@ const Markets = () => {
   // Flat markets object for open orders component
   const marketsFlat = filteredChain
     .map((row) => [
-      { ...row.call, type: 'call' },
-      { ...row.put, type: 'put' },
+      {
+        ...row.call,
+        type: 'call',
+        strikePrice: round
+          ? row.strike.toFixed(precision)
+          : row.strike.toString(10),
+      },
+      {
+        ...row.put,
+        type: 'put',
+        strikePrice: round
+          ? row.strike.toFixed(precision)
+          : row.strike.toString(10),
+      },
     ])
     .reduce((a, b) => [...a, ...b], [])
     .filter((callOrPut) => !!callOrPut)

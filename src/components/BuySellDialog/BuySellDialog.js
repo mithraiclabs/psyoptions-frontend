@@ -541,7 +541,11 @@ const BuySellDialog = ({
                 <CircularProgress />
               ) : serum ? (
                 <>
-                  <OrderBook {...orderbook} />
+                  <OrderBook 
+                    setOrderSize={setOrderSize}
+                    setLimitPrice={setLimitPrice}
+                    {...orderbook}
+                  />
                   <Box
                     pt={3}
                     pb={1}

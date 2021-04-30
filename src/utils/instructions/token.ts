@@ -5,9 +5,20 @@
  */
 
 import { AccountLayout, Token } from '@solana/spl-token'
-import { Account, PublicKey, SystemProgram, Transaction } from '@solana/web3.js'
+import {
+  Account,
+  PublicKey,
+  SystemProgram,
+  SYSVAR_RENT_PUBKEY,
+  Transaction,
+  TransactionInstruction,
+} from '@solana/web3.js'
 import { CreateNewTokenAccountResponse } from 'src/types'
 import { TOKEN_PROGRAM_ID } from '../tokenInstructions'
+
+const SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID = new PublicKey(
+  'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL',
+)
 
 /**
  * Create and initialize a new SPL Token account for the provided owner. Initial
@@ -51,4 +62,36 @@ export const createNewTokenAccount = ({
   const signers = [newAccount]
 
   return { transaction, signers, newTokenAccount: newAccount }
+}
+
+/**
+ * Create and initialize a Associated SPL Token account for the provided owner.
+ */
+export const createAssociatedTokenAccountInstruction = async ({
+  payer,
+  owner,
+  mintPublicKey,
+}: {
+  payer: PublicKey
+  owner: PublicKey
+  mintPublicKey: PublicKey
+}): Promise<[TransactionInstruction, PublicKey]> => {
+  const [associatedTokenPublicKey] = await PublicKey.findProgramAddress(
+    [owner.toBuffer(), TOKEN_PROGRAM_ID.toBuffer(), mintPublicKey.toBuffer()],
+    SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID,
+  )
+  const ix = new TransactionInstruction({
+    keys: [
+      { pubkey: payer, isSigner: true, isWritable: true },
+      { pubkey: associatedTokenPublicKey, isSigner: false, isWritable: true },
+      { pubkey: owner, isSigner: false, isWritable: false },
+      { pubkey: mintPublicKey, isSigner: false, isWritable: false },
+      { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+      { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
+      { pubkey: SYSVAR_RENT_PUBKEY, isSigner: false, isWritable: false },
+    ],
+    programId: SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID,
+  })
+
+  return [ix, associatedTokenPublicKey]
 }

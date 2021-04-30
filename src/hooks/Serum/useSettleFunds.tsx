@@ -2,9 +2,8 @@ import Link from '@material-ui/core/Link'
 import { Market } from '@mithraic-labs/serum'
 import { PublicKey, Transaction } from '@solana/web3.js'
 import React, { useCallback } from 'react'
-import { useSolanaMeta } from '../../context/SolanaMetaContext'
 import { NotificationSeverity } from '../../types'
-import { createNewTokenAccount } from '../../utils/instructions'
+import { createAssociatedTokenAccountInstruction } from '../../utils/instructions'
 import { buildSolanaExplorerUrl } from '../../utils/solanaExplorer'
 import { getHighestAccount } from '../../utils/token'
 import useConnection from '../useConnection'
@@ -21,7 +20,6 @@ export const useSettleFunds = (key: string): (() => Promise<void>) => {
   const { pushNotification } = useNotifications()
   const { connection } = useConnection()
   const { serumMarkets } = useSerum()
-  const { splTokenAccountRentBalance } = useSolanaMeta()
   const { wallet, pubKey } = useWallet()
   const {
     ownedTokenAccounts,
@@ -45,38 +43,34 @@ export const useSettleFunds = (key: string): (() => Promise<void>) => {
 
       if (!_baseTokenAccountKey) {
         // Create a SPL Token account for this base account if the wallet doesn't have one
-        const {
-          transaction: createOptAccountTx,
-          newTokenAccount,
-        } = createNewTokenAccount({
-          fromPubkey: pubKey,
+        const [
+          createOptAccountTx,
+          newTokenAccountKey,
+        ] = await createAssociatedTokenAccountInstruction({
+          payer: pubKey,
           owner: pubKey,
           mintPublicKey: new PublicKey(baseMintAddress),
-          splTokenAccountRentBalance,
         })
 
         transaction.add(createOptAccountTx)
-        signers.push(newTokenAccount)
-        _baseTokenAccountKey = newTokenAccount.publicKey
-        subscribeToTokenAccount(newTokenAccount.publicKey)
+        _baseTokenAccountKey = newTokenAccountKey
+        subscribeToTokenAccount(newTokenAccountKey)
       }
 
       if (!quoteTokenAccountKey) {
         // Create a SPL Token account for this quote account if the wallet doesn't have one
-        const {
-          transaction: createOptAccountTx,
-          newTokenAccount,
-        } = createNewTokenAccount({
-          fromPubkey: pubKey,
+        const [
+          createOptAccountTx,
+          newTokenAccountKey,
+        ] = await createAssociatedTokenAccountInstruction({
+          payer: pubKey,
           owner: pubKey,
           mintPublicKey: new PublicKey(quoteMintAddress),
-          splTokenAccountRentBalance,
         })
 
         transaction.add(createOptAccountTx)
-        signers.push(newTokenAccount)
-        _quoteTokenAccountKey = newTokenAccount.publicKey
-        subscribeToTokenAccount(newTokenAccount.publicKey)
+        _quoteTokenAccountKey = newTokenAccountKey
+        subscribeToTokenAccount(newTokenAccountKey)
       }
 
       const {
@@ -133,7 +127,6 @@ export const useSettleFunds = (key: string): (() => Promise<void>) => {
     quoteMintAddress,
     quoteTokenAccountKey,
     serumMarket?.market,
-    splTokenAccountRentBalance,
     subscribeToTokenAccount,
     wallet,
   ])

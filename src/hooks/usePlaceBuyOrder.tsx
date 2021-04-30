@@ -3,8 +3,7 @@ import React, { useCallback } from 'react'
 import { OrderParams } from '@mithraic-labs/serum/lib/market'
 import Link from '@material-ui/core/Link'
 import { NotificationSeverity, OptionMarket } from '../types'
-import { createNewTokenAccount } from '../utils/instructions/token'
-import { useSolanaMeta } from '../context/SolanaMetaContext'
+import { createAssociatedTokenAccountInstruction } from '../utils/instructions/token'
 import useWallet from './useWallet'
 import useNotifications from './useNotifications'
 import useConnection from './useConnection'
@@ -26,7 +25,6 @@ const usePlaceBuyOrder = (
   const { pushNotification } = useNotifications()
   const { wallet, pubKey } = useWallet()
   const { connection } = useConnection()
-  const { splTokenAccountRentBalance } = useSolanaMeta()
   const { subscribeToTokenAccount } = useOwnedTokenAccounts()
   const createAdHocOpenOrdersSub = useCreateAdHocOpenOrdersSubscription(
     serumKey,
@@ -45,19 +43,17 @@ const usePlaceBuyOrder = (
 
       if (!_optionDestinationKey) {
         // Create a SPL Token account for this option market if the wallet doesn't have one
-        const {
-          transaction: createOptAccountTx,
-          newTokenAccount,
-        } = createNewTokenAccount({
-          fromPubkey: pubKey,
+        const [
+          createOptAccountIx,
+          newPublicKey,
+        ] = await createAssociatedTokenAccountInstruction({
+          payer: pubKey,
           owner: pubKey,
           mintPublicKey: optionMarket.optionMintKey,
-          splTokenAccountRentBalance,
         })
 
-        transaction.add(createOptAccountTx)
-        signers.push(newTokenAccount)
-        subscribeToTokenAccount(newTokenAccount.publicKey)
+        transaction.add(createOptAccountIx)
+        subscribeToTokenAccount(newPublicKey)
       }
       // place the buy order
       const {
@@ -111,7 +107,6 @@ const usePlaceBuyOrder = (
       createAdHocOpenOrdersSub,
       pubKey,
       pushNotification,
-      splTokenAccountRentBalance,
       subscribeToTokenAccount,
       wallet,
     ],

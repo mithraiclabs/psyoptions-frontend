@@ -13,14 +13,17 @@ import {
 } from '../../types'
 import { truncatePublicKey } from '../format'
 import { WRAPPED_SOL_ADDRESS } from '../token'
-import { createNewTokenAccount } from './token'
+import {
+  createAssociatedTokenAccountInstruction,
+  createNewTokenAccount,
+} from './token'
 
 /**
  * Check that all the necessary accounts exist. If they're not provided then
  * instructions will be added to a transaction for creating them.
  *
  */
-export const createMissingMintAccounts = ({
+export const createMissingMintAccounts = async ({
   owner,
   market,
   uAsset,
@@ -39,7 +42,7 @@ export const createMissingMintAccounts = ({
   writerTokenDestinationKey?: PublicKey
   numberOfContractsToMint: number
   // TODO create an optional return type
-}): Result<CreateMissingMintAccountsRes, InstructionErrorResponse> => {
+}): Promise<Result<CreateMissingMintAccountsRes, InstructionErrorResponse>> => {
   const tx = new Transaction()
   const signers = []
   const uAssetSymbol = uAsset.tokenSymbol
@@ -109,29 +112,31 @@ export const createMissingMintAccounts = ({
 
   if (!_mintedOptionDestinationKey) {
     // Create token account for minted option if the user doesn't have one yet
-    const { transaction, newTokenAccount } = createNewTokenAccount({
-      fromPubkey: owner,
+    const [
+      instruction,
+      newTokenAccountKey,
+    ] = await createAssociatedTokenAccountInstruction({
+      payer: owner,
       owner,
       mintPublicKey: market.optionMintKey,
-      splTokenAccountRentBalance,
     })
 
-    tx.add(transaction)
-    signers.push(newTokenAccount)
-    _mintedOptionDestinationKey = newTokenAccount.publicKey
+    tx.add(instruction)
+    _mintedOptionDestinationKey = newTokenAccountKey
   }
 
   if (!_writerTokenDestinationKey) {
     // Create token account for minted Writer Token if the user doesn't have one yet
-    const { transaction, newTokenAccount } = createNewTokenAccount({
-      fromPubkey: owner,
+    const [
+      instruction,
+      newTokenAccountKey,
+    ] = await createAssociatedTokenAccountInstruction({
+      payer: owner,
       owner,
       mintPublicKey: market.writerTokenMintKey,
-      splTokenAccountRentBalance,
     })
-    tx.add(transaction)
-    signers.push(newTokenAccount)
-    _writerTokenDestinationKey = newTokenAccount.publicKey
+    tx.add(instruction)
+    _writerTokenDestinationKey = newTokenAccountKey
   }
 
   return {
@@ -218,7 +223,7 @@ export const createMissingAccountsAndMint = async ({
   let signers = []
 
   // TODO fix typescript yelling with Either or Option return type from create missing accounts
-  const { response, error } = createMissingMintAccounts({
+  const { response, error } = await createMissingMintAccounts({
     owner,
     market,
     uAsset,

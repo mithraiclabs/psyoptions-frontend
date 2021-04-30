@@ -1,7 +1,7 @@
 import React, { useContext, useCallback } from 'react'
 import BigNumber from 'bignumber.js'
 import { Link } from '@material-ui/core'
-import { initializeMarket, Market } from '@mithraic-labs/options-js-bindings'
+import { initializeMarket, Market } from '@mithraic-labs/psyoptions'
 
 import { Connection, PublicKey } from '@solana/web3.js'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'

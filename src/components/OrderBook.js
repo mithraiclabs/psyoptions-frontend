@@ -38,8 +38,8 @@ const bidOrAskType = propTypes.shape({
 const orderBookPropTypes = {
   bids: propTypes.arrayOf(bidOrAskType),
   asks: propTypes.arrayOf(bidOrAskType),
-  setLimitPrice: propTypes.func,
-  setOrderSize: propTypes.func
+  setLimitPrice: propTypes.func.isRequired,
+  setOrderSize: propTypes.func.isRequired
 }
 
 const OrderBook = memo(({ bids = [[]], asks = [[]], setLimitPrice, setOrderSize }) => {
@@ -104,14 +104,14 @@ const OrderBook = memo(({ bids = [[]], asks = [[]], setLimitPrice, setOrderSize 
                   <BidAskCell 
                     onClick={() => setPriceAndSize(bid)}
                     width="25%"
-                    style={{ color: successColor }}
+                    style={{ color: successColor, cursor: 'pointer' }}
                   >
                     {bid?.price || '\u00A0'}
                   </BidAskCell>
                   <BidAskCell 
                     onClick={() => setPriceAndSize(bid)}
                     width="25%"
-                    style={centerBorder}
+                    style={{ ...centerBorder, cursor: 'pointer' }}
                   >
                     {bid?.size || '\u00A0'}
                   </BidAskCell>
@@ -119,13 +119,14 @@ const OrderBook = memo(({ bids = [[]], asks = [[]], setLimitPrice, setOrderSize 
                     onClick={() => setPriceAndSize(ask)}
                     width="25%"
                     align="right"
+                    style={{ cursor: 'pointer' }}
                   >
                     {ask?.size || '\u00A0'}
                   </BidAskCell>
                   <BidAskCell
                     width="25%"
                     align="right"
-                    style={{ color: errorColor }}
+                    style={{ color: errorColor, cursor: 'pointer' }}
                     onClick={() => setPriceAndSize(ask)}
                   >
                     {ask?.price || '\u00A0'}

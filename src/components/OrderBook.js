@@ -38,9 +38,11 @@ const bidOrAskType = propTypes.shape({
 const orderBookPropTypes = {
   bids: propTypes.arrayOf(bidOrAskType),
   asks: propTypes.arrayOf(bidOrAskType),
+  setLimitPrice: propTypes.func.isRequired,
+  setOrderSize: propTypes.func.isRequired
 }
 
-const OrderBook = memo(({ bids = [[]], asks = [[]] }) => {
+const OrderBook = memo(({ bids = [[]], asks = [[]], setLimitPrice, setOrderSize }) => {
   // Maybe we should do this zipping of the bids/asks elsewhere
   // Doing it here for quick and dirty solution, don't over-engineer right? :)
   const rows = []
@@ -53,6 +55,11 @@ const OrderBook = memo(({ bids = [[]], asks = [[]] }) => {
   ) {
     rows.push({ bid: bids[i] || {}, ask: asks[i] || {}, key: i })
     i += 1
+  }
+
+  const setPriceAndSize = bidAsk => {
+    if (bidAsk?.price) setLimitPrice(bidAsk.price)
+    if (bidAsk?.size) setOrderSize(bidAsk.size)
   }
 
   return (
@@ -94,19 +101,33 @@ const OrderBook = memo(({ bids = [[]], asks = [[]] }) => {
             {rows.map(({ bid, ask, key }) => {
               return (
                 <TableRow key={key}>
-                  <BidAskCell width="25%" style={{ color: successColor }}>
+                  <BidAskCell 
+                    onClick={() => setPriceAndSize(bid)}
+                    width="25%"
+                    style={{ color: successColor, cursor: 'pointer' }}
+                  >
                     {bid?.price || '\u00A0'}
                   </BidAskCell>
-                  <BidAskCell width="25%" style={centerBorder}>
+                  <BidAskCell 
+                    onClick={() => setPriceAndSize(bid)}
+                    width="25%"
+                    style={{ ...centerBorder, cursor: 'pointer' }}
+                  >
                     {bid?.size || '\u00A0'}
                   </BidAskCell>
-                  <BidAskCell width="25%" align="right">
+                  <BidAskCell
+                    onClick={() => setPriceAndSize(ask)}
+                    width="25%"
+                    align="right"
+                    style={{ cursor: 'pointer' }}
+                  >
                     {ask?.size || '\u00A0'}
                   </BidAskCell>
                   <BidAskCell
                     width="25%"
                     align="right"
-                    style={{ color: errorColor }}
+                    style={{ color: errorColor, cursor: 'pointer' }}
+                    onClick={() => setPriceAndSize(ask)}
                   >
                     {ask?.price || '\u00A0'}
                   </BidAskCell>

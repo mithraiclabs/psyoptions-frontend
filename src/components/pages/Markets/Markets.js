@@ -29,6 +29,7 @@ import CallPutRow from './CallPutRow'
 import BuySellDialog from '../../BuySellDialog'
 import Loading from '../../Loading'
 import RefreshButton from '../../RefreshButton'
+import OpenOrders from '../../OpenOrders'
 
 const dblsp = `${'\u00A0'}${'\u00A0'}`
 
@@ -103,7 +104,7 @@ const expirations = getLastFridayOfMonths(10)
 const Markets = () => {
   const { uAsset, qAsset, setUAsset, assetListLoading } = useAssetList()
   const [date, setDate] = useState(expirations[0])
-  const { chain, fetchOptionsChain } = useOptionsChain()
+  const { chain, buildOptionsChain } = useOptionsChain()
   const { marketsLoading, fetchMarketData } = useOptionsMarkets()
   const { serumMarkets, fetchSerumMarket } = useSerum()
   const [round, setRound] = useState(true)
@@ -160,9 +161,30 @@ const Markets = () => {
     [filteredChain],
   )
 
+  // Flat markets object for open orders component
+  const marketsFlat = filteredChain
+    .map((row) => [
+      {
+        ...row.call,
+        type: 'call',
+        strikePrice: round
+          ? row.strike.toFixed(precision)
+          : row.strike.toString(10),
+      },
+      {
+        ...row.put,
+        type: 'put',
+        strikePrice: round
+          ? row.strike.toFixed(precision)
+          : row.strike.toString(10),
+      },
+    ])
+    .reduce((a, b) => [...a, ...b], [])
+    .filter((callOrPut) => !!callOrPut)
+
   useEffect(() => {
-    fetchOptionsChain(date.unix())
-  }, [fetchOptionsChain, date])
+    buildOptionsChain(date.unix())
+  }, [buildOptionsChain, date])
 
   useEffect(() => {
     // Load serum markets when the options chain changes
@@ -366,7 +388,7 @@ const Markets = () => {
             </Table>
           </TableContainer>
           <Box
-            pt={1}
+            py={1}
             px={[1, 1, 0]}
             display="flex"
             justifyContent="flex-end"
@@ -388,6 +410,9 @@ const Markets = () => {
               }
               style={{ margin: '0' }}
             />
+          </Box>
+          <Box>
+            <OpenOrders optionMarkets={marketsFlat} />
           </Box>
         </Box>
       </Box>

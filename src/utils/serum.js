@@ -1,11 +1,6 @@
-import {
-  Account,
-  PublicKey,
-  Transaction,
-  SystemProgram,
-} from '@solana/web3.js'
+import { Account, PublicKey, Transaction, SystemProgram } from '@solana/web3.js'
 
-import { DexInstructions, Market, } from '@mithraic-labs/serum'
+import { DexInstructions, Market } from '@mithraic-labs/serum'
 import BN from 'bn.js'
 import { Token } from '@solana/spl-token'
 import { Buffer } from 'buffer'
@@ -316,6 +311,8 @@ export class SerumMarket {
       ])
 
       return {
+        bidOrderbook,
+        askOrderbook,
         bids: !bidOrderbook
           ? []
           : bidOrderbook.getL2(depth).map(([price, size]) => ({ price, size })),
@@ -324,8 +321,10 @@ export class SerumMarket {
           : askOrderbook.getL2(depth).map(([price, size]) => ({ price, size })),
       }
     } catch (err) {
-      console.error(err);
+      console.error(err)
       return {
+        bidOrderbook: null,
+        askOrderbook: null,
         bids: [],
         asks: [],
       }
@@ -375,7 +374,12 @@ export class SerumMarket {
     orderType,
     opts = {},
   }) {
-    const {clientId, openOrdersAddressKey, openOrdersAccount, feeDiscountPubkey} = opts;
+    const {
+      clientId,
+      openOrdersAddressKey,
+      openOrdersAccount,
+      feeDiscountPubkey,
+    } = opts
 
     return this.market.makePlaceOrderTransaction(connection, {
       owner,

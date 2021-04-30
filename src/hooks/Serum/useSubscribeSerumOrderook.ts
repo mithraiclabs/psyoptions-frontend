@@ -34,6 +34,8 @@ export const useSubscribeSerumOrderbook = (key: string): void => {
           setOrderbooks((prevOrderbooks) => ({
             ...prevOrderbooks,
             [key]: {
+              askOrderbook: prevOrderbooks[key]?.askOrderbook,
+              bidOrderbook: book,
               asks: prevOrderbooks[key]?.asks ?? [],
               bids: _bids,
             },
@@ -50,6 +52,8 @@ export const useSubscribeSerumOrderbook = (key: string): void => {
           setOrderbooks((prevOrderbooks) => ({
             ...prevOrderbooks,
             [key]: {
+              askOrderbook: book,
+              bidOrderbook: prevOrderbooks[key]?.bidOrderbook,
               asks: _asks,
               bids: prevOrderbooks[key]?.bids ?? [],
             },

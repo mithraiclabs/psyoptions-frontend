@@ -1,8 +1,6 @@
 import { useCallback, useContext } from 'react'
 import BigNumber from 'bignumber.js'
-import { Connection } from '@solana/web3.js'
 
-import useConnection from './useConnection'
 import useOptionsMarkets from './useOptionsMarkets'
 import { OptionsChainContext } from '../context/OptionsChainContext'
 import useAssetList from './useAssetList'
@@ -18,58 +16,50 @@ const callOrPutTemplate = {
   serumKey: '',
   initialized: false,
 }
-
-/**
- *
- */
 const useOptionsChain = () => {
-  const { connection } = useConnection()
-  const { markets: marketData, marketsLoading } = useOptionsMarkets()
+  const { markets, marketsLoading } = useOptionsMarkets()
   const { uAsset, qAsset } = useAssetList()
-  const {
-    chain,
-    setChain,
-    optionsChainLoading,
-    setOptionsChainLoading,
-  } = useContext(OptionsChainContext)
+  const { chain, setChain } = useContext(OptionsChainContext)
 
-  const fetchOptionsChain = useCallback(
-    async (dateTimestamp) => {
+  /**
+   * Builds an options chain and set it in the OptionsChainContext
+   * This is synchronous but expects markets to be loaded
+   *
+   * @param {number} dateTimestamp - Expiration as unix timestamp in seconds
+   */
+  const buildOptionsChain = useCallback(
+    (dateTimestamp) => {
       try {
-        if (optionsChainLoading || marketsLoading) return
+        if (marketsLoading) return
 
         if (
-          !(connection instanceof Connection) ||
           !uAsset?.tokenSymbol ||
           !qAsset?.tokenSymbol ||
           !dateTimestamp ||
-          !marketData ||
-          Object.keys(marketData).length < 1
+          !markets ||
+          Object.keys(markets).length < 1
         ) {
-          setOptionsChainLoading(false)
           setChain([])
           return
         }
-
-        setOptionsChainLoading(true)
 
         const callKeyPart = `${dateTimestamp}-${uAsset.tokenSymbol}-${qAsset.tokenSymbol}`
         const putKeyPart = `${dateTimestamp}-${qAsset.tokenSymbol}-${uAsset.tokenSymbol}`
 
         const callPutMap = (k) => {
-          const amt = marketData[k].amountPerContract.toString()
-          const qAmt = marketData[k].quoteAmountPerContract.toString()
+          const amt = markets[k].amountPerContract.toString()
+          const qAmt = markets[k].quoteAmountPerContract.toString()
           return {
             fraction: `${amt}/${qAmt}`,
             reciprocalFraction: `${qAmt}/${amt}`,
-            ...marketData[k],
+            ...markets[k],
           }
         }
 
-        const calls = Object.keys(marketData)
+        const calls = Object.keys(markets)
           .filter((k) => k.match(callKeyPart))
           .map(callPutMap)
-        const puts = Object.keys(marketData)
+        const puts = Object.keys(markets)
           .filter((k) => k.match(putKeyPart))
           .map(callPutMap)
 
@@ -82,82 +72,72 @@ const useOptionsChain = () => {
 
         const rows = []
 
-        await Promise.all(
-          strikeFractions.map(async (fraction) => {
-            const sizes = new Set()
-            const [amt, qAmt] = fraction.split('/')
-            const strike = new BigNumber(qAmt).div(new BigNumber(amt))
+        strikeFractions.forEach((fraction) => {
+          const sizes = new Set()
+          const [amt, qAmt] = fraction.split('/')
+          const strike = new BigNumber(qAmt).div(new BigNumber(amt))
 
-            const matchingCalls = calls.filter((c) => {
-              if (c.fraction === fraction) {
-                sizes.add(c.size)
-                return true
-              }
-              return false
-            })
+          const matchingCalls = calls.filter((c) => {
+            if (c.fraction === fraction) {
+              sizes.add(c.size)
+              return true
+            }
+            return false
+          })
 
-            const matchingPuts = puts.filter((p) => {
-              if (p.reciprocalFraction === fraction) {
-                sizes.add(p.quoteAmountPerContract.toString())
-                return true
-              }
-              return false
-            })
+          const matchingPuts = puts.filter((p) => {
+            if (p.reciprocalFraction === fraction) {
+              sizes.add(p.quoteAmountPerContract.toString())
+              return true
+            }
+            return false
+          })
 
-            await Promise.all(
-              Array.from(sizes).map(async (size) => {
-                const call = matchingCalls.find((c) => c.size === size)
-                const put = matchingPuts.find(
-                  (p) => p.quoteAmountPerContract.toString() === size,
-                )
-
-                const row = {
-                  strike,
-                  size,
-                  call: call
-                    ? {
-                        ...callOrPutTemplate,
-                        ...call,
-                        serumKey: `${call?.optionMintAddress}-${call?.qAssetMint}`,
-                        initialized: true,
-                      }
-                    : callOrPutTemplate,
-                  put: put
-                    ? {
-                        ...callOrPutTemplate,
-                        ...put,
-                        serumKey: `${put?.optionMintAddress}-${put?.uAssetMint}`,
-                        initialized: true,
-                      }
-                    : callOrPutTemplate,
-                  key: `${callKeyPart}-${size}-${strike}`,
-                }
-
-                rows.push(row)
-              }),
+          Array.from(sizes).forEach(async (size) => {
+            const call = matchingCalls.find((c) => c.size === size)
+            const put = matchingPuts.find(
+              (p) => p.quoteAmountPerContract.toString() === size,
             )
-          }),
-        )
+
+            const row = {
+              strike,
+              size,
+              call: call
+                ? {
+                    ...callOrPutTemplate,
+                    ...call,
+                    serumKey: `${call?.optionMintAddress}-${call?.qAssetMint}`,
+                    initialized: true,
+                  }
+                : callOrPutTemplate,
+              put: put
+                ? {
+                    ...callOrPutTemplate,
+                    ...put,
+                    serumKey: `${put?.optionMintAddress}-${put?.uAssetMint}`,
+                    initialized: true,
+                  }
+                : callOrPutTemplate,
+              key: `${callKeyPart}-${size}-${strike}`,
+            }
+
+            rows.push(row)
+          })
+        })
 
         rows.sort((a, b) => a.strike.minus(b.strike).toNumber())
         setChain(rows)
-        setOptionsChainLoading(false)
       } catch (err) {
         console.log(err)
         setChain([])
-        setOptionsChainLoading(false)
       }
     },
-    // eslint-disable-next-line
-    [connection, uAsset, qAsset, setChain, marketData, marketsLoading],
+    [uAsset, qAsset, setChain, markets, marketsLoading],
   )
 
   return {
     chain,
-    setChain,
-    setOptionsChainLoading,
-    fetchOptionsChain,
-    optionsChainLoading,
+    buildOptionsChain,
   }
 }
 

@@ -1,5 +1,4 @@
 import React, { createContext, useState } from 'react'
-import useLocalStorageState from 'use-local-storage-state'
 import { Connection } from '@solana/web3.js'
 
 import { getDexProgramKeyByNetwork, networks } from '../utils/networkInfo'
@@ -12,10 +11,7 @@ const DEFAULT_NETWORK = networks.find(
 const ConnectionContext = createContext({})
 
 const ConnectionProvider = ({ children }) => {
-  const [endpoint, setEndpoint] = useLocalStorageState(
-    'endpoint',
-    DEFAULT_NETWORK,
-  )
+  const [endpoint, setEndpoint] = useState(DEFAULT_NETWORK)
 
   const [connection, setConnection] = useState(
     new Connection(endpoint.url, 'confirmed'),

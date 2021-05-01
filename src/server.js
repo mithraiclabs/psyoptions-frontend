@@ -49,6 +49,7 @@ const {
   APP_ENABLED = false,
   APP_PASSWORD,
   APP_PASSWORD_PROTECTED,
+  INITIALIZE_PAGE_ENABLED,
 } = process.env
 
 server.use((req, res) => {
@@ -77,6 +78,7 @@ server.use((req, res) => {
         OPTIONS_API_URL,
         APP_PASSWORD,
         APP_PASSWORD_PROTECTED,
+        INITIALIZE_PAGE_ENABLED,
       }
     } else {
       app = <LandingComingSoon />

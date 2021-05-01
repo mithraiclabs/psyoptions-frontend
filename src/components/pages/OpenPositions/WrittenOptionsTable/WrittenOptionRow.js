@@ -14,6 +14,7 @@ import { useClosePosition } from '../../../../hooks/useClosePosition'
 import useOwnedTokenAccounts from '../../../../hooks/useOwnedTokenAccounts'
 import useConnection from '../../../../hooks/useConnection'
 import { useExchangeWriterTokenForQuote } from '../../../../hooks/useExchangeWriterTokenForQuote'
+import useNotifications from '../../../../hooks/useNotifications'
 
 /**
  * Row to display the wallet's minted options
@@ -26,6 +27,7 @@ export const WrittenOptionRow = ({
   writerTokenAccounts,
   heldContracts,
 }) => {
+  const { pushNotification } = useNotifications()
   const { connection } = useConnection()
   const { ownedTokenAccounts } = useOwnedTokenAccounts()
   const { markets } = useOptionsMarkets()
@@ -58,20 +60,32 @@ export const WrittenOptionRow = ({
 
   useEffect(() => {
     ;(async () => {
-      const quoteToken = new Token(
-        connection,
-        new PublicKey(market.qAssetMint),
-        TOKEN_PROGRAM_ID,
-        null,
-      )
-      const quoteAssetPoolAccount = await quoteToken.getAccountInfo(
-        market.quoteAssetPoolKey,
-      )
-      if (!quoteAssetPoolAccount.amount.isZero()) {
-        setQuoteAssetPoolNotEmpty(true)
+      try {
+        const quoteToken = new Token(
+          connection,
+          new PublicKey(market.qAssetMint),
+          TOKEN_PROGRAM_ID,
+          null,
+        )
+        const quoteAssetPoolAccount = await quoteToken.getAccountInfo(
+          market.quoteAssetPoolKey,
+        )
+        if (!quoteAssetPoolAccount.amount.isZero()) {
+          setQuoteAssetPoolNotEmpty(true)
+        }
+      } catch (err) {
+        pushNotification({
+          severity: 'error',
+          message: `${err}`,
+        })
       }
     })()
-  }, [connection, market.qAssetMint, market.quoteAssetPoolKey])
+  }, [
+    connection,
+    market.qAssetMint,
+    market.quoteAssetPoolKey,
+    pushNotification,
+  ])
 
   let ActionFragment = null
   if (expired) {

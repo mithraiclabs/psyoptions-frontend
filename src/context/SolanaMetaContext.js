@@ -1,23 +1,34 @@
 import React, { useState, createContext, useContext, useEffect } from 'react'
 import PropTypes from 'prop-types'
-import { AccountLayout } from '@solana/spl-token';
-import useConnection from '../hooks/useConnection';
+import { AccountLayout } from '@solana/spl-token'
+import useConnection from '../hooks/useConnection'
+import useNotifications from '../hooks/useNotifications'
 
 const SolanaMetaContext = createContext()
 export const useSolanaMeta = () => useContext(SolanaMetaContext)
 
 export const SolanaMetaProvider = ({ children }) => {
+  const { pushNotification } = useNotifications()
   const { connection } = useConnection()
-  const [splTokenAccountRentBalance, setSplTokenAccountRentBalance] = useState(0)
+  const [splTokenAccountRentBalance, setSplTokenAccountRentBalance] = useState(
+    0,
+  )
 
   useEffect(() => {
-    (async () => {
-      const rentBalance = await connection.getMinimumBalanceForRentExemption(
-        AccountLayout.span
-      )
-      setSplTokenAccountRentBalance(rentBalance)
+    ;(async () => {
+      try {
+        const rentBalance = await connection.getMinimumBalanceForRentExemption(
+          AccountLayout.span,
+        )
+        setSplTokenAccountRentBalance(rentBalance)
+      } catch (err) {
+        pushNotification({
+          severity: 'error',
+          message: `${err}`,
+        })
+      }
     })()
-  }, [connection])
+  }, [connection, pushNotification])
 
   return (
     <SolanaMetaContext.Provider

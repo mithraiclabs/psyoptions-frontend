@@ -4,8 +4,10 @@ import { PublicKey } from '@solana/web3.js'
 import { SerumContext } from '../context/SerumContext'
 import { SerumMarket } from '../utils/serum'
 import useConnection from './useConnection'
+import useNotifications from './useNotifications'
 
 const useSerum = () => {
+  const { pushNotification } = useNotifications()
   const { connection, dexProgramId } = useConnection()
   const { serumMarkets, setSerumMarkets } = useContext(SerumContext)
 
@@ -37,7 +39,10 @@ const useSerum = () => {
         )
       } catch (err) {
         error = err.message
-        console.log(err)
+        pushNotification({
+          severity: 'error',
+          message: `${err}`,
+        })
       }
 
       const newMarket = {
@@ -52,7 +57,7 @@ const useSerum = () => {
 
       return newMarket
     },
-    [setSerumMarkets, connection, dexProgramId],
+    [setSerumMarkets, connection, dexProgramId, pushNotification],
   )
 
   return {

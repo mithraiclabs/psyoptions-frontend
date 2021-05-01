@@ -11,6 +11,7 @@ import bs58 from 'bs58'
 import useConnection from '../hooks/useConnection'
 import useWallet from '../hooks/useWallet'
 import { TokenAccount } from '../types'
+import useNotifications from '../hooks/useNotifications'
 
 export type OwnedTokenAccountsContextT = {
   loadingOwnedTokenAccounts: boolean
@@ -61,6 +62,7 @@ const convertAccountInfoToLocalStruct = (
  */
 export const OwnedTokenAccountsProvider: React.FC = ({ children }) => {
   const { connection } = useConnection()
+  const { pushNotification } = useNotifications()
   const { connected, pubKey } = useWallet()
   const [loadingOwnedTokenAccounts, setLoading] = useState(false)
   const [ownedTokenAccounts, setOwnedTokenAccounts] = useState<
@@ -137,36 +139,51 @@ export const OwnedTokenAccountsProvider: React.FC = ({ children }) => {
     ;(async () => {
       const filters = getOwnedTokenAccountsFilter(pubKey)
       setLoading(true)
-      // @ts-expect-error we know what we're doing
-      const resp = await connection._rpcRequest('getProgramAccounts', [
-        TOKEN_PROGRAM_ID.toBase58(),
-        {
-          commitment: connection.commitment,
-          filters,
-        },
-      ])
-      const _ownedTokenAccounts = {}
-      resp.result?.forEach(({ account, pubkey }) => {
-        const accountInfo = AccountLayout.decode(bs58.decode(account.data))
-        const initialAccount = convertAccountInfoToLocalStruct(
-          accountInfo,
-          new PublicKey(pubkey),
-        )
-        const mint = initialAccount.mint.toString()
-        if (_ownedTokenAccounts[mint]) {
-          _ownedTokenAccounts[mint].push(initialAccount)
-        } else {
-          _ownedTokenAccounts[mint] = [initialAccount]
-        }
-        if (!subscriptionsRef.current[pubkey]) {
-          // Subscribe to the SPL token account updates only if no subscription exists for this token.
-          subscribeToTokenAccount(new PublicKey(pubkey))
-        }
-      })
-      setOwnedTokenAccounts(_ownedTokenAccounts)
-      setLoading(false)
+      try {
+        // @ts-expect-error we know what we're doing
+        const resp = await connection._rpcRequest('getProgramAccounts', [
+          TOKEN_PROGRAM_ID.toBase58(),
+          {
+            commitment: connection.commitment,
+            filters,
+          },
+        ])
+        const _ownedTokenAccounts = {}
+        resp.result?.forEach(({ account, pubkey }) => {
+          const accountInfo = AccountLayout.decode(bs58.decode(account.data))
+          const initialAccount = convertAccountInfoToLocalStruct(
+            accountInfo,
+            new PublicKey(pubkey),
+          )
+          const mint = initialAccount.mint.toString()
+          if (_ownedTokenAccounts[mint]) {
+            _ownedTokenAccounts[mint].push(initialAccount)
+          } else {
+            _ownedTokenAccounts[mint] = [initialAccount]
+          }
+          if (!subscriptionsRef.current[pubkey]) {
+            // Subscribe to the SPL token account updates only if no subscription exists for this token.
+            subscribeToTokenAccount(new PublicKey(pubkey))
+          }
+        })
+        setOwnedTokenAccounts(_ownedTokenAccounts)
+      } catch (err) {
+        pushNotification({
+          severity: 'error',
+          message: `${err}`,
+        })
+      } finally {
+        setLoading(false)
+      }
     })()
-  }, [connected, connection, pubKey, refreshCount, subscribeToTokenAccount])
+  }, [
+    connected,
+    connection,
+    pubKey,
+    pushNotification,
+    refreshCount,
+    subscribeToTokenAccount,
+  ])
 
   return (
     <OwnedTokenAccountsContext.Provider

@@ -5,6 +5,7 @@ import {
   useSerumOrderbooks,
 } from '../../context/SerumOrderbookContext'
 import useConnection from '../useConnection'
+import useNotifications from '../useNotifications'
 import useSerum from '../useSerum'
 
 /**
@@ -16,6 +17,7 @@ export const useSerumOrderbook = (
   orderbook: OrderbookData | undefined
   loading: boolean
 } => {
+  const { pushNotification } = useNotifications()
   const { connection } = useConnection()
   const { serumMarkets } = useSerum()
   const [loading, setLoading] = useState(false)
@@ -28,30 +30,38 @@ export const useSerumOrderbook = (
       // initial load of the orderbook
       ;(async () => {
         setLoading(true)
-        const {
-          asks: _asks,
-          bids: _bids,
-          bidOrderbook,
-          askOrderbook,
-        } = await serumMarket.getOrderbook()
-        setOrderbooks((prevOrderbooks) => ({
-          ...prevOrderbooks,
-          [key]: {
-            // bidOrderbook and askOrderbook are the raw orderbook objects that come back from serum-ts
-            // These are not useable for displaying orders,
-            // But are needed for some other functionality such as finding open orders for an account
-            bidOrderbook,
-            askOrderbook,
-
-            // These are the human-readable orderbooks used to display data in the orderbook table
+        try {
+          const {
             asks: _asks,
             bids: _bids,
-          },
-        }))
-        setLoading(false)
+            bidOrderbook,
+            askOrderbook,
+          } = await serumMarket.getOrderbook()
+          setOrderbooks((prevOrderbooks) => ({
+            ...prevOrderbooks,
+            [key]: {
+              // bidOrderbook and askOrderbook are the raw orderbook objects that come back from serum-ts
+              // These are not useable for displaying orders,
+              // But are needed for some other functionality such as finding open orders for an account
+              bidOrderbook,
+              askOrderbook,
+
+              // These are the human-readable orderbooks used to display data in the orderbook table
+              asks: _asks,
+              bids: _bids,
+            },
+          }))
+        } catch (err) {
+          pushNotification({
+            severity: 'error',
+            message: `${err}`,
+          })
+        } finally {
+          setLoading(false)
+        }
       })()
     }
-  }, [connection, key, serumMarket, setOrderbooks])
+  }, [connection, key, pushNotification, serumMarket, setOrderbooks])
 
   return {
     orderbook: orderbooks[key],

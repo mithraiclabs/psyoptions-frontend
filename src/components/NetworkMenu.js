@@ -55,6 +55,7 @@ const NetworkMenu = () => {
     setSupportedAssets([])
     setUAsset({})
     setQAsset({})
+    // TODO setChain is not defined here
     setChain([])
     setMarkets({})
     setSerumMarkets({})

@@ -130,6 +130,8 @@ const OpenOrders: React.FC<{
     }
   }
 
+  console.log('YOYO ', optionMarkets)
+
   return (
     <Box>
       <Table stickyHeader aria-label="sticky table">

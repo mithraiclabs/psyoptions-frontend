@@ -165,85 +165,93 @@ const useOptionsMarkets = () => {
     uAssetDecimals,
     qAssetDecimals,
   }) => {
-    const results = await Promise.all(
-      quoteAmountsPerContract.map(async (qAmount) => {
-        const {
-          // signers,
-          transaction,
-          optionMarketDataAddress,
-          optionMintAddress,
-        } = await initializeMarket({
-          connection,
-          payer: { publicKey: pubKey },
-          programId: endpoint.programId,
-          underlyingAssetMintKey: uAssetMint,
-          quoteAssetMintKey: qAssetMint,
-          underlyingAssetDecimals: uAssetDecimals,
-          quoteAssetDecimals: qAssetDecimals,
-          underlyingAmountPerContract: amountPerContract,
-          quoteAmountPerContract: qAmount,
-          expirationUnixTimestamp: expiration,
-        })
+    try {
+      const results = await Promise.all(
+        quoteAmountsPerContract.map(async (qAmount) => {
+          const {
+            // signers,
+            transaction,
+            optionMarketDataAddress,
+            optionMintAddress,
+          } = await initializeMarket({
+            connection,
+            payer: { publicKey: pubKey },
+            programId: endpoint.programId,
+            underlyingAssetMintKey: uAssetMint,
+            quoteAssetMintKey: qAssetMint,
+            underlyingAssetDecimals: uAssetDecimals,
+            quoteAssetDecimals: qAssetDecimals,
+            underlyingAmountPerContract: amountPerContract,
+            quoteAmountPerContract: qAmount,
+            expirationUnixTimestamp: expiration,
+          })
 
-        const signed = await wallet.signTransaction(transaction)
-        const txid = await connection.sendRawTransaction(signed.serialize())
+          const signed = await wallet.signTransaction(transaction)
+          const txid = await connection.sendRawTransaction(signed.serialize())
 
-        const explorerUrl = buildSolanaExplorerUrl(txid)
+          const explorerUrl = buildSolanaExplorerUrl(txid)
 
-        // TODO: make the "View on Solana Explorer" am <a> element instead of text
-        pushNotification({
-          severity: 'info',
-          message: `Processing: Initialize Market`,
-          link: (
-            <Link href={explorerUrl} target="_new">
-              View on Solana Explorer
-            </Link>
-          ),
-        })
+          // TODO: make the "View on Solana Explorer" am <a> element instead of text
+          pushNotification({
+            severity: 'info',
+            message: `Processing: Initialize Market`,
+            link: (
+              <Link href={explorerUrl} target="_new">
+                View on Solana Explorer
+              </Link>
+            ),
+          })
 
-        await connection.confirmTransaction(txid)
+          await connection.confirmTransaction(txid)
 
-        pushNotification({
-          severity: 'success',
-          message: `Confirmed: Initialize Market`,
-          link: (
-            <Link href={explorerUrl} target="_new">
-              View on Solana Explorer
-            </Link>
-          ),
-        })
+          pushNotification({
+            severity: 'success',
+            message: `Confirmed: Initialize Market`,
+            link: (
+              <Link href={explorerUrl} target="_new">
+                View on Solana Explorer
+              </Link>
+            ),
+          })
 
-        const marketData = {
-          key: `${expiration}-${uAssetSymbol}-${qAssetSymbol}-${qAmount.toString()}-${amountPerContract.toString()}`,
-          size: amountPerContract.toNumber(),
-          strikePrice: qAmount.div(amountPerContract).toNumber(),
-          uAssetSymbol,
-          qAssetSymbol,
-          uAssetMint,
-          qAssetMint,
-          expiration,
-          optionMarketDataAddress: optionMarketDataAddress.toString(),
-          optionMintAddress: optionMintAddress.toString(),
-          createdByMe: true,
-          amountPerContract,
-          quoteAmountPerContract: qAmount,
-        }
+          const marketData = {
+            key: `${expiration}-${uAssetSymbol}-${qAssetSymbol}-${qAmount.toString()}-${amountPerContract.toString()}`,
+            size: amountPerContract.toNumber(),
+            strikePrice: qAmount.div(amountPerContract).toNumber(),
+            uAssetSymbol,
+            qAssetSymbol,
+            uAssetMint,
+            qAssetMint,
+            expiration,
+            optionMarketDataAddress: optionMarketDataAddress.toString(),
+            optionMintAddress: optionMintAddress.toString(),
+            createdByMe: true,
+            amountPerContract,
+            quoteAmountPerContract: qAmount,
+          }
 
-        return marketData
-      }),
-    )
+          return marketData
+        }),
+      )
 
-    const newMarkets = {}
-    results.forEach((market) => {
-      const m = market
-      m.size = `${market.size}`
-      m.strikePrice = `${market.strikePrice}`
-      newMarkets[market.key] = m
-      return m
-    })
-    setMarkets({ ...markets, ...newMarkets })
+      const newMarkets = {}
+      results.forEach((market) => {
+        const m = market
+        m.size = `${market.size}`
+        m.strikePrice = `${market.strikePrice}`
+        newMarkets[market.key] = m
+        return m
+      })
+      setMarkets({ ...markets, ...newMarkets })
 
-    return results
+      return results
+    } catch (err) {
+      pushNotification({
+        severity: 'error',
+        message: `${err}`,
+      })
+    }
+    return []
   }
 
   const getMyMarkets = () => Object.values(markets).filter((m) => m.createdByMe)
@@ -256,68 +264,76 @@ const useOptionsMarkets = () => {
     existingTransaction: { transaction, signers }, // existing transaction and signers
     numberOfContracts,
   }) => {
-    const tx = transaction
+    try {
+      const tx = transaction
 
-    const { transaction: mintTx } = await mintInstructions({
-      numberOfContractsToMint: numberOfContracts,
-      authorityPubkey: pubKey,
-      programId: new PublicKey(endpoint.programId),
-      market: marketData,
-      mintedOptionDestKey,
-      writerTokenDestKey,
-      underlyingAssetSrcKey,
-    })
+      const { transaction: mintTx } = await mintInstructions({
+        numberOfContractsToMint: numberOfContracts,
+        authorityPubkey: pubKey,
+        programId: new PublicKey(endpoint.programId),
+        market: marketData,
+        mintedOptionDestKey,
+        writerTokenDestKey,
+        underlyingAssetSrcKey,
+      })
 
-    tx.add(mintTx)
-    // Close out the wrapped SOL account so it feels native
-    if (marketData.uAssetMint === WRAPPED_SOL_ADDRESS) {
-      tx.add(
-        Token.createCloseAccountInstruction(
-          TOKEN_PROGRAM_ID,
-          underlyingAssetSrcKey,
-          pubKey, // Send any remaining SOL to the owner
-          pubKey,
-          [],
+      tx.add(mintTx)
+      // Close out the wrapped SOL account so it feels native
+      if (marketData.uAssetMint === WRAPPED_SOL_ADDRESS) {
+        tx.add(
+          Token.createCloseAccountInstruction(
+            TOKEN_PROGRAM_ID,
+            underlyingAssetSrcKey,
+            pubKey, // Send any remaining SOL to the owner
+            pubKey,
+            [],
+          ),
+        )
+      }
+
+      tx.feePayer = pubKey
+      const { blockhash } = await connection.getRecentBlockhash()
+      tx.recentBlockhash = blockhash
+
+      if (signers.length) {
+        tx.partialSign(...signers)
+      }
+      const signed = await wallet.signTransaction(tx)
+      const txid = await connection.sendRawTransaction(signed.serialize())
+
+      pushNotification({
+        severity: 'info',
+        message: 'Processing: Mint Options Token',
+        link: (
+          <Link href={buildSolanaExplorerUrl(txid)} target="_new">
+            View on Solana Explorer
+          </Link>
         ),
-      )
+      })
+
+      await connection.confirmTransaction(txid)
+
+      pushNotification({
+        severity: 'success',
+        message: 'Confirmed: Mint Options Token',
+        link: (
+          <Link href={buildSolanaExplorerUrl(txid)} target="_new">
+            View on Solana Explorer
+          </Link>
+        ),
+      })
+
+      return {
+        optionTokenDestKey: mintedOptionDestKey,
+        writerTokenDestKey,
+      }
+    } catch (err) {
+      pushNotification({
+        severity: 'error',
+        message: `${err}`,
+      })
     }
-
-    tx.feePayer = pubKey
-    const { blockhash } = await connection.getRecentBlockhash()
-    tx.recentBlockhash = blockhash
-
-    if (signers.length) {
-      tx.partialSign(...signers)
-    }
-    const signed = await wallet.signTransaction(tx)
-    const txid = await connection.sendRawTransaction(signed.serialize())
-
-    pushNotification({
-      severity: 'info',
-      message: 'Processing: Mint Options Token',
-      link: (
-        <Link href={buildSolanaExplorerUrl(txid)} target="_new">
-          View on Solana Explorer
-        </Link>
-      ),
-    })
-
-    await connection.confirmTransaction(txid)
-
-    pushNotification({
-      severity: 'success',
-      message: 'Confirmed: Mint Options Token',
-      link: (
-        <Link href={buildSolanaExplorerUrl(txid)} target="_new">
-          View on Solana Explorer
-        </Link>
-      ),
-    })
-
-    return {
-      optionTokenDestKey: mintedOptionDestKey,
-      writerTokenDestKey,
-    }
+    return {}
   }
 
   const createAccountsAndMint = async ({

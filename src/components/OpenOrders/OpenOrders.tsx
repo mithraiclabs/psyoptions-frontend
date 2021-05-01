@@ -163,13 +163,16 @@ const OpenOrders: React.FC<{
             </TableRow>
           ) : (
             optionMarkets.map((optionMarket) => {
-              return (
-                <OpenOrdersForMarket
-                  {...optionMarket}
-                  handleCancelOrder={handleCancelOrder}
-                  key={`${optionMarket.serumKey}`}
-                />
-              )
+              if (optionMarket?.serumKey) {
+                return (
+                  <OpenOrdersForMarket
+                    {...optionMarket}
+                    handleCancelOrder={handleCancelOrder}
+                    key={`${optionMarket.serumKey}`}
+                  />
+                )
+              }
+              return null
             })
           )}
         </TableBody>

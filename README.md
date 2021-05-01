@@ -5,7 +5,7 @@ Copy `.env-example` and rename it `.env`
 OR run `touch .env` and add the following lines to it:
 
 ```
-DEVNET_PROGRAM_ID='7UkUQY1gqYyumhyoDy73D5JoThqGY9SJw21k6QveesfP'
+DEVNET_PROGRAM_ID='4DvkJJBUiXMZVYXFGgYQvGceTuM7F5Be4HqWAiR7t2vM'
 DEVNET_DEX_PROGRAM_ID='DESVgJVGajEgKGXhb6XmqDHGz3VjdgP7rEVESBgxmroY'
 APP_ENABLED=true
 ```
@@ -85,4 +85,5 @@ DEV cloud run url: https://solana-options-frontend-ckpgwptysa-uc.a.run.app/
 See <a href="https://github.com/mithraiclabs/solana-options-frontend/blob/master/docs/Deploying.md">Deploy Docs</a>
 
 ### Troubleshooting
+
 If a build fails in google cloud, you can run `npm run build-docker` locally to simulate a cloud build and debug errors.

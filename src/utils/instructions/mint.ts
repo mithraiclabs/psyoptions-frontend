@@ -1,4 +1,4 @@
-import { mintCoveredCallInstruction } from '@mithraic-labs/options-js-bindings'
+import { mintCoveredCallInstruction } from '@mithraic-labs/psyoptions'
 import { PublicKey, Transaction } from '@solana/web3.js'
 import BigNumber from 'bignumber.js'
 import {

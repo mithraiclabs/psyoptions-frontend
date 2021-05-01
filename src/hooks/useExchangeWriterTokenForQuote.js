@@ -1,46 +1,53 @@
-import React, { useCallback } from 'react';
-import { exchangeWriterTokenForQuoteInstruction } from '@mithraic-labs/options-js-bindings'
+import React, { useCallback } from 'react'
+import { exchangeWriterTokenForQuoteInstruction } from '@mithraic-labs/psyoptions'
 import { Link } from '@material-ui/core'
-import { PublicKey, Transaction } from '@solana/web3.js';
-import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import useNotifications from './useNotifications';
-import useConnection from './useConnection';
-import useWallet from './useWallet';
+import { PublicKey, Transaction } from '@solana/web3.js'
+import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import useNotifications from './useNotifications'
+import useConnection from './useConnection'
+import useWallet from './useWallet'
 import { buildSolanaExplorerUrl } from '../utils/solanaExplorer'
-import { initializeTokenAccountTx, WRAPPED_SOL_ADDRESS } from '../utils/token';
-import { useSolanaMeta } from '../context/SolanaMetaContext';
+import { initializeTokenAccountTx, WRAPPED_SOL_ADDRESS } from '../utils/token'
+import { useSolanaMeta } from '../context/SolanaMetaContext'
 
 /**
- * Allow user to burn a Writer Token in exchange for Quote Asset in the 
+ * Allow user to burn a Writer Token in exchange for Quote Asset in the
  * Quote Asset Pool
- * 
- * @param {*} market 
- * @param {*} writerTokenSourceKey 
- * @param {*} _quoteAssetDestKey 
- * @returns 
+ *
+ * @param {*} market
+ * @param {*} writerTokenSourceKey
+ * @param {*} _quoteAssetDestKey
+ * @returns
  */
-export const useExchangeWriterTokenForQuote = (market, writerTokenSourceKey, quoteAssetDestKey) => {
+export const useExchangeWriterTokenForQuote = (
+  market,
+  writerTokenSourceKey,
+  quoteAssetDestKey,
+) => {
   const { connection, endpoint } = useConnection()
   const { pubKey, wallet } = useWallet()
   const { splTokenAccountRentBalance } = useSolanaMeta()
   const { pushNotification } = useNotifications()
-  
+
   const _exchangeWriterTokenFoQuote = useCallback(async () => {
     try {
       const transaction = new Transaction()
-      const signers = [];
+      const signers = []
       let _quoteAssetDestKey = quoteAssetDestKey
       if (market.qAssetMint === WRAPPED_SOL_ADDRESS) {
         // quote is wrapped sol, must create account to transfer and close
-        const {transaction: initWrappedSolAcctIx, newTokenAccount: wrappedSolAccount} = await initializeTokenAccountTx({
+        const {
+          transaction: initWrappedSolAcctIx,
+          newTokenAccount: wrappedSolAccount,
+        } = await initializeTokenAccountTx({
           connection,
           payer: { publicKey: pubKey },
           mintPublicKey: new PublicKey(WRAPPED_SOL_ADDRESS),
           owner: pubKey,
           rentBalance: splTokenAccountRentBalance,
         })
-        transaction.add(initWrappedSolAcctIx);
-        signers.push(wrappedSolAccount);
+        transaction.add(initWrappedSolAcctIx)
+        signers.push(wrappedSolAccount)
         _quoteAssetDestKey = wrappedSolAccount.publicKey
       }
       const ix = await exchangeWriterTokenForQuoteInstruction({
@@ -64,15 +71,15 @@ export const useExchangeWriterTokenForQuote = (market, writerTokenSourceKey, quo
             pubKey, // Send any remaining SOL to the owner
             pubKey,
             [],
-          )
-        );
+          ),
+        )
       }
-      transaction.feePayer = pubKey;
-      const { blockhash } = await connection.getRecentBlockhash();
-      transaction.recentBlockhash = blockhash;
-      
+      transaction.feePayer = pubKey
+      const { blockhash } = await connection.getRecentBlockhash()
+      transaction.recentBlockhash = blockhash
+
       if (signers.length) {
-        transaction.partialSign(...signers);
+        transaction.partialSign(...signers)
       }
 
       const signed = await wallet.signTransaction(transaction)
@@ -102,9 +109,23 @@ export const useExchangeWriterTokenForQuote = (market, writerTokenSourceKey, quo
         message: `${err}`,
       })
     }
-  }, [quoteAssetDestKey, market.qAssetMint, market.optionMarketKey, market.optionMintKey, market.writerTokenMintKey, market.quoteAssetPoolKey, endpoint.programId, pubKey, writerTokenSourceKey, connection, wallet, pushNotification, splTokenAccountRentBalance])
+  }, [
+    quoteAssetDestKey,
+    market.qAssetMint,
+    market.optionMarketKey,
+    market.optionMintKey,
+    market.writerTokenMintKey,
+    market.quoteAssetPoolKey,
+    endpoint.programId,
+    pubKey,
+    writerTokenSourceKey,
+    connection,
+    wallet,
+    pushNotification,
+    splTokenAccountRentBalance,
+  ])
 
   return {
-    exchangeWriterTokenForQuote: _exchangeWriterTokenFoQuote
+    exchangeWriterTokenForQuote: _exchangeWriterTokenFoQuote,
   }
 }

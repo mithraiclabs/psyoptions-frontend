@@ -31,12 +31,6 @@ async function ledgerSend(
     while (payload.length - payloadOffset > MAX_PAYLOAD) {
       const chunk = payload.slice(payloadOffset, payloadOffset + MAX_PAYLOAD)
       payloadOffset += MAX_PAYLOAD
-      console.log(
-        'send',
-        (p2 | P2_MORE).toString(16), // eslint-disable-line
-        chunk.length.toString(16),
-        chunk,
-      )
       // eslint-disable-next-line
       const reply = await transport.send(
         LEDGER_CLA,
@@ -53,7 +47,6 @@ async function ledgerSend(
   }
 
   const chunk = payload.slice(payloadOffset)
-  console.log('send', p2.toString(16), chunk.length.toString(16), chunk)
   const reply = await transport.send(LEDGER_CLA, instruction, p1, p2, chunk)
 
   return reply.slice(0, reply.length - 2)

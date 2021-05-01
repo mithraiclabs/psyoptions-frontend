@@ -61,7 +61,6 @@ const OpenOrdersForMarket: React.FC<{
     askOrderbook,
     openOrders[serumKey].orders,
   )
-  console.log('WHATTT ', actualOpenOrders)
 
   return (
     actualOpenOrders &&

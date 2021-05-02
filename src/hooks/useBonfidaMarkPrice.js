@@ -1,8 +1,10 @@
 import axios from 'axios'
 import { useEffect, useState } from 'react'
+import useNotifications from './useNotifications'
 
 export const useBonfidaMarkPrice = ({ uAsset, qAsset }) => {
-  const [markPrice, setMarkPrice] = useState()
+  const [markPrice, setMarkPrice] = useState(0)
+  const { pushNotification } = useNotifications()
 
   useEffect(() => {
     let timer
@@ -20,8 +22,13 @@ export const useBonfidaMarkPrice = ({ uAsset, qAsset }) => {
             setMarkPrice(0)
           }
         } catch (err) {
-          // Do we need too log anything here really?
-          // console.log(err)
+          pushNotification({
+            severity: 'error',
+            message: `Couldn't load market price for ${uAsset?.tokenSymbol}`,
+          })
+          console.error({
+            ...err,
+          })
         }
       }
 
@@ -36,7 +43,7 @@ export const useBonfidaMarkPrice = ({ uAsset, qAsset }) => {
     return () => {
       clearInterval(timer)
     }
-  }, [uAsset, qAsset])
+  }, [uAsset, qAsset, pushNotification])
 
   return markPrice
 }

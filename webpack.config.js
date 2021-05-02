@@ -2,6 +2,7 @@ const nodeExternals = require('webpack-node-externals')
 const NodePolyfillPlugin = require('node-polyfill-webpack-plugin')
 const WebpackAssetsManifest = require('webpack-assets-manifest')
 const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
+const SentryWebpackPlugin = require('@sentry/webpack-plugin')
 
 const isDev = process.env.NODE_ENV !== 'production'
 
@@ -104,6 +105,17 @@ module.exports = [
         analyzerMode: 'static',
         openAnalyzer: false,
       }),
+      !isDev &&
+        new SentryWebpackPlugin({
+          // sentry-cli configuration
+          authToken: process.env.SENTRY_AUTH_TOKEN,
+          org: 'psyoptions',
+          project: 'psyoptions',
+          release: process.env.SHORT_SHA,
+          // webpack specific configuration
+          include: './dist',
+          ignore: ['node_modules', 'webpack.config.js'],
+        }),
     ],
   },
   {

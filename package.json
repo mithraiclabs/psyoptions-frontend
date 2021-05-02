@@ -19,6 +19,7 @@
   "license": "ISC",
   "devDependencies": {
     "@babel/node": "^7.12.13",
+    "@sentry/webpack-plugin": "^1.15.1",
     "@types/bn.js": "^5.1.0",
     "@types/react": "^17.0.3",
     "@typescript-eslint/eslint-plugin": "^4.20.0",

@@ -15,6 +15,8 @@ import theme from '../utils/theme'
 
 import logo from '../../assets/psyoptions-logo-light.png'
 
+const { INITIALIZE_PAGE_ENABLED } = process.env
+
 const NavOptions = React.memo(() => {
   const history = useHistory()
 
@@ -45,17 +47,19 @@ const NavOptions = React.memo(() => {
           Markets
         </Button>
       </Box>
-      <Box mx={2}>
-        <Button
-          href="/initialize-market"
-          onClick={(e) => {
-            e.preventDefault()
-            history.push('/initialize-market')
-          }}
-        >
-          Initialize
-        </Button>
-      </Box>
+      {INITIALIZE_PAGE_ENABLED && (
+        <Box mx={2}>
+          <Button
+            href="/initialize-market"
+            onClick={(e) => {
+              e.preventDefault()
+              history.push('/initialize-market')
+            }}
+          >
+            Initialize
+          </Button>
+        </Box>
+      )}
       <Box mx={2}>
         <Button
           href="/open-positions"

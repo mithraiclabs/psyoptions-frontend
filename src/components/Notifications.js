@@ -19,7 +19,7 @@ const SimpleSnackbar = ({
     autoHideDuration={6000}
     onClose={(event, reason) => {
       if (reason === 'clickaway') {
-        return;
+        return
       }
       closeNotification() // eslint-disable-line
     }}
@@ -46,8 +46,15 @@ const SimpleSnackbar = ({
         background: theme.gradients[severity],
       }}
     >
-      <Box>
-        <Box fontSize="small">{message}</Box>
+      <Box maxWidth="90%">
+        <Box
+          fontSize="small"
+          textOverflow="ellipsis"
+          overflow="hidden"
+          width="100%"
+        >
+          {message}
+        </Box>
         {link && <Box fontSize="small">{link}</Box>}
       </Box>
       <Box>

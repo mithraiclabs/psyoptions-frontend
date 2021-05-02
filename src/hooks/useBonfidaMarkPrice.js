@@ -7,6 +7,7 @@ export const useBonfidaMarkPrice = ({ uAsset, qAsset }) => {
   const { pushNotification } = useNotifications()
 
   useEffect(() => {
+    setMarkPrice(0)
     let timer
     if (uAsset?.tokenSymbol && qAsset?.tokenSymbol) {
       const fetchPrice = async () => {
@@ -22,6 +23,9 @@ export const useBonfidaMarkPrice = ({ uAsset, qAsset }) => {
             setMarkPrice(0)
           }
         } catch (err) {
+          // Stop polling on failure to prevent error messages from popping up repeatedly
+          clearInterval(timer)
+          setMarkPrice(0)
           pushNotification({
             severity: 'error',
             message: `Couldn't load market price for ${uAsset?.tokenSymbol}`,

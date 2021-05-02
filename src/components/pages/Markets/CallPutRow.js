@@ -1,16 +1,19 @@
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useMemo } from 'react'
 import PropTypes from 'prop-types'
 import TableRow from '@material-ui/core/TableRow'
 import TableCell from '@material-ui/core/TableCell'
 import { withStyles } from '@material-ui/core/styles'
 import { CircularProgress } from '@material-ui/core'
 import Button from '@material-ui/core/Button'
+import moment from 'moment'
 
 import theme from '../../../utils/theme'
 import useOptionsMarkets from '../../../hooks/useOptionsMarkets'
 import useSerum from '../../../hooks/useSerum'
 import useWallet from '../../../hooks/useWallet'
 import useNotifications from '../../../hooks/useNotifications'
+import { useImpliedVol } from '../../../hooks/useImpliedVol'
+
 import Loading from '../../Loading'
 import {
   useSerumOrderbook,
@@ -90,6 +93,35 @@ const CallPutRow = ({
   const putOptionMintInfo = useSPLTokenMintInfo(putMarket?.optionMintKey)
   useSubscribeSPLTokenMint(callMarket?.optionMintKey)
   useSubscribeSPLTokenMint(putMarket?.optionMintKey)
+
+  // Further optimization here would be doing this in the markets page itself
+  const timeToExpiry = useMemo(() => {
+    return Math.max(date.diff(moment.utc(), 'years', true), 0)
+  }, [date])
+
+  const strikeAsNumber = row.strike && row.strike.toNumber()
+
+  const callImpliedVol = useImpliedVol({
+    optionPrice:
+      callHighestBid && callLowestAsk
+        ? (callHighestBid + callLowestAsk) / 2
+        : callHighestBid || callLowestAsk,
+    strikePrice: strikeAsNumber,
+    marketPrice: markPrice,
+    timeToExpiry,
+    type: 'call',
+  })
+
+  const putImpliedVol = useImpliedVol({
+    optionPrice:
+      putHighestBid && putLowestAsk
+        ? (putHighestBid + putLowestAsk) / 2
+        : putHighestBid || putLowestAsk,
+    strikePrice: strikeAsNumber,
+    marketPrice: markPrice,
+    timeToExpiry,
+    type: 'put',
+  })
 
   const [loading, setLoading] = useState({ call: false, put: false })
 
@@ -191,7 +223,7 @@ const CallPutRow = ({
         {row.call?.size ? `${row.call.size} ${uAsset?.tokenSymbol || ''}` : '—'}
       </TCell>
       {row.call?.serumKey && serumMarkets[row.call?.serumKey]?.loading ? (
-        <TCellLoading colSpan={5}>
+        <TCellLoading colSpan={6} style={callCellStyle}>
           <Loading />
         </TCellLoading>
       ) : (
@@ -207,6 +239,9 @@ const CallPutRow = ({
           </TCell>
           <TCell align="left" style={callCellStyle}>
             {row.call?.volume || '—'}
+          </TCell>
+          <TCell align="left" style={callCellStyle}>
+            {(callImpliedVol && `${callImpliedVol.toFixed(1)}%`) || '—'}
           </TCell>
           <TCell align="left" style={callCellStyle}>
             {callOptionMintInfo?.supply.toString() || '—'}
@@ -229,7 +264,7 @@ const CallPutRow = ({
         {row.put?.size ? `${row.put.size} ${qAsset?.tokenSymbol || ''}` : '—'}
       </TCell>
       {row.put?.serumKey && serumMarkets[row.put?.serumKey]?.loading ? (
-        <TCellLoading colSpan={5}>
+        <TCellLoading colSpan={6} style={putCellStyle}>
           <Loading />
         </TCellLoading>
       ) : (
@@ -245,6 +280,9 @@ const CallPutRow = ({
           </TCell>
           <TCell align="right" style={putCellStyle}>
             {row.put?.volume || '—'}
+          </TCell>
+          <TCell align="right" style={putCellStyle}>
+            {(putImpliedVol && `${putImpliedVol.toFixed(1)}%`) || '—'}
           </TCell>
           <TCell align="right" style={putCellStyle}>
             {putOptionMintInfo?.supply.toString() || '—'}

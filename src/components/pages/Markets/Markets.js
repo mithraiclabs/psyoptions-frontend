@@ -13,6 +13,7 @@ import { getLastFridayOfMonths } from '../../../utils/dates'
 import { getStrikePrices, intervals } from '../../../utils/getStrikePrices'
 import { getPriceFromSerumOrderbook } from '../../../utils/orderbook'
 
+import { useBonfidaMarkPrice } from '../../../hooks/useBonfidaMarkPrice'
 import useAssetList from '../../../hooks/useAssetList'
 import useOptionsMarkets from '../../../hooks/useOptionsMarkets'
 import useOptionsChain from '../../../hooks/useOptionsChain'
@@ -101,6 +102,8 @@ const rowTemplate = {
 
 const expirations = getLastFridayOfMonths(10)
 
+const USE_BONFIDA_MARK_PRICE = true
+
 const Markets = () => {
   const { uAsset, qAsset, setUAsset, assetListLoading } = useAssetList()
   const [date, setDate] = useState(expirations[0])
@@ -112,12 +115,21 @@ const Markets = () => {
   const [callPutData, setCallPutData] = useState({ type: 'call' })
   const [showAllStrikes] = useState(false) // TODO: let user configure this
 
+  // mainnet mark price from bonfida
+  const bonfidaMarkPrice = useBonfidaMarkPrice({
+    uAsset,
+    qAsset,
+  })
+
   const underlyingSerumMarketKey = `${uAsset?.mintAddress}-${qAsset?.mintAddress}`
   const { orderbook: underlyingOrderbook } = useSerumOrderbook(
     underlyingSerumMarketKey,
   )
   useSubscribeSerumOrderbook(underlyingSerumMarketKey)
-  const markPrice = getPriceFromSerumOrderbook(underlyingOrderbook)
+
+  const markPrice = USE_BONFIDA_MARK_PRICE
+    ? bonfidaMarkPrice
+    : getPriceFromSerumOrderbook(underlyingOrderbook)
 
   const supportedStrikePrices = useMemo(() => {
     if (markPrice && showAllStrikes === false) {
@@ -308,7 +320,7 @@ const Markets = () => {
             <Table stickyHeader aria-label="sticky table">
               <TableHead>
                 <TableRow>
-                  <TableCell colSpan={7}>
+                  <TableCell colSpan={8}>
                     <h3 style={{ margin: 0 }}>
                       {`Calls${
                         uAsset && qAsset && !assetListLoading
@@ -318,7 +330,7 @@ const Markets = () => {
                     </h3>
                   </TableCell>
                   <TableCell colSpan={1} />
-                  <TableCell colSpan={7}>
+                  <TableCell colSpan={8}>
                     <h3 style={{ margin: 0 }}>
                       {`Puts${
                         uAsset && qAsset && !assetListLoading
@@ -335,6 +347,7 @@ const Markets = () => {
                   <THeadCell align="left">Ask</THeadCell>
                   <THeadCell align="left">Change</THeadCell>
                   <THeadCell align="left">Volume</THeadCell>
+                  <THeadCell align="left">IV</THeadCell>
                   <THeadCell align="left">Open Interest</THeadCell>
 
                   <THeadCellStrike align="center">Strike</THeadCellStrike>
@@ -344,6 +357,7 @@ const Markets = () => {
                   <THeadCell align="right">Ask</THeadCell>
                   <THeadCell align="right">Change</THeadCell>
                   <THeadCell align="right">Volume</THeadCell>
+                  <THeadCell align="right">IV</THeadCell>
                   <THeadCell align="right">Open Interest</THeadCell>
                   <THeadCell align="right">Action</THeadCell>
                 </TableRow>
@@ -353,7 +367,7 @@ const Markets = () => {
                   return fullPageLoading ? (
                     <tr key={`${row.key}`}>
                       <TCellLoading
-                        colSpan={7}
+                        colSpan={8}
                         style={{
                           backgroundColor: theme.palette.background.medium,
                         }}
@@ -362,7 +376,7 @@ const Markets = () => {
                       </TCellLoading>
                       <TCellStrike />
                       <TCellLoading
-                        colSpan={7}
+                        colSpan={8}
                         style={{
                           backgroundColor: theme.palette.background.medium,
                         }}
@@ -381,6 +395,7 @@ const Markets = () => {
                       round={round}
                       onClickBuySellCall={handleBuySellClick}
                       onClickBuySellPut={handleBuySellClick}
+                      markPrice={markPrice}
                     />
                   )
                 })}
@@ -391,9 +406,17 @@ const Markets = () => {
             py={1}
             px={[1, 1, 0]}
             display="flex"
-            justifyContent="flex-end"
+            justifyContent="space-between"
             alignItems="center"
           >
+            <Box>
+              {uAsset && uAsset.tokenSymbol && markPrice && (
+                <>
+                  {uAsset?.tokenSymbol} Market Price: $
+                  {markPrice && markPrice.toFixed(precision)}
+                </>
+              )}
+            </Box>
             <FormControlLabel
               labelPlacement="start"
               control={

@@ -60,6 +60,7 @@
     "axios": "^0.21.1",
     "babel-loader": "^8.2.2",
     "bignumber.js": "^9.0.1",
+    "black-scholes": "^1.1.0",
     "bn.js": "^4.12.0",
     "bs58": "^4.0.1",
     "buffer": "6.0.1",

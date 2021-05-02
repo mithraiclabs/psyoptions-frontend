@@ -410,7 +410,7 @@ const Markets = () => {
             alignItems="center"
           >
             <Box>
-              {uAsset && uAsset.tokenSymbol && markPrice && (
+              {!!uAsset?.tokenSymbol && !!markPrice && (
                 <>
                   {uAsset?.tokenSymbol} Market Price: $
                   {markPrice && markPrice.toFixed(precision)}

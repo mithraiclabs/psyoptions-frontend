@@ -54,13 +54,18 @@ const OpenOrdersForMarket: React.FC<{
     return null
   }
 
-  const { bidOrderbook = [], askOrderbook = [] } = orderbooks[serumKey]
+  const { bidOrderbook, askOrderbook } = orderbooks[serumKey]
+  let actualOpenOrders
 
-  const actualOpenOrders = serumMarket.market.filterForOpenOrders(
-    bidOrderbook,
-    askOrderbook,
-    openOrders[serumKey].orders,
-  )
+  try {
+    actualOpenOrders = serumMarket.market.filterForOpenOrders(
+      bidOrderbook || [],
+      askOrderbook || [],
+      openOrders[serumKey]?.orders || [],
+    )
+  } catch (err) {
+    console.log(err)
+  }
 
   return (
     actualOpenOrders &&

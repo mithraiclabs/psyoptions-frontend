@@ -1,5 +1,5 @@
 import { Chip } from '@material-ui/core'
-import React, { useState } from 'react'
+import React, { useCallback, useState } from 'react'
 import Collapse from '@material-ui/core/Collapse'
 import Table from '@material-ui/core/Table'
 import TableBody from '@material-ui/core/TableBody'
@@ -45,10 +45,12 @@ const PositionRow: React.VFC<{
   const { qAsset } = useAssetList()
   const { ownedTokenAccounts } = useOwnedTokenAccounts()
   const { pushNotification } = useNotifications()
-  const serumMarketKey = `${row.market.optionMintAddress}-${qAsset.mintAddress}`
+  const serumMarketKey = `${row.market.optionMintKey}-${qAsset.mintAddress}`
   useSerumMarket(serumMarketKey)
   const { orderbook } = useSerumOrderbook(serumMarketKey)
   const price = getPriceFromSerumOrderbook(orderbook)
+  const nowInSeconds = Date.now() / 1000
+  const expired = row.expiration <= nowInSeconds
 
   const onRowClick = () => {
     if (row.accounts.length > 1) {
@@ -69,18 +71,17 @@ const PositionRow: React.VFC<{
     ownedOAssetKey && ownedOAssetKey.toString(),
   )
 
-  const handleExercisePosition = async () => {
+  const handleExercisePosition = useCallback(async () => {
     try {
       await exercise()
     } catch (err) {
-      console.log(err)
       Sentry.captureException(err)
       pushNotification({
         severity: 'error',
         message: `${err}`,
       })
     }
-  }
+  }, [exercise, pushNotification])
 
   return (
     <>
@@ -108,14 +109,16 @@ const PositionRow: React.VFC<{
           {formatExpirationTimestamp(row.expiration)}
         </TableCell>
         <TableCell align="right" width="15%">
-          <Chip
-            clickable
-            size="small"
-            label="Exercise"
-            color="primary"
-            variant="outlined"
-            onClick={handleExercisePosition}
-          />
+          {!expired && (
+            <Chip
+              clickable
+              size="small"
+              label="Exercise"
+              color="primary"
+              variant="outlined"
+              onClick={handleExercisePosition}
+            />
+          )}
         </TableCell>
       </TableRow>
       <TableRow key={`${row.optionContractTokenKey}Collapsible`}>
@@ -142,14 +145,16 @@ const PositionRow: React.VFC<{
                       {formatExpirationTimestamp(row.expiration)}
                     </TableCell>
                     <TableCell align="right" width="15%">
-                      <Chip
-                        clickable
-                        size="small"
-                        label="Exercise"
-                        color="primary"
-                        variant="outlined"
-                        onClick={handleExercisePosition}
-                      />
+                      {!expired && (
+                        <Chip
+                          clickable
+                          size="small"
+                          label="Exercise"
+                          color="primary"
+                          variant="outlined"
+                          onClick={handleExercisePosition}
+                        />
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}

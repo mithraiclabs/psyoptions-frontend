@@ -7,6 +7,7 @@ import useSerum from '../../hooks/useSerum'
 import { useSerumOpenOrders } from '../../context/SerumOpenOrdersContext'
 import { useSerumOrderbooks } from '../../context/SerumOrderbookContext'
 import { useSubscribeOpenOrders, useSettleFunds } from '../../hooks/Serum'
+import useNotifications from '../../hooks/useNotifications'
 
 import { TCell } from './OpenOrderStyles'
 
@@ -35,6 +36,7 @@ const OpenOrdersForMarket: React.FC<{
   const [openOrders] = useSerumOpenOrders()
   const { serumMarket } = serumMarkets[serumKey] || {}
   const settleFunds = useSettleFunds(serumKey)
+  const { pushNotification } = useNotifications()
 
   useSubscribeOpenOrders(serumKey)
 
@@ -54,13 +56,22 @@ const OpenOrdersForMarket: React.FC<{
     return null
   }
 
-  const { bidOrderbook = [], askOrderbook = [] } = orderbooks[serumKey]
+  const { bidOrderbook, askOrderbook } = orderbooks[serumKey]
+  let actualOpenOrders
 
-  const actualOpenOrders = serumMarket.market.filterForOpenOrders(
-    bidOrderbook,
-    askOrderbook,
-    openOrders[serumKey].orders,
-  )
+  try {
+    actualOpenOrders = serumMarket.market.filterForOpenOrders(
+      bidOrderbook || [],
+      askOrderbook || [],
+      openOrders[serumKey]?.orders || [],
+    )
+  } catch (err) {
+    pushNotification({
+      severity: 'error',
+      message: `Couldn't display open orders for option market: ${uAssetSymbol}/${qAssetSymbol} ${type} @ strike ${strikePrice}`,
+    })
+    console.error(err)
+  }
 
   return (
     actualOpenOrders &&

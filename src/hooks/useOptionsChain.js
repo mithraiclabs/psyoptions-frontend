@@ -4,6 +4,7 @@ import BigNumber from 'bignumber.js'
 import useOptionsMarkets from './useOptionsMarkets'
 import { OptionsChainContext } from '../context/OptionsChainContext'
 import useAssetList from './useAssetList'
+import useNotifications from './useNotifications'
 
 const callOrPutTemplate = {
   key: '',
@@ -17,6 +18,7 @@ const callOrPutTemplate = {
   initialized: false,
 }
 const useOptionsChain = () => {
+  const { pushNotification } = useNotifications()
   const { markets, marketsLoading } = useOptionsMarkets()
   const { uAsset, qAsset } = useAssetList()
   const { chain, setChain } = useContext(OptionsChainContext)
@@ -128,11 +130,14 @@ const useOptionsChain = () => {
         rows.sort((a, b) => a.strike.minus(b.strike).toNumber())
         setChain(rows)
       } catch (err) {
-        console.log(err)
+        pushNotification({
+          severity: 'error',
+          message: `${err}`,
+        })
         setChain([])
       }
     },
-    [uAsset, qAsset, setChain, markets, marketsLoading],
+    [marketsLoading, uAsset, qAsset, markets, setChain, pushNotification],
   )
 
   return {

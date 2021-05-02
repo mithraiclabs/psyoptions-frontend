@@ -5,11 +5,13 @@ import { SerumMarket } from '../../utils/serum'
 import useConnection from '../useConnection'
 import { LocalSerumMarket } from '../../types'
 import { useSerumContext } from '../../context/SerumContext'
+import useNotifications from '../useNotifications'
 
 /**
  * Fetch and return a serum market
  */
 export const useSerumMarket = (key: string): LocalSerumMarket | undefined => {
+  const { pushNotification } = useNotifications()
   const { connection, dexProgramId } = useConnection()
   const { serumMarkets, setSerumMarkets } = useSerumContext()
   const serumMarket = serumMarkets[key]
@@ -51,12 +53,21 @@ export const useSerumMarket = (key: string): LocalSerumMarket | undefined => {
             error: err,
           },
         }))
-        // eslint-disable-next-line no-console
-        console.log(err)
         Sentry.captureException(err)
+        pushNotification({
+          severity: 'error',
+          message: `${err}`,
+        })
       }
     })()
-  }, [connection, dexProgramId, key, serumMarket, setSerumMarkets])
+  }, [
+    connection,
+    dexProgramId,
+    key,
+    pushNotification,
+    serumMarket,
+    setSerumMarkets,
+  ])
 
   return serumMarket
 }

@@ -9,7 +9,6 @@ import MenuList from '@material-ui/core/MenuList'
 
 import useConnection from '../hooks/useConnection'
 import useAssetList from '../hooks/useAssetList'
-import useOptionsChain from '../hooks/useOptionsChain'
 import useOptionsMarkets from '../hooks/useOptionsMarkets'
 import useSerum from '../hooks/useSerum'
 import theme from '../utils/theme'
@@ -22,7 +21,6 @@ const NetworkMenu = () => {
     setSupportedAssets,
     assetListLoading,
   } = useAssetList()
-  const { setChain } = useOptionsChain()
   const { setMarkets, marketsLoading } = useOptionsMarkets()
   const { setSerumMarkets } = useSerum()
 
@@ -55,7 +53,6 @@ const NetworkMenu = () => {
     setSupportedAssets([])
     setUAsset({})
     setQAsset({})
-    setChain([])
     setMarkets({})
     setSerumMarkets({})
   }

@@ -267,7 +267,10 @@ const BuySellDialog = ({
       // Open to suggestions / refactoring
       await fetchSerumMarket(...serumKey.split('-'))
     } catch (e) {
-      console.error(e)
+      pushNotification({
+        severity: 'error',
+        message: `${e}`,
+      })
     } finally {
       setInitializingSerum(false)
     }
@@ -541,7 +544,7 @@ const BuySellDialog = ({
                 <CircularProgress />
               ) : serum ? (
                 <>
-                  <OrderBook 
+                  <OrderBook
                     setOrderSize={setOrderSize}
                     setLimitPrice={setLimitPrice}
                     {...orderbook}
@@ -622,9 +625,7 @@ const BuySellDialog = ({
                   >
                     {`This is a ${
                       type === 'call' ? 'covered call' : 'secured put'
-                    }. Mint/Sell will lock the required collateral (${collateralRequired} ${
-                      uAssetSymbol
-                    }) until the contract expires or is exercised.`}
+                    }. Mint/Sell will lock the required collateral (${collateralRequired} ${uAssetSymbol}) until the contract expires or is exercised.`}
                   </Box>
                   <UnsettledFunds
                     qAssetSymbol={qAssetSymbol}

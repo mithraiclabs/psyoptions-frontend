@@ -18,50 +18,58 @@ const useExerciseOpenPosition = (
   const { wallet, pubKey } = useWallet()
 
   const exercise = useCallback(async () => {
-    const { transaction: tx } = await exerciseCoveredCall({
-      connection,
-      payer: { publicKey: pubKey },
-      programId: endpoint.programId,
-      optionMintKey: new PublicKey(market.optionMintAddress),
-      optionMarketKey: new PublicKey(market.optionMarketDataAddress),
-      exerciserQuoteAssetKey: new PublicKey(exerciserQuoteAssetAddress),
-      exerciserUnderlyingAssetKey: new PublicKey(
-        exerciserUnderlyingAssetAddress,
-      ),
-      exerciserQuoteAssetAuthorityAccount: { publicKey: pubKey },
-      underlyingAssetPoolKey: market.underlyingAssetPoolKey,
-      quoteAssetPoolKey: market.quoteAssetPoolKey,
-      optionTokenKey: new PublicKey(exerciserContractTokenAddress),
-      optionTokenAuthorityAccount: { publicKey: pubKey },
-    })
+    try {
+      const { transaction: tx } = await exerciseCoveredCall({
+        connection,
+        payer: { publicKey: pubKey },
+        programId: endpoint.programId,
+        optionMintKey: new PublicKey(market.optionMintAddress),
+        optionMarketKey: new PublicKey(market.optionMarketDataAddress),
+        exerciserQuoteAssetKey: new PublicKey(exerciserQuoteAssetAddress),
+        exerciserUnderlyingAssetKey: new PublicKey(
+          exerciserUnderlyingAssetAddress,
+        ),
+        exerciserQuoteAssetAuthorityAccount: { publicKey: pubKey },
+        underlyingAssetPoolKey: market.underlyingAssetPoolKey,
+        quoteAssetPoolKey: market.quoteAssetPoolKey,
+        optionTokenKey: new PublicKey(exerciserContractTokenAddress),
+        optionTokenAuthorityAccount: { publicKey: pubKey },
+      })
 
-    const signed = await wallet.signTransaction(tx)
-    const txid = await connection.sendRawTransaction(signed.serialize())
+      const signed = await wallet.signTransaction(tx)
+      const txid = await connection.sendRawTransaction(signed.serialize())
 
-    // TODO add the Asset Pair to the push note
-    pushNotification({
-      severity: 'info',
-      message: `Processing: Exercise Option`,
-      link: (
-        <Link href={buildSolanaExplorerUrl(txid)} target="_new">
-          View on Solana Explorer
-        </Link>
-      ),
-    })
+      // TODO add the Asset Pair to the push note
+      pushNotification({
+        severity: 'info',
+        message: `Processing: Exercise Option`,
+        link: (
+          <Link href={buildSolanaExplorerUrl(txid)} target="_new">
+            View on Solana Explorer
+          </Link>
+        ),
+      })
 
-    await connection.confirmTransaction(txid)
+      await connection.confirmTransaction(txid)
 
-    pushNotification({
-      severity: 'success',
-      message: `Confirmed: Exercise Option`,
-      link: (
-        <Link href={buildSolanaExplorerUrl(txid)} target="_new">
-          View on Solana Explorer
-        </Link>
-      ),
-    })
+      pushNotification({
+        severity: 'success',
+        message: `Confirmed: Exercise Option`,
+        link: (
+          <Link href={buildSolanaExplorerUrl(txid)} target="_new">
+            View on Solana Explorer
+          </Link>
+        ),
+      })
 
-    return txid
+      return txid
+    } catch (err) {
+      pushNotification({
+        severity: 'error',
+        message: `${err}`,
+      })
+    }
+    return null
   }, [
     connection,
     pubKey,

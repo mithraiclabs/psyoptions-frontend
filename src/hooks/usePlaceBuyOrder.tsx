@@ -37,70 +37,77 @@ const usePlaceBuyOrder = (
       orderArgs,
       optionDestinationKey,
     }: PlaceBuyOrderArgs) => {
-      const transaction = new Transaction()
-      let signers = []
-      const _optionDestinationKey = optionDestinationKey
+      try {
+        const transaction = new Transaction()
+        let signers = []
+        const _optionDestinationKey = optionDestinationKey
 
-      if (!_optionDestinationKey) {
-        // Create a SPL Token account for this option market if the wallet doesn't have one
-        const [
-          createOptAccountIx,
-          newPublicKey,
-        ] = await createAssociatedTokenAccountInstruction({
-          payer: pubKey,
-          owner: pubKey,
-          mintPublicKey: optionMarket.optionMintKey,
+        if (!_optionDestinationKey) {
+          // Create a SPL Token account for this option market if the wallet doesn't have one
+          const [
+            createOptAccountIx,
+            newPublicKey,
+          ] = await createAssociatedTokenAccountInstruction({
+            payer: pubKey,
+            owner: pubKey,
+            mintPublicKey: optionMarket.optionMintKey,
+          })
+
+          transaction.add(createOptAccountIx)
+          subscribeToTokenAccount(newPublicKey)
+        }
+        // place the buy order
+        const {
+          createdOpenOrdersKey,
+          transaction: placeOrderTx,
+          signers: placeOrderSigners,
+        } = await serumMarket.market.makePlaceOrderTransaction(connection, {
+          ...orderArgs,
+        })
+        transaction.add(placeOrderTx)
+        signers = [...signers, ...placeOrderSigners]
+
+        if (createdOpenOrdersKey) {
+          createAdHocOpenOrdersSub(createdOpenOrdersKey)
+        }
+
+        transaction.feePayer = pubKey
+        const { blockhash } = await connection.getRecentBlockhash()
+        transaction.recentBlockhash = blockhash
+
+        if (signers.length) {
+          transaction.partialSign(...signers)
+        }
+        const signed = await wallet.signTransaction(transaction)
+        const txid = await connection.sendRawTransaction(signed.serialize())
+
+        pushNotification({
+          severity: NotificationSeverity.INFO,
+          message: 'Processing: Buy contracts',
+          link: (
+            <Link href={buildSolanaExplorerUrl(txid)} target="_new">
+              View on Solana Explorer
+            </Link>
+          ),
         })
 
-        transaction.add(createOptAccountIx)
-        subscribeToTokenAccount(newPublicKey)
+        await connection.confirmTransaction(txid)
+
+        pushNotification({
+          severity: NotificationSeverity.SUCCESS,
+          message: 'Confirmed: Buy contracts',
+          link: (
+            <Link href={buildSolanaExplorerUrl(txid)} target="_new">
+              View on Solana Explorer
+            </Link>
+          ),
+        })
+      } catch (err) {
+        pushNotification({
+          severity: 'error',
+          message: `${err}`,
+        })
       }
-      // place the buy order
-      const {
-        createdOpenOrdersKey,
-        transaction: placeOrderTx,
-        signers: placeOrderSigners,
-      } = await serumMarket.market.makePlaceOrderTransaction(connection, {
-        ...orderArgs,
-      })
-      transaction.add(placeOrderTx)
-      signers = [...signers, ...placeOrderSigners]
-
-      if (createdOpenOrdersKey) {
-        createAdHocOpenOrdersSub(createdOpenOrdersKey)
-      }
-
-      transaction.feePayer = pubKey
-      const { blockhash } = await connection.getRecentBlockhash()
-      transaction.recentBlockhash = blockhash
-
-      if (signers.length) {
-        transaction.partialSign(...signers)
-      }
-      const signed = await wallet.signTransaction(transaction)
-      const txid = await connection.sendRawTransaction(signed.serialize())
-
-      pushNotification({
-        severity: NotificationSeverity.INFO,
-        message: 'Processing: Buy contracts',
-        link: (
-          <Link href={buildSolanaExplorerUrl(txid)} target="_new">
-            View on Solana Explorer
-          </Link>
-        ),
-      })
-
-      await connection.confirmTransaction(txid)
-
-      pushNotification({
-        severity: NotificationSeverity.SUCCESS,
-        message: 'Confirmed: Buy contracts',
-        link: (
-          <Link href={buildSolanaExplorerUrl(txid)} target="_new">
-            View on Solana Explorer
-          </Link>
-        ),
-      })
     },
     [
       connection,

@@ -1,12 +1,11 @@
 import axios from 'axios'
 import { useEffect, useState } from 'react'
 
-let timer
-
 export const useBonfidaMarkPrice = ({ uAsset, qAsset }) => {
   const [markPrice, setMarkPrice] = useState()
 
   useEffect(() => {
+    let timer
     if (uAsset?.tokenSymbol && qAsset?.tokenSymbol) {
       const fetchPrice = async () => {
         try {

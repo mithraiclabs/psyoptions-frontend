@@ -22,7 +22,6 @@ const serverPlugins = isDev
     ]
   : []
 
-console.log('**** checking process variable', process.env.SHORT_SHA)
 module.exports = [
   {
     // Server

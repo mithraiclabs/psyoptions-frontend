@@ -26,6 +26,7 @@ import useAssetList from '../../hooks/useAssetList'
 import { useOptionMarket } from '../../hooks/useOptionMarket'
 
 import ConnectButton from '../ConnectButton'
+import { ContractSizeSelector } from '../ContractSizeSelector'
 
 const darkBorder = `1px solid ${theme.palette.background.main}`
 
@@ -171,11 +172,9 @@ const InitializeMarket = () => {
 
           <Box display="flex" borderBottom={darkBorder}>
             <Box width="50%" p={2} borderRight={darkBorder}>
-              <TextField
-                label="Contract Size"
-                variant="filled"
-                onChange={(e) => setSize(parseInt(e.target.value, 10))}
-                helperText={Number.isNaN(size) ? 'Must be a number' : null}
+              <ContractSizeSelector
+                onChange={(e) => setSize(e.target.value)}
+                value={size}
               />
             </Box>
             <Box width="50%" p={2}>

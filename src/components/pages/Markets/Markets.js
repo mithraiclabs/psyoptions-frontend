@@ -1,5 +1,5 @@
 import { Box, FormControlLabel, Switch } from '@material-ui/core'
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import Table from '@material-ui/core/Table'
 import TableBody from '@material-ui/core/TableBody'
 import TableCell from '@material-ui/core/TableCell'
@@ -31,6 +31,7 @@ import BuySellDialog from '../../BuySellDialog'
 import Loading from '../../Loading'
 import RefreshButton from '../../RefreshButton'
 import OpenOrders from '../../OpenOrders'
+import { ContractSizeSelector } from '../../ContractSizeSelector'
 
 const dblsp = `${'\u00A0'}${'\u00A0'}`
 
@@ -107,6 +108,7 @@ const USE_BONFIDA_MARK_PRICE = true
 const Markets = () => {
   const { uAsset, qAsset, setUAsset, assetListLoading } = useAssetList()
   const [date, setDate] = useState(expirations[0])
+  const [contractSize, setContractSize] = useState(100)
   const { chain, buildOptionsChain } = useOptionsChain()
   const { marketsLoading, fetchMarketData } = useOptionsMarkets()
   const { serumMarkets, fetchSerumMarket } = useSerum()
@@ -195,8 +197,8 @@ const Markets = () => {
     .filter((callOrPut) => !!callOrPut)
 
   useEffect(() => {
-    buildOptionsChain(date.unix())
-  }, [buildOptionsChain, date])
+    buildOptionsChain(date.unix(), contractSize)
+  }, [buildOptionsChain, contractSize, date])
 
   useEffect(() => {
     // Load serum markets when the options chain changes
@@ -212,10 +214,15 @@ const Markets = () => {
   }, [chain, fetchSerumMarket, serumMarkets])
 
   // Open buy/sell/mint modal
-  const handleBuySellClick = (callOrPut) => {
+  const handleBuySellClick = useCallback((callOrPut) => {
     setCallPutData(callOrPut)
     setBuySellDialogOpen(true)
-  }
+  }, [])
+
+  const updateContractSize = useCallback(
+    (e) => setContractSize(e.target.value),
+    [],
+  )
 
   const buySellDialogHeading = callPutData
     ? `${callPutData.uAssetSymbol}-${
@@ -271,6 +278,12 @@ const Markets = () => {
                 style={{
                   minWidth: '100%',
                 }}
+              />
+            </Box>
+            <Box px={2} py={0} width={['100%', '100%', '200px']}>
+              <ContractSizeSelector
+                onChange={updateContractSize}
+                value={contractSize}
               />
             </Box>
           </Box>

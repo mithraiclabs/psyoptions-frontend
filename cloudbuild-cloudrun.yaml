@@ -23,7 +23,7 @@ steps:
         'beta',
         'run',
         'deploy',
-        'solana-options-frontend',
+        '${DEPLOY_TARGET}',
         '--image',
         'gcr.io/${PROJECT_ID}/solana-options-frontend:latest',
         '--region',

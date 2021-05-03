@@ -35,7 +35,6 @@ const OpenPositions = () => {
     accounts: positions[key],
     assetPair: `${markets[key]?.uAssetSymbol}${markets[key]?.qAssetSymbol}`,
     expiration: markets[key]?.expiration,
-    markprice: 'TODO',
     size: positions[key]?.reduce(
       (acc, tokenAccount) => acc + tokenAccount.amount,
       0,

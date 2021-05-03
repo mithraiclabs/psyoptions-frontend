@@ -1,5 +1,8 @@
 FROM 'node:14-alpine'
 
+ARG SENTRY_AUTH_TOKEN
+ARG SHORT_SHA
+
 WORKDIR app
 
 ENV NODE_ENV='production'

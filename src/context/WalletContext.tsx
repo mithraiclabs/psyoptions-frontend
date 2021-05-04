@@ -6,6 +6,8 @@ import useNotifications from '../hooks/useNotifications'
 
 const WalletContext = createContext({})
 
+Sentry.captureException(new Error('Test sentry source maps'))
+
 const WalletProvider: React.FC = ({ children }) => {
   const { pushNotification } = useNotifications()
   const { connection } = useConnection()

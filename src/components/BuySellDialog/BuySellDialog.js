@@ -154,7 +154,6 @@ const BuySellDialog = ({
     ownedTokenAccounts,
     loadingOwnedTokenAccounts,
   } = useOwnedTokenAccounts()
-  Sentry.captureException(new Error('Test sentry source maps'))
   const [orderType, setOrderType] = useState('limit')
   const [orderSize, setOrderSize] = useState(1)
   const [limitPrice, setLimitPrice] = useState(0)

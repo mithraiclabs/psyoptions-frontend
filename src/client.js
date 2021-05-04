@@ -24,7 +24,7 @@ const run = async () => {
   try {
     await navigator.serviceWorker.register('/rate-limited-fetch-worker.js')
   } catch (err) {
-    // Not sure what to do here?
+    Sentry.captureException(err)
   }
 
   ReactDOM.hydrate(

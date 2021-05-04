@@ -20,7 +20,17 @@ if (process.env.NODE_ENV === 'production') {
   })
 }
 
-ReactDOM.hydrate(
-  <App suppressHydrationWarning />,
-  document.querySelector('#app'),
-)
+const run = async () => {
+  try {
+    await navigator.serviceWorker.register('/rate-limited-fetch-worker.js')
+  } catch (err) {
+    Sentry.captureException(err)
+  }
+
+  ReactDOM.hydrate(
+    <App suppressHydrationWarning />,
+    document.querySelector('#app'),
+  )
+}
+
+run()

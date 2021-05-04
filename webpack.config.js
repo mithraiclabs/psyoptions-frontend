@@ -106,4 +106,17 @@ module.exports = [
       }),
     ],
   },
+  {
+    // Service worker
+    entry: ['./service-worker/rate-limited-fetch-worker.js'],
+    devtool,
+    watch,
+    mode,
+    resolve: {
+      extensions: ['.ts', '.tsx', '.js'],
+    },
+    output: {
+      filename: 'public/rate-limited-fetch-worker.js',
+    },
+  },
 ]

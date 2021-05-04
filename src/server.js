@@ -37,6 +37,11 @@ server.use((req, res, next) => {
 server.use(cookieParser())
 server.use('/public', express.static('dist/public'))
 
+// Service worker can't be in the public folder
+server.get('/rate-limited-fetch-worker.js', (req, res) => {
+  res.sendfile(path.join(__dirname, 'public', 'rate-limited-fetch-worker.js'))
+})
+
 const {
   LOCAL_PROGRAM_ID,
   MAINNET_PROGRAM_ID,

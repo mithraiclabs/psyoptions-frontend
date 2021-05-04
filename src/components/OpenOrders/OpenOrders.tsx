@@ -6,6 +6,7 @@ import TableHead from '@material-ui/core/TableHead'
 import TableRow from '@material-ui/core/TableRow'
 import TableBody from '@material-ui/core/TableBody'
 import Link from '@material-ui/core/Link'
+import TableContainer from '@material-ui/core/TableContainer'
 
 import useSerum from '../../hooks/useSerum'
 import useWallet from '../../hooks/useWallet'
@@ -132,51 +133,53 @@ const OpenOrders: React.FC<{
 
   return (
     <Box>
-      <Table stickyHeader aria-label="sticky table">
-        <TableHead>
-          <TableRow>
-            <TableCell colSpan={10}>
-              <h3 style={{ margin: 0 }}>Open Orders</h3>
-            </TableCell>
-          </TableRow>
-          <TableRow>
-            <THeadCell>Side</THeadCell>
-            <THeadCell>Option Type</THeadCell>
-            <THeadCell>Asset Pair</THeadCell>
-            <THeadCell>Expiration</THeadCell>
-            <THeadCell>Strike Price</THeadCell>
-            <THeadCell>Contract Size</THeadCell>
-            <THeadCell>Order Size</THeadCell>
-            <THeadCell>Limit Price</THeadCell>
-            {/* <THeadCell>Filled</THeadCell> */}
-            <THeadCell align="right">Action</THeadCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {!connected ? (
+      <TableContainer>
+        <Table stickyHeader aria-label="sticky table">
+          <TableHead>
             <TableRow>
-              <TCell align="center" colSpan={10}>
-                <Box p={1}>
-                  <ConnectButton>Connect Wallet</ConnectButton>
-                </Box>
-              </TCell>
+              <TableCell colSpan={10}>
+                <h3 style={{ margin: 0 }}>Open Orders</h3>
+              </TableCell>
             </TableRow>
-          ) : (
-            optionMarkets.map((optionMarket) => {
-              if (optionMarket?.serumKey) {
-                return (
-                  <OpenOrdersForMarket
-                    {...optionMarket}
-                    handleCancelOrder={handleCancelOrder}
-                    key={`${optionMarket.serumKey}`}
-                  />
-                )
-              }
-              return null
-            })
-          )}
-        </TableBody>
-      </Table>
+            <TableRow>
+              <THeadCell>Side</THeadCell>
+              <THeadCell>Option Type</THeadCell>
+              <THeadCell>Asset Pair</THeadCell>
+              <THeadCell>Expiration</THeadCell>
+              <THeadCell>Strike Price</THeadCell>
+              <THeadCell>Contract Size</THeadCell>
+              <THeadCell>Order Size</THeadCell>
+              <THeadCell>Limit Price</THeadCell>
+              {/* <THeadCell>Filled</THeadCell> */}
+              <THeadCell align="right">Action</THeadCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {!connected ? (
+              <TableRow>
+                <TCell align="center" colSpan={10}>
+                  <Box p={1}>
+                    <ConnectButton>Connect Wallet</ConnectButton>
+                  </Box>
+                </TCell>
+              </TableRow>
+            ) : (
+              optionMarkets.map((optionMarket) => {
+                if (optionMarket?.serumKey) {
+                  return (
+                    <OpenOrdersForMarket
+                      {...optionMarket}
+                      handleCancelOrder={handleCancelOrder}
+                      key={`${optionMarket.serumKey}`}
+                    />
+                  )
+                }
+                return null
+              })
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
     </Box>
   )
 }

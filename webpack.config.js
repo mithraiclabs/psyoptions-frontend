@@ -118,24 +118,5 @@ module.exports = [
     output: {
       filename: 'public/rate-limited-fetch-worker.js',
     },
-    module: {
-      // rules: [
-      //   {
-      //     test: /\.m?js$/,
-      //     exclude: /(node_modules)/,
-      //     use: {
-      //       loader: 'babel-loader',
-      //       options: {
-      //         presets: ['@babel/preset-env', '@babel/preset-react'],
-      //       },
-      //     },
-      //   },
-      //   {
-      //     test: /\.tsx?/,
-      //     use: 'ts-loader',
-      //     exclude: /node_modules/,
-      //   },
-      // ],
-    },
   },
 ]

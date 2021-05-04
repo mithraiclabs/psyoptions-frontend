@@ -8,7 +8,7 @@ const isDev = process.env.NODE_ENV !== 'production'
 
 const watch = isDev
 const mode = isDev ? 'development' : 'production'
-const devtool = isDev ? 'inline-source-map' : undefined
+const devtool = isDev ? 'inline-source-map' : 'source-map'
 
 const serverPlugins = isDev
   ? [

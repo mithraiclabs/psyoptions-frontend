@@ -33,3 +33,9 @@ self.addEventListener('fetch', (event) => {
     )
   }
 })
+
+// eslint-disable-next-line
+self.addEventListener('activate', (event) => {
+  // eslint-disable-next-line
+  event.waitUntil(clients.claim())
+})

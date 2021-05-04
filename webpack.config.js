@@ -106,4 +106,36 @@ module.exports = [
       }),
     ],
   },
+  {
+    // Service worker
+    entry: ['./service-worker/rate-limited-fetch-worker.js'],
+    devtool,
+    watch,
+    mode,
+    resolve: {
+      extensions: ['.ts', '.tsx', '.js'],
+    },
+    output: {
+      filename: 'public/rate-limited-fetch-worker.js',
+    },
+    module: {
+      // rules: [
+      //   {
+      //     test: /\.m?js$/,
+      //     exclude: /(node_modules)/,
+      //     use: {
+      //       loader: 'babel-loader',
+      //       options: {
+      //         presets: ['@babel/preset-env', '@babel/preset-react'],
+      //       },
+      //     },
+      //   },
+      //   {
+      //     test: /\.tsx?/,
+      //     use: 'ts-loader',
+      //     exclude: /node_modules/,
+      //   },
+      // ],
+    },
+  },
 ]

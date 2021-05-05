@@ -101,10 +101,11 @@ module.exports = [
     plugins: [
       new NodePolyfillPlugin(),
       new WebpackAssetsManifest({}),
-      new BundleAnalyzerPlugin({
-        analyzerMode: 'static',
-        openAnalyzer: false,
-      }),
+      isDev &&
+        new BundleAnalyzerPlugin({
+          analyzerMode: 'static',
+          openAnalyzer: false,
+        }),
       !isDev &&
         new SentryWebpackPlugin({
           // sentry-cli configuration

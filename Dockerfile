@@ -6,6 +6,7 @@ ARG SHORT_SHA
 WORKDIR app
 
 ENV NODE_ENV='production'
+ENV SHORT_SHA=$SHORT_SHA
 
 COPY *.json ./
 

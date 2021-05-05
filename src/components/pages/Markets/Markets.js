@@ -280,7 +280,7 @@ const Markets = () => {
                 }}
               />
             </Box>
-            <Box px={2} py={0} width={['100%', '100%', '200px']}>
+            <Box px={[0, 0, 2]} py={0} width={['100%', '100%', '200px']}>
               <ContractSizeSelector
                 onChange={updateContractSize}
                 value={contractSize}

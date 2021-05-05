@@ -175,8 +175,8 @@ const useOptionsChain = (): {
     [
       _markets,
       marketsLoading,
-      uAsset.tokenSymbol,
-      qAsset.tokenSymbol,
+      uAsset?.tokenSymbol,
+      qAsset?.tokenSymbol,
       setChain,
       pushNotification,
     ],

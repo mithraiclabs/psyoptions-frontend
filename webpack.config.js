@@ -100,17 +100,20 @@ module.exports = [
     plugins: [
       new NodePolyfillPlugin(),
       new WebpackAssetsManifest({}),
-      !isDev &&
-        new SentryWebpackPlugin({
-          // sentry-cli configuration
-          authToken: process.env.SENTRY_AUTH_TOKEN,
-          org: 'psyoptions',
-          project: 'psyoptions',
-          release: process.env.SHORT_SHA,
-          // webpack specific configuration
-          include: './dist',
-          ignore: ['node_modules', 'webpack.config.js'],
-        }),
+      ...(isDev
+        ? []
+        : [
+            new SentryWebpackPlugin({
+              // sentry-cli configuration
+              authToken: process.env.SENTRY_AUTH_TOKEN,
+              org: 'psyoptions',
+              project: 'psyoptions',
+              release: process.env.SHORT_SHA,
+              // webpack specific configuration
+              include: './dist',
+              ignore: ['node_modules', 'webpack.config.js'],
+            }),
+          ]),
     ],
   },
   {

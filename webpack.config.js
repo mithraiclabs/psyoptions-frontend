@@ -1,6 +1,7 @@
 const nodeExternals = require('webpack-node-externals')
 const NodePolyfillPlugin = require('node-polyfill-webpack-plugin')
 const WebpackAssetsManifest = require('webpack-assets-manifest')
+const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
 const SentryWebpackPlugin = require('@sentry/webpack-plugin')
 
 const isDev = process.env.NODE_ENV !== 'production'
@@ -100,6 +101,10 @@ module.exports = [
     plugins: [
       new NodePolyfillPlugin(),
       new WebpackAssetsManifest({}),
+      new BundleAnalyzerPlugin({
+        analyzerMode: 'static',
+        openAnalyzer: false,
+      }),
       ...(isDev
         ? []
         : [

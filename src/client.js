@@ -9,7 +9,6 @@ import App from './components/App'
 
 // Don't log errors in local development
 if (process.env.NODE_ENV === 'production') {
-  console.log('*** release = ', process.env.SHORT_SHA)
   Sentry.init({
     dsn:
       'https://f01c872e3d354a7ebcb3face8a11728e@o540422.ingest.sentry.io/5658746',

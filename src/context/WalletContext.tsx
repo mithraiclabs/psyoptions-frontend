@@ -6,8 +6,6 @@ import useNotifications from '../hooks/useNotifications'
 
 const WalletContext = createContext({})
 
-let errorThrown = false
-
 const WalletProvider: React.FC = ({ children }) => {
   const { pushNotification } = useNotifications()
   const { connection } = useConnection()
@@ -17,16 +15,6 @@ const WalletProvider: React.FC = ({ children }) => {
   const [pubKey, setPubKey] = useState<PublicKey | null>(null)
   // balance of public key in lamports
   const [balance, setBalance] = useState(0)
-
-  if (!errorThrown) {
-    try {
-      throw new TypeError('testing the errors')
-    } catch (error) {
-      console.log('reporting error!')
-      Sentry.captureException(error)
-      errorThrown = true
-    }
-  }
 
   // This is ok to have in the context because the logic
   // should remain the same no matter where the user is

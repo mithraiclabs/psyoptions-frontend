@@ -55,6 +55,7 @@ const {
   APP_PASSWORD,
   APP_PASSWORD_PROTECTED,
   INITIALIZE_PAGE_ENABLED,
+  SHOW_CLOSE_ALL_WRITTEN_OPTIONS
 } = process.env
 
 server.use((req, res) => {
@@ -84,6 +85,7 @@ server.use((req, res) => {
         APP_PASSWORD,
         APP_PASSWORD_PROTECTED,
         INITIALIZE_PAGE_ENABLED,
+        SHOW_CLOSE_ALL_WRITTEN_OPTIONS
       }
     } else {
       app = <LandingComingSoon />

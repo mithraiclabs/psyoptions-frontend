@@ -16,6 +16,8 @@ import useConnection from '../../../../hooks/useConnection'
 import { useExchangeWriterTokenForQuote } from '../../../../hooks/useExchangeWriterTokenForQuote'
 import useNotifications from '../../../../hooks/useNotifications'
 
+const { SHOW_CLOSE_ALL_WRITTEN_OPTIONS } = process.env
+
 /**
  * Row to display the wallet's minted options
  *
@@ -90,14 +92,26 @@ export const WrittenOptionRow = ({
   let ActionFragment = null
   if (expired) {
     ActionFragment = (
-      <Chip
-        clickable
-        size="small"
-        label="Close"
-        color="primary"
-        variant="outlined"
-        onClick={closeOptionPostExpiration}
-      />
+      <Box display="flex" flexDirection="row" justifyContent="flex-end">
+        <Chip
+          clickable
+          size="small"
+          label="Close"
+          color="primary"
+          variant="outlined"
+          onClick={closeOptionPostExpiration}
+        />
+        {SHOW_CLOSE_ALL_WRITTEN_OPTIONS && (
+          <Chip
+            clickable
+            size="small"
+            label="Close All"
+            color="primary"
+            variant="outlined"
+            // onClick={/**Insert close all expired written options functionality*/}
+          />
+        )}
+      </Box>
     )
   } else {
     ActionFragment = (
@@ -110,6 +124,16 @@ export const WrittenOptionRow = ({
             color="primary"
             variant="outlined"
             onClick={closePosition}
+          />
+        )} 
+        {holdsContracts && SHOW_CLOSE_ALL_WRITTEN_OPTIONS && (
+          <Chip
+            clickable
+            size="small"
+            label="Close All"
+            color="primary"
+            variant="outlined"
+            // onClick={/*Insert close all written options functionality*/}
           />
         )}
         {quotePoolNotEmpty && (

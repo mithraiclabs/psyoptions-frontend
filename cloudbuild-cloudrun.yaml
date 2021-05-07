@@ -8,6 +8,10 @@ steps:
         '-t',
         'gcr.io/${PROJECT_ID}/solana-options-frontend:latest',
         '.',
+        '--build-arg',
+        'SENTRY_AUTH_TOKEN=${_SENTRY_AUTH_TOKEN}',
+        '--build-arg',
+        'SHORT_SHA=${SHORT_SHA}',
       ]
     id: 'Build docker image'
 
@@ -23,7 +27,7 @@ steps:
         'beta',
         'run',
         'deploy',
-        'solana-options-frontend',
+        '${_DEPLOY_TARGET}',
         '--image',
         'gcr.io/${PROJECT_ID}/solana-options-frontend:latest',
         '--region',

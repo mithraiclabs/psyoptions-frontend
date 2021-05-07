@@ -55,6 +55,7 @@ const {
   APP_PASSWORD,
   APP_PASSWORD_PROTECTED,
   INITIALIZE_PAGE_ENABLED,
+  SHORT_SHA,
   SHOW_CLOSE_ALL_WRITTEN_OPTIONS
 } = process.env
 
@@ -85,6 +86,7 @@ server.use((req, res) => {
         APP_PASSWORD,
         APP_PASSWORD_PROTECTED,
         INITIALIZE_PAGE_ENABLED,
+        SHORT_SHA,
         SHOW_CLOSE_ALL_WRITTEN_OPTIONS
       }
     } else {

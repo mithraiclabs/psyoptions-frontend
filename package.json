@@ -55,6 +55,7 @@
     "@project-serum/tokens": "0.0.7",
     "@sentry/react": "^6.2.1",
     "@sentry/tracing": "^6.2.1",
+    "@sentry/webpack-plugin": "^1.15.1",
     "@solana/spl-token": "0.1.3",
     "@solana/web3.js": "^1.2.6",
     "axios": "^0.21.1",

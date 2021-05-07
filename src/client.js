@@ -13,6 +13,7 @@ if (process.env.NODE_ENV === 'production') {
     dsn:
       'https://f01c872e3d354a7ebcb3face8a11728e@o540422.ingest.sentry.io/5658746',
     integrations: [new Integrations.BrowserTracing()],
+    release: process.env.SHORT_SHA,
 
     // We recommend adjusting this value in production, or using tracesSampler
     // for finer control

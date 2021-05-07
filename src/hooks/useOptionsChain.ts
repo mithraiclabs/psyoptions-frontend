@@ -5,6 +5,28 @@ import useOptionsMarkets from './useOptionsMarkets'
 import { OptionsChainContext } from '../context/OptionsChainContext'
 import useAssetList from './useAssetList'
 import useNotifications from './useNotifications'
+import { OptionMarket } from '../types'
+
+type OptionRow = OptionMarket & {
+  key: string
+  ask: string
+  bid: string
+  change: string
+  volume: string
+  openInterest: string
+  serumKey: string
+  initialized: boolean
+  fraction: string
+  reciprocalFraction: string
+}
+
+type ChainRow = {
+  strike: BigNumber
+  size: string
+  key: string
+  call: OptionRow
+  put: OptionRow
+}
 
 const callOrPutTemplate = {
   key: '',
@@ -17,9 +39,12 @@ const callOrPutTemplate = {
   serumKey: '',
   initialized: false,
 }
-const useOptionsChain = () => {
+const useOptionsChain = (): {
+  chain: ChainRow[]
+  buildOptionsChain: (timestamp: number) => void
+} => {
   const { pushNotification } = useNotifications()
-  const { markets, marketsLoading } = useOptionsMarkets()
+  const { markets: _markets, marketsLoading } = useOptionsMarkets()
   const { uAsset, qAsset } = useAssetList()
   const { chain, setChain } = useContext(OptionsChainContext)
 
@@ -30,7 +55,8 @@ const useOptionsChain = () => {
    * @param {number} dateTimestamp - Expiration as unix timestamp in seconds
    */
   const buildOptionsChain = useCallback(
-    (dateTimestamp) => {
+    (dateTimestamp: number, contractSize?: number) => {
+      const markets = _markets as OptionMarket // for TS since useOptionsMarkets is not in TS
       try {
         if (marketsLoading) return
 
@@ -45,10 +71,19 @@ const useOptionsChain = () => {
           return
         }
 
-        const callKeyPart = `${dateTimestamp}-${uAsset.tokenSymbol}-${qAsset.tokenSymbol}`
-        const putKeyPart = `${dateTimestamp}-${qAsset.tokenSymbol}-${uAsset.tokenSymbol}`
+        const callKeyPart = `${dateTimestamp}-${uAsset.tokenSymbol}-${
+          qAsset.tokenSymbol
+        }${contractSize ? `-${contractSize}` : ''}`
+        const putKeyPart = `${dateTimestamp}-${qAsset.tokenSymbol}-${
+          uAsset.tokenSymbol
+        }${contractSize ? `-${contractSize}` : ''}`
 
-        const callPutMap = (k) => {
+        const callPutMap = (
+          k: string,
+        ): OptionMarket & {
+          fraction: string
+          reciprocalFraction: string
+        } => {
           const amt = markets[k].amountPerContract.toString()
           const qAmt = markets[k].quoteAmountPerContract.toString()
           return {
@@ -72,10 +107,10 @@ const useOptionsChain = () => {
           ]),
         )
 
-        const rows = []
+        const rows: ChainRow[] = []
 
         strikeFractions.forEach((fraction) => {
-          const sizes = new Set()
+          const sizes: Set<string> = new Set()
           const [amt, qAmt] = fraction.split('/')
           const strike = new BigNumber(qAmt).div(new BigNumber(amt))
 
@@ -108,18 +143,18 @@ const useOptionsChain = () => {
                 ? {
                     ...callOrPutTemplate,
                     ...call,
-                    serumKey: `${call?.optionMintAddress}-${call?.qAssetMint}`,
+                    serumKey: `${call?.optionMintKey}-${call?.qAssetMint}`,
                     initialized: true,
                   }
-                : callOrPutTemplate,
+                : (callOrPutTemplate as OptionRow),
               put: put
                 ? {
                     ...callOrPutTemplate,
                     ...put,
-                    serumKey: `${put?.optionMintAddress}-${put?.uAssetMint}`,
+                    serumKey: `${put?.optionMintKey}-${put?.uAssetMint}`,
                     initialized: true,
                   }
-                : callOrPutTemplate,
+                : (callOrPutTemplate as OptionRow),
               key: `${callKeyPart}-${size}-${strike}`,
             }
 
@@ -137,7 +172,14 @@ const useOptionsChain = () => {
         setChain([])
       }
     },
-    [marketsLoading, uAsset, qAsset, markets, setChain, pushNotification],
+    [
+      _markets,
+      marketsLoading,
+      uAsset?.tokenSymbol,
+      qAsset?.tokenSymbol,
+      setChain,
+      pushNotification,
+    ],
   )
 
   return {

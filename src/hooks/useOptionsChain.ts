@@ -71,12 +71,8 @@ const useOptionsChain = (): {
           return
         }
 
-        const callKeyPart = `${dateTimestamp}-${uAsset.tokenSymbol}-${
-          qAsset.tokenSymbol
-        }${contractSize ? `-${contractSize}` : ''}`
-        const putKeyPart = `${dateTimestamp}-${qAsset.tokenSymbol}-${
-          uAsset.tokenSymbol
-        }${contractSize ? `-${contractSize}` : ''}`
+        const callKeyPart = `${dateTimestamp}-${uAsset.tokenSymbol}-${qAsset.tokenSymbol}`
+        const putKeyPart = `${dateTimestamp}-${qAsset.tokenSymbol}-${uAsset.tokenSymbol}`
 
         const callPutMap = (
           k: string,
@@ -130,36 +126,38 @@ const useOptionsChain = (): {
             return false
           })
 
-          Array.from(sizes).forEach(async (size) => {
-            const call = matchingCalls.find((c) => c.size === size)
-            const put = matchingPuts.find(
-              (p) => p.quoteAmountPerContract.toString() === size,
-            )
+          Array.from(sizes)
+            .filter((size) => size === `${contractSize}`)
+            .forEach(async (size) => {
+              const call = matchingCalls.find((c) => c.size === size)
+              const put = matchingPuts.find(
+                (p) => p.quoteAmountPerContract.toString() === size,
+              )
 
-            const row = {
-              strike,
-              size,
-              call: call
-                ? {
-                    ...callOrPutTemplate,
-                    ...call,
-                    serumKey: `${call?.optionMintKey}-${call?.qAssetMint}`,
-                    initialized: true,
-                  }
-                : (callOrPutTemplate as OptionRow),
-              put: put
-                ? {
-                    ...callOrPutTemplate,
-                    ...put,
-                    serumKey: `${put?.optionMintKey}-${put?.uAssetMint}`,
-                    initialized: true,
-                  }
-                : (callOrPutTemplate as OptionRow),
-              key: `${callKeyPart}-${size}-${strike}`,
-            }
+              const row = {
+                strike,
+                size,
+                call: call
+                  ? {
+                      ...callOrPutTemplate,
+                      ...call,
+                      serumKey: `${call?.optionMintKey}-${call?.qAssetMint}`,
+                      initialized: true,
+                    }
+                  : (callOrPutTemplate as OptionRow),
+                put: put
+                  ? {
+                      ...callOrPutTemplate,
+                      ...put,
+                      serumKey: `${put?.optionMintKey}-${put?.uAssetMint}`,
+                      initialized: true,
+                    }
+                  : (callOrPutTemplate as OptionRow),
+                key: `${callKeyPart}-${size}-${strike}`,
+              }
 
-            rows.push(row)
-          })
+              rows.push(row)
+            })
         })
 
         rows.sort((a, b) => a.strike.minus(b.strike).toNumber())

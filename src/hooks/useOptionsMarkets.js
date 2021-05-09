@@ -118,7 +118,10 @@ const useOptionsMarkets = () => {
 
         const key = `${newMarket.expiration}-${newMarket.uAssetSymbol}-${
           newMarket.qAssetSymbol
-        }-${newMarket.size}-${strike.toString(10)}`
+        }-${newMarket.size}-${amountPerContract.toString(
+          10,
+        )}/${quoteAmountPerContract.toString(10)}`
+
         newMarkets[key] = newMarket
       })
       // Not sure if we should replace the existing markets or merge them
@@ -253,8 +256,6 @@ const useOptionsMarkets = () => {
     }
     return []
   }
-
-  const getMyMarkets = () => Object.values(markets).filter((m) => m.createdByMe)
 
   const mint = async ({
     marketData,
@@ -401,7 +402,6 @@ const useOptionsMarkets = () => {
     getStrikePrices,
     getSizes,
     getDates,
-    getMyMarkets,
     mint,
     createAccountsAndMint,
     fetchMarketData,

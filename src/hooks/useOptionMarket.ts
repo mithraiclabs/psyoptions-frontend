@@ -1,3 +1,5 @@
+import type BigNumber from 'bignumber.js'
+
 import { useMemo } from 'react'
 import { OptionMarket } from '../types'
 import useOptionsMarkets from './useOptionsMarkets'
@@ -7,18 +9,35 @@ export const useOptionMarket = ({
   qAssetSymbol,
   date,
   size,
-  price,
+  amountPerContract,
+  quoteAmountPerContract,
 }: {
   uAssetSymbol: string
   qAssetSymbol: string
   date: string
   size: number
-  price: number
+  amountPerContract: BigNumber
+  quoteAmountPerContract: BigNumber
 }): OptionMarket | undefined => {
   const { markets } = useOptionsMarkets()
 
   return useMemo(
-    () => markets[`${date}-${uAssetSymbol}-${qAssetSymbol}-${size}-${price}`],
-    [date, markets, price, qAssetSymbol, size, uAssetSymbol],
+    () =>
+      amountPerContract &&
+      quoteAmountPerContract &&
+      markets[
+        `${date}-${uAssetSymbol}-${qAssetSymbol}-${size}-${amountPerContract.toString(
+          10,
+        )}/${quoteAmountPerContract.toString(10)}`
+      ],
+    [
+      date,
+      markets,
+      qAssetSymbol,
+      size,
+      uAssetSymbol,
+      amountPerContract,
+      quoteAmountPerContract,
+    ],
   )
 }

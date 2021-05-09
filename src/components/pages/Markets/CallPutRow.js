@@ -80,14 +80,16 @@ const CallPutRow = ({
     uAssetSymbol: uAsset?.tokenSymbol,
     qAssetSymbol: qAsset?.tokenSymbol,
     size: row.call?.size,
-    price: row.strike,
+    amountPerContract: row.call?.amountPerContract,
+    quoteAmountPerContract: row.call?.quoteAmountPerContract,
   })
   const putMarket = useOptionMarket({
     date: date.unix(),
     uAssetSymbol: qAsset?.tokenSymbol,
     qAssetSymbol: uAsset?.tokenSymbol,
     size: row.put?.size,
-    price: 1 / row.strike,
+    amountPerContract: row.put?.amountPerContract,
+    quoteAmountPerContract: row.put?.quoteAmountPerContract,
   })
   const callOptionMintInfo = useSPLTokenMintInfo(callMarket?.optionMintKey)
   const putOptionMintInfo = useSPLTokenMintInfo(putMarket?.optionMintKey)

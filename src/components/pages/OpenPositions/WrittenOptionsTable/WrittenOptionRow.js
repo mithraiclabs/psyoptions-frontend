@@ -39,6 +39,7 @@ export const WrittenOptionRow = ({
   const initialWriterTokenAccount = writerTokenAccounts[0]
   const ownedUAssetKey = ownedTokenAccounts[market.uAssetMint]?.[0]?.pubKey
   const ownedQAssetKey = ownedTokenAccounts[market.qAssetMint]?.[0]?.pubKey
+  const ownedOptionTokenAccounts = ownedTokenAccounts[market.optionMintAddress]
   const { closeOptionPostExpiration } = useCloseWrittenOptionPostExpiration(
     market,
     ownedUAssetKey,
@@ -108,7 +109,7 @@ export const WrittenOptionRow = ({
             label="Close All"
             color="primary"
             variant="outlined"
-            // onClick={/**Insert close all expired written options functionality*/}
+            onClick={closeOptionPostExpiration}
           />
         )}
       </Box>
@@ -123,17 +124,19 @@ export const WrittenOptionRow = ({
             label="Close Position"
             color="primary"
             variant="outlined"
-            onClick={closePosition}
+            onClick={() => closePosition()}
           />
         )} 
         {holdsContracts && SHOW_CLOSE_ALL_WRITTEN_OPTIONS && (
           <Chip
             clickable
             size="small"
-            label="Close All"
+            label="Close Available"
             color="primary"
             variant="outlined"
-            // onClick={/*Insert close all written options functionality*/}
+            onClick={() => {
+              closePosition(Math.min(ownedOptionTokenAccounts?.[0]?.amount, initialWriterTokenAccount.amount))
+            }}
           />
         )}
         {quotePoolNotEmpty && (
@@ -159,7 +162,8 @@ export const WrittenOptionRow = ({
       <TableCell width="15%">
         {market.size} {market.uAssetSymbol}
       </TableCell>
-      <TableCell width="15%">{-initialWriterTokenAccount.amount}</TableCell>
+      <TableCell width="7.5%">{initialWriterTokenAccount.amount}</TableCell>
+      <TableCell width="7.5%">{ownedOptionTokenAccounts?.[0]?.amount}</TableCell>
       <TableCell width="20%">
         {formatExpirationTimestamp(market.expiration)}
       </TableCell>

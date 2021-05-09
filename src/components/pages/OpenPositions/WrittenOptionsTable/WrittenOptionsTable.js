@@ -29,7 +29,8 @@ export const WrittenOptionsTable = () => {
               <TableCell width="15%">Asset Pair</TableCell>
               <TableCell width="15%">Strike</TableCell>
               <TableCell width="15%">Locked</TableCell>
-              <TableCell width="15%">Size</TableCell>
+              <TableCell width="7.5%">Size</TableCell>
+              <TableCell width="7.5%">Available</TableCell>
               <TableCell width="20%">Expiration</TableCell>
               <TableCell align="right" width="15%">
                 Action

@@ -24,7 +24,7 @@ import { useSolanaMeta } from '../context/SolanaMetaContext'
 // As of writing 25 mints is a good round number that won't
 // breach that limit when OptionToken and WriterToken accounts
 // are included in TX.
-const MAX_MINTS_PER_TX = 25
+const maxClosesPerTx = 25
 
 export const useClosePosition = (
   market,
@@ -77,7 +77,7 @@ export const useClosePosition = (
         })
         // loop this by # of times given by parameter
         const loopRemaining = remaining
-        for (let i = 1; i <= Math.min(MAX_MINTS_PER_TX, loopRemaining); i += 1) {
+        for (let i = 1; i <= Math.min(maxClosesPerTx, loopRemaining); i += 1) {
           tx.add(closePositionIx)
           remaining -= 1
         }

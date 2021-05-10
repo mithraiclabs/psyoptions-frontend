@@ -113,7 +113,9 @@ module.exports = [
               authToken: process.env.SENTRY_AUTH_TOKEN,
               org: 'psyoptions',
               project: 'psyoptions',
-              release: process.env.SHORT_SHA,
+              release: `${process.env.SHORT_SHA}${
+                (process.env.TAG_NAME && `:${process.env.TAG_NAME}`) || ''
+              }`,
               // webpack specific configuration
               include: './dist',
               ignore: ['node_modules', 'webpack.config.js'],

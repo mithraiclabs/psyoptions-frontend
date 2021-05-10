@@ -16,8 +16,6 @@ import useConnection from '../../../../hooks/useConnection'
 import { useExchangeWriterTokenForQuote } from '../../../../hooks/useExchangeWriterTokenForQuote'
 import useNotifications from '../../../../hooks/useNotifications'
 
-const { SHOW_CLOSE_ALL_WRITTEN_OPTIONS } = process.env
-
 /**
  * Row to display the wallet's minted options
  *
@@ -102,42 +100,40 @@ export const WrittenOptionRow = ({
           variant="outlined"
           onClick={closeOptionPostExpiration}
         />
-        {SHOW_CLOSE_ALL_WRITTEN_OPTIONS && (
-          <Chip
-            clickable
-            size="small"
-            label="Close All"
-            color="primary"
-            variant="outlined"
-            onClick={closeOptionPostExpiration}
-          />
-        )}
+        <Chip
+          clickable
+          size="small"
+          label="Close All"
+          color="primary"
+          variant="outlined"
+          onClick={closeOptionPostExpiration}
+        />
       </Box>
     )
   } else {
     ActionFragment = (
       <Box display="flex" flexDirection="row" justifyContent="flex-end">
         {holdsContracts && (
-          <Chip
-            clickable
-            size="small"
-            label="Close Position"
-            color="primary"
-            variant="outlined"
-            onClick={() => closePosition()}
-          />
-        )} 
-        {holdsContracts && SHOW_CLOSE_ALL_WRITTEN_OPTIONS && (
-          <Chip
-            clickable
-            size="small"
-            label="Close Available"
-            color="primary"
-            variant="outlined"
-            onClick={() => {
-              closePosition(Math.min(ownedOptionTokenAccounts?.[0]?.amount, initialWriterTokenAccount.amount))
-            }}
-          />
+          <div>
+            <Chip
+              clickable
+              size="small"
+              label="Close Position"
+              color="primary"
+              variant="outlined"
+              onClick={() => closePosition()}
+            />
+            <Chip
+              clickable
+              size="small"
+              label="Close Available"
+              color="primary"
+              variant="outlined"
+              onClick={() => {
+                closePosition(Math.min(ownedOptionTokenAccounts?.[0]?.amount, initialWriterTokenAccount.amount))
+              }}
+            />
+          </div>
         )}
         {quotePoolNotEmpty && (
           <Chip

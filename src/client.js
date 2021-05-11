@@ -26,7 +26,9 @@ if (process.env.NODE_ENV === 'production') {
 
 const run = async () => {
   try {
-    await navigator.serviceWorker.register('/rate-limited-fetch-worker.js')
+    if (navigator?.serviceWorker) {
+      await navigator.serviceWorker.register('/rate-limited-fetch-worker.js')
+    }
   } catch (err) {
     Sentry.captureException(err)
   }

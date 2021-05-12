@@ -30,13 +30,9 @@ import OrderBook from '../OrderBook'
 import { useSerumOrderbook } from '../../hooks/Serum'
 import { WRAPPED_SOL_ADDRESS } from '../../utils/token'
 import { useSerumFeeDiscountKey } from '../../hooks/Serum/useSerumFeeDiscountKey'
-import { getPriceFromSerumOrderbook } from '../../utils/orderbook'
 import { useOptionMarket } from '../../hooks/useOptionMarket'
 import { UnsettledFunds } from './UnsettledFunds'
 
-const successColor = theme.palette.success.main
-const errorColor = theme.palette.error.main
-// const primaryColor = theme.palette.primary.main
 const bgLighterColor = theme.palette.background.lighter
 
 const StyledFilledInput = withStyles({
@@ -66,28 +62,46 @@ const PlusMinusButton = withStyles({
 })(Button)
 
 const BuyButton = withStyles({
-  root: {
-    backgroundColor: successColor,
-    color: theme.palette.background.default,
-    '&:hover': {
-      backgroundColor: theme.palette.success.light,
-    },
-  },
-  disabled: {
-    backgroundColor: theme.palette.success.dark,
-  },
+  // The fakeDisabled prop is a hack/workaround
+  // to make the button look disabled but still show tooltips on hover
+  // Make sure to remove the onClick handler via props
+  root: ({ fakeDisabled }) =>
+    fakeDisabled
+      ? {
+          backgroundColor: theme.palette.success.dark,
+          color: 'rgba(255, 255, 255, 0.3)',
+          '&:hover': {
+            backgroundColor: theme.palette.success.dark,
+          },
+        }
+      : {
+          backgroundColor: theme.palette.success.main,
+          '&:hover': {
+            backgroundColor: theme.palette.success.light,
+          },
+          color: theme.palette.background.main,
+        },
 })(Button)
 
 const SellButton = withStyles({
-  root: {
-    backgroundColor: errorColor,
-    '&:hover': {
-      backgroundColor: theme.palette.error.light,
-    },
-  },
-  disabled: {
-    backgroundColor: theme.palette.error.dark,
-  },
+  // The fakeDisabled prop is a hack/workaround
+  // to make the button look disabled but still show tooltips on hover
+  // Make sure to remove the onClick handler via props
+  root: ({ fakeDisabled }) =>
+    fakeDisabled
+      ? {
+          backgroundColor: theme.palette.error.dark,
+          color: 'rgba(255, 255, 255, 0.3)',
+          '&:hover': {
+            backgroundColor: theme.palette.error.dark,
+          },
+        }
+      : {
+          backgroundColor: theme.palette.error.main,
+          '&:hover': {
+            backgroundColor: theme.palette.error.light,
+          },
+        },
 })(Button)
 
 const orderTypes = ['limit', 'market']
@@ -142,6 +156,7 @@ const BuySellDialog = ({
   writerTokenMintKey,
   serumKey,
   date,
+  markPrice,
 }) => {
   const { pushNotification } = useNotifications()
   const { connection, dexProgramId } = useConnection()
@@ -163,7 +178,6 @@ const BuySellDialog = ({
     feeRates: serumFeeRates,
     publicKey: serumDiscountFeeKey,
   } = useSerumFeeDiscountKey()
-  const price = getPriceFromSerumOrderbook(orderbook)
   const optionMarket = useOptionMarket({
     date: date.unix(),
     uAssetSymbol,
@@ -176,12 +190,14 @@ const BuySellDialog = ({
   const optionAccounts = ownedTokenAccounts[optionMintAddress] || []
   const writerAccounts = ownedTokenAccounts[writerTokenMintKey] || []
   const uAssetAccounts = ownedTokenAccounts[uAssetMint] || []
+  const qAssetAccounts = ownedTokenAccounts[qAssetMint] || []
 
   const contractsWritten = getHighestAccount(writerAccounts)?.amount || 0
   const openPositionSize = getHighestAccount(optionAccounts)?.amount || 0
+  const qAssetBalance =
+    (getHighestAccount(qAssetAccounts)?.amount || 0) / 10 ** qAssetDecimals
   let uAssetBalance =
     (getHighestAccount(uAssetAccounts)?.amount || 0) / 10 ** uAssetDecimals
-
   if (uAssetMint === WRAPPED_SOL_ADDRESS) {
     // if asset is wrapped Sol, use balance of wallet account
     uAssetBalance = balance / LAMPORTS_PER_SOL
@@ -386,8 +402,30 @@ const BuySellDialog = ({
     }
   }
 
+  const orderCost = parsedLimitPrice.multipliedBy(parsedOrderSize)
+
+  const isBuyDisabled =
+    (!orderbook?.asks?.length && orderType === 'market') ||
+    (orderType === 'limit' && parsedLimitPrice.isLessThanOrEqualTo(0)) ||
+    qAssetBalance < orderCost
+
+  const buyTooltipLabel =
+    orderType === 'market'
+      ? orderbook?.asks?.length
+        ? `Buy ${parsedOrderSize} options at market price`
+        : `Can't market buy because there are no asks`
+      : qAssetBalance >= orderCost && parsedLimitPrice.isGreaterThan(0)
+      ? `Place buy order using ${orderCost} ${qAssetSymbol}`
+      : parsedLimitPrice.isLessThanOrEqualTo(0)
+      ? `Limit price can't be 0`
+      : `Not enough ${qAssetSymbol} to place order`
+
   const mintSellTooltipLabel =
-    openPositionSize >= parsedOrderSize
+    orderType === 'market' && !orderbook?.bids?.length
+      ? `Can't market sell because there are no bids`
+      : parsedLimitPrice.isLessThanOrEqualTo(0)
+      ? `Limit price can't be 0`
+      : openPositionSize >= parsedOrderSize
       ? `Place sell order using: ${orderSize} owned option${
           orderSize > 1 ? 's' : ''
         }`
@@ -423,7 +461,7 @@ const BuySellDialog = ({
                 ? `${qAssetSymbol}/${uAssetSymbol}`
                 : `${uAssetSymbol}/${qAssetSymbol}`}
             </Box>
-            <Box pt={1}>Mark Price: {price ?? '-'}</Box>
+            <Box pt={1}>Mark Price: {markPrice ?? '-'}</Box>
             <Box pt={1}>
               Open Position:{' '}
               {loadingOwnedTokenAccounts ? 'Loading...' : openPositionSize}
@@ -561,44 +599,32 @@ const BuySellDialog = ({
                     ) : (
                       <>
                         <Box pr={1} width="50%">
-                          {/* <Tooltip title={buyTooltipLabel} placement="top"> */}
-                          <BuyButton
-                            fullWidth
-                            disabled={
-                              (!orderbook?.asks?.length &&
-                                orderType === 'market') ||
-                              (orderType === 'limit' &&
-                                parsedLimitPrice.isLessThanOrEqualTo(0))
-                            }
-                            onClick={handleBuyOrder}
-                          >
-                            Buy
-                          </BuyButton>
-                          {/* </Tooltip> */}
+                          <Tooltip title={buyTooltipLabel} placement="top">
+                            <BuyButton
+                              fullWidth
+                              onClick={isBuyDisabled ? null : handleBuyOrder}
+                              fakeDisabled={isBuyDisabled}
+                              disableRipple={isBuyDisabled}
+                            >
+                              Buy
+                            </BuyButton>
+                          </Tooltip>
                         </Box>
                         <Box pl={1} width="50%">
-                          {/* Annoying thing I had to do to get MUI to stop clogging the console with "errors" that aren't real errors about how wrapping a disabled button in a tooltip won't show the tooltip... sigh */}
-                          {isSellDisabled ? (
+                          <Tooltip title={mintSellTooltipLabel} placement="top">
                             <SellButton
                               fullWidth
-                              disabled
-                              onClick={handlePlaceSellOrder}
+                              onClick={
+                                isSellDisabled ? null : handlePlaceSellOrder
+                              }
+                              fakeDisabled={isSellDisabled}
+                              disableRipple={isSellDisabled}
                             >
-                              Mint/Sell
+                              {openPositionSize >= parsedOrderSize
+                                ? 'Sell'
+                                : 'Mint/Sell'}
                             </SellButton>
-                          ) : (
-                            <Tooltip
-                              title={mintSellTooltipLabel}
-                              placement="top"
-                            >
-                              <SellButton
-                                fullWidth
-                                onClick={handlePlaceSellOrder}
-                              >
-                                Mint/Sell
-                              </SellButton>
-                            </Tooltip>
-                          )}
+                          </Tooltip>
                         </Box>
                       </>
                     )}

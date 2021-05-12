@@ -248,6 +248,7 @@ const Markets = () => {
     <Page>
       <BuySellDialog
         {...callPutData}
+        markPrice={markPrice}
         heading={buySellDialogHeading}
         open={buySellDialogOpen}
         onClose={() => setBuySellDialogOpen(false)}

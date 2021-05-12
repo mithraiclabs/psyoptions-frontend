@@ -21,7 +21,7 @@ import useWallet from '../../hooks/useWallet'
 import useOptionsMarkets from '../../hooks/useOptionsMarkets'
 import useSerumMarketInfo from '../../hooks/useSerumMarketInfo'
 import { getStrikePrices } from '../../utils/getStrikePrices'
-import { getLastFridayOfMonths } from '../../utils/dates'
+import { getLastFridayOfMonths, getZeroDayExpiration } from '../../utils/dates'
 import useAssetList from '../../hooks/useAssetList'
 import { useOptionMarket } from '../../hooks/useOptionMarket'
 
@@ -31,6 +31,8 @@ import { ContractSizeSelector } from '../ContractSizeSelector'
 const darkBorder = `1px solid ${theme.palette.background.main}`
 
 const expirations = getLastFridayOfMonths(10)
+const zeroDay = getZeroDayExpiration()
+expirations.unshift(zeroDay)
 
 const InitializeMarket = () => {
   const { pushNotification } = useNotifications()

@@ -11,3 +11,7 @@ export const getLastFridayOfMonths = (n = 10) =>
       return lastFriday
     })
     .filter((date) => date.isSameOrAfter(moment.utc()))
+
+export const getZeroDayExpiration = () => {
+  return moment.utc().add(30, 'minutes')
+}

@@ -55,7 +55,9 @@ const {
   APP_PASSWORD,
   APP_PASSWORD_PROTECTED,
   INITIALIZE_PAGE_ENABLED,
-  SHORT_SHA
+  SHORT_SHA,
+  TAG_NAME,
+  SENTRY_ENVIRONMENT,
 } = process.env
 
 server.use((req, res) => {
@@ -85,7 +87,9 @@ server.use((req, res) => {
         APP_PASSWORD,
         APP_PASSWORD_PROTECTED,
         INITIALIZE_PAGE_ENABLED,
-        SHORT_SHA
+        SHORT_SHA,
+        TAG_NAME,
+        SENTRY_ENVIRONMENT,
       }
     } else {
       app = <LandingComingSoon />

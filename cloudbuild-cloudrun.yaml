@@ -12,6 +12,8 @@ steps:
         'SENTRY_AUTH_TOKEN=${_SENTRY_AUTH_TOKEN}',
         '--build-arg',
         'SHORT_SHA=${SHORT_SHA}',
+        '--build-arg',
+        'TAG_NAME=${TAG_NAME}',
       ]
     id: 'Build docker image'
 

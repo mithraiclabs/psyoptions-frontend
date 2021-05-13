@@ -9,7 +9,7 @@ import TableRow from '@material-ui/core/TableRow'
 import { withStyles } from '@material-ui/core/styles'
 
 import theme from '../../../utils/theme'
-import { getLastFridayOfMonths, getZeroDayExpiration } from '../../../utils/dates'
+import { getLastFridayOfMonths } from '../../../utils/dates'
 import { getStrikePrices, intervals } from '../../../utils/getStrikePrices'
 import { getPriceFromSerumOrderbook } from '../../../utils/orderbook'
 
@@ -102,8 +102,6 @@ const rowTemplate = {
 }
 
 const expirations = getLastFridayOfMonths(10)
-const zeroDay = getZeroDayExpiration()
-expirations.unshift(zeroDay)
 
 const USE_BONFIDA_MARK_PRICE = true
 

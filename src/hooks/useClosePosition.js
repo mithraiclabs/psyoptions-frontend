@@ -10,6 +10,12 @@ import { buildSolanaExplorerUrl } from '../utils/solanaExplorer'
 import { initializeTokenAccountTx, WRAPPED_SOL_ADDRESS } from '../utils/token'
 import { useSolanaMeta } from '../context/SolanaMetaContext'
 
+// Solana has a maximum packet size when sending a transaction.
+// As of writing 25 mints is a good round number that won't
+// breach that limit when OptionToken and WriterToken accounts
+// are included in TX.
+const maxClosesPerTx = 25
+
 /**
  * Close the Option the wallet has written in order to return the
  * underlying asset to the option writer
@@ -19,12 +25,6 @@ import { useSolanaMeta } from '../context/SolanaMetaContext'
  * @param underlyingAssetDestKEy PublicKey where the unlocked underlying asset will be sent
  * @param writerTokenSourceKey PublicKey of the address where the Writer Token will be burned from
  */
-
-// Solana has a maximum packet size when sending a transaction.
-// As of writing 25 mints is a good round number that won't
-// breach that limit when OptionToken and WriterToken accounts
-// are included in TX.
-const maxClosesPerTx = 25
 
 export const useClosePosition = (
   market,

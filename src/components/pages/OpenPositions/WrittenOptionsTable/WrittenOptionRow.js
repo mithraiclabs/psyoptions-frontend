@@ -98,7 +98,7 @@ export const WrittenOptionRow = ({
           label="Close"
           color="primary"
           variant="outlined"
-          onClick={closeOptionPostExpiration}
+          onClick={() => closeOptionPostExpiration()}
         />
         <Chip
           clickable
@@ -106,7 +106,9 @@ export const WrittenOptionRow = ({
           label="Close All"
           color="primary"
           variant="outlined"
-          onClick={closeOptionPostExpiration}
+          onClick={() => {
+            closeOptionPostExpiration(Math.min(ownedOptionTokenAccounts?.[0]?.amount, initialWriterTokenAccount.amount))
+          }}
         />
       </Box>
     )

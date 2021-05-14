@@ -12,7 +12,7 @@ require('../src/config')
 const argv = require('minimist')(process.argv.slice(2));
 const fs = require('fs');
 
-const connection = new Connection('https://devnet.solana.com');
+const connection = new Connection('https://api.devnet.solana.com');
 const solanaConfig = getSolanaConfig();
 const keyBuffer = fs.readFileSync(solanaConfig.keypair_path);
 const wallet = new Account(JSON.parse(keyBuffer));

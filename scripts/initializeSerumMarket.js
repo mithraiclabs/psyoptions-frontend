@@ -30,7 +30,7 @@ const {
   const keyBuffer = fs.readFileSync(solanaConfig.keypair_path)
   const wallet = new Account(JSON.parse(keyBuffer))
 
-  const connection = new Connection('https://devnet.solana.com')
+  const connection = new Connection('https://api.devnet.solana.com')
   const splData = getAssetsByNetwork('Devnet');
   console.log('*** SPL Data = ', splData);
   const dexProgramId = getDexProgramKeyByNetwork('Devnet');

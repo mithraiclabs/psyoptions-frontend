@@ -37,6 +37,7 @@ export const WrittenOptionRow = ({
   const initialWriterTokenAccount = writerTokenAccounts[0]
   const ownedUAssetKey = ownedTokenAccounts[market.uAssetMint]?.[0]?.pubKey
   const ownedQAssetKey = ownedTokenAccounts[market.qAssetMint]?.[0]?.pubKey
+  const ownedOptionTokenAccounts = ownedTokenAccounts[market.optionMintAddress]
   const { closeOptionPostExpiration } = useCloseWrittenOptionPostExpiration(
     market,
     ownedUAssetKey,
@@ -90,27 +91,51 @@ export const WrittenOptionRow = ({
   let ActionFragment = null
   if (expired) {
     ActionFragment = (
-      <Chip
-        clickable
-        size="small"
-        label="Close"
-        color="primary"
-        variant="outlined"
-        onClick={closeOptionPostExpiration}
-      />
+      <Box display="flex" flexDirection="row" justifyContent="flex-end">
+        <Chip
+          clickable
+          size="small"
+          label="Close"
+          color="primary"
+          variant="outlined"
+          onClick={() => closeOptionPostExpiration()}
+        />
+        <Chip
+          clickable
+          size="small"
+          label="Close All"
+          color="primary"
+          variant="outlined"
+          onClick={() => {
+            closeOptionPostExpiration(Math.min(ownedOptionTokenAccounts?.[0]?.amount, initialWriterTokenAccount.amount))
+          }}
+        />
+      </Box>
     )
   } else {
     ActionFragment = (
       <Box display="flex" flexDirection="row" justifyContent="flex-end">
         {holdsContracts && (
-          <Chip
-            clickable
-            size="small"
-            label="Close Position"
-            color="primary"
-            variant="outlined"
-            onClick={closePosition}
-          />
+          <div>
+            <Chip
+              clickable
+              size="small"
+              label="Close Position"
+              color="primary"
+              variant="outlined"
+              onClick={() => closePosition()}
+            />
+            <Chip
+              clickable
+              size="small"
+              label="Close Available"
+              color="primary"
+              variant="outlined"
+              onClick={() => {
+                closePosition(Math.min(ownedOptionTokenAccounts?.[0]?.amount, initialWriterTokenAccount.amount))
+              }}
+            />
+          </div>
         )}
         {quotePoolNotEmpty && (
           <Chip
@@ -135,7 +160,8 @@ export const WrittenOptionRow = ({
       <TableCell width="15%">
         {market.size} {market.uAssetSymbol}
       </TableCell>
-      <TableCell width="15%">{-initialWriterTokenAccount.amount}</TableCell>
+      <TableCell width="7.5%">{initialWriterTokenAccount.amount}</TableCell>
+      <TableCell width="7.5%">{ownedOptionTokenAccounts?.[0]?.amount}</TableCell>
       <TableCell width="20%">
         {formatExpirationTimestamp(market.expiration)}
       </TableCell>

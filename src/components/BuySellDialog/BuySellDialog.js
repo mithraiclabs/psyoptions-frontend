@@ -8,7 +8,6 @@ import {
   CircularProgress,
 } from '@material-ui/core'
 import Done from '@material-ui/icons/Done'
-import Tooltip from '@material-ui/core/Tooltip'
 import React, { useState } from 'react'
 import propTypes from 'prop-types'
 import BigNumber from 'bignumber.js'
@@ -31,7 +30,10 @@ import { useSerumOrderbook } from '../../hooks/Serum'
 import { WRAPPED_SOL_ADDRESS } from '../../utils/token'
 import { useSerumFeeDiscountKey } from '../../hooks/Serum/useSerumFeeDiscountKey'
 import { useOptionMarket } from '../../hooks/useOptionMarket'
+
 import { UnsettledFunds } from './UnsettledFunds'
+import BuyButton from './BuyButton'
+import SellButton from './SellButton'
 
 const bgLighterColor = theme.palette.background.lighter
 
@@ -59,49 +61,6 @@ const PlusMinusButton = withStyles({
       backgroundColor: 'rgba(255, 255, 255, 0.18)',
     },
   },
-})(Button)
-
-const BuyButton = withStyles({
-  // The fakeDisabled prop is a hack/workaround
-  // to make the button look disabled but still show tooltips on hover
-  // Make sure to remove the onClick handler via props
-  root: ({ fakeDisabled }) =>
-    fakeDisabled
-      ? {
-          backgroundColor: theme.palette.success.dark,
-          color: 'rgba(255, 255, 255, 0.3)',
-          '&:hover': {
-            backgroundColor: theme.palette.success.dark,
-          },
-        }
-      : {
-          backgroundColor: theme.palette.success.main,
-          '&:hover': {
-            backgroundColor: theme.palette.success.light,
-          },
-          color: theme.palette.background.main,
-        },
-})(Button)
-
-const SellButton = withStyles({
-  // The fakeDisabled prop is a hack/workaround
-  // to make the button look disabled but still show tooltips on hover
-  // Make sure to remove the onClick handler via props
-  root: ({ fakeDisabled }) =>
-    fakeDisabled
-      ? {
-          backgroundColor: theme.palette.error.dark,
-          color: 'rgba(255, 255, 255, 0.3)',
-          '&:hover': {
-            backgroundColor: theme.palette.error.dark,
-          },
-        }
-      : {
-          backgroundColor: theme.palette.error.main,
-          '&:hover': {
-            backgroundColor: theme.palette.error.light,
-          },
-        },
 })(Button)
 
 const orderTypes = ['limit', 'market']
@@ -204,8 +163,6 @@ const BuySellDialog = ({
   }
 
   const openPositionUAssetBalance = openPositionSize * amountPerContract
-  const sufficientFundsToSell =
-    openPositionSize + uAssetBalance / amountPerContract >= orderSize
 
   const serumMarketData = serumMarkets[serumKey]
   const serum = serumMarketData?.serumMarket
@@ -402,51 +359,6 @@ const BuySellDialog = ({
     }
   }
 
-  const orderCost = parsedLimitPrice.multipliedBy(parsedOrderSize)
-
-  const isBuyDisabled =
-    (!orderbook?.asks?.length && orderType === 'market') ||
-    (orderType === 'limit' && parsedLimitPrice.isLessThanOrEqualTo(0)) ||
-    qAssetBalance < orderCost
-
-  const buyTooltipLabel =
-    orderType === 'market'
-      ? orderbook?.asks?.length
-        ? `Buy ${parsedOrderSize} options at market price`
-        : `Can't market buy because there are no asks`
-      : qAssetBalance >= orderCost && parsedLimitPrice.isGreaterThan(0)
-      ? `Place buy order using ${orderCost} ${qAssetSymbol}`
-      : parsedLimitPrice.isLessThanOrEqualTo(0)
-      ? `Limit price can't be 0`
-      : `Not enough ${qAssetSymbol} to place order`
-
-  const mintSellTooltipLabel =
-    orderType === 'market' && !orderbook?.bids?.length
-      ? `Can't market sell because there are no bids`
-      : parsedLimitPrice.isLessThanOrEqualTo(0)
-      ? `Limit price can't be 0`
-      : openPositionSize >= parsedOrderSize
-      ? `Place sell order using: ${orderSize} owned option${
-          orderSize > 1 ? 's' : ''
-        }`
-      : openPositionSize + uAssetBalance / amountPerContract.toNumber() >=
-        parsedOrderSize
-      ? `Place sell order using: ${
-          openPositionSize > 0
-            ? `${openPositionSize} owned option${
-                openPositionSize > 1 && orderSize > 1 ? 's' : ''
-              } and `
-            : ''
-        }${
-          (parsedOrderSize - openPositionSize) * amountPerContract.toNumber()
-        } ${uAssetSymbol}`
-      : 'Collateral requirement not met to place sell order'
-
-  const isSellDisabled =
-    (!orderbook?.bids?.length && orderType === 'market') ||
-    (orderType === 'limit' && parsedLimitPrice.isLessThanOrEqualTo(0)) ||
-    !sufficientFundsToSell
-
   return (
     <Dialog open={open} onClose={onClose} maxWidth={'lg'}>
       <Box py={1} px={2} width="680px" maxWidth={['100%']}>
@@ -599,32 +511,31 @@ const BuySellDialog = ({
                     ) : (
                       <>
                         <Box pr={1} width="50%">
-                          <Tooltip title={buyTooltipLabel} placement="top">
-                            <BuyButton
-                              fullWidth
-                              onClick={isBuyDisabled ? null : handleBuyOrder}
-                              fakeDisabled={isBuyDisabled}
-                              disableRipple={isBuyDisabled}
-                            >
-                              Buy
-                            </BuyButton>
-                          </Tooltip>
+                          <BuyButton
+                            parsedLimitPrice={parsedLimitPrice}
+                            numberOfAsks={orderbook?.asks?.length || 0}
+                            qAssetSymbol={qAssetSymbol}
+                            orderType={orderType}
+                            orderCost={parsedLimitPrice.multipliedBy(
+                              parsedOrderSize,
+                            )}
+                            parsedOrderSize={parsedOrderSize}
+                            qAssetBalance={qAssetBalance}
+                            onClick={handleBuyOrder}
+                          />
                         </Box>
                         <Box pl={1} width="50%">
-                          <Tooltip title={mintSellTooltipLabel} placement="top">
-                            <SellButton
-                              fullWidth
-                              onClick={
-                                isSellDisabled ? null : handlePlaceSellOrder
-                              }
-                              fakeDisabled={isSellDisabled}
-                              disableRipple={isSellDisabled}
-                            >
-                              {openPositionSize >= parsedOrderSize
-                                ? 'Sell'
-                                : 'Mint/Sell'}
-                            </SellButton>
-                          </Tooltip>
+                          <SellButton
+                            amountPerContract={amountPerContract}
+                            parsedLimitPrice={parsedLimitPrice}
+                            openPositionSize={openPositionSize}
+                            numberOfBids={orderbook?.bids?.length || 0}
+                            uAssetSymbol={uAssetSymbol}
+                            uAssetBalance={uAssetBalance}
+                            orderType={orderType}
+                            parsedOrderSize={parsedOrderSize}
+                            onClick={handlePlaceSellOrder}
+                          />
                         </Box>
                       </>
                     )}

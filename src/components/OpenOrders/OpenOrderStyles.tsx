@@ -6,7 +6,7 @@ export const TCell = withStyles({
   root: {
     padding: '8px 16px',
     whiteSpace: 'nowrap',
-    fontSize: '11px',
+    fontSize: '13px',
     border: 'none',
     height: '52px',
     background: (theme.palette.background as any).medium, // Todo fix this type
@@ -17,7 +17,7 @@ export const THeadCell = withStyles({
   root: {
     padding: '4px 16px',
     whiteSpace: 'nowrap',
-    fontSize: '11px',
+    fontSize: '13px',
     height: '48px',
     border: 'none',
   },

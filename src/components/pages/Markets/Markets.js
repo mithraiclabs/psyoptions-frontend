@@ -39,7 +39,7 @@ const THeadCell = withStyles({
   root: {
     padding: '4px',
     whiteSpace: 'nowrap',
-    fontSize: '11px',
+    fontSize: '13px',
     height: '48px',
     border: 'none',
   },
@@ -49,7 +49,7 @@ const THeadCellStrike = withStyles({
   root: {
     padding: '4px',
     whiteSpace: 'nowrap',
-    fontSize: '11px',
+    fontSize: '13px',
     height: '48px',
     border: 'none',
   },
@@ -59,7 +59,6 @@ const TCellLoading = withStyles({
   root: {
     padding: '16px',
     whiteSpace: 'nowrap',
-    fontSize: '11px',
     height: '52px',
     border: 'none',
   },
@@ -69,7 +68,7 @@ const TCellStrike = withStyles({
   root: {
     padding: '16px',
     whiteSpace: 'nowrap',
-    fontSize: '11px',
+    fontSize: '13px',
     height: '52px',
     border: 'none',
     background: theme.palette.background.default,
@@ -301,7 +300,7 @@ const Markets = () => {
             </Box>
           </Box>
           <Box px={[1, 1, 0]} py={[2, 2, 1]} width={['100%', '100%', 'auto']}>
-            <Box pb={'6px'} pl="10px" fontSize={'11px'}>
+            <Box pb={'6px'} pl="10px" fontSize={'13px'}>
               Asset Pair:
             </Box>
             <Box
@@ -455,7 +454,7 @@ const Markets = () => {
                 />
               }
               label={
-                <span style={{ fontSize: '11px' }}>Round Strike Prices</span>
+                <span style={{ fontSize: '13px' }}>Round Strike Prices</span>
               }
               style={{ margin: '0' }}
             />

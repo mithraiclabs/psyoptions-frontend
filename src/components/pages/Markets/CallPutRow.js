@@ -31,7 +31,7 @@ const TCell = withStyles({
   root: {
     padding: '8px',
     whiteSpace: 'nowrap',
-    fontSize: '11px',
+    fontSize: '13px',
     border: 'none',
     height: '52px',
     background: theme.palette.background.medium,
@@ -42,7 +42,7 @@ const TCellLoading = withStyles({
   root: {
     padding: '16px',
     whiteSpace: 'nowrap',
-    fontSize: '11px',
+    fontSize: '13px',
     height: '52px',
     border: 'none',
     background: theme.palette.background.medium,
@@ -50,6 +50,10 @@ const TCellLoading = withStyles({
 })(TableCell)
 
 const darkBorder = `1px solid ${theme.palette.background.main}`
+
+const Empty = ({ children }) => (
+  <span style={{ opacity: '0.3' }}>{children}</span>
+)
 
 const CallPutRow = ({
   row,
@@ -128,8 +132,8 @@ const CallPutRow = ({
   const [loading, setLoading] = useState({ call: false, put: false })
 
   const formatStrike = (sp) => {
-    if (!sp) return '—'
-    return round ? sp.toFixed(precision) : sp.toString(10)
+    if (!sp) return <Empty>{'—'}</Empty>
+    return <span>{round ? sp.toFixed(precision) : sp.toString(10)}</span>
   }
 
   const handleInitialize = useCallback(
@@ -186,7 +190,7 @@ const CallPutRow = ({
     <TableRow hover role="checkbox" tabIndex={-1}>
       <TCell align="left" style={callCellStyle}>
         {row.call?.emptyRow ? (
-          '—'
+          ''
         ) : loading.call ? (
           <CircularProgress size={32} />
         ) : !connected ? (
@@ -222,7 +226,11 @@ const CallPutRow = ({
         )}
       </TCell>
       <TCell align="left" style={callCellStyle}>
-        {row.call?.size ? `${row.call.size} ${uAsset?.tokenSymbol || ''}` : '—'}
+        {row.call?.size ? (
+          `${row.call.size} ${uAsset?.tokenSymbol || ''}`
+        ) : (
+          <Empty>{'—'}</Empty>
+        )}
       </TCell>
       {row.call?.serumKey && serumMarkets[row.call?.serumKey]?.loading ? (
         <TCellLoading colSpan={6} style={callCellStyle}>
@@ -231,22 +239,24 @@ const CallPutRow = ({
       ) : (
         <>
           <TCell align="left" style={callCellStyle}>
-            {callHighestBid || '—'}
+            {callHighestBid || <Empty>{'—'}</Empty>}
           </TCell>
           <TCell align="left" style={callCellStyle}>
-            {callLowestAsk || '—'}
+            {callLowestAsk || <Empty>{'—'}</Empty>}
           </TCell>
           <TCell align="left" style={callCellStyle}>
-            {row.call?.change || '—'}
+            {row.call?.change || <Empty>{'—'}</Empty>}
           </TCell>
           <TCell align="left" style={callCellStyle}>
-            {row.call?.volume || '—'}
+            {row.call?.volume || <Empty>{'—'}</Empty>}
           </TCell>
           <TCell align="left" style={callCellStyle}>
-            {(callImpliedVol && `${callImpliedVol.toFixed(1)}%`) || '—'}
+            {(callImpliedVol && `${callImpliedVol.toFixed(1)}%`) || (
+              <Empty>{'—'}</Empty>
+            )}
           </TCell>
           <TCell align="left" style={callCellStyle}>
-            {callOptionMintInfo?.supply.toString() || '—'}
+            {callOptionMintInfo?.supply.toString() || <Empty>{'—'}</Empty>}
           </TCell>
         </>
       )}
@@ -259,11 +269,17 @@ const CallPutRow = ({
           background: theme.palette.background.main,
         }}
       >
-        <h4 style={{ margin: 0 }}>{formatStrike(row.strike, precision)}</h4>
+        <h4 style={{ margin: 0, fontFamily: 'JetBrains Mono' }}>
+          {formatStrike(row.strike, precision)}
+        </h4>
       </TCell>
 
       <TCell align="right" style={putCellStyle}>
-        {row.put?.size ? `${row.put.size} ${qAsset?.tokenSymbol || ''}` : '—'}
+        {row.put?.size ? (
+          `${row.put.size} ${qAsset?.tokenSymbol || ''}`
+        ) : (
+          <Empty>{'—'}</Empty>
+        )}
       </TCell>
       {row.put?.serumKey && serumMarkets[row.put?.serumKey]?.loading ? (
         <TCellLoading colSpan={6} style={putCellStyle}>
@@ -272,28 +288,30 @@ const CallPutRow = ({
       ) : (
         <>
           <TCell align="right" style={putCellStyle}>
-            {putHighestBid || '—'}
+            {putHighestBid || <Empty>{'—'}</Empty>}
           </TCell>
           <TCell align="right" style={putCellStyle}>
-            {putLowestAsk || '—'}
+            {putLowestAsk || <Empty>{'—'}</Empty>}
           </TCell>
           <TCell align="right" style={putCellStyle}>
-            {row.put?.change || '—'}
+            {row.put?.change || <Empty>{'—'}</Empty>}
           </TCell>
           <TCell align="right" style={putCellStyle}>
-            {row.put?.volume || '—'}
+            {row.put?.volume || <Empty>{'—'}</Empty>}
           </TCell>
           <TCell align="right" style={putCellStyle}>
-            {(putImpliedVol && `${putImpliedVol.toFixed(1)}%`) || '—'}
+            {(putImpliedVol && `${putImpliedVol.toFixed(1)}%`) || (
+              <Empty>{'—'}</Empty>
+            )}
           </TCell>
           <TCell align="right" style={putCellStyle}>
-            {putOptionMintInfo?.supply.toString() || '—'}
+            {putOptionMintInfo?.supply.toString() || <Empty>{'—'}</Empty>}
           </TCell>
         </>
       )}
       <TCell align="right" style={putCellStyle}>
         {row.put?.emptyRow ? (
-          '—'
+          ''
         ) : loading.put ? (
           <CircularProgress size={32} />
         ) : !connected ? (

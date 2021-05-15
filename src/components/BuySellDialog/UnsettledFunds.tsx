@@ -46,7 +46,8 @@ export const UnsettledFunds: React.VFC<{
       <Box display="flex" flex="1" justifyContent="space-between" my={2}>
         <Box>Options: {unsettledFunds.baseFree.toString()}</Box>
         <Box>
-          {qAssetSymbol}: {valueUnsettled.dividedBy(10 ** qAssetDecimals).toString()}
+          {qAssetSymbol}:{' '}
+          {valueUnsettled.dividedBy(10 ** qAssetDecimals).toString()}
         </Box>
       </Box>
       <Button color="primary" onClick={settleFunds} variant="outlined">

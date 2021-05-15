@@ -104,9 +104,9 @@ const Landing = () => {
           <Box display="flex" flexDirection={['column', 'row', 'row']}>
             <LandingCard
               title={`${Object.keys(markets).length}`}
-              text={`options market${
+              text={`Options Market${
                 Object.keys(markets).length === 1 ? '' : 's'
-              } created`}
+              } Created`}
               button={
                 <Button
                   color="primary"
@@ -124,9 +124,9 @@ const Landing = () => {
             />
             <LandingCard
               title={`${Object.keys(positions).length}`}
-              text={`open position${
+              text={`Open Position${
                 Object.keys(positions).length === 1 ? '' : 's'
-              } in wallet`}
+              } in Wallet`}
               button={<WalletStatus />}
             />
           </Box>

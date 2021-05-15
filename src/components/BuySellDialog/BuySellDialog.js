@@ -8,7 +8,6 @@ import {
   CircularProgress,
 } from '@material-ui/core'
 import Done from '@material-ui/icons/Done'
-import Tooltip from '@material-ui/core/Tooltip'
 import React, { useState } from 'react'
 import propTypes from 'prop-types'
 import BigNumber from 'bignumber.js'
@@ -30,13 +29,12 @@ import OrderBook from '../OrderBook'
 import { useSerumOrderbook } from '../../hooks/Serum'
 import { WRAPPED_SOL_ADDRESS } from '../../utils/token'
 import { useSerumFeeDiscountKey } from '../../hooks/Serum/useSerumFeeDiscountKey'
-import { getPriceFromSerumOrderbook } from '../../utils/orderbook'
 import { useOptionMarket } from '../../hooks/useOptionMarket'
-import { UnsettledFunds } from './UnsettledFunds'
 
-const successColor = theme.palette.success.main
-const errorColor = theme.palette.error.main
-// const primaryColor = theme.palette.primary.main
+import { UnsettledFunds } from './UnsettledFunds'
+import BuyButton from './BuyButton'
+import SellButton from './SellButton'
+
 const bgLighterColor = theme.palette.background.lighter
 
 const StyledFilledInput = withStyles({
@@ -62,31 +60,6 @@ const PlusMinusButton = withStyles({
     '&:hover': {
       backgroundColor: 'rgba(255, 255, 255, 0.18)',
     },
-  },
-})(Button)
-
-const BuyButton = withStyles({
-  root: {
-    backgroundColor: successColor,
-    color: theme.palette.background.default,
-    '&:hover': {
-      backgroundColor: theme.palette.success.light,
-    },
-  },
-  disabled: {
-    backgroundColor: theme.palette.success.dark,
-  },
-})(Button)
-
-const SellButton = withStyles({
-  root: {
-    backgroundColor: errorColor,
-    '&:hover': {
-      backgroundColor: theme.palette.error.light,
-    },
-  },
-  disabled: {
-    backgroundColor: theme.palette.error.dark,
   },
 })(Button)
 
@@ -142,6 +115,7 @@ const BuySellDialog = ({
   writerTokenMintKey,
   serumKey,
   date,
+  markPrice,
 }) => {
   const { pushNotification } = useNotifications()
   const { connection, dexProgramId } = useConnection()
@@ -163,7 +137,6 @@ const BuySellDialog = ({
     feeRates: serumFeeRates,
     publicKey: serumDiscountFeeKey,
   } = useSerumFeeDiscountKey()
-  const price = getPriceFromSerumOrderbook(orderbook)
   const optionMarket = useOptionMarket({
     date: date.unix(),
     uAssetSymbol,
@@ -176,20 +149,20 @@ const BuySellDialog = ({
   const optionAccounts = ownedTokenAccounts[optionMintAddress] || []
   const writerAccounts = ownedTokenAccounts[writerTokenMintKey] || []
   const uAssetAccounts = ownedTokenAccounts[uAssetMint] || []
+  const qAssetAccounts = ownedTokenAccounts[qAssetMint] || []
 
   const contractsWritten = getHighestAccount(writerAccounts)?.amount || 0
   const openPositionSize = getHighestAccount(optionAccounts)?.amount || 0
+  const qAssetBalance =
+    (getHighestAccount(qAssetAccounts)?.amount || 0) / 10 ** qAssetDecimals
   let uAssetBalance =
     (getHighestAccount(uAssetAccounts)?.amount || 0) / 10 ** uAssetDecimals
-
   if (uAssetMint === WRAPPED_SOL_ADDRESS) {
     // if asset is wrapped Sol, use balance of wallet account
     uAssetBalance = balance / LAMPORTS_PER_SOL
   }
 
   const openPositionUAssetBalance = openPositionSize * amountPerContract
-  const sufficientFundsToSell =
-    openPositionSize + uAssetBalance / amountPerContract >= orderSize
 
   const serumMarketData = serumMarkets[serumKey]
   const serum = serumMarketData?.serumMarket
@@ -386,29 +359,6 @@ const BuySellDialog = ({
     }
   }
 
-  const mintSellTooltipLabel =
-    openPositionSize >= parsedOrderSize
-      ? `Place sell order using: ${orderSize} owned option${
-          orderSize > 1 ? 's' : ''
-        }`
-      : openPositionSize + uAssetBalance / amountPerContract.toNumber() >=
-        parsedOrderSize
-      ? `Place sell order using: ${
-          openPositionSize > 0
-            ? `${openPositionSize} owned option${
-                openPositionSize > 1 && orderSize > 1 ? 's' : ''
-              } and `
-            : ''
-        }${
-          (parsedOrderSize - openPositionSize) * amountPerContract.toNumber()
-        } ${uAssetSymbol}`
-      : 'Collateral requirement not met to place sell order'
-
-  const isSellDisabled =
-    (!orderbook?.bids?.length && orderType === 'market') ||
-    (orderType === 'limit' && parsedLimitPrice.isLessThanOrEqualTo(0)) ||
-    !sufficientFundsToSell
-
   return (
     <Dialog open={open} onClose={onClose} maxWidth={'lg'}>
       <Box py={1} px={2} width="680px" maxWidth={['100%']}>
@@ -423,7 +373,7 @@ const BuySellDialog = ({
                 ? `${qAssetSymbol}/${uAssetSymbol}`
                 : `${uAssetSymbol}/${qAssetSymbol}`}
             </Box>
-            <Box pt={1}>Mark Price: {price ?? '-'}</Box>
+            <Box pt={1}>Mark Price: {markPrice ?? '-'}</Box>
             <Box pt={1}>
               Open Position:{' '}
               {loadingOwnedTokenAccounts ? 'Loading...' : openPositionSize}
@@ -561,44 +511,31 @@ const BuySellDialog = ({
                     ) : (
                       <>
                         <Box pr={1} width="50%">
-                          {/* <Tooltip title={buyTooltipLabel} placement="top"> */}
                           <BuyButton
-                            fullWidth
-                            disabled={
-                              (!orderbook?.asks?.length &&
-                                orderType === 'market') ||
-                              (orderType === 'limit' &&
-                                parsedLimitPrice.isLessThanOrEqualTo(0))
-                            }
+                            parsedLimitPrice={parsedLimitPrice}
+                            numberOfAsks={orderbook?.asks?.length || 0}
+                            qAssetSymbol={qAssetSymbol}
+                            orderType={orderType}
+                            orderCost={parsedLimitPrice.multipliedBy(
+                              parsedOrderSize,
+                            )}
+                            parsedOrderSize={parsedOrderSize}
+                            qAssetBalance={qAssetBalance}
                             onClick={handleBuyOrder}
-                          >
-                            Buy
-                          </BuyButton>
-                          {/* </Tooltip> */}
+                          />
                         </Box>
                         <Box pl={1} width="50%">
-                          {/* Annoying thing I had to do to get MUI to stop clogging the console with "errors" that aren't real errors about how wrapping a disabled button in a tooltip won't show the tooltip... sigh */}
-                          {isSellDisabled ? (
-                            <SellButton
-                              fullWidth
-                              disabled
-                              onClick={handlePlaceSellOrder}
-                            >
-                              Mint/Sell
-                            </SellButton>
-                          ) : (
-                            <Tooltip
-                              title={mintSellTooltipLabel}
-                              placement="top"
-                            >
-                              <SellButton
-                                fullWidth
-                                onClick={handlePlaceSellOrder}
-                              >
-                                Mint/Sell
-                              </SellButton>
-                            </Tooltip>
-                          )}
+                          <SellButton
+                            amountPerContract={amountPerContract}
+                            parsedLimitPrice={parsedLimitPrice}
+                            openPositionSize={openPositionSize}
+                            numberOfBids={orderbook?.bids?.length || 0}
+                            uAssetSymbol={uAssetSymbol}
+                            uAssetBalance={uAssetBalance}
+                            orderType={orderType}
+                            parsedOrderSize={parsedOrderSize}
+                            onClick={handlePlaceSellOrder}
+                          />
                         </Box>
                       </>
                     )}

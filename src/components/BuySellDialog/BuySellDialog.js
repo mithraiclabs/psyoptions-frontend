@@ -279,8 +279,12 @@ const BuySellDialog = ({
           // This will be null if a token with the symbol SRM does
           // not exist in the supported asset list
           feeDiscountPubkey: serumDiscountFeeKey,
-          // serum fee rate
-          feeRate: orderType === 'market' ? serumFeeRates?.taker : undefined,
+          // serum fee rate. Should use the taker fee even if limit order if it's likely to match an order
+          feeRate:
+            orderType === 'market' ||
+            parsedLimitPrice <= orderbook?.bids?.[0]?.price
+              ? serumFeeRates?.taker
+              : undefined,
         },
         uAsset: {
           tokenSymbol: uAssetSymbol,
@@ -343,8 +347,12 @@ const BuySellDialog = ({
           // This will be null if a token with the symbol SRM does
           // not exist in the supported asset list
           feeDiscountPubkey: serumDiscountFeeKey,
-          // serum fee rate
-          feeRate: orderType === 'market' ? serumFeeRates?.taker : undefined,
+          // serum fee rate. Should use the taker fee even if limit order if it's likely to match an order
+          feeRate:
+            orderType === 'market' ||
+            parsedLimitPrice >= orderbook?.asks?.[0]?.price
+              ? serumFeeRates?.taker
+              : undefined,
         },
       })
       setPlaceOrderLoading(false)

@@ -120,7 +120,7 @@ const Markets = () => {
   const [round, setRound] = useState(true)
   const [buySellDialogOpen, setBuySellDialogOpen] = useState(false)
   const [callPutData, setCallPutData] = useState({ type: 'call' })
-  const [showAllStrikes] = useState(false) // TODO: let user configure this
+  const [showAllStrikes] = useState(true) // TODO: let user configure this
 
   // Unfortunately we need to set contract size in a useEffect because uAsset is asynchronously loaded
   useEffect(() => {

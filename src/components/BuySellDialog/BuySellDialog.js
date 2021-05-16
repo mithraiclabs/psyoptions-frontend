@@ -458,6 +458,7 @@ const BuySellDialog = ({
                       style={{
                         marginRight: theme.spacing(2),
                         minWidth: '98px',
+                        fontSize: '14px',
                       }}
                     />
                   )
@@ -565,7 +566,7 @@ const BuySellDialog = ({
                   <Box
                     py={2}
                     borderTop={`1px solid ${bgLighterColor}`}
-                    fontSize={'10px'}
+                    fontSize={'14px'}
                   >
                     {`This is a ${
                       type === 'call' ? 'covered call' : 'secured put'

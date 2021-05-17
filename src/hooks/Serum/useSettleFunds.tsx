@@ -16,7 +16,12 @@ import { useSerumOpenOrderAccounts } from './useSerumOpenOrderAccounts'
 /**
  * Returns function for settling the funds of a specific market
  */
-export const useSettleFunds = (key: string): (() => Promise<void>) => {
+export const useSettleFunds = (
+  key: string,
+): {
+  settleFundsTx: () => Promise<Transaction>
+  sendAndConfirmSettleFunds: () => Promise<void>
+} => {
   const { pushNotification } = useNotifications()
   const { connection } = useConnection()
   const { serumMarkets } = useSerum()
@@ -33,108 +38,120 @@ export const useSettleFunds = (key: string): (() => Promise<void>) => {
   const { pubKey: baseTokenAccountKey } = getHighestAccount(baseTokenAccounts)
   const { pubKey: quoteTokenAccountKey } = getHighestAccount(quoteTokenAccounts)
 
-  return useCallback(async () => {
-    try {
-      const market = serumMarket?.market as Market | undefined
-      if (openOrders.length && market) {
-        const transaction = new Transaction()
-        let signers = []
-        let _baseTokenAccountKey = baseTokenAccountKey
-        let _quoteTokenAccountKey = quoteTokenAccountKey
+  const settleFundsTx = useCallback(async (): Promise<
+    Transaction | undefined
+  > => {
+    const market = serumMarket?.market as Market | undefined
+    if (openOrders.length && market) {
+      const transaction = new Transaction()
+      let signers = []
+      let _baseTokenAccountKey = baseTokenAccountKey
+      let _quoteTokenAccountKey = quoteTokenAccountKey
 
-        if (!_baseTokenAccountKey) {
-          // Create a SPL Token account for this base account if the wallet doesn't have one
-          const [
-            createOptAccountTx,
-            newTokenAccountKey,
-          ] = await createAssociatedTokenAccountInstruction({
-            payer: pubKey,
-            owner: pubKey,
-            mintPublicKey: new PublicKey(baseMintAddress),
-          })
-
-          transaction.add(createOptAccountTx)
-          _baseTokenAccountKey = newTokenAccountKey
-          subscribeToTokenAccount(newTokenAccountKey)
-        }
-
-        if (!quoteTokenAccountKey) {
-          // Create a SPL Token account for this quote account if the wallet doesn't have one
-          const [
-            createOptAccountTx,
-            newTokenAccountKey,
-          ] = await createAssociatedTokenAccountInstruction({
-            payer: pubKey,
-            owner: pubKey,
-            mintPublicKey: new PublicKey(quoteMintAddress),
-          })
-
-          transaction.add(createOptAccountTx)
-          _quoteTokenAccountKey = newTokenAccountKey
-          subscribeToTokenAccount(newTokenAccountKey)
-        }
-
-        const {
-          transaction: settleTx,
-          signers: settleSigners,
-        } = await market.makeSettleFundsTransaction(
-          connection,
-          openOrders[0],
-          _baseTokenAccountKey,
-          _quoteTokenAccountKey,
-        )
-        transaction.add(settleTx)
-        signers = [...signers, ...settleSigners]
-
-        transaction.feePayer = pubKey
-        const { blockhash } = await connection.getRecentBlockhash()
-        transaction.recentBlockhash = blockhash
-
-        if (signers.length) {
-          transaction.partialSign(...signers)
-        }
-        const signed = await wallet.signTransaction(transaction)
-        const txid = await connection.sendRawTransaction(signed.serialize())
-
-        pushNotification({
-          severity: NotificationSeverity.INFO,
-          message: 'Processing: Settle funds',
-          link: (
-            <Link href={buildSolanaExplorerUrl(txid)} target="_new">
-              View on Solana Explorer
-            </Link>
-          ),
+      if (!_baseTokenAccountKey) {
+        // Create a SPL Token account for this base account if the wallet doesn't have one
+        const [
+          createOptAccountTx,
+          newTokenAccountKey,
+        ] = await createAssociatedTokenAccountInstruction({
+          payer: pubKey,
+          owner: pubKey,
+          mintPublicKey: new PublicKey(baseMintAddress),
         })
 
-        await connection.confirmTransaction(txid)
-
-        pushNotification({
-          severity: NotificationSeverity.SUCCESS,
-          message: 'Confirmed: Settle funds',
-          link: (
-            <Link href={buildSolanaExplorerUrl(txid)} target="_new">
-              View on Solana Explorer
-            </Link>
-          ),
-        })
+        transaction.add(createOptAccountTx)
+        _baseTokenAccountKey = newTokenAccountKey
+        subscribeToTokenAccount(newTokenAccountKey)
       }
+
+      if (!quoteTokenAccountKey) {
+        // Create a SPL Token account for this quote account if the wallet doesn't have one
+        const [
+          createOptAccountTx,
+          newTokenAccountKey,
+        ] = await createAssociatedTokenAccountInstruction({
+          payer: pubKey,
+          owner: pubKey,
+          mintPublicKey: new PublicKey(quoteMintAddress),
+        })
+
+        transaction.add(createOptAccountTx)
+        _quoteTokenAccountKey = newTokenAccountKey
+        subscribeToTokenAccount(newTokenAccountKey)
+      }
+
+      const {
+        transaction: settleTx,
+        signers: settleSigners,
+      } = await market.makeSettleFundsTransaction(
+        connection,
+        openOrders[0],
+        _baseTokenAccountKey,
+        _quoteTokenAccountKey,
+      )
+      transaction.add(settleTx)
+      signers = [...signers, ...settleSigners]
+
+      transaction.feePayer = pubKey
+      const { blockhash } = await connection.getRecentBlockhash()
+      transaction.recentBlockhash = blockhash
+
+      if (signers.length) {
+        transaction.partialSign(...signers)
+      }
+      return transaction
+    }
+    return undefined
+  }, [
+    connection,
+    baseMintAddress,
+    quoteMintAddress,
+    pubKey,
+    serumMarket,
+    openOrders,
+    baseTokenAccountKey,
+    quoteTokenAccountKey,
+    subscribeToTokenAccount,
+  ])
+
+  const sendAndConfirmSettleFunds = useCallback(async () => {
+    try {
+      const transaction = await settleFundsTx()
+
+      const signed = await wallet.signTransaction(transaction)
+      const txid = await connection.sendRawTransaction(signed.serialize())
+
+      pushNotification({
+        severity: NotificationSeverity.INFO,
+        message: 'Processing: Settle funds',
+        link: (
+          <Link href={buildSolanaExplorerUrl(txid)} target="_new">
+            View on Solana Explorer
+          </Link>
+        ),
+      })
+
+      await connection.confirmTransaction(txid)
+
+      pushNotification({
+        severity: NotificationSeverity.SUCCESS,
+        message: 'Confirmed: Settle funds',
+        link: (
+          <Link href={buildSolanaExplorerUrl(txid)} target="_new">
+            View on Solana Explorer
+          </Link>
+        ),
+      })
     } catch (err) {
       pushNotification({
         severity: 'error',
         message: `${err}`,
       })
     }
-  }, [
-    baseMintAddress,
-    baseTokenAccountKey,
-    connection,
-    openOrders,
-    pubKey,
-    pushNotification,
-    quoteMintAddress,
-    quoteTokenAccountKey,
-    serumMarket?.market,
-    subscribeToTokenAccount,
-    wallet,
-  ])
+  }, [connection, pushNotification, wallet, settleFundsTx])
+
+  return {
+    sendAndConfirmSettleFunds,
+    settleFundsTx,
+  }
 }

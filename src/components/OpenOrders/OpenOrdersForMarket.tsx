@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react'
+import React from 'react'
 import TableRow from '@material-ui/core/TableRow'
 import Button from '@material-ui/core/Button'
 import moment from 'moment'
@@ -6,7 +6,7 @@ import moment from 'moment'
 import useSerum from '../../hooks/useSerum'
 import { useSerumOpenOrders } from '../../context/SerumOpenOrdersContext'
 import { useSerumOrderbooks } from '../../context/SerumOrderbookContext'
-import { useSubscribeOpenOrders, useSettleFunds } from '../../hooks/Serum'
+import { useSubscribeOpenOrders, useCancelOrder } from '../../hooks/Serum'
 import useNotifications from '../../hooks/useNotifications'
 
 import { TCell } from './OpenOrderStyles'
@@ -20,7 +20,6 @@ const OpenOrdersForMarket: React.FC<{
   uAssetSymbol: string
   serumKey: string
   strikePrice: string
-  handleCancelOrder: ({ order: any, serumKey: string }) => void
 }> = ({
   expiration,
   size: contractSize,
@@ -29,24 +28,16 @@ const OpenOrdersForMarket: React.FC<{
   uAssetSymbol,
   serumKey,
   strikePrice,
-  handleCancelOrder = () => {},
 }) => {
   const { serumMarkets } = useSerum()
   const [orderbooks] = useSerumOrderbooks()
   const [openOrders] = useSerumOpenOrders()
   const { serumMarket } = serumMarkets[serumKey] || {}
-  const settleFunds = useSettleFunds(serumKey)
   const { pushNotification } = useNotifications()
 
-  useSubscribeOpenOrders(serumKey)
+  const handleCancelOrder = useCancelOrder(serumKey)
 
-  const cancelOrderAndSettle = useCallback(
-    async ({ order }) => {
-      await handleCancelOrder({ order, serumKey })
-      await settleFunds()
-    },
-    [serumKey, settleFunds, handleCancelOrder],
-  )
+  useSubscribeOpenOrders(serumKey)
 
   if (
     !serumMarket?.market ||
@@ -93,12 +84,7 @@ const OpenOrdersForMarket: React.FC<{
             <Button
               variant="outlined"
               color="primary"
-              onClick={() =>
-                cancelOrderAndSettle({
-                  order,
-                  serumKey,
-                })
-              }
+              onClick={() => handleCancelOrder(order)}
             >
               Cancel
             </Button>

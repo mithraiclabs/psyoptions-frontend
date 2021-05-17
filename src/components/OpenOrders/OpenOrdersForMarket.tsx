@@ -1,18 +1,13 @@
-import React, { useCallback } from 'react'
+import React from 'react'
 import TableRow from '@material-ui/core/TableRow'
 import Button from '@material-ui/core/Button'
-import Link from '@material-ui/core/Link'
 import moment from 'moment'
 
 import useSerum from '../../hooks/useSerum'
-import useWallet from '../../hooks/useWallet'
-import useConnection from '../../hooks/useConnection'
 import { useSerumOpenOrders } from '../../context/SerumOpenOrdersContext'
 import { useSerumOrderbooks } from '../../context/SerumOrderbookContext'
-import { useSubscribeOpenOrders, useSettleFunds } from '../../hooks/Serum'
+import { useSubscribeOpenOrders, useCancelOrder } from '../../hooks/Serum'
 import useNotifications from '../../hooks/useNotifications'
-
-import { buildSolanaExplorerUrl } from '../../utils/solanaExplorer'
 
 import { TCell } from './OpenOrderStyles'
 
@@ -34,104 +29,13 @@ const OpenOrdersForMarket: React.FC<{
   serumKey,
   strikePrice,
 }) => {
-  const { connection } = useConnection()
-  const { wallet, pubKey } = useWallet()
   const { serumMarkets } = useSerum()
   const [orderbooks] = useSerumOrderbooks()
   const [openOrders] = useSerumOpenOrders()
   const { serumMarket } = serumMarkets[serumKey] || {}
-  const { makeSettleFundsTx } = useSettleFunds(serumKey)
   const { pushNotification } = useNotifications()
 
-  // TODO: maybe move this handleCancelOrder function to a hook
-  const handleCancelOrder = useCallback(
-    async (order) => {
-      if (serumMarket?.market) {
-        try {
-          const settleTx = await makeSettleFundsTx()
-
-          const cancelTx = await serumMarket.market.makeCancelOrderTransaction(
-            connection,
-            pubKey,
-            order,
-          )
-          const { blockhash } = await connection.getRecentBlockhash()
-          cancelTx.recentBlockhash = blockhash
-          cancelTx.feePayer = pubKey
-          const [
-            signedCancelTx,
-            signedSettleTx,
-          ] = await wallet.signAllTransactions([cancelTx, settleTx])
-          const cancelTxId = await connection.sendRawTransaction(
-            signedCancelTx.serialize(),
-          )
-
-          pushNotification({
-            severity: 'info',
-            message: `Processing: Cancel Order`,
-            link: (
-              <Link href={buildSolanaExplorerUrl(cancelTxId)} target="_new">
-                View on Solana Explorer
-              </Link>
-            ),
-          })
-
-          await connection.confirmTransaction(cancelTxId)
-
-          pushNotification({
-            severity: 'success',
-            message: `Confirmed: Cancel Order`,
-            link: (
-              <Link href={buildSolanaExplorerUrl(cancelTxId)} target="_new">
-                View on Solana Explorer
-              </Link>
-            ),
-          })
-
-          const settleTxId = await connection.sendRawTransaction(
-            signedSettleTx.serialize(),
-          )
-
-          pushNotification({
-            severity: 'info',
-            message: `Processing: Settle Funds`,
-            link: (
-              <Link href={buildSolanaExplorerUrl(settleTxId)} target="_new">
-                View on Solana Explorer
-              </Link>
-            ),
-          })
-
-          await connection.confirmTransaction(settleTxId)
-
-          pushNotification({
-            severity: 'success',
-            message: `Confirmed: Settle Funds`,
-            link: (
-              <Link href={buildSolanaExplorerUrl(settleTxId)} target="_new">
-                View on Solana Explorer
-              </Link>
-            ),
-          })
-
-          // We shouldn't have to update open orders state here because we will subscribe to changes
-        } catch (err) {
-          pushNotification({
-            severity: 'error',
-            message: `Transaction Failed: Cancel Order | Error: ${err}`,
-          })
-        }
-      }
-    },
-    [
-      connection,
-      makeSettleFundsTx,
-      pubKey,
-      pushNotification,
-      serumMarket,
-      wallet,
-    ],
-  )
+  const handleCancelOrder = useCancelOrder(serumKey)
 
   useSubscribeOpenOrders(serumKey)
 

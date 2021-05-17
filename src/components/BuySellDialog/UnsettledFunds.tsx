@@ -18,14 +18,14 @@ export const UnsettledFunds: React.VFC<{
   qAssetDecimals: number
 }> = ({ qAssetSymbol, serumKey, qAssetDecimals }) => {
   const unsettledFunds = useUnsettledFundsForMarket(serumKey)
-  const _settleFunds = useSettleFunds(serumKey)
+  const { settleFunds } = useSettleFunds(serumKey)
   useSubscribeOpenOrders(serumKey)
   const [loading, setLoading] = useState(false)
-  const settleFunds = useCallback(async () => {
+  const _settleFunds = useCallback(async () => {
     setLoading(true)
-    await _settleFunds()
+    await settleFunds()
     setLoading(false)
-  }, [_settleFunds])
+  }, [settleFunds])
 
   if (
     unsettledFunds.baseFree.toNumber() <= 0 &&
@@ -46,10 +46,11 @@ export const UnsettledFunds: React.VFC<{
       <Box display="flex" flex="1" justifyContent="space-between" my={2}>
         <Box>Options: {unsettledFunds.baseFree.toString()}</Box>
         <Box>
-          {qAssetSymbol}: {valueUnsettled.dividedBy(10 ** qAssetDecimals).toString()}
+          {qAssetSymbol}:{' '}
+          {valueUnsettled.dividedBy(10 ** qAssetDecimals).toString()}
         </Box>
       </Box>
-      <Button color="primary" onClick={settleFunds} variant="outlined">
+      <Button color="primary" onClick={_settleFunds} variant="outlined">
         Settle Funds
       </Button>
     </Box>

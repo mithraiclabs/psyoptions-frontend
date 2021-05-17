@@ -19,8 +19,8 @@ import { useSerumOpenOrderAccounts } from './useSerumOpenOrderAccounts'
 export const useSettleFunds = (
   key: string,
 ): {
-  settleFundsTx: () => Promise<Transaction>
-  sendAndConfirmSettleFunds: () => Promise<void>
+  makeSettleFundsTx: () => Promise<Transaction>
+  settleFunds: () => Promise<void>
 } => {
   const { pushNotification } = useNotifications()
   const { connection } = useConnection()
@@ -38,7 +38,7 @@ export const useSettleFunds = (
   const { pubKey: baseTokenAccountKey } = getHighestAccount(baseTokenAccounts)
   const { pubKey: quoteTokenAccountKey } = getHighestAccount(quoteTokenAccounts)
 
-  const settleFundsTx = useCallback(async (): Promise<
+  const makeSettleFundsTx = useCallback(async (): Promise<
     Transaction | undefined
   > => {
     const market = serumMarket?.market as Market | undefined
@@ -114,9 +114,9 @@ export const useSettleFunds = (
     subscribeToTokenAccount,
   ])
 
-  const sendAndConfirmSettleFunds = useCallback(async () => {
+  const settleFunds = useCallback(async () => {
     try {
-      const transaction = await settleFundsTx()
+      const transaction = await makeSettleFundsTx()
 
       const signed = await wallet.signTransaction(transaction)
       const txid = await connection.sendRawTransaction(signed.serialize())
@@ -148,10 +148,10 @@ export const useSettleFunds = (
         message: `${err}`,
       })
     }
-  }, [connection, pushNotification, wallet, settleFundsTx])
+  }, [connection, pushNotification, wallet, makeSettleFundsTx])
 
   return {
-    sendAndConfirmSettleFunds,
-    settleFundsTx,
+    settleFunds,
+    makeSettleFundsTx,
   }
 }

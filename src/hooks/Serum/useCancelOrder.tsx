@@ -9,7 +9,6 @@ import useNotifications from '../useNotifications'
 
 import { buildSolanaExplorerUrl } from '../../utils/solanaExplorer'
 
-// Render all open orders for a given market as table rows
 export const useCancelOrder = (serumKey: string) => {
   const { connection } = useConnection()
   const { wallet, pubKey } = useWallet()

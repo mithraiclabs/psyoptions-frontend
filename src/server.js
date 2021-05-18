@@ -39,7 +39,7 @@ server.use('/public', express.static('dist/public'))
 
 // Service worker can't be in the public folder
 server.get('/rate-limited-fetch-worker.js', (req, res) => {
-  res.sendfile(path.join(__dirname, 'public', 'rate-limited-fetch-worker.js'))
+  res.sendFile(path.join(__dirname, 'public', 'rate-limited-fetch-worker.js'))
 })
 
 const {

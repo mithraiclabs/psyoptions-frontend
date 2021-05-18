@@ -366,7 +366,7 @@ const BuySellDialog = ({
       })
     }
   }
-
+console.log('qasset', qAssetBalance)
   return (
     <Dialog open={open} onClose={onClose} maxWidth={'lg'}>
       <Box py={1} px={2} width="680px" maxWidth={['100%']}>
@@ -430,12 +430,6 @@ const BuySellDialog = ({
                   ? 'Loading...'
                   : `${collateralRequired} ${uAssetSymbol}`}
               </Box>
-              <Box pt={'2px'} style={{ fontSize: '12px' }}>
-                Available:{' '}
-                {loadingOwnedTokenAccounts
-                  ? 'Loading...'
-                  : `${uAssetBalance} ${uAssetSymbol}`}
-              </Box>
             </Box>
             <Box pb={1} pt={2}>
               Order Type:
@@ -485,6 +479,21 @@ const BuySellDialog = ({
                   }}
                   disabled={orderType === 'market'}
                 />
+              </Box>
+              <Box pt={2} style={{ fontSize: '12px' }}>
+                Balances:{' '}
+              </Box>
+              <Box display='flex' justifyContent='space-between' style={{ fontSize: '12px' }}>
+                <Box pt={1}>
+                  {loadingOwnedTokenAccounts
+                    ? 'Loading...'
+                    : `${uAssetSymbol}: ${uAssetBalance} `}
+                </Box>
+                <Box pt={1}>
+                  {loadingOwnedTokenAccounts
+                    ? 'Loading...'
+                    : `${qAssetSymbol}: ${qAssetBalance} `}
+                </Box>
               </Box>
             </Box>
           </Box>

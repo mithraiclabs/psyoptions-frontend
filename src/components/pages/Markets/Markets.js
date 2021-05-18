@@ -39,7 +39,7 @@ const THeadCell = withStyles({
   root: {
     padding: '4px',
     whiteSpace: 'nowrap',
-    fontSize: '11px',
+    fontSize: '14px',
     height: '48px',
     border: 'none',
   },
@@ -49,7 +49,7 @@ const THeadCellStrike = withStyles({
   root: {
     padding: '4px',
     whiteSpace: 'nowrap',
-    fontSize: '11px',
+    fontSize: '14px',
     height: '48px',
     border: 'none',
   },
@@ -59,8 +59,7 @@ const TCellLoading = withStyles({
   root: {
     padding: '16px',
     whiteSpace: 'nowrap',
-    fontSize: '11px',
-    height: '52px',
+    height: '48px',
     border: 'none',
   },
 })(TableCell)
@@ -69,8 +68,8 @@ const TCellStrike = withStyles({
   root: {
     padding: '16px',
     whiteSpace: 'nowrap',
-    fontSize: '11px',
-    height: '52px',
+    fontSize: '14px',
+    height: '48px',
     border: 'none',
     background: theme.palette.background.default,
   },
@@ -301,7 +300,7 @@ const Markets = () => {
             </Box>
           </Box>
           <Box px={[1, 1, 0]} py={[2, 2, 1]} width={['100%', '100%', 'auto']}>
-            <Box pb={'6px'} pl="10px" fontSize={'11px'}>
+            <Box pb={'6px'} pl="10px" fontSize={'14px'}>
               Asset Pair:
             </Box>
             <Box
@@ -368,23 +367,41 @@ const Markets = () => {
                 </TableRow>
                 <TableRow>
                   <THeadCell align="left">Action</THeadCell>
-                  <THeadCell align="left">Size</THeadCell>
-                  <THeadCell align="left">Bid</THeadCell>
-                  <THeadCell align="left">Ask</THeadCell>
+                  {/* <THeadCell align="left">Size</THeadCell> */}
+                  <THeadCell align="left" width={'70px'}>
+                    IV
+                  </THeadCell>
+                  <THeadCell align="left" width={'90px'}>
+                    Bid
+                  </THeadCell>
+                  <THeadCell align="left" width={'90px'}>
+                    Ask
+                  </THeadCell>
+                  <THeadCell align="left" width={'70px'}>
+                    IV
+                  </THeadCell>
                   <THeadCell align="left">Change</THeadCell>
                   <THeadCell align="left">Volume</THeadCell>
-                  <THeadCell align="left">IV</THeadCell>
-                  <THeadCell align="left">Open Interest</THeadCell>
+                  <THeadCell align="left">Open</THeadCell>
 
                   <THeadCellStrike align="center">Strike</THeadCellStrike>
 
-                  <THeadCell align="right">Size</THeadCell>
-                  <THeadCell align="right">Bid</THeadCell>
-                  <THeadCell align="right">Ask</THeadCell>
+                  {/* <THeadCell align="right">Size</THeadCell> */}
+                  <THeadCell align="right" width={'70px'}>
+                    IV
+                  </THeadCell>
+                  <THeadCell align="right" width={'90px'}>
+                    Bid
+                  </THeadCell>
+                  <THeadCell align="right" width={'90px'}>
+                    Ask
+                  </THeadCell>
+                  <THeadCell align="right" width={'70px'}>
+                    IV
+                  </THeadCell>
                   <THeadCell align="right">Change</THeadCell>
                   <THeadCell align="right">Volume</THeadCell>
-                  <THeadCell align="right">IV</THeadCell>
-                  <THeadCell align="right">Open Interest</THeadCell>
+                  <THeadCell align="right">Open</THeadCell>
                   <THeadCell align="right">Action</THeadCell>
                 </TableRow>
               </TableHead>
@@ -455,7 +472,7 @@ const Markets = () => {
                 />
               }
               label={
-                <span style={{ fontSize: '11px' }}>Round Strike Prices</span>
+                <span style={{ fontSize: '14px' }}>Round Strike Prices</span>
               }
               style={{ margin: '0' }}
             />

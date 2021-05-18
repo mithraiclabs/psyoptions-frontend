@@ -17,9 +17,11 @@ const baseCss = `
 
   body {
     background-color: ${theme.palette.background.main};
-    color: ${theme.palette.primary.main};
-    font-family: JetBrains Mono, monospace;
-    font-size: 14px;
+    color: ${theme.palette.text.primary};
+    font-family: ${theme.typography.fontFamily};
+    font-size: 1rem;
+    letter-spacing: 0.2;
+    font-weight: 500;
   }
   
   h1, h2, h3 {
@@ -82,13 +84,15 @@ const Template = ({
       <link rel="icon" type="image/png" href={favicon} />
       <link rel="preconnect" href="https://fonts.gstatic.com" />
       <link
-        href="https://fonts.googleapis.com/css2?family=Goldman:wght@400;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Goldman:wght@400&display=swap"
         rel="stylesheet"
       />
+      {/* Manrope */}
       <link
-        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300&family=Major+Mono+Display&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700&display=swap"
         rel="stylesheet"
       />
+
       <style>{baseCss}</style>
       <style>{cssString}</style>
     </head>

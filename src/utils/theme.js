@@ -11,7 +11,12 @@ const theme = createMuiTheme({
   },
   glow: '0px 0px 20px #1D4DC9',
   typography: {
-    fontFamily: 'JetBrains Mono, monospace',
+    fontFamily: 'Manrope, sans-serif',
+    fontWeightRegular: 500,
+    button: {
+      fontSize: '14px',
+      textTransform: 'none',
+    },
   },
   palette: {
     type: 'dark',
@@ -60,7 +65,7 @@ const theme = createMuiTheme({
       main: '#373B40',
     },
     text: {
-      primary: '#8BEAFF',
+      primary: 'rgba(139, 234, 255, 0.9)',
     },
     // Used by `getContrastText()` to maximize the contrast between
     // the background and the text.

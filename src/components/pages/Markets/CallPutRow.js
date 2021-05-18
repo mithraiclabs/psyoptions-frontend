@@ -31,9 +31,9 @@ const TCell = withStyles({
   root: {
     padding: '8px',
     whiteSpace: 'nowrap',
-    fontSize: '11px',
+    fontSize: '14px',
     border: 'none',
-    height: '52px',
+    height: '48px',
     background: theme.palette.background.medium,
   },
 })(TableCell)
@@ -42,14 +42,26 @@ const TCellLoading = withStyles({
   root: {
     padding: '16px',
     whiteSpace: 'nowrap',
-    fontSize: '11px',
-    height: '52px',
+    fontSize: '14px',
+    height: '48px',
     border: 'none',
     background: theme.palette.background.medium,
   },
 })(TableCell)
 
 const darkBorder = `1px solid ${theme.palette.background.main}`
+
+const Empty = ({ children }) => (
+  <span style={{ opacity: '0.3' }}>{children}</span>
+)
+
+const Bid = ({ children }) => (
+  <span style={{ color: theme.palette.success.main }}>{children}</span>
+)
+
+const Ask = ({ children }) => (
+  <span style={{ color: theme.palette.error.light }}>{children}</span>
+)
 
 const CallPutRow = ({
   row,
@@ -103,22 +115,32 @@ const CallPutRow = ({
 
   const strikeAsNumber = row.strike && row.strike.toNumber()
 
-  const callImpliedVol = useImpliedVol({
-    optionPrice:
-      callHighestBid && callLowestAsk
-        ? (callHighestBid + callLowestAsk) / 2
-        : callHighestBid || callLowestAsk,
+  const callBidIV = useImpliedVol({
+    optionPrice: callHighestBid || 0,
     strikePrice: strikeAsNumber,
     marketPrice: markPrice,
     timeToExpiry,
     type: 'call',
   })
 
-  const putImpliedVol = useImpliedVol({
-    optionPrice:
-      putHighestBid && putLowestAsk
-        ? (putHighestBid + putLowestAsk) / 2
-        : putHighestBid || putLowestAsk,
+  const callAskIV = useImpliedVol({
+    optionPrice: callLowestAsk || 0,
+    strikePrice: strikeAsNumber,
+    marketPrice: markPrice,
+    timeToExpiry,
+    type: 'call',
+  })
+
+  const putBidIV = useImpliedVol({
+    optionPrice: putHighestBid,
+    strikePrice: strikeAsNumber,
+    marketPrice: markPrice,
+    timeToExpiry,
+    type: 'put',
+  })
+
+  const putAskIV = useImpliedVol({
+    optionPrice: putLowestAsk,
     strikePrice: strikeAsNumber,
     marketPrice: markPrice,
     timeToExpiry,
@@ -128,8 +150,8 @@ const CallPutRow = ({
   const [loading, setLoading] = useState({ call: false, put: false })
 
   const formatStrike = (sp) => {
-    if (!sp) return '—'
-    return round ? sp.toFixed(precision) : sp.toString(10)
+    if (!sp) return <Empty>{'—'}</Empty>
+    return <span>{round ? sp.toFixed(precision) : sp.toString(10)}</span>
   }
 
   const handleInitialize = useCallback(
@@ -184,9 +206,9 @@ const CallPutRow = ({
 
   return (
     <TableRow hover role="checkbox" tabIndex={-1}>
-      <TCell align="left" style={callCellStyle}>
+      <TCell align="left" style={callCellStyle} width={'120px'}>
         {row.call?.emptyRow ? (
-          '—'
+          ''
         ) : loading.call ? (
           <CircularProgress size={32} />
         ) : !connected ? (
@@ -221,32 +243,40 @@ const CallPutRow = ({
           </Button>
         )}
       </TCell>
-      <TCell align="left" style={callCellStyle}>
-        {row.call?.size ? `${row.call.size} ${uAsset?.tokenSymbol || ''}` : '—'}
-      </TCell>
       {row.call?.serumKey && serumMarkets[row.call?.serumKey]?.loading ? (
-        <TCellLoading colSpan={6} style={callCellStyle}>
+        <TCellLoading colSpan={7} style={callCellStyle}>
           <Loading />
         </TCellLoading>
       ) : (
         <>
-          <TCell align="left" style={callCellStyle}>
-            {callHighestBid || '—'}
+          <TCell align="left" style={callCellStyle} width={'70px'}>
+            {(callBidIV && `${callBidIV.toFixed(1)}%`) || <Empty>{'—'}</Empty>}
+          </TCell>
+          <TCell align="left" style={callCellStyle} width={'90px'}>
+            {callHighestBid ? (
+              <Bid>${callHighestBid.toFixed(2)}</Bid>
+            ) : (
+              <Empty>{'—'}</Empty>
+            )}
+          </TCell>
+          <TCell align="left" style={callCellStyle} width={'90px'}>
+            {callLowestAsk ? (
+              <Ask>${callLowestAsk.toFixed(2)}</Ask>
+            ) : (
+              <Empty>{'—'}</Empty>
+            )}
+          </TCell>
+          <TCell align="left" style={callCellStyle} width={'70px'}>
+            {(callAskIV && `${callAskIV.toFixed(1)}%`) || <Empty>{'—'}</Empty>}
           </TCell>
           <TCell align="left" style={callCellStyle}>
-            {callLowestAsk || '—'}
+            {row.call?.change || <Empty>{'—'}</Empty>}
           </TCell>
           <TCell align="left" style={callCellStyle}>
-            {row.call?.change || '—'}
+            {row.call?.volume || <Empty>{'—'}</Empty>}
           </TCell>
           <TCell align="left" style={callCellStyle}>
-            {row.call?.volume || '—'}
-          </TCell>
-          <TCell align="left" style={callCellStyle}>
-            {(callImpliedVol && `${callImpliedVol.toFixed(1)}%`) || '—'}
-          </TCell>
-          <TCell align="left" style={callCellStyle}>
-            {callOptionMintInfo?.supply.toString() || '—'}
+            {callOptionMintInfo?.supply.toString() || <Empty>{'—'}</Empty>}
           </TCell>
         </>
       )}
@@ -257,43 +287,55 @@ const CallPutRow = ({
           borderLeft: darkBorder,
           borderRight: darkBorder,
           background: theme.palette.background.main,
+          paddingLeft: '16px',
+          paddingRight: '16px',
         }}
       >
-        <h4 style={{ margin: 0 }}>{formatStrike(row.strike, precision)}</h4>
+        <h4 style={{ margin: 0, fontWeight: 400 }}>
+          {formatStrike(row.strike, precision)}
+        </h4>
       </TCell>
 
-      <TCell align="right" style={putCellStyle}>
-        {row.put?.size ? `${row.put.size} ${qAsset?.tokenSymbol || ''}` : '—'}
-      </TCell>
       {row.put?.serumKey && serumMarkets[row.put?.serumKey]?.loading ? (
-        <TCellLoading colSpan={6} style={putCellStyle}>
+        <TCellLoading colSpan={7} style={putCellStyle}>
           <Loading />
         </TCellLoading>
       ) : (
         <>
-          <TCell align="right" style={putCellStyle}>
-            {putHighestBid || '—'}
+          <TCell align="right" style={putCellStyle} width={'70px'}>
+            {(putBidIV && `${putBidIV.toFixed(1)}%`) || <Empty>{'—'}</Empty>}
+          </TCell>
+          <TCell align="right" style={putCellStyle} width={'90px'}>
+            {putHighestBid ? (
+              <Bid>${putHighestBid.toFixed(2)}</Bid>
+            ) : (
+              <Empty>{'—'}</Empty>
+            )}
+          </TCell>
+          <TCell align="right" style={putCellStyle} width={'90px'}>
+            {putLowestAsk ? (
+              <Ask>${putLowestAsk.toFixed(2)}</Ask>
+            ) : (
+              <Empty>{'—'}</Empty>
+            )}
+          </TCell>
+          <TCell align="right" style={putCellStyle} width={'70px'}>
+            {(putAskIV && `${putAskIV.toFixed(1)}%`) || <Empty>{'—'}</Empty>}
           </TCell>
           <TCell align="right" style={putCellStyle}>
-            {putLowestAsk || '—'}
+            {row.put?.change || <Empty>{'—'}</Empty>}
           </TCell>
           <TCell align="right" style={putCellStyle}>
-            {row.put?.change || '—'}
+            {row.put?.volume || <Empty>{'—'}</Empty>}
           </TCell>
           <TCell align="right" style={putCellStyle}>
-            {row.put?.volume || '—'}
-          </TCell>
-          <TCell align="right" style={putCellStyle}>
-            {(putImpliedVol && `${putImpliedVol.toFixed(1)}%`) || '—'}
-          </TCell>
-          <TCell align="right" style={putCellStyle}>
-            {putOptionMintInfo?.supply.toString() || '—'}
+            {putOptionMintInfo?.supply.toString() || <Empty>{'—'}</Empty>}
           </TCell>
         </>
       )}
-      <TCell align="right" style={putCellStyle}>
+      <TCell align="right" style={putCellStyle} width={'120px'}>
         {row.put?.emptyRow ? (
-          '—'
+          ''
         ) : loading.put ? (
           <CircularProgress size={32} />
         ) : !connected ? (

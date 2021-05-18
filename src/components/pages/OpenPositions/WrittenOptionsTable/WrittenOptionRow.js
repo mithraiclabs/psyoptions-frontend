@@ -107,7 +107,12 @@ export const WrittenOptionRow = ({
           color="primary"
           variant="outlined"
           onClick={() => {
-            closeOptionPostExpiration(Math.min(ownedOptionTokenAccounts?.[0]?.amount, initialWriterTokenAccount.amount))
+            closeOptionPostExpiration(
+              Math.min(
+                ownedOptionTokenAccounts?.[0]?.amount,
+                initialWriterTokenAccount.amount,
+              ),
+            )
           }}
         />
       </Box>
@@ -132,7 +137,12 @@ export const WrittenOptionRow = ({
               color="primary"
               variant="outlined"
               onClick={() => {
-                closePosition(Math.min(ownedOptionTokenAccounts?.[0]?.amount, initialWriterTokenAccount.amount))
+                closePosition(
+                  Math.min(
+                    ownedOptionTokenAccounts?.[0]?.amount,
+                    initialWriterTokenAccount.amount,
+                  ),
+                )
               }}
             />
           </div>
@@ -161,7 +171,9 @@ export const WrittenOptionRow = ({
         {market.size} {market.uAssetSymbol}
       </TableCell>
       <TableCell width="7.5%">{initialWriterTokenAccount.amount}</TableCell>
-      <TableCell width="7.5%">{ownedOptionTokenAccounts?.[0]?.amount}</TableCell>
+      <TableCell width="7.5%">
+        {ownedOptionTokenAccounts?.[0]?.amount}
+      </TableCell>
       <TableCell width="20%">
         {formatExpirationTimestamp(market.expiration)}
       </TableCell>

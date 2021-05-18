@@ -12,7 +12,7 @@ const Footer = () => (
       display="flex"
       flexDirection="row"
       justifyContent="center"
-      fontSize={11}
+      fontSize={13}
     >
       <Box px={1}>made by mithraiclabs</Box>
       {' | '}
@@ -40,7 +40,7 @@ const Footer = () => (
     </Box>
     <Box
       py={1}
-      fontSize={12}
+      fontSize={13}
       display="flex"
       flexDirection={'row'}
       alignItems="center"

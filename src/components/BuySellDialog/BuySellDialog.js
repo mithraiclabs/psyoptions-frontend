@@ -480,20 +480,20 @@ const BuySellDialog = ({
                   disabled={orderType === 'market'}
                 />
               </Box>
-              <Box pt={2} style={{ fontSize: '12px' }}>
-                Balances:{' '}
+            </Box>
+            <Box pt={2} style={{ fontSize: '12px' }}>
+              Balances:{' '}
+            </Box>
+            <Box display='flex' justifyContent='space-between' style={{ fontSize: '12px' }}>
+              <Box pt={1}>
+                {loadingOwnedTokenAccounts
+                  ? 'Loading...'
+                  : `${uAssetSymbol}: ${uAssetBalance} `}
               </Box>
-              <Box display='flex' justifyContent='space-between' style={{ fontSize: '12px' }}>
-                <Box pt={1}>
-                  {loadingOwnedTokenAccounts
-                    ? 'Loading...'
-                    : `${uAssetSymbol}: ${uAssetBalance} `}
-                </Box>
-                <Box pt={1}>
-                  {loadingOwnedTokenAccounts
-                    ? 'Loading...'
-                    : `${qAssetSymbol}: ${qAssetBalance} `}
-                </Box>
+              <Box pt={1}>
+                {loadingOwnedTokenAccounts
+                  ? 'Loading...'
+                  : `${qAssetSymbol}: ${qAssetBalance} `}
               </Box>
             </Box>
           </Box>

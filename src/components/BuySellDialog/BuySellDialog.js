@@ -366,7 +366,7 @@ const BuySellDialog = ({
       })
     }
   }
-console.log('qasset', qAssetBalance)
+
   return (
     <Dialog open={open} onClose={onClose} maxWidth={'lg'}>
       <Box py={1} px={2} width="680px" maxWidth={['100%']}>

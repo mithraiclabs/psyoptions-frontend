@@ -14,7 +14,6 @@ import Page from '../Page'
 import PositionRow from './PositionRow'
 import useOpenPositions from '../../../hooks/useOpenPositions'
 import useOptionsMarkets from '../../../hooks/useOptionsMarkets'
-import { useWrittenOptions } from '../../../hooks/useWrittenOptions'
 import { Heading } from './Heading'
 import { WrittenOptionsTable } from './WrittenOptionsTable'
 
@@ -32,27 +31,27 @@ const OpenPositions = () => {
   const [page] = useState(0)
   const [rowsPerPage] = useState(10)
   const positions = useOpenPositions()
-  const writtenOptions = useWrittenOptions()
   const { markets } = useOptionsMarkets()
   const [selectedTab, setSelectedTab] = useState(0)
-
-  const writtenOptionsCount = Object.keys(writtenOptions).length
 
   const positionRows = Object.keys(positions).map((key) => ({
     accounts: positions[key],
     assetPair: `${markets[key]?.uAssetSymbol}-${markets[key]?.qAssetSymbol}`,
-    uAssetSymbol: `${markets[key]?.uAssetSymbol}`,
     expiration: markets[key]?.expiration,
     size: positions[key]?.reduce(
       (acc, tokenAccount) => acc + tokenAccount.amount,
       0,
     ),
-    strike: markets[key]?.strikePrice,
+    strikePrice: markets[key]?.strikePrice,
     optionMarketKey: markets[key]?.optionMarketDataAddress,
     market: markets[key],
-    quoteAssetKey: markets[key]?.qAssetMint,
-    underlyingAssetKey: markets[key]?.uAssetMint,
+    qAssetMintAddress: markets[key]?.qAssetMint,
+    uAssetMintAddress: markets[key]?.uAssetMint,
+    qAssetSymbol: markets[key]?.qAssetSymbol,
+    uAssetSymbol: markets[key]?.uAssetSymbol,
     optionContractTokenKey: markets[key]?.optionMintAddress,
+    amountPerContract: markets[key]?.amountPerContract,
+    quoteAmountPerContract: markets[key]?.quoteAmountPerContract,
   }))
 
   return (
@@ -72,8 +71,8 @@ const OpenPositions = () => {
           indicatorColor="primary"
           textColor="primary"
         >
-          <Tab label={`Open Positions (${positionRows?.length || 0})`} />
-          <Tab label={`Written Options (${writtenOptionsCount})`} />
+          <Tab label={`Open Positions`} />
+          <Tab label={`Written Options`} />
         </Tabs>
         {selectedTab === 0 && (
           <Paper
@@ -87,9 +86,10 @@ const OpenPositions = () => {
                 <TableHead>
                   <TableRow>
                     <TableCell width="5%" />
-                    <TableCell width="15%">Asset Pair</TableCell>
-                    <TableCell width="15%">Strike</TableCell>
-                    <TableCell width="15%">Market Price</TableCell>
+                    <TableCell width="11.25%">Asset Pair</TableCell>
+                    <TableCell width="11.25%">Type</TableCell>
+                    <TableCell width="11.25%">Strike</TableCell>
+                    <TableCell width="11.25%">Market Price</TableCell>
                     <TableCell width="15%">Position Size</TableCell>
                     <TableCell width="20%">Expiration</TableCell>
                     <TableCell align="right" width="15%">

@@ -56,6 +56,19 @@ export const WrittenOptionRow = React.memo(
       initialWriterTokenAccount.pubKey,
     )
 
+    let optionType = ''
+    if (market?.uAssetSymbol) {
+      optionType = market?.uAssetSymbol?.match(/^USD/) ? 'put' : 'call'
+    }
+
+    const strike =
+      optionType === 'put'
+        ? market?.amountPerContract &&
+          market.amountPerContract
+            .dividedBy(market?.quoteAmountPerContract)
+            .toString()
+        : market?.strikePrice
+
     useEffect(() => {
       ;(async () => {
         try {
@@ -162,9 +175,10 @@ export const WrittenOptionRow = React.memo(
     return (
       <TableRow key={marketKey}>
         <TableCell width="5%" />
-        <TableCell width="15%">{`${market.uAssetSymbol}${market.qAssetSymbol}`}</TableCell>
-        <TableCell width="15%">{market.strikePrice}</TableCell>
-        <TableCell width="15%">
+        <TableCell width="11.25%">{`${market.uAssetSymbol}-${market.qAssetSymbol}`}</TableCell>
+        <TableCell width="11.25%">{optionType}</TableCell>
+        <TableCell width="11.25%">{strike}</TableCell>
+        <TableCell width="11.25%">
           {initialWriterTokenAccount.amount * market.size} {market.uAssetSymbol}
         </TableCell>
         <TableCell width="7.5%">{initialWriterTokenAccount.amount}</TableCell>

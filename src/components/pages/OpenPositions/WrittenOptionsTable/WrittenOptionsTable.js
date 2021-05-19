@@ -26,10 +26,11 @@ export const WrittenOptionsTable = React.memo(() => {
           <TableHead>
             <TableRow>
               <TableCell width="5%" />
-              <TableCell width="15%">Asset Pair</TableCell>
-              <TableCell width="15%">Strike</TableCell>
-              <TableCell width="15%">Locked</TableCell>
-              <TableCell width="7.5%">Amount Written</TableCell>
+              <TableCell width="11.25%">Asset Pair</TableCell>
+              <TableCell width="11.25%">Type</TableCell>
+              <TableCell width="11.25%">Strike</TableCell>
+              <TableCell width="11.25%">Locked</TableCell>
+              <TableCell width="7.5%">Written</TableCell>
               <TableCell width="7.5%">Available</TableCell>
               <TableCell width="20%">Expiration</TableCell>
               <TableCell align="right" width="15%">

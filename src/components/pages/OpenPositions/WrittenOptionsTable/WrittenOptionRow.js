@@ -175,17 +175,30 @@ export const WrittenOptionRow = React.memo(
     return (
       <TableRow key={marketKey}>
         <TableCell width="5%" />
-        <TableCell width="11.25%">{`${market.uAssetSymbol}-${market.qAssetSymbol}`}</TableCell>
-        <TableCell width="11.25%">{optionType}</TableCell>
-        <TableCell width="11.25%">{strike}</TableCell>
-        <TableCell width="11.25%">
+        {/* <TableCell width="12%">Asset Pair</TableCell>
+            <TableCell width="10%">Type</TableCell>
+            <TableCell width="12%">Strike</TableCell>
+            <TableCell width="12%">Locked Assets</TableCell>
+            <TableCell width="5%">Contract Size</TableCell>
+            <TableCell width="7%">Written</TableCell>
+            <TableCell width="7%">Available</TableCell>
+            <TableCell width="15%">Expiration</TableCell> */}
+        <TableCell width="10%">{`${market.uAssetSymbol}-${market.qAssetSymbol}`}</TableCell>
+        <TableCell width="9%">{optionType}</TableCell>
+        <TableCell width="10%">{strike}</TableCell>
+        <TableCell width="13%">
           {initialWriterTokenAccount.amount * market.size} {market.uAssetSymbol}
         </TableCell>
-        <TableCell width="7.5%">{initialWriterTokenAccount.amount}</TableCell>
-        <TableCell width="7.5%">
+        <TableCell width="10%">
+          {optionType === 'call'
+            ? market.amountPerContract.toString()
+            : market.quoteAmountPerContract.toString()}
+        </TableCell>
+        <TableCell width="7%">{initialWriterTokenAccount.amount}</TableCell>
+        <TableCell width="8%">
           {ownedOptionTokenAccounts?.[0]?.amount}
         </TableCell>
-        <TableCell width="20%">
+        <TableCell width="16%">
           {formatExpirationTimestamp(market.expiration)}
         </TableCell>
         <TableCell align="right" width="15%">

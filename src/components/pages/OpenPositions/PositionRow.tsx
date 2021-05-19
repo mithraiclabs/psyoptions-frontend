@@ -67,9 +67,13 @@ const PositionRow: React.VFC<{
 
   const strike =
     optionType === 'put'
-      ? row?.amountPerContract &&
-        row.amountPerContract.dividedBy(row?.quoteAmountPerContract).toString()
+      ? row.amountPerContract.dividedBy(row.quoteAmountPerContract).toString()
       : row?.strikePrice
+
+  const contractSize =
+    optionType === 'call'
+      ? row.amountPerContract.toString()
+      : row.quoteAmountPerContract.toString()
 
   const onRowClick = () => {
     if (row.accounts.length > 1) {
@@ -120,14 +124,15 @@ const PositionRow: React.VFC<{
             />
           )}
         </TableCell>
-        <TableCell width="11.25%">{row.assetPair}</TableCell>
-        <TableCell width="11.25%">{optionType}</TableCell>
-        <TableCell width="11.25%">{strike}</TableCell>
-        <TableCell width="11.25%">
+        <TableCell width="10%">{row.assetPair}</TableCell>
+        <TableCell width="10%">{optionType}</TableCell>
+        <TableCell width="10%">{strike}</TableCell>
+        <TableCell width="11%">
           {price ? `$${price.toFixed(2)}` : '-'}
         </TableCell>
-        <TableCell width="15%">{row.size}</TableCell>
-        <TableCell width="20%">
+        <TableCell width="12%">{contractSize}</TableCell>
+        <TableCell width="12%">{row.size}</TableCell>
+        <TableCell width="15%">
           {formatExpirationTimestamp(row.expiration)}
         </TableCell>
         <TableCell align="right" width="15%">
@@ -159,12 +164,13 @@ const PositionRow: React.VFC<{
                     tabIndex={-1}
                   >
                     <TableCell width="5%" />
-                    <TableCell width="11.25%" />
-                    <TableCell width="11.25%" />
-                    <TableCell width="11.25%">{strike}</TableCell>
-                    <TableCell width="11.25%" />
-                    <TableCell width="15%">{account.amount}</TableCell>
-                    <TableCell width="20%">
+                    <TableCell width="10%" />
+                    <TableCell width="10%" />
+                    <TableCell width="10%">{strike}</TableCell>
+                    <TableCell width="11%" />
+                    <TableCell width="12%" />
+                    <TableCell width="12%">{account.amount}</TableCell>
+                    <TableCell width="15%">
                       {formatExpirationTimestamp(row.expiration)}
                     </TableCell>
                     <TableCell align="right" width="15%">

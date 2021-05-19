@@ -86,12 +86,13 @@ const OpenPositions = () => {
                 <TableHead>
                   <TableRow>
                     <TableCell width="5%" />
-                    <TableCell width="11.25%">Asset Pair</TableCell>
-                    <TableCell width="11.25%">Type</TableCell>
-                    <TableCell width="11.25%">Strike</TableCell>
-                    <TableCell width="11.25%">Market Price</TableCell>
-                    <TableCell width="15%">Position Size</TableCell>
-                    <TableCell width="20%">Expiration</TableCell>
+                    <TableCell width="10%">Asset Pair</TableCell>
+                    <TableCell width="10%">Type</TableCell>
+                    <TableCell width="10%">Strike</TableCell>
+                    <TableCell width="11%">Market Price</TableCell>
+                    <TableCell width="12%">Contract Size</TableCell>
+                    <TableCell width="12%">Position Size</TableCell>
+                    <TableCell width="15%">Expiration</TableCell>
                     <TableCell align="right" width="15%">
                       Action
                     </TableCell>

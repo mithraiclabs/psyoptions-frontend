@@ -130,8 +130,8 @@ const Markets = () => {
 
   // mainnet mark price from bonfida
   const bonfidaMarkPrice = useBonfidaMarkPrice({
-    uAsset,
-    qAsset,
+    uAssetSymbol: uAsset?.tokenSymbol,
+    qAssetSymbol: qAsset?.tokenSymbol,
   })
 
   const underlyingSerumMarketKey = `${uAsset?.mintAddress}-${qAsset?.mintAddress}`

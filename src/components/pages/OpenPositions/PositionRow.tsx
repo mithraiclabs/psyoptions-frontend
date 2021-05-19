@@ -17,6 +17,10 @@ import useAssetList from '../../../hooks/useAssetList'
 import { useSerumMarket, useSerumOrderbook } from '../../../hooks/Serum'
 import { getPriceFromSerumOrderbook } from '../../../utils/orderbook'
 
+import { useBonfidaMarkPrice } from '../../../hooks/useBonfidaMarkPrice'
+
+const USE_BONFIDA_MARK_PRICE = true
+
 const useStyles = makeStyles({
   dropdownOpen: {
     transform: 'rotate(-180deg)',
@@ -30,6 +34,7 @@ const PositionRow: React.VFC<{
   row: {
     accounts: TokenAccount[]
     assetPair: string
+    uAssetSymbol: string
     expiration: number
     market: OptionMarket
     optionContractTokenKey: string
@@ -48,9 +53,17 @@ const PositionRow: React.VFC<{
   const serumMarketKey = `${row.market.optionMintKey}-${qAsset.mintAddress}`
   useSerumMarket(serumMarketKey)
   const { orderbook } = useSerumOrderbook(serumMarketKey)
-  const price = getPriceFromSerumOrderbook(orderbook)
   const nowInSeconds = Date.now() / 1000
   const expired = row.expiration <= nowInSeconds
+
+  // mainnet mark price from bonfida
+  const bonfidaMarkPrice = useBonfidaMarkPrice({
+    uAssetSymbol: row?.uAssetSymbol,
+    qAssetSymbol: qAsset?.tokenSymbol,
+  })
+  const serumPrice = getPriceFromSerumOrderbook(orderbook)
+
+  const price = USE_BONFIDA_MARK_PRICE ? bonfidaMarkPrice : serumPrice
 
   const onRowClick = () => {
     if (row.accounts.length > 1) {
@@ -103,7 +116,9 @@ const PositionRow: React.VFC<{
         </TableCell>
         <TableCell width="15%">{row.assetPair}</TableCell>
         <TableCell width="15%">{row.strike}</TableCell>
-        <TableCell width="15%">{price ?? '-'}</TableCell>
+        <TableCell width="15%">
+          {price ? `$${price.toFixed(2)}` : '-'}
+        </TableCell>
         <TableCell width="15%">{row.size}</TableCell>
         <TableCell width="20%">
           {formatExpirationTimestamp(row.expiration)}
@@ -167,4 +182,4 @@ const PositionRow: React.VFC<{
   )
 }
 
-export default PositionRow
+export default React.memo(PositionRow)

@@ -2,7 +2,11 @@ import React, { useCallback, useContext } from 'react'
 import { Account, PublicKey } from '@solana/web3.js'
 import BigNumber from 'bignumber.js'
 import Link from '@material-ui/core/Link'
-import { initializeMarket } from '@mithraic-labs/psyoptions'
+import {
+  initializeAccountsForMarket,
+  initializeMarket,
+  initializeMarketInstruction,
+} from '@mithraic-labs/psyoptions'
 import useConnection from './useConnection'
 import useNotifications from './useNotifications'
 import useWallet from './useWallet'
@@ -44,6 +48,74 @@ export const useInitializeMarkets = (): ((
       try {
         const results = await Promise.all(
           quoteAmountsPerContract.map(async (qAmount) => {
+            // Create and send transaction for creating/initializing accounts needed
+            // for option market
+            const {
+              transaction: createAccountsTx,
+              optionMarketKey,
+              optionMintKey,
+              writerTokenMintKey,
+              quoteAssetPoolKey,
+              underlyingAssetPoolKey,
+            } = await initializeAccountsForMarket({
+              connection,
+              payer: { publicKey: pubKey } as Account,
+              programId: endpoint.programId,
+            })
+
+            const createAccountsSigned = await wallet.signTransaction(
+              createAccountsTx,
+            )
+            const createAccountsTxId = await connection.sendRawTransaction(
+              createAccountsSigned.serialize(),
+            )
+
+            const createAccountsExplorerUrl = buildSolanaExplorerUrl(
+              createAccountsTxId,
+            )
+
+            pushNotification({
+              severity: 'info',
+              message: `Processing: Create Market Accounts`,
+              link: (
+                <Link href={createAccountsExplorerUrl} target="_new">
+                  View on Solana Explorer
+                </Link>
+              ),
+            })
+
+            await connection.confirmTransaction(createAccountsTxId)
+
+            pushNotification({
+              severity: 'success',
+              message: `Confirmed: Create Market Accounts`,
+              link: (
+                <Link href={createAccountsExplorerUrl} target="_new">
+                  View on Solana Explorer
+                </Link>
+              ),
+            })
+
+            // TODO -- can we encode these to the buffer without converting back to the built-in number type?
+            const amountPerContractU64 = amountPerContract
+              .multipliedBy(new BigNumber(10).pow(uAssetDecimals))
+              .toNumber()
+            const quoteAmountPerContractU64 = qAmount
+              .multipliedBy(new BigNumber(10).pow(qAssetDecimals))
+              .toNumber()
+
+            // create and send transaction for initializing the option market
+            const initializeMarketIx = await initializeMarketInstruction({
+              programId: new PublicKey(endpoint.programId),
+              underlyingAssetMintKey: new PublicKey(uAssetMint),
+              quoteAssetMintKey: new PublicKey(qAssetMint),
+              underlyingAssetDecimals: uAssetDecimals,
+              quoteAssetDecimals: qAssetDecimals,
+              underlyingAmountPerContract: amountPerContractU64,
+              quoteAmountPerContract: quoteAmountPerContractU64,
+              expirationUnixTimestamp: expiration,
+            })
+
             const {
               // signers,
               transaction,

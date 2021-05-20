@@ -1,10 +1,9 @@
 import React, { useCallback, useContext } from 'react'
-import { Account, PublicKey } from '@solana/web3.js'
+import { Account, PublicKey, Transaction } from '@solana/web3.js'
 import BigNumber from 'bignumber.js'
 import Link from '@material-ui/core/Link'
 import {
   initializeAccountsForMarket,
-  initializeMarket,
   initializeMarketInstruction,
 } from '@mithraic-labs/psyoptions'
 import useConnection from './useConnection'
@@ -52,6 +51,7 @@ export const useInitializeMarkets = (): ((
             // for option market
             const {
               transaction: createAccountsTx,
+              signers,
               optionMarketKey,
               optionMintKey,
               writerTokenMintKey,
@@ -63,6 +63,10 @@ export const useInitializeMarkets = (): ((
               programId: endpoint.programId,
             })
 
+            createAccountsTx.feePayer = wallet.publicKey
+            const { blockhash } = await connection.getRecentBlockhash()
+            createAccountsTx.recentBlockhash = blockhash
+            createAccountsTx.partialSign(...signers)
             const createAccountsSigned = await wallet.signTransaction(
               createAccountsTx,
             )
@@ -107,32 +111,26 @@ export const useInitializeMarkets = (): ((
             // create and send transaction for initializing the option market
             const initializeMarketIx = await initializeMarketInstruction({
               programId: new PublicKey(endpoint.programId),
+              fundingAccountKey: pubKey,
               underlyingAssetMintKey: new PublicKey(uAssetMint),
               quoteAssetMintKey: new PublicKey(qAssetMint),
-              underlyingAssetDecimals: uAssetDecimals,
-              quoteAssetDecimals: qAssetDecimals,
+              optionMintKey,
+              writerTokenMintKey,
+              optionMarketKey,
+              underlyingAssetPoolKey,
+              quoteAssetPoolKey,
               underlyingAmountPerContract: amountPerContractU64,
               quoteAmountPerContract: quoteAmountPerContractU64,
               expirationUnixTimestamp: expiration,
             })
 
+            const transaction = new Transaction()
+            transaction.add(initializeMarketIx)
+            transaction.feePayer = wallet.publicKey
             const {
-              // signers,
-              transaction,
-              optionMarketDataAddress,
-              optionMintAddress,
-            } = await initializeMarket({
-              connection,
-              payer: { publicKey: pubKey } as Account,
-              programId: endpoint.programId,
-              underlyingAssetMintKey: new PublicKey(uAssetMint),
-              quoteAssetMintKey: new PublicKey(qAssetMint),
-              underlyingAssetDecimals: uAssetDecimals,
-              quoteAssetDecimals: qAssetDecimals,
-              underlyingAmountPerContract: amountPerContract,
-              quoteAmountPerContract: qAmount,
-              expirationUnixTimestamp: expiration,
-            })
+              blockhash: initMarketBlockHash,
+            } = await connection.getRecentBlockhash()
+            transaction.recentBlockhash = initMarketBlockHash
 
             const signed = await wallet.signTransaction(transaction)
             const txid = await connection.sendRawTransaction(signed.serialize())
@@ -170,8 +168,8 @@ export const useInitializeMarkets = (): ((
               uAssetMint,
               qAssetMint,
               expiration,
-              optionMarketDataAddress: optionMarketDataAddress.toString(),
-              optionMintAddress: optionMintAddress.toString(),
+              optionMarketDataAddress: optionMarketKey.toString(),
+              optionMintAddress: optionMintKey.toString(),
               createdByMe: true,
               amountPerContract,
               quoteAmountPerContract: qAmount,

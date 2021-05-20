@@ -138,7 +138,7 @@ export const WrittenOptionRow = React.memo(
                 label="Close Position"
                 color="primary"
                 variant="outlined"
-                onClick={() => closePosition()}
+                onClick={closePosition}
               />
               <Chip
                 clickable

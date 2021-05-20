@@ -2,18 +2,18 @@ import axios from 'axios'
 import { useEffect, useState } from 'react'
 import useNotifications from './useNotifications'
 
-export const useBonfidaMarkPrice = ({ uAsset, qAsset }) => {
+export const useBonfidaMarkPrice = ({ uAssetSymbol, qAssetSymbol }) => {
   const [markPrice, setMarkPrice] = useState(0)
   const { pushNotification } = useNotifications()
 
   useEffect(() => {
     setMarkPrice(0)
     let timer
-    if (uAsset?.tokenSymbol && qAsset?.tokenSymbol) {
+    if (uAssetSymbol && qAssetSymbol) {
       const fetchPrice = async () => {
         try {
           const resp = await axios.get(
-            `https://serum-api.bonfida.com/orderbooks/${uAsset?.tokenSymbol}${qAsset?.tokenSymbol}`,
+            `https://serum-api.bonfida.com/orderbooks/${uAssetSymbol}${qAssetSymbol}`,
           )
           const highestBid = resp?.data?.data?.bids[0]?.price
           const lowestAsk = resp?.data?.data?.asks[0]?.price
@@ -28,7 +28,7 @@ export const useBonfidaMarkPrice = ({ uAsset, qAsset }) => {
           setMarkPrice(0)
           pushNotification({
             severity: 'error',
-            message: `Couldn't load market price for ${uAsset?.tokenSymbol}`,
+            message: `Couldn't load market price for ${uAssetSymbol}`,
           })
           console.error({
             ...err,
@@ -47,7 +47,7 @@ export const useBonfidaMarkPrice = ({ uAsset, qAsset }) => {
     return () => {
       clearInterval(timer)
     }
-  }, [uAsset, qAsset, pushNotification])
+  }, [uAssetSymbol, qAssetSymbol, pushNotification])
 
   return markPrice
 }

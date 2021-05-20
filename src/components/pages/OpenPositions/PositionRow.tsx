@@ -5,15 +5,16 @@ import Table from '@material-ui/core/Table'
 import TableBody from '@material-ui/core/TableBody'
 import TableCell from '@material-ui/core/TableCell'
 import TableRow from '@material-ui/core/TableRow'
-import * as Sentry from '@sentry/react'
 import KeyboardArrowDown from '@material-ui/icons/KeyboardArrowDown'
 import { makeStyles } from '@material-ui/core/styles'
+import * as Sentry from '@sentry/react'
+import BigNumber from 'bignumber.js'
+
 import useExerciseOpenPosition from '../../../hooks/useExerciseOpenPosition'
 import useOwnedTokenAccounts from '../../../hooks/useOwnedTokenAccounts'
 import useNotifications from '../../../hooks/useNotifications'
 import { formatExpirationTimestamp } from '../../../utils/format'
 import { OptionMarket, TokenAccount } from '../../../types'
-import useAssetList from '../../../hooks/useAssetList'
 import { useSerumMarket, useSerumOrderbook } from '../../../hooks/Serum'
 import { getPriceFromSerumOrderbook } from '../../../utils/orderbook'
 
@@ -30,27 +31,49 @@ const PositionRow: React.VFC<{
   row: {
     accounts: TokenAccount[]
     assetPair: string
+    uAssetSymbol: string
     expiration: number
     market: OptionMarket
     optionContractTokenKey: string
     optionMarketKey: string
-    quoteAssetKey: string
     size: number
-    strike: string
-    underlyingAssetKey: string
+    strikePrice: string
+    uAssetMintAddress: string
+    qAssetSymbol: string
+    qAssetMintAddress: string
+    amountPerContract: BigNumber
+    quoteAmountPerContract: BigNumber
   }
 }> = ({ row }) => {
   const classes = useStyles()
   const [visible, setVisible] = useState(false)
-  const { qAsset } = useAssetList()
   const { ownedTokenAccounts } = useOwnedTokenAccounts()
   const { pushNotification } = useNotifications()
-  const serumMarketKey = `${row.market.optionMintKey}-${qAsset.mintAddress}`
+  const serumMarketKey = `${row.market.optionMintKey}-${row?.qAssetMintAddress}`
   useSerumMarket(serumMarketKey)
-  const { orderbook } = useSerumOrderbook(serumMarketKey)
-  const price = getPriceFromSerumOrderbook(orderbook)
   const nowInSeconds = Date.now() / 1000
   const expired = row.expiration <= nowInSeconds
+
+  // const { orderbook } = useSerumOrderbook(serumMarketKey)
+  // const price = getPriceFromSerumOrderbook(orderbook)
+
+  // TODO -- The way we were getting market price was incorrect because it was pulling in the price of the options themselves, not the underlying asset. We should be pulling in the price of the underlying asset so we can calculate how much profit would be made from exercising. I left the above code in so that when we fix it later we don't have to start over.
+  const price = null
+
+  let optionType = ''
+  if (row?.uAssetSymbol) {
+    optionType = row?.uAssetSymbol?.match(/^USD/) ? 'put' : 'call'
+  }
+
+  const strike =
+    optionType === 'put'
+      ? row.amountPerContract.dividedBy(row.quoteAmountPerContract).toString()
+      : row?.strikePrice
+
+  const contractSize =
+    optionType === 'call'
+      ? row.amountPerContract.toString()
+      : row.quoteAmountPerContract.toString()
 
   const onRowClick = () => {
     if (row.accounts.length > 1) {
@@ -58,8 +81,8 @@ const PositionRow: React.VFC<{
     }
   }
 
-  const ownedQAssetKey = ownedTokenAccounts[row.quoteAssetKey]?.[0]?.pubKey
-  const ownedUAssetKey = ownedTokenAccounts[row.underlyingAssetKey]?.[0]?.pubKey
+  const ownedQAssetKey = ownedTokenAccounts[row.qAssetMintAddress]?.[0]?.pubKey
+  const ownedUAssetKey = ownedTokenAccounts[row.uAssetMintAddress]?.[0]?.pubKey
   const ownedOAssetKey =
     ownedTokenAccounts[row.optionContractTokenKey]?.[0]?.pubKey
 
@@ -101,11 +124,15 @@ const PositionRow: React.VFC<{
             />
           )}
         </TableCell>
-        <TableCell width="15%">{row.assetPair}</TableCell>
-        <TableCell width="15%">{row.strike}</TableCell>
-        <TableCell width="15%">{price ?? '-'}</TableCell>
-        <TableCell width="15%">{row.size}</TableCell>
-        <TableCell width="20%">
+        <TableCell width="10%">{row.assetPair}</TableCell>
+        <TableCell width="10%">{optionType}</TableCell>
+        <TableCell width="10%">{strike}</TableCell>
+        <TableCell width="11%">
+          {price ? `$${price.toFixed(2)}` : '-'}
+        </TableCell>
+        <TableCell width="12%">{contractSize}</TableCell>
+        <TableCell width="12%">{row.size}</TableCell>
+        <TableCell width="15%">
           {formatExpirationTimestamp(row.expiration)}
         </TableCell>
         <TableCell align="right" width="15%">
@@ -137,11 +164,13 @@ const PositionRow: React.VFC<{
                     tabIndex={-1}
                   >
                     <TableCell width="5%" />
-                    <TableCell width="15%" />
-                    <TableCell width="15%">{row.strike}</TableCell>
-                    <TableCell width="15%" />
-                    <TableCell width="15%">{account.amount}</TableCell>
-                    <TableCell width="20%">
+                    <TableCell width="10%" />
+                    <TableCell width="10%" />
+                    <TableCell width="10%">{strike}</TableCell>
+                    <TableCell width="11%" />
+                    <TableCell width="12%" />
+                    <TableCell width="12%">{account.amount}</TableCell>
+                    <TableCell width="15%">
                       {formatExpirationTimestamp(row.expiration)}
                     </TableCell>
                     <TableCell align="right" width="15%">
@@ -167,4 +196,4 @@ const PositionRow: React.VFC<{
   )
 }
 
-export default PositionRow
+export default React.memo(PositionRow)

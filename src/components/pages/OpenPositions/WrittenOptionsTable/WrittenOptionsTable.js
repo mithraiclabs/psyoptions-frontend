@@ -12,7 +12,7 @@ import { Heading } from '../Heading'
 import { WrittenOptionRow } from './WrittenOptionRow'
 
 // TODO handle the case where the writer has multiple underlying asset accounts
-export const WrittenOptionsTable = () => {
+export const WrittenOptionsTable = React.memo(() => {
   const positions = useOpenPositions()
   const writtenOptions = useWrittenOptions()
   const { markets } = useOptionsMarkets()
@@ -26,12 +26,14 @@ export const WrittenOptionsTable = () => {
           <TableHead>
             <TableRow>
               <TableCell width="5%" />
-              <TableCell width="15%">Asset Pair</TableCell>
-              <TableCell width="15%">Strike</TableCell>
-              <TableCell width="15%">Locked</TableCell>
-              <TableCell width="7.5%">Size</TableCell>
-              <TableCell width="7.5%">Available</TableCell>
-              <TableCell width="20%">Expiration</TableCell>
+              <TableCell width="10%">Asset Pair</TableCell>
+              <TableCell width="9%">Type</TableCell>
+              <TableCell width="10%">Strike</TableCell>
+              <TableCell width="13%">Locked Assets</TableCell>
+              <TableCell width="10%">Contract Size</TableCell>
+              <TableCell width="7%">Written</TableCell>
+              <TableCell width="8%">Available</TableCell>
+              <TableCell width="16%">Expiration</TableCell>
               <TableCell align="right" width="15%">
                 Action
               </TableCell>
@@ -58,4 +60,4 @@ export const WrittenOptionsTable = () => {
       </TableContainer>
     </>
   )
-}
+})

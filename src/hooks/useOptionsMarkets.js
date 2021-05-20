@@ -115,6 +115,7 @@ const useOptionsMarkets = () => {
           underlyingAssetPoolKey: market.marketData.underlyingAssetPoolKey,
           underlyingAssetMintKey: market.marketData.underlyingAssetMintKey,
           quoteAssetPoolKey: market.marketData.quoteAssetPoolKey,
+          quoteAssetMintKey: market.marketData.quoteAssetMintKey,
         }
 
         const key = `${newMarket.expiration}-${newMarket.uAssetSymbol}-${

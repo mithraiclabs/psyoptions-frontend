@@ -37,6 +37,20 @@ export type OptionMarket = {
   quoteAssetPoolKey: PublicKey
 }
 
+export type OptionMarketMeta = {
+  expiration: number
+  optionMarketAddress: string
+  optionContractMintAddress: string
+  optionWriterTokenMintAddress: string
+  quoteAssetMint: string
+  quoteAssetSymbol: string
+  underlyingAssetMint: string
+  underlyingAssetSymbol: string
+  underlyingAssetPerContract: string
+  quoteAssetPerContract: string
+  serumMarketAddress: string
+}
+
 export enum NotificationSeverity {
   SUCCESS = 'success',
   INFO = 'info',

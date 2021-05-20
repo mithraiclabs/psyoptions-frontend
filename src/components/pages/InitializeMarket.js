@@ -86,14 +86,14 @@ const InitializeMarket = () => {
         uAssetMint: uAsset.mintAddress,
         qAssetMint: qAsset.mintAddress,
         uAssetDecimals: uAsset.decimals,
-        qAssetDecimals: uAsset.decimals,
+        qAssetDecimals: qAsset.decimals,
         expiration: date.unix(),
       })
       setLoading(false)
     } catch (err) {
       setLoading(false)
       // TODO: display some meaningful error state to user
-      console.log(err)
+      console.error(err)
       pushNotification({
         severity: 'error',
         message: `${err}`,

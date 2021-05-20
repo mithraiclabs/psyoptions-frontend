@@ -189,8 +189,8 @@ const useOptionsMarkets = () => {
             connection,
             payer: { publicKey: pubKey },
             programId: endpoint.programId,
-            underlyingAssetMintKey: uAssetMint,
-            quoteAssetMintKey: qAssetMint,
+            underlyingAssetMintKey: new PublicKey(uAssetMint),
+            quoteAssetMintKey: new PublicKey(qAssetMint),
             underlyingAssetDecimals: uAssetDecimals,
             quoteAssetDecimals: qAssetDecimals,
             underlyingAmountPerContract: amountPerContract,
@@ -262,6 +262,7 @@ const useOptionsMarkets = () => {
 
       return results
     } catch (err) {
+      console.error(err)
       pushNotification({
         severity: 'error',
         message: `${err}`,
@@ -342,6 +343,7 @@ const useOptionsMarkets = () => {
         writerTokenDestKey,
       }
     } catch (err) {
+      console.error(err)
       pushNotification({
         severity: 'error',
         message: `${err}`,

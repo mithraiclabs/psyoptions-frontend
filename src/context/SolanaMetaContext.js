@@ -22,6 +22,7 @@ export const SolanaMetaProvider = ({ children }) => {
         )
         setSplTokenAccountRentBalance(rentBalance)
       } catch (err) {
+        console.error(err)
         pushNotification({
           severity: 'error',
           message: `${err}`,

@@ -27,6 +27,7 @@ const WalletProvider: React.FC = ({ children }) => {
           const _balance = await connection.getBalance(pubKey)
           setBalance(_balance)
         } catch (err) {
+          console.error(err)
           Sentry.captureException(err)
           pushNotification({
             severity: 'error',

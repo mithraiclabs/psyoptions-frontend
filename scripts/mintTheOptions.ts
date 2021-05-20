@@ -65,8 +65,8 @@ const buildAirdropTokensIx = async (
 
 const getFaucetAddressByMint = (mint: PublicKey) => {
   switch (mint.toString()) {
-    case 'HinfVnJuzMtJsyuLE2ArYCChDZB6FCxEu2p3CQeMcDiF':
-      return new PublicKey('BmaVN3Wut1k2MtrcsxjTn919GdBJ2gzVLTtbiybnAPnR')
+    case 'E6Z6zLzk8MWY3TY8E87mr88FhGowEPJTeMWzkqtL6qkF':
+      return new PublicKey('E6wQSMPGqHn7dqEMeWcSVfjdkwd8ED5CncQ9BtMNGtUG')
     case 'C6kYXcaRUMqeBF5fhg165RWU7AnpT9z92fvKNoMqjmz6':
       return new PublicKey('97z3NzcDxqRMyE7F73PuHEmAbA72S7eDopjhe7GTymTk')
     default:

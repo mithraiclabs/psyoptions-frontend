@@ -59,7 +59,6 @@ const OrderBook = memo(
     ) {
       rows.push({ bid: bids[i] || {}, ask: asks[i] || {}, key: i })
       i += 1
-      console.log('rowws', rows.length)
     }
 
     const setPriceAndSize = (bidAsk) => {

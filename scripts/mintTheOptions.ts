@@ -243,6 +243,8 @@ const getFaucetAddressByMint = (mint: PublicKey) => {
                 underlyingAssetPoolKey:
                   market.marketData.underlyingAssetPoolKey,
                 underlyingAssetSrcKey: associatedUnderlyingTokenAccount.address,
+                fundingAccountKey: payer.publicKey,
+                underlyingMintKey: market.marketData.underlyingAssetMintKey,
               })
 
               transaction.add(mintInstruction)

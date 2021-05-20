@@ -35,6 +35,7 @@ export type OptionMarket = {
   writerTokenMintKey: PublicKey
   underlyingAssetPoolKey: PublicKey
   quoteAssetPoolKey: PublicKey
+  underlyingAssetMintKey: PublicKey
 }
 
 export type OptionMarketMeta = {

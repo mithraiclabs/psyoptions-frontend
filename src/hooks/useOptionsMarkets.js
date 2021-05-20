@@ -113,6 +113,7 @@ const useOptionsMarkets = () => {
           optionMarketKey: market.pubkey,
           writerTokenMintKey: market.marketData.writerTokenMintKey,
           underlyingAssetPoolKey: market.marketData.underlyingAssetPoolKey,
+          underlyingAssetMintKey: market.marketData.underlyingAssetMintKey,
           quoteAssetPoolKey: market.marketData.quoteAssetPoolKey,
         }
 

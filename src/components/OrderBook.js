@@ -48,14 +48,18 @@ const OrderBook = memo(
     // Doing it here for quick and dirty solution, don't over-engineer right? :)
     const rows = []
     const minRows = 4
+    // We can adjust the max rows as desired later
+    const maxRows = 8
     let i = 0
     while (
+      rows.length < maxRows &&
       rows.length < bids.length ||
       rows.length < asks.length ||
       rows.length < minRows
     ) {
       rows.push({ bid: bids[i] || {}, ask: asks[i] || {}, key: i })
       i += 1
+      console.log('rowws', rows.length)
     }
 
     const setPriceAndSize = (bidAsk) => {

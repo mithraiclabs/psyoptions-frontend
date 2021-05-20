@@ -24,7 +24,7 @@ const DEX_PROGRAM_ID = new PublicKey(
     'C6kYXcaRUMqeBF5fhg165RWU7AnpT9z92fvKNoMqjmz6',
   )
   const devnetUSDCKey = new PublicKey(
-    'HinfVnJuzMtJsyuLE2ArYCChDZB6FCxEu2p3CQeMcDiF',
+    'E6Z6zLzk8MWY3TY8E87mr88FhGowEPJTeMWzkqtL6qkF',
   )
 
   let res = await Market.getAllMarketsBySplSupport(

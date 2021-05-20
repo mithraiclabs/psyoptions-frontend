@@ -1,7 +1,7 @@
 import React, { useContext, useCallback } from 'react'
 import BigNumber from 'bignumber.js'
 import { Link } from '@material-ui/core'
-import { initializeMarket, Market } from '@mithraic-labs/psyoptions'
+import { Market } from '@mithraic-labs/psyoptions'
 
 import { Connection, PublicKey } from '@solana/web3.js'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
@@ -159,118 +159,6 @@ const useOptionsMarkets = () => {
     return deduped
   }
 
-  const initializeMarkets = async ({
-    amountPerContract,
-    quoteAmountsPerContract,
-    uAssetSymbol,
-    qAssetSymbol,
-    uAssetMint,
-    qAssetMint,
-    expiration,
-    uAssetDecimals,
-    qAssetDecimals,
-  }) => {
-    try {
-      const results = await Promise.all(
-        quoteAmountsPerContract.map(async (qAmount) => {
-          const {
-            // signers,
-            transaction,
-
-            // These values say adress but they are PublicKey types currently
-            optionMarketDataAddress,
-            optionMintAddress,
-
-            // TODO: Update these names to end in Key and add the writerTokenMintKey
-            // optionMarketDataKey
-            // optionMintKey
-            // writerTokenMintKey
-          } = await initializeMarket({
-            connection,
-            payer: { publicKey: pubKey },
-            programId: endpoint.programId,
-            underlyingAssetMintKey: new PublicKey(uAssetMint),
-            quoteAssetMintKey: new PublicKey(qAssetMint),
-            underlyingAssetDecimals: uAssetDecimals,
-            quoteAssetDecimals: qAssetDecimals,
-            underlyingAmountPerContract: amountPerContract,
-            quoteAmountPerContract: qAmount,
-            expirationUnixTimestamp: expiration,
-          })
-
-          const signed = await wallet.signTransaction(transaction)
-          const txid = await connection.sendRawTransaction(signed.serialize())
-
-          const explorerUrl = buildSolanaExplorerUrl(txid)
-
-          // TODO: make the "View on Solana Explorer" am <a> element instead of text
-          pushNotification({
-            severity: 'info',
-            message: `Processing: Initialize Market`,
-            link: (
-              <Link href={explorerUrl} target="_new">
-                View on Solana Explorer
-              </Link>
-            ),
-          })
-
-          await connection.confirmTransaction(txid)
-
-          pushNotification({
-            severity: 'success',
-            message: `Confirmed: Initialize Market`,
-            link: (
-              <Link href={explorerUrl} target="_new">
-                View on Solana Explorer
-              </Link>
-            ),
-          })
-
-          const marketData = {
-            key: `${expiration}-${uAssetSymbol}-${qAssetSymbol}-${amountPerContract.toString()}-${amountPerContract.toString()}/${qAmount.toString()}`,
-            size: amountPerContract.toNumber(),
-            strikePrice: qAmount.div(amountPerContract).toNumber(),
-            uAssetSymbol,
-            qAssetSymbol,
-            uAssetMint,
-            qAssetMint,
-            expiration,
-            optionMarketDataAddress: optionMarketDataAddress.toString(),
-            optionMarketKey: optionMarketDataAddress,
-            optionMintAddress: optionMintAddress.toString(),
-            optionMintKey: optionMintAddress,
-            amountPerContract,
-            quoteAmountPerContract: qAmount,
-            // TODO -- we need to include writerTokenMintKey here and add it to this state
-            // otherwise you can't place a sell order after initializing the market until refreshing the page
-            // writerTokenMintKey
-          }
-
-          return marketData
-        }),
-      )
-
-      const newMarkets = {}
-      results.forEach((market) => {
-        const m = market
-        m.size = `${market.size}`
-        m.strikePrice = `${market.strikePrice}`
-        newMarkets[market.key] = m
-        return m
-      })
-      setMarkets({ ...markets, ...newMarkets })
-
-      return results
-    } catch (err) {
-      console.error(err)
-      pushNotification({
-        severity: 'error',
-        message: `${err}`,
-      })
-    }
-    return []
-  }
-
   const mint = async ({
     marketData,
     mintedOptionDestKey, // address in user's wallet to send minted Option Token to
@@ -409,7 +297,6 @@ const useOptionsMarkets = () => {
   }
 
   return {
-    initializeMarkets,
     markets,
     marketsLoading,
     setMarkets,

@@ -108,7 +108,7 @@ export const WrittenOptionRow = React.memo(
             label="Close"
             color="primary"
             variant="outlined"
-            onClick={() => closeOptionPostExpiration()}
+            onClick={closeOptionPostExpiration}
           />
           <Chip
             clickable

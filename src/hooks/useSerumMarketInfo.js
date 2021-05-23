@@ -12,16 +12,27 @@ const useSerumMarketInfo = ({ uAssetMint, qAssetMint }) => {
   useEffect(() => {
     // TODO fix this
     const getPairPrices = async ({ _uAssetMint, _qAssetMint }) => {
-      const serumMarkets = await SerumMarket.getMarketByAssetKeys(
-        connection,
-        new PublicKey(_uAssetMint),
-        new PublicKey(_qAssetMint),
-      )
-      const serumMarketAddress = serumMarkets[0].publicKey
-      const serumMarket = new SerumMarket(connection, serumMarketAddress)
-      await serumMarket.initMarket()
+      let prices = { bid: 0, ask: 0 }
+      let serumMarkets
 
-      const prices = await serumMarket.getBidAskSpread()
+      try {
+        serumMarkets = await SerumMarket.getMarketByAssetKeys(
+          connection,
+          new PublicKey(_uAssetMint),
+          new PublicKey(_qAssetMint),
+        )
+      } catch (err) {
+        // If we hit this, it most likely means the serum market for the asset pair just hasn't been created yet
+        console.error(err)
+        return prices
+      }
+
+      const serumMarketAddress = serumMarkets[0]?.publicKey
+      if (serumMarketAddress) {
+        const serumMarket = new SerumMarket(connection, serumMarketAddress)
+        await serumMarket.initMarket()
+        prices = await serumMarket.getBidAskSpread()
+      }
       return prices
     }
 
@@ -34,6 +45,7 @@ const useSerumMarketInfo = ({ uAssetMint, qAssetMint }) => {
 
         setCurrentPairPrice(bid)
       } catch (err) {
+        console.error(err)
         pushNotification({
           severity: 'error',
           message: `${err}`,

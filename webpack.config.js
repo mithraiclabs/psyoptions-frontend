@@ -13,6 +13,11 @@ const devtool = isDev ? 'inline-source-map' : 'source-map'
 const serverPlugins = isDev
   ? [
       new (require('webpack-shell-plugin-next'))({
+        onBuildStart: {
+          scripts: ['npm run clean'],
+          blocking: true,
+          parallel: false,
+        },
         onBuildEnd: {
           scripts: ['nodemon dist/index.js'],
           blocking: false,

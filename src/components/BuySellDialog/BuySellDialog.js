@@ -138,10 +138,6 @@ const BuySellDialog = ({
     publicKey: serumDiscountFeeKey,
   } = useSerumFeeDiscountKey()
 
-  // console.log({
-  //   writerTokenMintKey,
-  // })
-
   const optionMarket = useOptionMarket({
     date: date.unix(),
     uAssetSymbol,

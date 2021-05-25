@@ -241,6 +241,7 @@ const BuySellDialog = ({
       // Open to suggestions / refactoring
       await fetchSerumMarket(...serumKey.split('-'))
     } catch (e) {
+      console.error(e)
       pushNotification({
         severity: 'error',
         message: `${e}`,

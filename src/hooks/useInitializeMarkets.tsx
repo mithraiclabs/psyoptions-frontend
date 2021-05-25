@@ -170,6 +170,7 @@ export const useInitializeMarkets = (): ((
               expiration,
               optionMarketDataAddress: optionMarketKey.toString(),
               optionMintAddress: optionMintKey.toString(),
+              optionMintKey,
               createdByMe: true,
               amountPerContract,
               quoteAmountPerContract: qAmount,

@@ -297,6 +297,7 @@ const usePlaceSellOrder = (
           ),
         })
       } catch (err) {
+        console.error(err)
         pushNotification({
           severity: 'error',
           message: `${err}`,

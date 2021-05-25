@@ -38,6 +38,7 @@ const useSerum = () => {
           dexProgramId,
         )
       } catch (err) {
+        console.error(err, mintA, mintB)
         error = err.message
         pushNotification({
           severity: 'error',

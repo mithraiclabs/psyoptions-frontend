@@ -59,7 +59,7 @@ const OPTION_PROGRAM_ID = new PublicKey(
       const {
         transaction,
         signers,
-        optionMarketDataAddress,
+        optionMarketDataKey,
       } = await initializeMarket({
         connection,
         payer,
@@ -85,7 +85,7 @@ const OPTION_PROGRAM_ID = new PublicKey(
         },
       )
       console.log(`* confirmed mint TX id: ${txId}`)
-      newOptionMarketAddresses.push(optionMarketDataAddress)
+      newOptionMarketAddresses.push(optionMarketDataKey.toString())
     })()
   }, starterPromise)
 

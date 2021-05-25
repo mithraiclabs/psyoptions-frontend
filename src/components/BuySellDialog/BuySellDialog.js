@@ -137,6 +137,7 @@ const BuySellDialog = ({
     feeRates: serumFeeRates,
     publicKey: serumDiscountFeeKey,
   } = useSerumFeeDiscountKey()
+
   const optionMarket = useOptionMarket({
     date: date.unix(),
     uAssetSymbol,
@@ -166,6 +167,7 @@ const BuySellDialog = ({
 
   const serumMarketData = serumMarkets[serumKey]
   const serum = serumMarketData?.serumMarket
+  const serumError = serumMarketData?.error
 
   const parsedOrderSize =
     Number.isNaN(parseFloat(orderSize)) || orderSize < 1
@@ -358,7 +360,7 @@ const BuySellDialog = ({
       setPlaceOrderLoading(false)
     } catch (err) {
       setPlaceOrderLoading(false)
-      console.log(err)
+      console.error(err)
       Sentry.captureException(err)
       pushNotification({
         severity: 'error',
@@ -484,7 +486,11 @@ const BuySellDialog = ({
             <Box pt={2} style={{ fontSize: '12px' }}>
               Balances:{' '}
             </Box>
-            <Box display='flex' justifyContent='space-between' style={{ fontSize: '12px' }}>
+            <Box
+              display="flex"
+              justifyContent="space-between"
+              style={{ fontSize: '12px' }}
+            >
               <Box pt={1}>
                 {loadingOwnedTokenAccounts
                   ? 'Loading...'
@@ -501,7 +507,9 @@ const BuySellDialog = ({
             <Box
               display="flex"
               flexDirection="column"
-              justifyContent={serum ? 'flex-start' : 'center'}
+              justifyContent={
+                serum && serumError === false ? 'flex-start' : 'center'
+              }
               alignItems="center"
               width="100%"
               height="100%"
@@ -509,7 +517,7 @@ const BuySellDialog = ({
             >
               {serumMarketData?.loading ? (
                 <CircularProgress />
-              ) : serum ? (
+              ) : serum && serumError === false ? (
                 <>
                   <OrderBook
                     setOrderSize={setOrderSize}

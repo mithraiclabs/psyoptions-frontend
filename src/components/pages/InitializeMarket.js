@@ -40,7 +40,7 @@ const InitializeMarket = () => {
   const [basePrice, setBasePrice] = useState(0)
   const [date, setDate] = useState(expirations[0])
   const { uAsset, qAsset, setUAsset } = useAssetList()
-  const [size, setSize] = useState(0)
+  const [size, setSize] = useState(1)
   const { marketPrice } = useSerumMarketInfo({
     uAssetMint: uAsset?.mintAddress,
     qAssetMint: qAsset?.mintAddress,
@@ -174,7 +174,7 @@ const InitializeMarket = () => {
             <Box width="50%" p={2} borderRight={darkBorder}>
               <ContractSizeSelector
                 onChange={(e) => setSize(e.target.value)}
-                value={size}
+                value={`${size}`}
               />
             </Box>
             <Box width="50%" p={2}>

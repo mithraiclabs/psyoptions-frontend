@@ -174,8 +174,15 @@ const useOptionsMarkets = () => {
           const {
             // signers,
             transaction,
+
+            // These values say adress but they are PublicKey types currently
             optionMarketDataAddress,
             optionMintAddress,
+
+            // TODO: Update these names to end in Key and add the writerTokenMintKey
+            // optionMarketDataKey
+            // optionMintKey
+            // writerTokenMintKey
           } = await initializeMarket({
             connection,
             payer: { publicKey: pubKey },
@@ -218,7 +225,7 @@ const useOptionsMarkets = () => {
           })
 
           const marketData = {
-            key: `${expiration}-${uAssetSymbol}-${qAssetSymbol}-${qAmount.toString()}-${amountPerContract.toString()}`,
+            key: `${expiration}-${uAssetSymbol}-${qAssetSymbol}-${amountPerContract.toString()}-${amountPerContract.toString()}/${qAmount.toString()}`,
             size: amountPerContract.toNumber(),
             strikePrice: qAmount.div(amountPerContract).toNumber(),
             uAssetSymbol,
@@ -227,10 +234,14 @@ const useOptionsMarkets = () => {
             qAssetMint,
             expiration,
             optionMarketDataAddress: optionMarketDataAddress.toString(),
+            optionMarketKey: optionMarketDataAddress,
             optionMintAddress: optionMintAddress.toString(),
-            createdByMe: true,
+            optionMintKey: optionMintAddress,
             amountPerContract,
             quoteAmountPerContract: qAmount,
+            // TODO -- we need to include writerTokenMintKey here and add it to this state
+            // otherwise you can't place a sell order after initializing the market until refreshing the page
+            // writerTokenMintKey
           }
 
           return marketData

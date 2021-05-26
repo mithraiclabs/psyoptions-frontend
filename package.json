@@ -49,7 +49,7 @@
     "@ledgerhq/hw-transport-webusb": "^5.48.0",
     "@material-ui/core": "^4.11.3",
     "@material-ui/icons": "^4.11.2",
-    "@mithraic-labs/psyoptions": "^0.3.0-rc1",
+    "@mithraic-labs/psyoptions": "^0.3.0",
     "@mithraic-labs/serum": "^0.0.3",
     "@project-serum/sol-wallet-adapter": "0.2.0",
     "@project-serum/tokens": "0.0.7",

@@ -18,7 +18,6 @@ import theme from '../../utils/theme'
 
 import useNotifications from '../../hooks/useNotifications'
 import useWallet from '../../hooks/useWallet'
-import useOptionsMarkets from '../../hooks/useOptionsMarkets'
 import useSerumMarketInfo from '../../hooks/useSerumMarketInfo'
 import { getStrikePrices } from '../../utils/getStrikePrices'
 import { getLastFridayOfMonths } from '../../utils/dates'
@@ -27,6 +26,7 @@ import { useOptionMarket } from '../../hooks/useOptionMarket'
 
 import ConnectButton from '../ConnectButton'
 import { ContractSizeSelector } from '../ContractSizeSelector'
+import { useInitializeMarkets } from '../../hooks/useInitializeMarkets'
 
 const darkBorder = `1px solid ${theme.palette.background.main}`
 
@@ -35,7 +35,7 @@ const expirations = getLastFridayOfMonths(10)
 const InitializeMarket = () => {
   const { pushNotification } = useNotifications()
   const { connected } = useWallet()
-  const { initializeMarkets } = useOptionsMarkets()
+  const initializeMarkets = useInitializeMarkets()
   const [multiple, setMultiple] = useState(false)
   const [basePrice, setBasePrice] = useState(0)
   const [date, setDate] = useState(expirations[0])
@@ -86,14 +86,14 @@ const InitializeMarket = () => {
         uAssetMint: uAsset.mintAddress,
         qAssetMint: qAsset.mintAddress,
         uAssetDecimals: uAsset.decimals,
-        qAssetDecimals: uAsset.decimals,
+        qAssetDecimals: qAsset.decimals,
         expiration: date.unix(),
       })
       setLoading(false)
     } catch (err) {
       setLoading(false)
       // TODO: display some meaningful error state to user
-      console.log(err)
+      console.error(err)
       pushNotification({
         severity: 'error',
         message: `${err}`,

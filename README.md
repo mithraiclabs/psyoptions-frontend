@@ -5,7 +5,7 @@ Copy `.env-example` and rename it `.env`
 OR run `touch .env` and add the following lines to it:
 
 ```
-DEVNET_PROGRAM_ID='4DvkJJBUiXMZVYXFGgYQvGceTuM7F5Be4HqWAiR7t2vM'
+DEVNET_PROGRAM_ID='6RX6shL4vRaTXWvwDFrh3rkXQGMfkZTY1zzoxE5ZTZ5p'
 DEVNET_DEX_PROGRAM_ID='DESVgJVGajEgKGXhb6XmqDHGz3VjdgP7rEVESBgxmroY'
 APP_ENABLED=true
 ```
@@ -54,8 +54,8 @@ Mint Address: BzwRWwr1kCLJVUUM14fQthP6FJKrGpXjw3ZHTZ6PQsYa
 
 ```
 Token Symbol: USDCT
-Faucet Address: BmaVN3Wut1k2MtrcsxjTn919GdBJ2gzVLTtbiybnAPnR
-Mint Address: HinfVnJuzMtJsyuLE2ArYCChDZB6FCxEu2p3CQeMcDiF
+Faucet Address: E6wQSMPGqHn7dqEMeWcSVfjdkwd8ED5CncQ9BtMNGtUG
+Mint Address: E6Z6zLzk8MWY3TY8E87mr88FhGowEPJTeMWzkqtL6qkF
 ```
 
 ### Example: To Airdrop PSYA Tokens

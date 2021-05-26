@@ -34,6 +34,7 @@ const useExerciseOpenPosition = (
         quoteAssetPoolKey: market.quoteAssetPoolKey,
         optionTokenKey: new PublicKey(exerciserContractTokenAddress),
         optionTokenAuthorityAccount: { publicKey: pubKey },
+        quoteAssetMintKey: market.quoteAssetMintKey,
       })
 
       const signed = await wallet.signTransaction(tx)

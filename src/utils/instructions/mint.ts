@@ -184,6 +184,8 @@ export const mintInstructions = async ({
           writerTokenMintKey: market.writerTokenMintKey,
           underlyingAssetPoolKey: market.underlyingAssetPoolKey,
           underlyingAssetSrcKey,
+          underlyingMintKey: market.underlyingAssetMintKey,
+          fundingAccountKey: authorityPubkey,
         })
 
         transaction.add(mintInstruction)

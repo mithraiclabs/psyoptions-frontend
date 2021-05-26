@@ -65,11 +65,6 @@ const getSerumMarketsByNetwork = (name) => {
           quoteAssetMint: 'So11111111111111111111111111111111111111112',
           marketAddress: '339KS1xbJLkfbF5ph3M9AbQpp1LnbPx6L2tReyQR5KD1',
         },
-        {
-          baseAssetMint: '2ShyNZqKffdYKMV6Pm8Ypcxj8GQwvFiAUkfTiyxq9v42',
-          quoteAssetMint: 'HinfVnJuzMtJsyuLE2ArYCChDZB6FCxEu2p3CQeMcDiF',
-          marketAddress: 'ChLBxZL8RjQ2DhyrZakuTN9nPNjQn23sN7k2fPsSGxuu',
-        },
       ]
     case networks[2].name:
       return TOKENS.testnet
@@ -110,7 +105,7 @@ const getAssetsByNetwork = (name) => {
         },
         {
           tokenSymbol: 'USDC',
-          mintAddress: 'HinfVnJuzMtJsyuLE2ArYCChDZB6FCxEu2p3CQeMcDiF',
+          mintAddress: 'E6Z6zLzk8MWY3TY8E87mr88FhGowEPJTeMWzkqtL6qkF',
           tokenName: 'USDC',
           icon:
             'https://raw.githubusercontent.com/trustwallet/assets/f3ffd0b9ae2165336279ce2f8db1981a55ce30f8/blockchains/ethereum/assets/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48/logo.png',

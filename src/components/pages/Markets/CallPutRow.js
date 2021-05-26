@@ -8,7 +8,6 @@ import Button from '@material-ui/core/Button'
 import moment from 'moment'
 
 import theme from '../../../utils/theme'
-import useOptionsMarkets from '../../../hooks/useOptionsMarkets'
 import useSerum from '../../../hooks/useSerum'
 import useWallet from '../../../hooks/useWallet'
 import useNotifications from '../../../hooks/useNotifications'
@@ -26,6 +25,7 @@ import {
 import { useOptionMarket } from '../../../hooks/useOptionMarket'
 
 import ConnectButton from '../../ConnectButton'
+import { useInitializeMarkets } from '../../../hooks/useInitializeMarkets'
 
 const TCell = withStyles({
   root: {
@@ -77,7 +77,7 @@ const CallPutRow = ({
   const { connected } = useWallet()
   const { pushNotification } = useNotifications()
   const { serumMarkets } = useSerum()
-  const { initializeMarkets } = useOptionsMarkets()
+  const initializeMarkets = useInitializeMarkets()
   const { orderbook: callOrderbook } = useSerumOrderbook(row.call?.serumKey)
   useSubscribeSerumOrderbook(row.call?.serumKey)
   const { orderbook: putOrderbook } = useSerumOrderbook(row.put?.serumKey)

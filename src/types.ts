@@ -35,6 +35,21 @@ export type OptionMarket = {
   writerTokenMintKey: PublicKey
   underlyingAssetPoolKey: PublicKey
   quoteAssetPoolKey: PublicKey
+  underlyingAssetMintKey: PublicKey
+}
+
+export type OptionMarketMeta = {
+  expiration: number
+  optionMarketAddress: string
+  optionContractMintAddress: string
+  optionWriterTokenMintAddress: string
+  quoteAssetMint: string
+  quoteAssetSymbol: string
+  underlyingAssetMint: string
+  underlyingAssetSymbol: string
+  underlyingAssetPerContract: string
+  quoteAssetPerContract: string
+  serumMarketAddress: string
 }
 
 export enum NotificationSeverity {

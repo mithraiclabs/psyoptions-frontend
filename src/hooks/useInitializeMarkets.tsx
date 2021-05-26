@@ -174,6 +174,7 @@ export const useInitializeMarkets = (): ((
               createdByMe: true,
               amountPerContract,
               quoteAmountPerContract: qAmount,
+              writerTokenMintKey,
             }
 
             return marketData

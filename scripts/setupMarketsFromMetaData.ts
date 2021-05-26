@@ -14,7 +14,7 @@ import { getSolanaConfig } from './helpers'
 const fs = require('fs')
 
 const OPTION_PROGRAM_ID = new PublicKey(
-  '6RX6shL4vRaTXWvwDFrh3rkXQGMfkZTY1zzoxE5ZTZ5p',
+  'CUmVnHnQZGjeCmiYcF6ZfKrJKJ8uEW79QCWuxNdjLUBn',
 )
 
 ;(async () => {

@@ -22,7 +22,7 @@ const FAUCET_PROGRAM_ID = new PublicKey(
   '4bXpkKSV8swHSnwqtzuboGPaPDeEgAn4Vt8GfarV5rZt',
 )
 const OPTION_PROGRAM_ID = new PublicKey(
-  '6RX6shL4vRaTXWvwDFrh3rkXQGMfkZTY1zzoxE5ZTZ5p',
+  'CUmVnHnQZGjeCmiYcF6ZfKrJKJ8uEW79QCWuxNdjLUBn',
 )
 const getPDA = () =>
   PublicKey.findProgramAddress([Buffer.from('faucet')], FAUCET_PROGRAM_ID)
@@ -80,7 +80,7 @@ const getFaucetAddressByMint = (mint: PublicKey) => {
 ;(async () => {
   const connection = new Connection('https://devnet.solana.com')
   const optionProgramKey = new PublicKey(
-    '6RX6shL4vRaTXWvwDFrh3rkXQGMfkZTY1zzoxE5ZTZ5p',
+    'CUmVnHnQZGjeCmiYcF6ZfKrJKJ8uEW79QCWuxNdjLUBn',
   )
   // The amount of contracts to mint
   const amountStr = process.argv[2]

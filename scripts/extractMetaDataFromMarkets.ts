@@ -6,7 +6,7 @@ import { Market as SerumMarket } from '@mithraic-labs/serum'
 const fs = require('fs')
 
 const OPTION_PROGRAM_ID = new PublicKey(
-  '6RX6shL4vRaTXWvwDFrh3rkXQGMfkZTY1zzoxE5ZTZ5p',
+  'CUmVnHnQZGjeCmiYcF6ZfKrJKJ8uEW79QCWuxNdjLUBn',
 )
 
 const DEX_PROGRAM_ID = new PublicKey(

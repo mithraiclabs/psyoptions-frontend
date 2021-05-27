@@ -100,8 +100,7 @@ const getAssetsByNetwork = (name) => {
           tokenSymbol: 'PSY',
           mintAddress: 'BzwRWwr1kCLJVUUM14fQthP6FJKrGpXjw3ZHTZ6PQsYa',
           tokenName: 'PSY Test',
-          icon:
-            'https://raw.githubusercontent.com/trustwallet/assets/08d734b5e6ec95227dc50efef3a9cdfea4c398a1/blockchains/ethereum/assets/0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984/logo.png',
+          icon: 'https://docs.psyoptions.io/img/PsyOps.svg',
         },
         {
           tokenSymbol: 'USDC',

@@ -16,6 +16,7 @@ import theme from '../utils/theme'
 import { SerumOrderbooksProvider } from './SerumOrderbookContext'
 import { SPLTokenMintsProvider } from './SPLTokenMintsContext'
 import { SerumOpenOrdersProvider } from './SerumOpenOrdersContext'
+import { ExpirationDateProvider } from './ExpirationDateContext'
 
 const _providers = [
   // eslint-disable-next-line react/no-children-prop
@@ -33,6 +34,7 @@ const _providers = [
   <SerumOrderbooksProvider />,
   <SerumOpenOrdersProvider />,
   <PasswordProvider />,
+  <ExpirationDateProvider />,
 ]
 
 // flatten context providers for simpler app component tree

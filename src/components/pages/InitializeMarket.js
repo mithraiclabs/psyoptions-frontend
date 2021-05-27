@@ -10,6 +10,7 @@ import {
   Switch,
   FormControlLabel,
   CircularProgress,
+  NoSsr,
 } from '@material-ui/core'
 import Done from '@material-ui/icons/Done'
 import Page from './Page'
@@ -20,7 +21,7 @@ import useNotifications from '../../hooks/useNotifications'
 import useWallet from '../../hooks/useWallet'
 import useSerumMarketInfo from '../../hooks/useSerumMarketInfo'
 import { getStrikePrices } from '../../utils/getStrikePrices'
-import { getLastFridayOfMonths } from '../../utils/dates'
+import useExpirationDate from '../../hooks/useExpirationDate'
 import useAssetList from '../../hooks/useAssetList'
 import { useOptionMarket } from '../../hooks/useOptionMarket'
 
@@ -30,15 +31,13 @@ import { useInitializeMarkets } from '../../hooks/useInitializeMarkets'
 
 const darkBorder = `1px solid ${theme.palette.background.main}`
 
-const expirations = getLastFridayOfMonths(10)
-
 const InitializeMarket = () => {
   const { pushNotification } = useNotifications()
   const { connected } = useWallet()
   const initializeMarkets = useInitializeMarkets()
   const [multiple, setMultiple] = useState(false)
   const [basePrice, setBasePrice] = useState(0)
-  const [date, setDate] = useState(expirations[0])
+  const { selectedDate, setSelectedDate, dates } = useExpirationDate()
   const { uAsset, qAsset, setUAsset } = useAssetList()
   const [size, setSize] = useState(1)
   const { marketPrice } = useSerumMarketInfo({
@@ -57,7 +56,7 @@ const InitializeMarket = () => {
     strikePrices = getStrikePrices(parsedBasePrice || marketPrice, 1, 0)
   }
   const market = useOptionMarket({
-    date: date.unix(),
+    date: selectedDate.unix(),
     uAssetSymbol: uAsset?.tokenSymbol,
     qAssetSymbol: qAsset?.tokenSymbol,
     size,
@@ -87,7 +86,7 @@ const InitializeMarket = () => {
         qAssetMint: qAsset.mintAddress,
         uAssetDecimals: uAsset.decimals,
         qAssetDecimals: qAsset.decimals,
-        expiration: date.unix(),
+        expiration: selectedDate.unix(),
       })
       setLoading(false)
     } catch (err) {
@@ -124,28 +123,31 @@ const InitializeMarket = () => {
           <Box p={2} borderBottom={darkBorder}>
             Expires On:
             <Box display="flex" flexWrap="wrap">
-              {expirations.map((moment) => {
-                const label = `${moment.format('ll')}`
-                const selected = moment === date
-                const onClick = () => setDate(moment)
-                return (
-                  <Chip
-                    key={label}
-                    clickable
-                    size="small"
-                    label={label}
-                    color="primary"
-                    onClick={onClick}
-                    onDelete={selected ? onClick : undefined}
-                    deleteIcon={selected ? <Done /> : undefined}
-                    variant={selected ? undefined : 'outlined'}
-                    style={{
-                      marginTop: theme.spacing(2),
-                      marginRight: theme.spacing(2),
-                    }}
-                  />
-                )
-              })}
+              <NoSsr>
+                {dates.map((d) => {
+                  const label = `${d.format('ll')}`
+                  const selected =
+                    d.toISOString() === selectedDate.toISOString()
+                  const onClick = () => setSelectedDate(d)
+                  return (
+                    <Chip
+                      key={label}
+                      clickable
+                      size="small"
+                      label={label}
+                      color="primary"
+                      onClick={onClick}
+                      onDelete={selected ? onClick : undefined}
+                      deleteIcon={selected ? <Done /> : undefined}
+                      variant={selected ? undefined : 'outlined'}
+                      style={{
+                        marginTop: theme.spacing(2),
+                        marginRight: theme.spacing(2),
+                      }}
+                    />
+                  )
+                })}
+              </NoSsr>
             </Box>
           </Box>
 

@@ -541,13 +541,17 @@ const BuySellDialog = ({
                           <BuyButton
                             parsedLimitPrice={parsedLimitPrice}
                             numberOfAsks={orderbook?.asks?.length || 0}
-                            qAssetSymbol={qAssetSymbol}
                             orderType={orderType}
                             orderCost={parsedLimitPrice.multipliedBy(
                               parsedOrderSize,
                             )}
                             parsedOrderSize={parsedOrderSize}
-                            qAssetBalance={qAssetBalance}
+                            qAssetSymbol={
+                              type === 'put' ? uAssetSymbol : qAssetSymbol
+                            }
+                            qAssetBalance={
+                              type === 'put' ? uAssetBalance : qAssetBalance
+                            }
                             onClick={handleBuyOrder}
                           />
                         </Box>

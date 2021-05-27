@@ -253,9 +253,13 @@ const Markets = () => {
         onClose={() => setBuySellDialogOpen(false)}
         round={round}
         precision={precision}
-        uAssetDecimals={uAsset?.decimals || 0}
-        qAssetDecimals={qAsset?.decimals || 0}
         date={date}
+        uAssetDecimals={
+          callPutData?.type === 'call' ? uAsset?.decimals : qAsset?.decimals
+        }
+        qAssetDecimals={
+          callPutData?.type === 'call' ? qAsset?.decimals : uAsset?.decimals
+        }
       />
       <Box
         display="flex"

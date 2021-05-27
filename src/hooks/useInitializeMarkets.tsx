@@ -108,12 +108,15 @@ export const useInitializeMarkets = (): ((
               .multipliedBy(new BigNumber(10).pow(qAssetDecimals))
               .toNumber()
 
+            const underlyingAssetMintKey = new PublicKey(uAssetMint)
+            const quoteAssetMintKey = new PublicKey(qAssetMint)
+
             // create and send transaction for initializing the option market
             const initializeMarketIx = await initializeMarketInstruction({
               programId: new PublicKey(endpoint.programId),
               fundingAccountKey: pubKey,
-              underlyingAssetMintKey: new PublicKey(uAssetMint),
-              quoteAssetMintKey: new PublicKey(qAssetMint),
+              underlyingAssetMintKey,
+              quoteAssetMintKey,
               optionMintKey,
               writerTokenMintKey,
               optionMarketKey,
@@ -160,7 +163,9 @@ export const useInitializeMarkets = (): ((
             })
 
             const marketData = {
-              key: `${expiration}-${uAssetSymbol}-${qAssetSymbol}-${qAmount.toString()}-${amountPerContract.toString()}`,
+              key: `${expiration}-${uAssetSymbol}-${qAssetSymbol}-${amountPerContract.toString()}-${amountPerContract.toString()}/${qAmount.toString()}`,
+              amountPerContract,
+              quoteAmountPerContract: qAmount,
               size: amountPerContract.toNumber(),
               strikePrice: qAmount.div(amountPerContract).toNumber(),
               uAssetSymbol,
@@ -169,12 +174,14 @@ export const useInitializeMarkets = (): ((
               qAssetMint,
               expiration,
               optionMarketDataAddress: optionMarketKey.toString(),
+              optionMarketKey,
               optionMintAddress: optionMintKey.toString(),
               optionMintKey,
-              createdByMe: true,
-              amountPerContract,
-              quoteAmountPerContract: qAmount,
               writerTokenMintKey,
+              underlyingAssetPoolKey,
+              underlyingAssetMintKey,
+              quoteAssetPoolKey,
+              quoteAssetMintKey,
             }
 
             return marketData

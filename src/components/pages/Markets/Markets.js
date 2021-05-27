@@ -7,9 +7,9 @@ import TableContainer from '@material-ui/core/TableContainer'
 import TableHead from '@material-ui/core/TableHead'
 import TableRow from '@material-ui/core/TableRow'
 import { withStyles } from '@material-ui/core/styles'
+import moment from 'moment'
 
 import theme from '../../../utils/theme'
-import { getLastFridayOfMonths } from '../../../utils/dates'
 import { getStrikePrices, intervals } from '../../../utils/getStrikePrices'
 import { getPriceFromSerumOrderbook } from '../../../utils/orderbook'
 
@@ -22,6 +22,7 @@ import {
   useSerumOrderbook,
   useSubscribeSerumOrderbook,
 } from '../../../hooks/Serum'
+import useExpirationDate from '../../../hooks/useExpirationDate'
 
 import Page from '../Page'
 import Select from '../../Select'
@@ -100,8 +101,6 @@ const rowTemplate = {
   },
 }
 
-const expirations = getLastFridayOfMonths(10)
-
 const USE_BONFIDA_MARK_PRICE = true
 
 const defaultContractSizes = {
@@ -111,7 +110,7 @@ const defaultContractSizes = {
 
 const Markets = () => {
   const { uAsset, qAsset, setUAsset, assetListLoading } = useAssetList()
-  const [date, setDate] = useState(expirations[0])
+  const { selectedDate: date, setSelectedDate, dates } = useExpirationDate()
   const [contractSize, setContractSize] = useState(100)
   const { chain, buildOptionsChain } = useOptionsChain()
   const { marketsLoading, fetchMarketData } = useOptionsMarkets()
@@ -285,10 +284,10 @@ const Markets = () => {
               <Select
                 variant="filled"
                 label="Expiration Date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                options={expirations.map((d) => ({
-                  value: d,
+                value={date.toISOString()}
+                onChange={(e) => setSelectedDate(moment.utc(e.target.value))}
+                options={dates.map((d) => ({
+                  value: d.toISOString(),
                   text: `${d.format('ll')} | 23:59:59 UTC`,
                 }))}
                 style={{

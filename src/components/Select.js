@@ -1,5 +1,11 @@
 import React from 'react'
-import { FormControl, InputLabel, Select, MenuItem } from '@material-ui/core'
+import {
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  NoSsr,
+} from '@material-ui/core'
 
 const Sel = (props) => {
   const { disabled, label, value, onChange, options } = props
@@ -15,7 +21,7 @@ const Sel = (props) => {
         {options
           ? options.map((option) => (
               <MenuItem key={option.text} value={option.value}>
-                {option.text}
+                <NoSsr>{option.text}</NoSsr>
               </MenuItem>
             ))
           : null}

@@ -1,14 +1,12 @@
-import {
-  Box,
-  Chip,
-  Dialog,
-  FilledInput,
-  withStyles,
-  Button,
-  CircularProgress,
-} from '@material-ui/core'
-import Done from '@material-ui/icons/Done'
 import React, { useState } from 'react'
+import Box from '@material-ui/core/Box'
+import Chip from '@material-ui/core/Chip'
+import Dialog from '@material-ui/core/Dialog'
+import FilledInput from '@material-ui/core/FilledInput'
+import { withStyles } from '@material-ui/core/styles'
+import Button from '@material-ui/core/Button'
+import CircularProgress from '@material-ui/core/CircularProgress'
+import Done from '@material-ui/icons/Done'
 import propTypes from 'prop-types'
 import BigNumber from 'bignumber.js'
 import { LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js'

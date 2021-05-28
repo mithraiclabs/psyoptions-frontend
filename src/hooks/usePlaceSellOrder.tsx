@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react'
 import { PublicKey, Transaction } from '@solana/web3.js'
-import { Link } from '@material-ui/core'
+import Link from '@material-ui/core/Link'
 
 import { SerumMarket } from 'src/utils/serum'
 import { OrderParams } from '@mithraic-labs/serum/lib/market'

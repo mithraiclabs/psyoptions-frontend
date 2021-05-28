@@ -3,7 +3,7 @@ import PropTypes from 'prop-types'
 import TableRow from '@material-ui/core/TableRow'
 import TableCell from '@material-ui/core/TableCell'
 import { withStyles } from '@material-ui/core/styles'
-import { CircularProgress } from '@material-ui/core'
+import CircularProgress from '@material-ui/core/CircularProgress'
 import Button from '@material-ui/core/Button'
 import moment from 'moment'
 

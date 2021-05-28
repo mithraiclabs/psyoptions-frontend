@@ -1,5 +1,7 @@
 import React from 'react'
-import { Dialog, Box, Button } from '@material-ui/core'
+import Dialog from '@material-ui/core/Dialog'
+import Box from '@material-ui/core/Box'
+import Button from '@material-ui/core/Button'
 import { makeStyles } from '@material-ui/core/styles'
 
 import wallets from '../utils/wallet/wallets'

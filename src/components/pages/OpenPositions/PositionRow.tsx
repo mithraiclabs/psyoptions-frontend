@@ -1,4 +1,4 @@
-import { Chip } from '@material-ui/core'
+import Chip from '@material-ui/core/Chip'
 import React, { useCallback, useState } from 'react'
 import Collapse from '@material-ui/core/Collapse'
 import Table from '@material-ui/core/Table'

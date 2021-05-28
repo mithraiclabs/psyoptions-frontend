@@ -1,6 +1,6 @@
 import React, { useContext, useCallback } from 'react'
 import BigNumber from 'bignumber.js'
-import { Link } from '@material-ui/core'
+import Link from '@material-ui/core/Link'
 import { Market } from '@mithraic-labs/psyoptions'
 
 import { Connection, PublicKey } from '@solana/web3.js'

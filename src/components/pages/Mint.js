@@ -1,6 +1,10 @@
 import React, { useEffect, useState, useMemo } from 'react'
 import Done from '@material-ui/icons/Done'
-import { Box, Paper, Button, Chip, CircularProgress } from '@material-ui/core'
+import Box from '@material-ui/core/Box'
+import Paper from '@material-ui/core/Paper'
+import Button from '@material-ui/core/Button'
+import Chip from '@material-ui/core/Chip'
+import CircularProgress from '@material-ui/core/CircularProgress'
 import * as Sentry from '@sentry/react'
 
 import SelectAsset from '../SelectAsset'

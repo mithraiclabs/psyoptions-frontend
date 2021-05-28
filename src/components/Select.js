@@ -1,11 +1,9 @@
 import React from 'react'
-import {
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  NoSsr,
-} from '@material-ui/core'
+import FormControl from '@material-ui/core/FormControl'
+import InputLabel from '@material-ui/core/InputLabel'
+import Select from '@material-ui/core/Select'
+import MenuItem from '@material-ui/core/MenuItem'
+import NoSsr from '@material-ui/core/NoSsr'
 
 const Sel = (props) => {
   const { disabled, label, value, onChange, options } = props

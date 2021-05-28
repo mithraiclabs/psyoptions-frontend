@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react'
 import { PublicKey } from '@solana/web3.js'
-import { Link } from '@material-ui/core'
+import Link from '@material-ui/core/Link'
 import { exerciseCoveredCall } from '@mithraic-labs/psyoptions'
 import useConnection from './useConnection'
 import useWallet from './useWallet'

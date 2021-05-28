@@ -1,4 +1,4 @@
-const MS_DELAY = 100
+const MS_DELAY = 250
 let count = 0
 
 const sleep = () => {

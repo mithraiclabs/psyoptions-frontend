@@ -1,4 +1,4 @@
-import { CircularProgress } from '@material-ui/core'
+import CircularProgress from '@material-ui/core/CircularProgress'
 import Box from '@material-ui/core/Box'
 import Button from '@material-ui/core/Button'
 import React, { useCallback, useState } from 'react'

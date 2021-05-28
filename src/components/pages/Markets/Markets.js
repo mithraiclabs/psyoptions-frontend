@@ -1,5 +1,7 @@
-import { Box, FormControlLabel, Switch } from '@material-ui/core'
 import React, { useState, useEffect, useMemo, useCallback } from 'react'
+import Box from '@material-ui/core/Box'
+import FormControlLabel from '@material-ui/core/FormControlLabel'
+import Switch from '@material-ui/core/Switch'
 import Table from '@material-ui/core/Table'
 import TableBody from '@material-ui/core/TableBody'
 import TableCell from '@material-ui/core/TableCell'

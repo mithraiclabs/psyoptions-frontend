@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react'
-import { Link } from '@material-ui/core'
+import Link from '@material-ui/core/Link'
 import { initializeTokenAccountTx } from '../utils/token'
 import useConnection from './useConnection'
 import useNotifications from './useNotifications'

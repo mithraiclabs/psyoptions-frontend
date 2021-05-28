@@ -4,7 +4,7 @@ import Snackbar from '@material-ui/core/Snackbar'
 import IconButton from '@material-ui/core/IconButton'
 import CloseIcon from '@material-ui/icons/Close'
 
-import { Box } from '@material-ui/core'
+import Box from '@material-ui/core/Box'
 import useNotifications from '../hooks/useNotifications'
 import theme from '../utils/theme'
 

@@ -1,5 +1,7 @@
 import React, { useState } from 'react'
-import { Box, Button, TextField } from '@material-ui/core'
+import Box from '@material-ui/core/Box'
+import Button from '@material-ui/core/Button'
+import TextField from '@material-ui/core/TextField'
 import { makeStyles, ThemeProvider } from '@material-ui/core/styles'
 
 import usePassword from '../../hooks/usePassword'

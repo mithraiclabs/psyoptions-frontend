@@ -1,3 +1,4 @@
+const { ContextReplacementPlugin } = require('webpack')
 const nodeExternals = require('webpack-node-externals')
 const NodePolyfillPlugin = require('node-polyfill-webpack-plugin')
 const WebpackAssetsManifest = require('webpack-assets-manifest')
@@ -104,6 +105,7 @@ module.exports = [
       ],
     },
     plugins: [
+      new ContextReplacementPlugin(/moment[/\\]locale$/, /en/),
       new NodePolyfillPlugin(),
       new WebpackAssetsManifest({}),
       new BundleAnalyzerPlugin({

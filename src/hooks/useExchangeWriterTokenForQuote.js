@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react'
 import { exchangeWriterTokenForQuoteInstruction } from '@mithraic-labs/psyoptions'
-import { Link } from '@material-ui/core'
+import Link from '@material-ui/core/Link'
 import { PublicKey, Transaction } from '@solana/web3.js'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import useNotifications from './useNotifications'

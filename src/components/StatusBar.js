@@ -6,8 +6,8 @@ import Hidden from '@material-ui/core/Hidden'
 import IconButton from '@material-ui/core/IconButton'
 import Menu from '@material-ui/icons/Menu'
 import SwipeableDrawer from '@material-ui/core/SwipeableDrawer'
+import NoSsr from '@material-ui/core/NoSsr'
 
-import { NoSsr } from '@material-ui/core'
 import WalletStatus from './WalletStatus'
 import NetworkMenu from './NetworkMenu'
 

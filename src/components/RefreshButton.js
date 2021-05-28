@@ -1,6 +1,8 @@
 import React from 'react'
 import { func, bool } from 'prop-types'
-import { Button, CircularProgress, Box } from '@material-ui/core'
+import Button from '@material-ui/core/Button'
+import CircularProgress from '@material-ui/core/CircularProgress'
+import Box from '@material-ui/core/Box'
 import Refresh from '@material-ui/icons/Refresh'
 
 const RefreshButton = ({ loading, onRefresh }) => {

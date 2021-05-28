@@ -1,12 +1,11 @@
-import {
-  Box,
-  withStyles,
-  Table,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableBody,
-} from '@material-ui/core'
+import Box from '@material-ui/core/Box'
+import { withStyles } from '@material-ui/core/styles'
+import Table from '@material-ui/core/Table'
+import TableHead from '@material-ui/core/TableHead'
+import TableRow from '@material-ui/core/TableRow'
+import TableCell from '@material-ui/core/TableCell'
+import TableBody from '@material-ui/core/TableBody'
+
 import React, { memo } from 'react'
 import propTypes from 'prop-types'
 import theme from '../utils/theme'
@@ -52,8 +51,7 @@ const OrderBook = memo(
     const maxRows = 8
     let i = 0
     while (
-      rows.length < maxRows &&
-      rows.length < bids.length ||
+      (rows.length < maxRows && rows.length < bids.length) ||
       rows.length < asks.length ||
       rows.length < minRows
     ) {

@@ -1,16 +1,13 @@
 import React, { useState } from 'react'
-import {
-  Dialog,
-  Chip,
-  Box,
-  TextField,
-  ListItem,
-  ListItemAvatar,
-  Avatar,
-  ListItemText,
-  useTheme,
-  withStyles,
-} from '@material-ui/core'
+import Dialog from '@material-ui/core/Dialog'
+import Chip from '@material-ui/core/Chip'
+import Box from '@material-ui/core/Box'
+import TextField from '@material-ui/core/TextField'
+import ListItem from '@material-ui/core/ListItem'
+import ListItemAvatar from '@material-ui/core/ListItemAvatar'
+import Avatar from '@material-ui/core/Avatar'
+import ListItemText from '@material-ui/core/ListItemText'
+import { useTheme, withStyles } from '@material-ui/core/styles'
 import KeyboardArrowDown from '@material-ui/icons/KeyboardArrowDown'
 import { debounce } from 'throttle-debounce'
 

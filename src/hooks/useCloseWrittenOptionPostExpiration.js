@@ -39,7 +39,7 @@ export const useCloseWrittenOptionPostExpiration = (
     try {
       let remaining = contractsToClose
       const closeTxs = []
-
+      
       while (remaining > 0) {
         const transaction = new Transaction()
         const signers = []

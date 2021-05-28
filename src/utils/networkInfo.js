@@ -88,6 +88,7 @@ const getAssetsByNetwork = (name) => {
           tokenName: 'Solana',
           icon:
             'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/solana/info/logo.png',
+          decimals: 9,
         },
         {
           tokenSymbol: 'BTC',
@@ -95,12 +96,14 @@ const getAssetsByNetwork = (name) => {
           tokenName: 'Bitcoin',
           icon:
             'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/bitcoin/info/logo.png',
+          decimals: 9,
         },
         {
           tokenSymbol: 'PSY',
           mintAddress: 'BzwRWwr1kCLJVUUM14fQthP6FJKrGpXjw3ZHTZ6PQsYa',
           tokenName: 'PSY Test',
           icon: 'https://docs.psyoptions.io/img/PsyOps.svg',
+          decimals: 9,
         },
         {
           tokenSymbol: 'USDC',
@@ -108,6 +111,7 @@ const getAssetsByNetwork = (name) => {
           tokenName: 'USDC',
           icon:
             'https://raw.githubusercontent.com/trustwallet/assets/f3ffd0b9ae2165336279ce2f8db1981a55ce30f8/blockchains/ethereum/assets/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48/logo.png',
+          decimals: 2,
         },
       ]
     case networks[2].name:

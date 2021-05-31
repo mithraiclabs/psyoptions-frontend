@@ -12,13 +12,15 @@ import WalletStatus from './WalletStatus'
 import NetworkMenu from './NetworkMenu'
 
 import theme from '../utils/theme'
-
 import logo from '../../assets/psyoptions-logo-light.png'
+
+import useConnection from '../hooks/useConnection'
 
 const { INITIALIZE_PAGE_ENABLED } = process.env
 
 const NavOptions = React.memo(() => {
   const history = useHistory()
+  const { endpoint } = useConnection()
 
   return (
     <>
@@ -71,6 +73,19 @@ const NavOptions = React.memo(() => {
           Open Positions
         </Button>
       </Box>
+      {endpoint?.name === 'Devnet' && (
+        <Box mx={2}>
+          <Button
+            href="/faucets"
+            onClick={(e) => {
+              e.preventDefault()
+              history.push('/faucets')
+            }}
+          >
+            Faucets
+          </Button>
+        </Box>
+      )}
       <Box mx={2}>
         <Button
           href="https://docs.psyoptions.io/"

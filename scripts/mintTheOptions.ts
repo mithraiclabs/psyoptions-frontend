@@ -11,58 +11,15 @@ import { Market, mintCoveredCallInstruction } from '@mithraic-labs/psyoptions'
 import BN from 'bn.js'
 import { getSolanaConfig } from './helpers'
 
+import { buildAirdropTokensIx } from '../src/utils/airdropInstructions'
+
 const fs = require('fs')
 
 const MAX_MINTS_PER_TX = 40
 
-const SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID = new PublicKey(
-  'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL',
-)
-const FAUCET_PROGRAM_ID = new PublicKey(
-  '4bXpkKSV8swHSnwqtzuboGPaPDeEgAn4Vt8GfarV5rZt',
-)
 const OPTION_PROGRAM_ID = new PublicKey(
   'GDvqQy3FkDB2wyNwgZGp5YkmRMUmWbhNNWDMYKbLSZ5N',
 )
-const getPDA = () =>
-  PublicKey.findProgramAddress([Buffer.from('faucet')], FAUCET_PROGRAM_ID)
-
-const buildAirdropTokensIx = async (
-  amount: BN,
-  adminPubkey: PublicKey,
-  tokenMintPublicKey: PublicKey,
-  destinationAccountPubkey: PublicKey,
-  faucetPubkey: PublicKey,
-) => {
-  const pubkeyNonce = await getPDA()
-
-  const keys = [
-    { pubkey: pubkeyNonce[0], isSigner: false, isWritable: false },
-    {
-      pubkey: tokenMintPublicKey,
-      isSigner: false,
-      isWritable: true,
-    },
-    { pubkey: destinationAccountPubkey, isSigner: false, isWritable: true },
-    { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
-    { pubkey: faucetPubkey, isSigner: false, isWritable: false },
-  ]
-
-  if (adminPubkey) {
-    keys.push({
-      pubkey: adminPubkey,
-      isSigner: true,
-      isWritable: false,
-    })
-  }
-
-  return new TransactionInstruction({
-    programId: FAUCET_PROGRAM_ID,
-    data: Buffer.from([1, ...amount.toArray('le', 8)]),
-    keys,
-  })
-}
-
 const getFaucetAddressByMint = (mint: PublicKey) => {
   switch (mint.toString()) {
     case 'E6Z6zLzk8MWY3TY8E87mr88FhGowEPJTeMWzkqtL6qkF':
@@ -123,9 +80,8 @@ const getFaucetAddressByMint = (mint: PublicKey) => {
       console.log('Error creating option token account:\n', error)
     }
     // - get the associated underlying asset account for the payer
-    const associatedUnderlyingTokenAccount = await underlyingToken.getOrCreateAssociatedAccountInfo(
-      payer.publicKey,
-    )
+    const associatedUnderlyingTokenAccount =
+      await underlyingToken.getOrCreateAssociatedAccountInfo(payer.publicKey)
     console.log(
       '* associatedUnderlyingAccount',
       associatedUnderlyingTokenAccount.address.toString(),

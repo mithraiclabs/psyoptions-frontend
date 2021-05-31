@@ -58,6 +58,9 @@ const {
   SHORT_SHA,
   TAG_NAME,
   SENTRY_ENVIRONMENT,
+  DEVNET_FAUCET_USDC,
+  DEVNET_FAUCET_BTC,
+  DEVNET_FAUCET_PSY,
 } = process.env
 
 server.use((req, res) => {
@@ -90,6 +93,9 @@ server.use((req, res) => {
         SHORT_SHA,
         TAG_NAME,
         SENTRY_ENVIRONMENT,
+        DEVNET_FAUCET_USDC,
+        DEVNET_FAUCET_BTC,
+        DEVNET_FAUCET_PSY,
       }
     } else {
       app = <LandingComingSoon />

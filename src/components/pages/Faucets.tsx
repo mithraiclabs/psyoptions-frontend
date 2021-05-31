@@ -6,19 +6,20 @@ import Box from '@material-ui/core/Box'
 import Paper from '@material-ui/core/Paper'
 import Button from '@material-ui/core/Button'
 import Avatar from '@material-ui/core/Avatar'
-
-import useOwnedTokenAccounts from '../../hooks/useOwnedTokenAccounts'
-import useNotifications from '../../hooks/useNotifications'
-import useWallet from '../../hooks/useWallet'
-import useAssetList from '../../hooks/useAssetList'
+import Link from '@material-ui/core/Link'
 
 import theme from '../../utils/theme'
 import Page from './Page'
 import ConnectButton from '../ConnectButton'
 
-import { buildAirdropTokensIx } from '../../utils/airdropInstructions'
-import { initializeTokenAccountTx } from '../../utils/token'
+import useOwnedTokenAccounts from '../../hooks/useOwnedTokenAccounts'
+import useNotifications from '../../hooks/useNotifications'
+import useWallet from '../../hooks/useWallet'
+import useAssetList from '../../hooks/useAssetList'
 import useConnection from '../../hooks/useConnection'
+import { buildAirdropTokensIx } from '../../utils/airdropInstructions'
+import { createAssociatedTokenAccountInstruction } from '../../utils/instructions/token'
+import { buildSolanaExplorerUrl } from '../../utils/solanaExplorer'
 
 const darkBorder = `1px solid ${(theme.palette.background as any).main}`
 
@@ -41,7 +42,11 @@ const Faucets = () => {
   const { connected, wallet, pubKey } = useWallet()
   const { connection } = useConnection()
   const { supportedAssets: assets } = useAssetList()
-  const { ownedTokenAccounts: accounts } = useOwnedTokenAccounts()
+  const {
+    ownedTokenAccounts: accounts,
+    subscribeToTokenAccount,
+    refreshTokenAccounts,
+  } = useOwnedTokenAccounts()
 
   const [loadingBTC, setLoadingBTC] = useState(false)
   const [loadingPSY, setLoadingPSY] = useState(false)
@@ -76,69 +81,70 @@ const Faucets = () => {
     message,
   ) => {
     try {
-      let receivingAccount = existingAccount
-      const txes = []
+      let isNewAccount = false
+      let receivingAccountPublicKey = existingAccount?.pubKey
+      const tx = new Transaction()
       const mintPublicKey = new PublicKey(asset.mintAddress)
 
-      const recentBlockhash = (await connection.getRecentBlockhash('max'))
-        .blockhash
-
       if (!existingAccount) {
-        // TODO - this isn't working, error is "cannot read property toString of undefined"
-        console.log({
-          connection,
-          payer: { publicKey: pubKey },
-          mintPublicKey,
-          owner: pubKey,
-        })
-        // Create account transaction
-        const { transaction, newTokenAccount } = await initializeTokenAccountTx(
-          {
-            connection,
-            payer: { publicKey: pubKey },
-            mintPublicKey,
+        const [ix, associatedTokenPublicKey] =
+          await createAssociatedTokenAccountInstruction({
+            payer: pubKey,
             owner: pubKey,
-          } as any,
-        )
-        transaction.recentBlockhash = recentBlockhash
-        transaction.feePayer = pubKey
-        receivingAccount = newTokenAccount
-        txes.push(transaction)
+            mintPublicKey,
+          })
+        tx.add(ix)
+        receivingAccountPublicKey = associatedTokenPublicKey
+        isNewAccount = true
       }
 
       const amountToDrop = new BN(amount).mul(
         new BN(10).pow(new BN(asset.decimals)),
       )
 
-      const airdropTx = new Transaction()
-      const ix = await buildAirdropTokensIx(
+      const airdropIx = await buildAirdropTokensIx(
         amountToDrop,
-        undefined, // admin key
-        mintPublicKey, // asset mint public key
-        receivingAccount.pubKey, // destination public key
-        new PublicKey(asset.faucetAddress), // Faucet public key
+        undefined, // admin key, not needed
+        mintPublicKey,
+        receivingAccountPublicKey,
+        new PublicKey(asset.faucetAddress),
       )
-      airdropTx.add(ix)
-      airdropTx.feePayer = pubKey
-      airdropTx.recentBlockhash = recentBlockhash
-      txes.push(airdropTx)
+      tx.add(airdropIx)
 
-      await wallet.signAllTransactions(txes)
+      const recentBlockhash = (await connection.getRecentBlockhash('max'))
+        .blockhash
+      tx.recentBlockhash = recentBlockhash
+      tx.feePayer = pubKey
+
+      const signed = await wallet.signTransaction(tx)
+      const txid = await connection.sendRawTransaction(signed.serialize())
 
       pushNotification({
         severity: 'info',
         message: `Processing: ${message}`,
+        link: (
+          <Link href={buildSolanaExplorerUrl(txid)} target="_new">
+            View on Solana Explorer
+          </Link>
+        ),
       })
 
-      txes.forEach(async (tx) => {
-        const txid = await connection.sendRawTransaction(tx.serialize())
-        await connection.confirmTransaction(txid)
-      })
+      await connection.confirmTransaction(txid)
 
       pushNotification({
         severity: 'success',
         message: `Confirmed: ${message}`,
+        link: (
+          <Link href={buildSolanaExplorerUrl(txid)} target="_new">
+            View on Solana Explorer
+          </Link>
+        ),
       })
+
+      if (isNewAccount) {
+        subscribeToTokenAccount(receivingAccountPublicKey)
+        refreshTokenAccounts()
+      }
     } catch (err) {
       console.error(err)
       pushNotification({
@@ -167,7 +173,7 @@ const Faucets = () => {
 
   const handleClaimPSY = async () => {
     setLoadingPSY(true)
-    await createAccountsAndAirdrop(BTC, btcAccount, 1000, 'Claim 1,000 PSY')
+    await createAccountsAndAirdrop(PSY, psyAccount, 1000, 'Claim 1,000 PSY')
     setLoadingPSY(false)
   }
 

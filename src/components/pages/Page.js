@@ -30,4 +30,8 @@ const Page = ({ children, background }) => (
   </>
 )
 
+Page.defaultProps = {
+  background: undefined,
+}
+
 export default React.memo(Page)

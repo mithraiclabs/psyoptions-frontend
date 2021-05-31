@@ -13,13 +13,11 @@ import InitializeMarket from './pages/InitializeMarket'
 import OpenPositions from './pages/OpenPositions'
 import History from './pages/History'
 import Markets from './pages/Markets'
+import Faucets from './pages/Faucets'
 import NotFound from './pages/NotFound'
 
-const {
-  INITIALIZE_PAGE_ENABLED,
-  APP_PASSWORD_PROTECTED,
-  APP_PASSWORD,
-} = process.env
+const { INITIALIZE_PAGE_ENABLED, APP_PASSWORD_PROTECTED, APP_PASSWORD } =
+  process.env
 
 const Router = isBrowser ? BrowserRouter : StaticRouter
 
@@ -72,6 +70,9 @@ const Routes = (props) => {
         </Route>
         <Route exact path="/open-positions">
           <OpenPositions />
+        </Route>
+        <Route exact path="/faucets">
+          <Faucets />
         </Route>
         <Route exact path="/history">
           <History />

@@ -81,7 +81,6 @@ const Faucets = () => {
     message,
   ) => {
     try {
-      let isNewAccount = false
       let receivingAccountPublicKey = existingAccount?.pubKey
       const tx = new Transaction()
       const mintPublicKey = new PublicKey(asset.mintAddress)
@@ -95,7 +94,7 @@ const Faucets = () => {
           })
         tx.add(ix)
         receivingAccountPublicKey = associatedTokenPublicKey
-        isNewAccount = true
+        subscribeToTokenAccount(receivingAccountPublicKey)
       }
 
       const amountToDrop = new BN(amount).mul(
@@ -140,11 +139,6 @@ const Faucets = () => {
           </Link>
         ),
       })
-
-      if (isNewAccount) {
-        subscribeToTokenAccount(receivingAccountPublicKey)
-        refreshTokenAccounts()
-      }
     } catch (err) {
       console.error(err)
       pushNotification({

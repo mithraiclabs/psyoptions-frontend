@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { useQuery } from 'urql'
+import { useSerumContext } from '../../context/SerumContext'
 import { ChainRow } from '../useOptionsChain'
 
 const query = `query chainMarkets($serumMarketIds: [String!]) {
@@ -11,27 +12,31 @@ const query = `query chainMarkets($serumMarketIds: [String!]) {
   }
 }`
 
+// TODO refactor serumMarket.marketAddress to public key
 export const useChainMarketData = (chain: ChainRow[] | undefined): any => {
+  const { serumMarkets } = useSerumContext()
   const serumMarketIds = useMemo(
     () =>
       chain?.reduce((acc, chainRow) => {
-        if (chainRow?.call?.serumKey) {
-          acc.push(chainRow.call.serumKey)
+        const callMarketMeta = serumMarkets[chainRow?.call?.serumKey]
+        const putMarketMeta = serumMarkets[chainRow?.put?.serumKey]
+        if (callMarketMeta?.serumMarket?.marketAddress) {
+          acc.push(callMarketMeta.serumMarket.marketAddress.toString())
         }
-        if (chainRow?.put?.serumKey) {
-          acc.push(chainRow.put.serumKey)
+        if (putMarketMeta?.serumMarket?.marketAddress) {
+          acc.push(putMarketMeta.serumMarket.marketAddress.toString())
         }
         return acc
       }, []) ?? '[]',
-    [chain],
+    [chain, serumMarkets],
   )
 
-  const [result] = useQuery({
+  const [{ data }] = useQuery({
     query,
     variables: {
       serumMarketIds,
     },
   })
-  // TODO remove and handle response
-  console.log('Result ', result, serumMarketIds)
+
+  return data
 }

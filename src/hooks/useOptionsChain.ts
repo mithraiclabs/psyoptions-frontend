@@ -20,7 +20,7 @@ type OptionRow = OptionMarket & {
   reciprocalFraction: string
 }
 
-type ChainRow = {
+export type ChainRow = {
   strike: BigNumber
   size: string
   key: string

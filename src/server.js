@@ -14,9 +14,15 @@ import Template from './components/server/template'
 
 const bundleFilename = 'public/bundle.js'
 let manifest = {}
+let serviceWorkerManifest = {}
 try {
   manifest = JSON.parse(
     fs.readFileSync(path.join(process.cwd(), 'dist', 'assets-manifest.json')),
+  )
+  serviceWorkerManifest = JSON.parse(
+    fs.readFileSync(
+      path.join(process.cwd(), 'dist', 'service-worker-manifest.json'),
+    ),
   )
 } catch (err) {
   manifest['main.js'] = bundleFilename
@@ -38,8 +44,8 @@ server.use(cookieParser())
 server.use('/public', express.static('dist/public'))
 
 // Service worker can't be in the public folder
-server.get('/rate-limited-fetch-worker.js', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'rate-limited-fetch-worker.js'))
+server.get(/rate-limited-fetch-worker/, (req, res) => {
+  res.sendFile(path.join(__dirname, serviceWorkerManifest['main.js']))
 })
 
 const {

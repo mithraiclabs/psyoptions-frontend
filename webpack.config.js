@@ -140,7 +140,12 @@ module.exports = [
       extensions: ['.ts', '.tsx', '.js'],
     },
     output: {
-      filename: 'public/rate-limited-fetch-worker.js',
+      filename: 'public/rate-limited-fetch-worker.[contenthash].js',
     },
+    plugins: [
+      new WebpackAssetsManifest({
+        output: 'service-worker-manifest.json',
+      }),
+    ],
   },
 ]

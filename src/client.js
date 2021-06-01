@@ -11,8 +11,7 @@ import App from './components/App'
 if (process.env.NODE_ENV === 'production') {
   Sentry.init({
     environment: process.env.SENTRY_ENVIRONMENT,
-    dsn:
-      'https://f01c872e3d354a7ebcb3face8a11728e@o540422.ingest.sentry.io/5658746',
+    dsn: 'https://f01c872e3d354a7ebcb3face8a11728e@o540422.ingest.sentry.io/5658746',
     integrations: [new Integrations.BrowserTracing()],
     release: `${process.env.SHORT_SHA}${
       (process.env.TAG_NAME && `:${process.env.TAG_NAME}`) || ''
@@ -27,7 +26,9 @@ if (process.env.NODE_ENV === 'production') {
 const run = async () => {
   try {
     if (navigator?.serviceWorker) {
-      await navigator.serviceWorker.register('/rate-limited-fetch-worker.js')
+      await navigator.serviceWorker.register(
+        `/${window.process.env.SERVICE_WORKER}`,
+      )
     }
   } catch (err) {
     Sentry.captureException(err)

@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import BN from 'bn.js'
-import { PublicKey, Transaction } from '@solana/web3.js'
+import { PublicKey, Transaction, LAMPORTS_PER_SOL } from '@solana/web3.js'
 import CircularProgress from '@material-ui/core/CircularProgress'
 import Box from '@material-ui/core/Box'
 import Paper from '@material-ui/core/Paper'
@@ -39,7 +39,7 @@ const LoadingAirdrop = () => (
 
 const Faucets = () => {
   const { pushNotification } = useNotifications()
-  const { connected, wallet, pubKey } = useWallet()
+  const { balance: solBalance, connected, wallet, pubKey } = useWallet()
   const { connection } = useConnection()
   const { supportedAssets: assets } = useAssetList()
   const {
@@ -51,6 +51,7 @@ const Faucets = () => {
   const [loadingBTC, setLoadingBTC] = useState(false)
   const [loadingPSY, setLoadingPSY] = useState(false)
   const [loadingUSDC, setLoadingUSDC] = useState(false)
+  const [loadingSOL, setLoadingSOL] = useState(false)
 
   const BTC = {
     ...(assets.find((a) => a.tokenSymbol === 'BTC') || {}),
@@ -74,6 +75,12 @@ const Faucets = () => {
     ? usdcAccount.amount * 10 ** -USDC.decimals
     : 0
 
+  const handleClaimSOL = async () => {
+    setLoadingSOL(true)
+    await connection.requestAirdrop(pubKey, 10 * LAMPORTS_PER_SOL)
+    setLoadingSOL(false)
+  }
+
   const createAccountsAndAirdrop = async (
     asset,
     existingAccount,
@@ -86,12 +93,14 @@ const Faucets = () => {
       const mintPublicKey = new PublicKey(asset.mintAddress)
 
       if (!existingAccount) {
-        const [ix, associatedTokenPublicKey] =
-          await createAssociatedTokenAccountInstruction({
-            payer: pubKey,
-            owner: pubKey,
-            mintPublicKey,
-          })
+        const [
+          ix,
+          associatedTokenPublicKey,
+        ] = await createAssociatedTokenAccountInstruction({
+          payer: pubKey,
+          owner: pubKey,
+          mintPublicKey,
+        })
         tx.add(ix)
         receivingAccountPublicKey = associatedTokenPublicKey
         subscribeToTokenAccount(receivingAccountPublicKey)
@@ -197,6 +206,34 @@ const Faucets = () => {
           </Box>
           {connected ? (
             <>
+              <Box
+                p={2}
+                display="flex"
+                flexDirection="row"
+                justifyContent="space-between"
+                style={{ borderTop: darkBorder }}
+              >
+                <Box flexDirection="row" display="flex" alignItems="center">
+                  <Avatar src="https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/solana/info/logo.png" />
+                  <Box px={2}>
+                    Devnet SOL
+                    <br />
+                    Balance: {(solBalance / LAMPORTS_PER_SOL).toFixed(2)}
+                  </Box>
+                </Box>
+                {loadingSOL ? (
+                  <LoadingAirdrop />
+                ) : (
+                  <Button
+                    style={{ width: '160px' }}
+                    color="primary"
+                    variant="outlined"
+                    onClick={handleClaimSOL}
+                  >
+                    Claim 10 SOL
+                  </Button>
+                )}
+              </Box>
               <Box
                 p={2}
                 display="flex"

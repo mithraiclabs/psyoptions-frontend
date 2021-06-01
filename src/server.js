@@ -102,6 +102,9 @@ server.use((req, res) => {
         DEVNET_FAUCET_USDC,
         DEVNET_FAUCET_BTC,
         DEVNET_FAUCET_PSY,
+        SERVICE_WORKER: serviceWorkerManifest['main.js'].match(
+          /rate-limited-fetch-worker.*/,
+        )[0],
       }
     } else {
       app = <LandingComingSoon />

@@ -36,6 +36,11 @@ self.addEventListener('fetch', (event) => {
     )
   }
 })
+// eslint-disable-next-line
+self.addEventListener('install', () => {
+  // eslint-disable-next-line
+  self.skipWaiting()
+})
 
 // eslint-disable-next-line
 self.addEventListener('activate', (event) => {

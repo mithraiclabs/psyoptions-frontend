@@ -4,11 +4,9 @@ import FormControlLabel from '@material-ui/core/FormControlLabel'
 import Switch from '@material-ui/core/Switch'
 import Table from '@material-ui/core/Table'
 import TableBody from '@material-ui/core/TableBody'
-import TableCell from '@material-ui/core/TableCell'
 import TableContainer from '@material-ui/core/TableContainer'
 import TableHead from '@material-ui/core/TableHead'
 import TableRow from '@material-ui/core/TableRow'
-import { withStyles } from '@material-ui/core/styles'
 import moment from 'moment'
 
 import theme from '../../../utils/theme'
@@ -32,51 +30,12 @@ import SelectAsset from '../../SelectAsset'
 import CallPutRow from './CallPutRow'
 import BuySellDialog from '../../BuySellDialog'
 import Loading from '../../Loading'
-import RefreshButton from '../../RefreshButton'
 import OpenOrders from '../../OpenOrders'
 import { ContractSizeSelector } from '../../ContractSizeSelector'
 
+import { TCellLoading, THeadCell, TCellStrike } from './styles'
+
 const dblsp = `${'\u00A0'}${'\u00A0'}`
-
-const THeadCell = withStyles({
-  root: {
-    padding: '4px',
-    whiteSpace: 'nowrap',
-    fontSize: '14px',
-    height: '48px',
-    border: 'none',
-  },
-})(TableCell)
-
-const THeadCellStrike = withStyles({
-  root: {
-    padding: '4px',
-    whiteSpace: 'nowrap',
-    fontSize: '14px',
-    height: '48px',
-    border: 'none',
-  },
-})(TableCell)
-
-const TCellLoading = withStyles({
-  root: {
-    padding: '16px',
-    whiteSpace: 'nowrap',
-    height: '48px',
-    border: 'none',
-  },
-})(TableCell)
-
-const TCellStrike = withStyles({
-  root: {
-    padding: '16px',
-    whiteSpace: 'nowrap',
-    fontSize: '14px',
-    height: '48px',
-    border: 'none',
-    background: theme.palette.background.default,
-  },
-})(TableCell)
 
 const rowTemplate = {
   call: {
@@ -115,7 +74,7 @@ const Markets = () => {
   const { selectedDate: date, setSelectedDate, dates } = useExpirationDate()
   const [contractSize, setContractSize] = useState(100)
   const { chain, buildOptionsChain } = useOptionsChain()
-  const { marketsLoading, fetchMarketData } = useOptionsMarkets()
+  const { marketsLoading } = useOptionsMarkets()
   const { serumMarkets, fetchSerumMarket } = useSerum()
   const [round, setRound] = useState(true)
   const [buySellDialogOpen, setBuySellDialogOpen] = useState(false)
@@ -215,7 +174,7 @@ const Markets = () => {
   useEffect(() => {
     // Load serum markets when the options chain changes
     // Only if they don't already exist for the matching call/put
-    chain.forEach(({ call, put }) => {
+    filteredChain.forEach(({ call, put }) => {
       if (call?.serumKey && !serumMarkets[call.serumKey]) {
         fetchSerumMarket(...call.serumKey.split('-'))
       }
@@ -223,7 +182,7 @@ const Markets = () => {
         fetchSerumMarket(...put.serumKey.split('-'))
       }
     })
-  }, [chain, fetchSerumMarket, serumMarkets])
+  }, [filteredChain, fetchSerumMarket, serumMarkets])
 
   // Open buy/sell/mint modal
   const handleBuySellClick = useCallback((callOrPut) => {
@@ -334,23 +293,14 @@ const Markets = () => {
           </Box>
         </Box>
         <Box position="relative">
-          <Box
-            position="absolute"
-            zIndex={5}
-            right={['16px', '16px', '1px']}
-            top={'8px'}
-            bgcolor={theme.palette.background.default}
-          >
-            <RefreshButton
-              loading={fullPageLoading}
-              onRefresh={fetchMarketData}
-            />
-          </Box>
           <TableContainer>
             <Table stickyHeader aria-label="sticky table">
               <TableHead>
                 <TableRow>
-                  <TableCell colSpan={8}>
+                  <THeadCell
+                    colSpan={8}
+                    style={{ borderTop: 'none', padding: '16px 20px' }}
+                  >
                     <h3 style={{ margin: 0 }}>
                       {`Calls${
                         uAsset && qAsset && !assetListLoading
@@ -358,9 +308,12 @@ const Markets = () => {
                           : ''
                       }`}
                     </h3>
-                  </TableCell>
-                  <TableCell colSpan={1} />
-                  <TableCell colSpan={8}>
+                  </THeadCell>
+                  <TCellStrike colSpan={1} />
+                  <THeadCell
+                    colSpan={8}
+                    style={{ borderTop: 'none', padding: '16px 20px' }}
+                  >
                     <h3 style={{ margin: 0 }}>
                       {`Puts${
                         uAsset && qAsset && !assetListLoading
@@ -368,10 +321,12 @@ const Markets = () => {
                           : ''
                       }`}
                     </h3>
-                  </TableCell>
+                  </THeadCell>
                 </TableRow>
                 <TableRow>
-                  <THeadCell align="left">Action</THeadCell>
+                  <THeadCell align="left" style={{ paddingLeft: '16px' }}>
+                    Action
+                  </THeadCell>
                   {/* <THeadCell align="left">Size</THeadCell> */}
                   <THeadCell align="left" width={'70px'}>
                     IV
@@ -389,7 +344,7 @@ const Markets = () => {
                   <THeadCell align="left">Volume</THeadCell>
                   <THeadCell align="left">Open</THeadCell>
 
-                  <THeadCellStrike align="center">Strike</THeadCellStrike>
+                  <TCellStrike align="center">Strike</TCellStrike>
 
                   {/* <THeadCell align="right">Size</THeadCell> */}
                   <THeadCell align="right" width={'70px'}>
@@ -407,7 +362,9 @@ const Markets = () => {
                   <THeadCell align="right">Change</THeadCell>
                   <THeadCell align="right">Volume</THeadCell>
                   <THeadCell align="right">Open</THeadCell>
-                  <THeadCell align="right">Action</THeadCell>
+                  <THeadCell align="right" style={{ paddingRight: '16px' }}>
+                    Action
+                  </THeadCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -447,41 +404,52 @@ const Markets = () => {
                     />
                   )
                 })}
+                <TableRow>
+                  <THeadCell colSpan={17} style={{ borderBottom: 'none' }}>
+                    <Box
+                      py={1}
+                      px={[1, 1, 0]}
+                      display="flex"
+                      justifyContent="space-between"
+                      alignItems="center"
+                    >
+                      <Box width="33%" align="left">
+                        {!!uAsset?.tokenSymbol && !!markPrice && (
+                          <>
+                            {uAsset?.tokenSymbol} Market Price: $
+                            {markPrice && markPrice.toFixed(precision)}
+                          </>
+                        )}
+                      </Box>
+                      <Box width="33%" align="center">
+                        {/* Paging Controls Go Here */}
+                      </Box>
+                      <Box width="33%" align="right">
+                        <FormControlLabel
+                          labelPlacement="start"
+                          control={
+                            <Switch
+                              checked={round}
+                              onChange={() => setRound(!round)}
+                              name="round-strike-prices"
+                              color="primary"
+                              size="small"
+                            />
+                          }
+                          label={
+                            <span style={{ fontSize: '14px' }}>
+                              Round Strike Prices
+                            </span>
+                          }
+                          style={{ margin: '0' }}
+                        />
+                      </Box>
+                    </Box>
+                  </THeadCell>
+                </TableRow>
               </TableBody>
             </Table>
           </TableContainer>
-          <Box
-            py={1}
-            px={[1, 1, 0]}
-            display="flex"
-            justifyContent="space-between"
-            alignItems="center"
-          >
-            <Box>
-              {!!uAsset?.tokenSymbol && !!markPrice && (
-                <>
-                  {uAsset?.tokenSymbol} Market Price: $
-                  {markPrice && markPrice.toFixed(precision)}
-                </>
-              )}
-            </Box>
-            <FormControlLabel
-              labelPlacement="start"
-              control={
-                <Switch
-                  checked={round}
-                  onChange={() => setRound(!round)}
-                  name="round-strike-prices"
-                  color="primary"
-                  size="small"
-                />
-              }
-              label={
-                <span style={{ fontSize: '14px' }}>Round Strike Prices</span>
-              }
-              style={{ margin: '0' }}
-            />
-          </Box>
           <Box>
             <OpenOrders optionMarkets={marketsFlat} />
           </Box>

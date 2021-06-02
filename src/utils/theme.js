@@ -9,7 +9,7 @@ const theme = createMuiTheme({
     success: 'linear-gradient(90deg, #14758A 0%, #28C972 100%)',
     info: 'linear-gradient(90deg, #686775 0%, #9C9CB6 100%)',
   },
-  glow: '0px 0px 20px #1D4DC9',
+  glow: '0 2px 4px #000, 0 0px 12px #6dcbfd',
   typography: {
     fontFamily: 'Manrope, sans-serif',
     fontWeightRegular: 500,
@@ -52,9 +52,10 @@ const theme = createMuiTheme({
     },
     background: {
       lighter: '#5C585F',
-      light: '#36343E',
-      paper: '#36343E',
-      medium: '#2A2A34',
+      light: '#34343E',
+      paper: '#34343E',
+      tableHighlight: '#2A2A34',
+      medium: '#22222A',
       main: '#101017',
       default: '#101017',
     },

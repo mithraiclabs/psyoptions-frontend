@@ -7,6 +7,8 @@ import TableBody from '@material-ui/core/TableBody'
 import TableContainer from '@material-ui/core/TableContainer'
 import TableHead from '@material-ui/core/TableHead'
 import TableRow from '@material-ui/core/TableRow'
+import ChevronLeft from '@material-ui/icons/ChevronLeft'
+import ChevronRight from '@material-ui/icons/ChevronRight'
 import moment from 'moment'
 
 import theme from '../../../utils/theme'
@@ -33,7 +35,7 @@ import Loading from '../../Loading'
 import OpenOrders from '../../OpenOrders'
 import { ContractSizeSelector } from '../../ContractSizeSelector'
 
-import { TCellLoading, THeadCell, TCellStrike } from './styles'
+import { TCellLoading, THeadCell, TCellStrike, PageButton } from './styles'
 
 const dblsp = `${'\u00A0'}${'\u00A0'}`
 
@@ -80,6 +82,8 @@ const Markets = () => {
   const [buySellDialogOpen, setBuySellDialogOpen] = useState(false)
   const [callPutData, setCallPutData] = useState({ type: 'call' })
   const [showAllStrikes] = useState(true) // TODO: let user configure this
+  const [page, setPage] = useState(0)
+  const rowsPerPage = 7
 
   // Unfortunately we need to set contract size in a useEffect because uAsset is asynchronously loaded
   useEffect(() => {
@@ -133,17 +137,23 @@ const Markets = () => {
     [chain, supportedStrikePrices],
   )
 
+  const numberOfPages = Math.ceil(filteredChain.length / rowsPerPage)
+
+  const rowsToDisplay = useMemo(() => {
+    return filteredChain.slice(rowsPerPage * page, rowsPerPage * (page + 1))
+  }, [filteredChain, page])
+
   const rows = useMemo(
     () => [
-      ...filteredChain,
-      ...Array(Math.max(9 - filteredChain.length, 0))
+      ...rowsToDisplay,
+      ...Array(Math.max(rowsPerPage - rowsToDisplay.length, 0))
         .fill(rowTemplate)
         .map((row, i) => ({
           ...row,
           key: `empty-${i}`,
         })),
     ],
-    [filteredChain],
+    [rowsToDisplay],
   )
 
   // Flat markets object for open orders component
@@ -174,7 +184,7 @@ const Markets = () => {
   useEffect(() => {
     // Load serum markets when the options chain changes
     // Only if they don't already exist for the matching call/put
-    filteredChain.forEach(({ call, put }) => {
+    rowsToDisplay.forEach(({ call, put }) => {
       if (call?.serumKey && !serumMarkets[call.serumKey]) {
         fetchSerumMarket(...call.serumKey.split('-'))
       }
@@ -182,7 +192,7 @@ const Markets = () => {
         fetchSerumMarket(...put.serumKey.split('-'))
       }
     })
-  }, [filteredChain, fetchSerumMarket, serumMarkets])
+  }, [rowsToDisplay, fetchSerumMarket, serumMarkets])
 
   // Open buy/sell/mint modal
   const handleBuySellClick = useCallback((callOrPut) => {
@@ -202,6 +212,16 @@ const Markets = () => {
         'D MMM YYYY',
       )}${dblsp}|${dblsp}${callPutData.type.slice(0, 1).toUpperCase()}`
     : '--'
+
+  const currentPageStart = page * rowsPerPage + 1
+  const currentPageEnd = Math.min(
+    rowsPerPage * (page + 1),
+    filteredChain.length,
+  )
+  const currentPageLabel =
+    currentPageStart !== currentPageEnd
+      ? `${currentPageStart}-${currentPageEnd} of ${filteredChain.length}`
+      : `${currentPageStart} of ${filteredChain.length}`
 
   return (
     <Page>
@@ -421,8 +441,32 @@ const Markets = () => {
                           </>
                         )}
                       </Box>
-                      <Box width="33%" align="center">
-                        {/* Paging Controls Go Here */}
+                      <Box
+                        width="33%"
+                        align="center"
+                        display="flex"
+                        justifyContent="center"
+                        alignItems="center"
+                      >
+                        {numberOfPages > 1 && (
+                          <>
+                            <PageButton
+                              disabled={page === 0}
+                              onClick={() => setPage(Math.max(page - 1, 0))}
+                            >
+                              <ChevronLeft />
+                            </PageButton>
+                            <Box width="80px">{currentPageLabel}</Box>
+                            <PageButton
+                              disabled={page === numberOfPages - 1}
+                              onClick={() =>
+                                setPage(Math.min(page + 1, numberOfPages))
+                              }
+                            >
+                              <ChevronRight />
+                            </PageButton>
+                          </>
+                        )}
                       </Box>
                       <Box width="33%" align="right">
                         <FormControlLabel

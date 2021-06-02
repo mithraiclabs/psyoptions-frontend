@@ -45,10 +45,11 @@ const OpenOrders: React.FC<{
       const fetchOpenOrders = async (key) => {
         const { serumMarket } = serumMarkets[key]
         if (serumMarket?.market) {
-          const orders = await serumMarket.market.findOpenOrdersAccountsForOwner(
-            connection,
-            pubKey,
-          )
+          const orders =
+            await serumMarket.market.findOpenOrdersAccountsForOwner(
+              connection,
+              pubKey,
+            )
           setOpenOrders((prevOpenOrders) => ({
             ...prevOpenOrders,
             [key]: {
@@ -79,15 +80,27 @@ const OpenOrders: React.FC<{
     }
   }, [connection, serumMarkets, wallet, pubKey, openOrders, setOpenOrders])
 
+  const openOrdersArray = optionMarkets
+    .map((optionMarket) => {
+      if (optionMarket?.serumKey) {
+        return optionMarket
+      }
+      return undefined
+    })
+    .filter((item) => !!item)
+
   return (
-    <Box>
+    <Box mt={'20px'}>
       <TableContainer>
         <Table stickyHeader aria-label="sticky table">
           <TableHead>
             <TableRow>
-              <TableCell colSpan={10}>
+              <THeadCell
+                colSpan={10}
+                style={{ borderTop: 'none', padding: '16px 20px' }}
+              >
                 <h3 style={{ margin: 0 }}>Open Orders</h3>
-              </TableCell>
+              </THeadCell>
             </TableRow>
             <TableRow>
               <THeadCell>Side</THeadCell>
@@ -112,17 +125,12 @@ const OpenOrders: React.FC<{
                 </TCell>
               </TableRow>
             ) : (
-              optionMarkets.map((optionMarket) => {
-                if (optionMarket?.serumKey) {
-                  return (
-                    <OpenOrdersForMarket
-                      {...optionMarket}
-                      key={`${optionMarket.serumKey}`}
-                    />
-                  )
-                }
-                return null
-              })
+              openOrdersArray.map((optionMarket) => (
+                <OpenOrdersForMarket
+                  {...optionMarket}
+                  key={`${optionMarket.serumKey}`}
+                />
+              ))
             )}
           </TableBody>
         </Table>

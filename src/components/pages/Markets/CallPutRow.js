@@ -1,8 +1,7 @@
 import React, { useState, useCallback, useMemo } from 'react'
 import PropTypes from 'prop-types'
 import TableRow from '@material-ui/core/TableRow'
-import TableCell from '@material-ui/core/TableCell'
-import { withStyles } from '@material-ui/core/styles'
+
 import CircularProgress from '@material-ui/core/CircularProgress'
 import Button from '@material-ui/core/Button'
 import moment from 'moment'
@@ -27,29 +26,7 @@ import { useOptionMarket } from '../../../hooks/useOptionMarket'
 import ConnectButton from '../../ConnectButton'
 import { useInitializeMarkets } from '../../../hooks/useInitializeMarkets'
 
-const TCell = withStyles({
-  root: {
-    padding: '8px',
-    whiteSpace: 'nowrap',
-    fontSize: '14px',
-    border: 'none',
-    height: '48px',
-    background: theme.palette.background.medium,
-  },
-})(TableCell)
-
-const TCellLoading = withStyles({
-  root: {
-    padding: '16px',
-    whiteSpace: 'nowrap',
-    fontSize: '14px',
-    height: '48px',
-    border: 'none',
-    background: theme.palette.background.medium,
-  },
-})(TableCell)
-
-const darkBorder = `1px solid ${theme.palette.background.main}`
+import { TCell, TCellLoading, TCellStrike } from './styles'
 
 const Empty = ({ children }) => (
   <span style={{ opacity: '0.3' }}>{children}</span>
@@ -198,10 +175,10 @@ const CallPutRow = ({
   )
 
   const callCellStyle = row.strike?.lte(markPrice)
-    ? { backgroundColor: theme.palette.background.light }
+    ? { backgroundColor: theme.palette.background.tableHighlight }
     : undefined
   const putCellStyle = row.strike?.gte(markPrice)
-    ? { backgroundColor: theme.palette.background.light }
+    ? { backgroundColor: theme.palette.background.tableHighlight }
     : undefined
 
   return (
@@ -281,20 +258,11 @@ const CallPutRow = ({
         </>
       )}
 
-      <TCell
-        align="center"
-        style={{
-          borderLeft: darkBorder,
-          borderRight: darkBorder,
-          background: theme.palette.background.main,
-          paddingLeft: '16px',
-          paddingRight: '16px',
-        }}
-      >
+      <TCellStrike align="center">
         <h4 style={{ margin: 0, fontWeight: 400 }}>
           {formatStrike(row.strike, precision)}
         </h4>
-      </TCell>
+      </TCellStrike>
 
       {row.put?.serumKey && serumMarkets[row.put?.serumKey]?.loading ? (
         <TCellLoading colSpan={7} style={putCellStyle}>

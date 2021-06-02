@@ -78,9 +78,11 @@ const CallPutRow = ({
   const { pushNotification } = useNotifications()
   const { serumMarkets } = useSerum()
   const initializeMarkets = useInitializeMarkets()
-  const { orderbook: callOrderbook } = useSerumOrderbook(row.call?.serumKey)
+  const { orderbook: callOrderbook, loading: callOrdersLoading } =
+    useSerumOrderbook(row.call?.serumKey)
   useSubscribeSerumOrderbook(row.call?.serumKey)
-  const { orderbook: putOrderbook } = useSerumOrderbook(row.put?.serumKey)
+  const { orderbook: putOrderbook, loading: putOrdersLoading } =
+    useSerumOrderbook(row.put?.serumKey)
   useSubscribeSerumOrderbook(row.put?.serumKey)
 
   const callHighestBid = callOrderbook?.bids[0]?.price
@@ -243,7 +245,8 @@ const CallPutRow = ({
           </Button>
         )}
       </TCell>
-      {row.call?.serumKey && serumMarkets[row.call?.serumKey]?.loading ? (
+      {row.call?.serumKey &&
+      (serumMarkets[row.call?.serumKey]?.loading || callOrdersLoading) ? (
         <TCellLoading colSpan={7} style={callCellStyle}>
           <Loading />
         </TCellLoading>
@@ -296,7 +299,8 @@ const CallPutRow = ({
         </h4>
       </TCell>
 
-      {row.put?.serumKey && serumMarkets[row.put?.serumKey]?.loading ? (
+      {row.put?.serumKey &&
+      (serumMarkets[row.put?.serumKey]?.loading || putOrdersLoading) ? (
         <TCellLoading colSpan={7} style={putCellStyle}>
           <Loading />
         </TCellLoading>

@@ -16,7 +16,7 @@ interface PhantomProvider {
   autoApprove?: boolean
   signTransaction: (transaction: Transaction) => Promise<Transaction>
   signAllTransactions: (transactions: Transaction[]) => Promise<Transaction[]>
-  connect: () => Promise<void>
+  connect: ({ onlyIfTrusted: boolean }) => Promise<void>
   disconnect: () => Promise<void>
   on: (event: PhantomEvent, handler: (args: any) => void) => void
   request: (method: PhantomRequestMethod, params: any) => Promise<any>
@@ -75,7 +75,7 @@ class PhantomWalletAdapter extends EventEmitter implements WalletAdapter {
     return this._provider.signTransaction(transaction)
   }
 
-  async connect() {
+  async connect(args) {
     if (!isBrowser) {
       return
     }
@@ -90,7 +90,7 @@ class PhantomWalletAdapter extends EventEmitter implements WalletAdapter {
       this._provider?.on('disconnect', this._handleDisconnect)
     }
     // eslint-disable-next-line
-    return this._provider?.connect()
+    return this._provider?.connect(args)
   }
 
   async disconnect() {

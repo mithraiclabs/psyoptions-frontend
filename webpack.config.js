@@ -11,11 +11,23 @@ const watch = isDev
 const mode = isDev ? 'development' : 'production'
 const devtool = isDev ? 'inline-source-map' : 'source-map'
 
+// Remove nested bn.js that are still on 4.x.x
+// Not too worried about breaking changes in 5.x.x based on release notes:
+// https://github.com/indutny/bn.js/releases/tag/v5.0.0
+const dedupeBnJs = [
+  'rm -rf node_modules/elliptic/node_modules/bn.js/',
+  'rm -rf node_modules/asn1.js/node_modules/bn.js/',
+  'rm -rf node_modules/create-ecdh/node_modules/bn.js/',
+  'rm -rf node_modules/diffie-hellman/node_modules/bn.js/',
+  'rm -rf node_modules/miller-rabin/node_modules/bn.js/',
+  'rm -rf node_modules/public-encrypt/node_modules/bn.js/',
+]
+
 const serverPlugins = isDev
   ? [
       new (require('webpack-shell-plugin-next'))({
         onBuildStart: {
-          scripts: ['npm run clean'],
+          scripts: ['npm run clean', ...dedupeBnJs],
           blocking: true,
           parallel: false,
         },
@@ -26,7 +38,15 @@ const serverPlugins = isDev
         },
       }),
     ]
-  : []
+  : [
+      new (require('webpack-shell-plugin-next'))({
+        onBuildStart: {
+          scripts: dedupeBnJs,
+          blocking: true,
+          parallel: false,
+        },
+      }),
+    ]
 
 module.exports = [
   {

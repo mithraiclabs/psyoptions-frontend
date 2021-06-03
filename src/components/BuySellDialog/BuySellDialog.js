@@ -599,24 +599,30 @@ const BuySellDialog = ({
                     qAssetDecimals={qAssetDecimals}
                   />
                 </>
-              ) : (
-                <>
-                  <Box textAlign="center" px={2} pb={2}>
-                    Initialize Serum Market to Place Order
-                  </Box>
-                  {initializingSerum ? (
-                    <CircularProgress />
-                  ) : (
-                    <Button
-                      variant="outlined"
-                      color="primary"
-                      onClick={handleInitializeSerum}
-                    >
-                      Initialize Serum
-                    </Button>
-                  )}
-                </>
-              )}
+              ) : !connected
+                    ? <>
+                        <Box textAlign="center" px={2} pb={2}>
+                          Connect to Initialize Serum Market
+                        </Box>
+                        <ConnectButton>Connect Wallet</ConnectButton>
+                      </>
+                    : <>
+                        <Box textAlign="center" px={2} pb={2}>
+                          Initialize Serum Market to Place Order
+                        </Box>
+                        {initializingSerum ? (
+                          <CircularProgress />
+                        ) : (
+                          <Button
+                            variant="outlined"
+                            color="primary"
+                            onClick={handleInitializeSerum}
+                          >
+                            Initialize Serum
+                          </Button>
+                        )}
+                      </>
+              }
             </Box>
           </Box>
         </Box>

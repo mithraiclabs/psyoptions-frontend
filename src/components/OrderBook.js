@@ -41,109 +41,107 @@ const orderBookPropTypes = {
   setOrderSize: propTypes.func.isRequired,
 }
 
-const OrderBook = memo(
-  ({ bids = [[]], asks = [[]], setLimitPrice, setOrderSize }) => {
-    // Maybe we should do this zipping of the bids/asks elsewhere
-    // Doing it here for quick and dirty solution, don't over-engineer right? :)
-    const rows = []
-    const minRows = 4
-    // We can adjust the max rows as desired later
-    const maxRows = 8
-    let i = 0
-    while (
-      (rows.length < maxRows && rows.length < bids.length) ||
-      rows.length < asks.length ||
-      rows.length < minRows
-    ) {
-      rows.push({ bid: bids[i] || {}, ask: asks[i] || {}, key: i })
-      i += 1
-    }
+const OrderBook = ({ bids = [], asks = [], setLimitPrice, setOrderSize }) => {
+  // Maybe we should do this zipping of the bids/asks elsewhere
+  // Doing it here for quick and dirty solution, don't over-engineer right? :)
+  const rows = []
+  const minRows = 4
+  // We can adjust the max rows as desired later
+  const maxRows = 8
+  let i = 0
+  while (
+    (rows.length < maxRows && rows.length < bids.length) ||
+    rows.length < asks.length ||
+    rows.length < minRows
+  ) {
+    rows.push({ bid: bids[i] || {}, ask: asks[i] || {}, key: i })
+    i += 1
+  }
 
-    const setPriceAndSize = (bidAsk) => {
-      if (bidAsk?.price) setLimitPrice(bidAsk.price)
-      if (bidAsk?.size) setOrderSize(bidAsk.size)
-    }
+  const setPriceAndSize = (bidAsk) => {
+    if (bidAsk?.price) setLimitPrice(bidAsk.price)
+    if (bidAsk?.size) setOrderSize(bidAsk.size)
+  }
 
-    return (
-      <>
-        <Box pb={2}>Order Book</Box>
-        <Box width="100%">
-          <Table>
-            <TableHead>
-              <TableRow style={topRowBorder}>
-                <BidAskCell
-                  colSpan={2}
-                  align="left"
-                  style={{ ...centerBorder, fontSize: '16px' }}
-                >
-                  Bids
-                </BidAskCell>
-                <BidAskCell
-                  colSpan={2}
-                  align="right"
-                  style={{ fontSize: '16px' }}
-                >
-                  Asks
-                </BidAskCell>
-              </TableRow>
-              <TableRow>
-                <BidAskCell width="25%">price</BidAskCell>
-                <BidAskCell width="25%" style={{ ...centerBorder }}>
-                  size
-                </BidAskCell>
-                <BidAskCell width="25%" align="right">
-                  size
-                </BidAskCell>
-                <BidAskCell width="25%" align="right">
-                  price
-                </BidAskCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {rows.map(({ bid, ask, key }) => {
-                return (
-                  <TableRow key={key}>
-                    <BidAskCell
-                      onClick={() => setPriceAndSize(bid)}
-                      width="25%"
-                      style={{ color: successColor, cursor: 'pointer' }}
-                    >
-                      {bid?.price || '\u00A0'}
-                    </BidAskCell>
-                    <BidAskCell
-                      onClick={() => setPriceAndSize(bid)}
-                      width="25%"
-                      style={{ ...centerBorder, cursor: 'pointer' }}
-                    >
-                      {bid?.size || '\u00A0'}
-                    </BidAskCell>
-                    <BidAskCell
-                      onClick={() => setPriceAndSize(ask)}
-                      width="25%"
-                      align="right"
-                      style={{ cursor: 'pointer' }}
-                    >
-                      {ask?.size || '\u00A0'}
-                    </BidAskCell>
-                    <BidAskCell
-                      width="25%"
-                      align="right"
-                      style={{ color: errorColor, cursor: 'pointer' }}
-                      onClick={() => setPriceAndSize(ask)}
-                    >
-                      {ask?.price || '\u00A0'}
-                    </BidAskCell>
-                  </TableRow>
-                )
-              })}
-            </TableBody>
-          </Table>
-        </Box>
-      </>
-    )
-  },
-)
+  return (
+    <>
+      <Box pb={2}>Order Book</Box>
+      <Box width="100%">
+        <Table>
+          <TableHead>
+            <TableRow style={topRowBorder}>
+              <BidAskCell
+                colSpan={2}
+                align="left"
+                style={{ ...centerBorder, fontSize: '16px' }}
+              >
+                Bids
+              </BidAskCell>
+              <BidAskCell
+                colSpan={2}
+                align="right"
+                style={{ fontSize: '16px' }}
+              >
+                Asks
+              </BidAskCell>
+            </TableRow>
+            <TableRow>
+              <BidAskCell width="25%">price</BidAskCell>
+              <BidAskCell width="25%" style={{ ...centerBorder }}>
+                size
+              </BidAskCell>
+              <BidAskCell width="25%" align="right">
+                size
+              </BidAskCell>
+              <BidAskCell width="25%" align="right">
+                price
+              </BidAskCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {rows.map(({ bid, ask, key }) => {
+              return (
+                <TableRow key={key}>
+                  <BidAskCell
+                    onClick={() => setPriceAndSize(bid)}
+                    width="25%"
+                    style={{ color: successColor, cursor: 'pointer' }}
+                  >
+                    {bid?.price || '\u00A0'}
+                  </BidAskCell>
+                  <BidAskCell
+                    onClick={() => setPriceAndSize(bid)}
+                    width="25%"
+                    style={{ ...centerBorder, cursor: 'pointer' }}
+                  >
+                    {bid?.size || '\u00A0'}
+                  </BidAskCell>
+                  <BidAskCell
+                    onClick={() => setPriceAndSize(ask)}
+                    width="25%"
+                    align="right"
+                    style={{ cursor: 'pointer' }}
+                  >
+                    {ask?.size || '\u00A0'}
+                  </BidAskCell>
+                  <BidAskCell
+                    width="25%"
+                    align="right"
+                    style={{ color: errorColor, cursor: 'pointer' }}
+                    onClick={() => setPriceAndSize(ask)}
+                  >
+                    {ask?.price || '\u00A0'}
+                  </BidAskCell>
+                </TableRow>
+              )
+            })}
+          </TableBody>
+        </Table>
+      </Box>
+    </>
+  )
+}
 
 OrderBook.propTypes = orderBookPropTypes
 
-export default OrderBook
+export default memo(OrderBook)

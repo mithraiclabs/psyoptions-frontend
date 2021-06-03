@@ -240,6 +240,7 @@ const Markets = () => {
         qAssetDecimals={
           callPutData?.type === 'call' ? qAsset?.decimals : uAsset?.decimals
         }
+        propsLimitPrice={callPutData.price}
       />
       <Box
         display="flex"

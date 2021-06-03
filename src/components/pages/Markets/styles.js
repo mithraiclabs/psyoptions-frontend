@@ -1,8 +1,21 @@
 import TableCell from '@material-ui/core/TableCell'
+import Button from '@material-ui/core/Button'
 import { withStyles } from '@material-ui/core/styles'
 import theme from '../../../utils/theme'
 
 const borderLight = `1px solid ${theme.palette.background.paper}`
+
+export const PageButton = withStyles({
+  root: {
+    padding: '12px',
+    whiteSpace: 'nowrap',
+    borderRadius: '40px',
+    minWidth: '0px',
+    width: '40px',
+    height: '40px',
+    margin: '0 4px',
+  },
+})(Button)
 
 export const TCell = withStyles({
   root: {

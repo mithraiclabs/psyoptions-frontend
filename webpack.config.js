@@ -132,7 +132,7 @@ module.exports = [
         analyzerMode: 'static',
         openAnalyzer: false,
       }),
-      ...(isDev
+      ...(isDev || !process.env.SENTRY_AUTH_TOKEN
         ? []
         : [
             new SentryWebpackPlugin({

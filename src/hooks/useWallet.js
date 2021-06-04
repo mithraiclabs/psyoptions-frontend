@@ -15,7 +15,7 @@ const useWallet = () => {
     setPubKey,
   } = useContext(WalletContext)
 
-  const connect = async (walletAdapter) => {
+  const connect = async (walletAdapter, args) => {
     // Reset state in case user is changing wallets
     setPubKey(null)
     setConnected(false)
@@ -39,7 +39,7 @@ const useWallet = () => {
     })
     // })
 
-    await walletAdapter.connect()
+    await walletAdapter.connect(args)
   }
 
   const disconnect = () => {

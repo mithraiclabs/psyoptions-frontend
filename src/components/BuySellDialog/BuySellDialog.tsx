@@ -1,20 +1,19 @@
-import React, { useState } from 'react'
+import React, { useState, memo } from 'react'
 import Box from '@material-ui/core/Box'
 import Chip from '@material-ui/core/Chip'
 import Dialog from '@material-ui/core/Dialog'
-import FilledInput from '@material-ui/core/FilledInput'
-import { withStyles } from '@material-ui/core/styles'
 import Button from '@material-ui/core/Button'
 import CircularProgress from '@material-ui/core/CircularProgress'
 import Done from '@material-ui/icons/Done'
-import propTypes from 'prop-types'
-import BigNumber from 'bignumber.js'
-import { LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js'
-import BN from 'bn.js'
 import * as Sentry from '@sentry/react'
+import { LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js'
+import BigNumber from 'bignumber.js'
+import BN from 'bn.js'
+import type { Moment } from 'moment'
 
 import theme from '../../utils/theme'
 import { createInitializeMarketTx } from '../../utils/serum'
+import { WRAPPED_SOL_ADDRESS, getHighestAccount } from '../../utils/token'
 import useConnection from '../../hooks/useConnection'
 import useWallet from '../../hooks/useWallet'
 import useSerum from '../../hooks/useSerum'
@@ -22,78 +21,47 @@ import useOwnedTokenAccounts from '../../hooks/useOwnedTokenAccounts'
 import useNotifications from '../../hooks/useNotifications'
 import usePlaceSellOrder from '../../hooks/usePlaceSellOrder'
 import usePlaceBuyOrder from '../../hooks/usePlaceBuyOrder'
-
-import OrderBook from '../OrderBook'
 import { useSerumOrderbook } from '../../hooks/Serum'
-import { WRAPPED_SOL_ADDRESS } from '../../utils/token'
 import { useSerumFeeDiscountKey } from '../../hooks/Serum/useSerumFeeDiscountKey'
 import { useOptionMarket } from '../../hooks/useOptionMarket'
 
+import OrderBook from '../OrderBook'
 import { UnsettledFunds } from './UnsettledFunds'
 import BuyButton from './BuyButton'
 import SellButton from './SellButton'
+import { StyledFilledInput, PlusMinusButton } from './styles'
 
-const bgLighterColor = theme.palette.background.lighter
-
-const StyledFilledInput = withStyles({
-  root: {
-    borderRadius: 0,
-    width: '100%',
-    minWidth: '100px',
-  },
-  input: {
-    padding: '8px 12px !important',
-  },
-})(FilledInput)
-
-const PlusMinusButton = withStyles({
-  root: {
-    borderRadius: 0,
-    minWidth: '38px',
-    backgroundColor: 'rgba(255, 255, 255, 0.09)',
-    marginLeft: '2px',
-    fontWeight: 700,
-    fontSize: '24px',
-    lineHeight: '24px',
-    '&:hover': {
-      backgroundColor: 'rgba(255, 255, 255, 0.18)',
-    },
-  },
-})(Button)
+const bgLighterColor = (theme.palette.background as any).lighter
 
 const orderTypes = ['limit', 'market']
-
-const getHighestAccount = (accounts) => {
-  if (accounts.length === 0) return {}
-  if (accounts.length === 1) return accounts[0]
-  return accounts.sort((a, b) => b.amount - a.amount)[0]
-}
-
-const proptypes = {
-  open: propTypes.bool,
-  onClose: propTypes.func,
-  heading: propTypes.string,
-  amountPerContract: propTypes.object,
-  uAssetSymbol: propTypes.string,
-  qAssetSymbol: propTypes.string,
-  qAssetMint: propTypes.string,
-  uAssetMint: propTypes.string,
-  uAssetDecimals: propTypes.number,
-  qAssetDecimals: propTypes.number,
-  strike: propTypes.object,
-  round: propTypes.bool,
-  precision: propTypes.number,
-  type: propTypes.oneOf(['call', 'put']),
-  optionMintAddress: propTypes.string,
-  serumKey: propTypes.string,
-}
 
 const defaultProps = {
   amountPerContract: new BigNumber(0),
   strike: new BigNumber(0),
 }
 
-const BuySellDialog = ({
+const BuySellDialog: React.VFC<{
+  open: boolean
+  onClose: () => void
+  heading: string
+  amountPerContract: BigNumber
+  quoteAmountPerContract: BigNumber
+  uAssetSymbol: string
+  qAssetSymbol: string
+  qAssetMint: string
+  uAssetMint: string
+  uAssetDecimals: number
+  qAssetDecimals: number
+  strike: BigNumber
+  round: boolean
+  precision: number
+  type: string
+  optionMintAddress: string
+  writerTokenMintKey: string
+  serumKey: string
+  date: Moment
+  markPrice: number
+}> = ({
   open,
   onClose,
   heading,
@@ -115,29 +83,24 @@ const BuySellDialog = ({
   date,
   markPrice,
 }) => {
+  const [orderType, setOrderType] = useState('limit')
+  const [orderSize, setOrderSize] = useState('1')
+  const [limitPrice, setLimitPrice] = useState('0')
+  const [initializingSerum, setInitializingSerum] = useState(false)
+  const [placeOrderLoading, setPlaceOrderLoading] = useState(false)
   const { pushNotification } = useNotifications()
   const { connection, dexProgramId } = useConnection()
   const { balance, wallet, pubKey } = useWallet()
   const placeSellOrder = usePlaceSellOrder(serumKey)
   const placeBuyOrder = usePlaceBuyOrder(serumKey)
   const { serumMarkets, fetchSerumMarket } = useSerum()
-  const {
-    ownedTokenAccounts,
-    loadingOwnedTokenAccounts,
-  } = useOwnedTokenAccounts()
-  const [orderType, setOrderType] = useState('limit')
-  const [orderSize, setOrderSize] = useState(1)
-  const [limitPrice, setLimitPrice] = useState(0)
-  const [initializingSerum, setInitializingSerum] = useState(false)
-  const [placeOrderLoading, setPlaceOrderLoading] = useState(false)
   const { orderbook } = useSerumOrderbook(serumKey)
-  const {
-    feeRates: serumFeeRates,
-    publicKey: serumDiscountFeeKey,
-  } = useSerumFeeDiscountKey()
-
+  const { feeRates: serumFeeRates, publicKey: serumDiscountFeeKey } =
+    useSerumFeeDiscountKey()
+  const { ownedTokenAccounts, loadingOwnedTokenAccounts } =
+    useOwnedTokenAccounts()
   const optionMarket = useOptionMarket({
-    date: date.unix(),
+    date: `${date.unix()}`,
     uAssetSymbol,
     qAssetSymbol,
     size: amountPerContract.toNumber(),
@@ -161,19 +124,22 @@ const BuySellDialog = ({
     uAssetBalance = balance / LAMPORTS_PER_SOL
   }
 
-  const openPositionUAssetBalance = openPositionSize * amountPerContract
+  const openPositionUAssetBalance =
+    openPositionSize * amountPerContract.toNumber()
 
   const serumMarketData = serumMarkets[serumKey]
   const serum = serumMarketData?.serumMarket
   const serumError = serumMarketData?.error
 
   const parsedOrderSize =
-    Number.isNaN(parseFloat(orderSize)) || orderSize < 1
+    Number.isNaN(parseInt(orderSize, 10)) || parseInt(orderSize, 10) < 1
       ? 1
       : parseInt(orderSize, 10)
 
   const parsedLimitPrice = new BigNumber(
-    Number.isNaN(parseFloat(limitPrice)) || limitPrice < 0 ? 0 : limitPrice,
+    Number.isNaN(parseFloat(limitPrice)) || parseFloat(limitPrice) < 0
+      ? 0
+      : parseFloat(limitPrice),
   )
 
   const collateralRequired = amountPerContract
@@ -255,8 +221,8 @@ const BuySellDialog = ({
       const numberOfContracts = parsedOrderSize - openPositionSize
       const optionTokenKey = getHighestAccount(optionAccounts)?.pubKey
       const underlyingAssetSrcKey = getHighestAccount(uAssetAccounts)?.pubKey
-      const writerTokenDestinationKey = getHighestAccount(writerAccounts)
-        ?.pubKey
+      const writerTokenDestinationKey =
+        getHighestAccount(writerAccounts)?.pubKey
 
       await placeSellOrder({
         numberOfContractsToMint: numberOfContracts,
@@ -271,19 +237,19 @@ const BuySellDialog = ({
           price:
             orderType === 'market'
               ? orderbook?.bids?.[0]?.price
-              : parsedLimitPrice,
+              : parsedLimitPrice.toNumber(),
           // Serum-ts handles adding the SPL Token decimals via their
           //  `maket.priceNumberToLots` function
           size: parsedOrderSize,
           // TODO create true mapping https://github.com/project-serum/serum-ts/blob/6803cb95056eb9b8beced9135d6956583ae5a222/packages/serum/src/market.ts#L1163
-          orderType: orderType === 'market' ? 'ioc' : orderType,
+          orderType: orderType === 'market' ? 'ioc' : 'limit',
           // This will be null if a token with the symbol SRM does
           // not exist in the supported asset list
           feeDiscountPubkey: serumDiscountFeeKey,
           // serum fee rate. Should use the taker fee even if limit order if it's likely to match an order
           feeRate:
             orderType === 'market' ||
-            parsedLimitPrice <= orderbook?.bids?.[0]?.price
+            parsedLimitPrice.isLessThanOrEqualTo(orderbook?.bids?.[0]?.price)
               ? serumFeeRates?.taker
               : undefined,
         },
@@ -295,11 +261,10 @@ const BuySellDialog = ({
         optionMarket,
         uAssetTokenAccount: {
           pubKey: underlyingAssetSrcKey,
-          amount: new BigNumber(
+          amount:
             uAssetAccounts.find((asset) =>
               asset.pubKey.equals(underlyingAssetSrcKey),
             )?.amount || 0,
-          ),
           mint: new PublicKey(uAssetMint),
         },
         mintedOptionDestinationKey: optionTokenKey,
@@ -322,8 +287,9 @@ const BuySellDialog = ({
     try {
       const serumQuoteTokenAccounts =
         ownedTokenAccounts[serum.market._decoded.quoteMint.toString()] || []
-      const serumQuoteTokenKey = getHighestAccount(serumQuoteTokenAccounts)
-        ?.pubKey
+      const serumQuoteTokenKey = getHighestAccount(
+        serumQuoteTokenAccounts,
+      )?.pubKey
       const optionTokenKey = getHighestAccount(optionAccounts)?.pubKey
       await placeBuyOrder({
         optionMarket,
@@ -339,19 +305,19 @@ const BuySellDialog = ({
           price:
             orderType === 'market'
               ? orderbook?.asks?.[0]?.price
-              : parsedLimitPrice,
+              : parsedLimitPrice.toNumber(),
           // Serum-ts handles adding the SPL Token decimals via their
           //  `maket.priceNumberToLots` function
           size: parsedOrderSize,
           // TODO create true mapping https://github.com/project-serum/serum-ts/blob/6803cb95056eb9b8beced9135d6956583ae5a222/packages/serum/src/market.ts#L1163
-          orderType: orderType === 'market' ? 'ioc' : orderType,
+          orderType: orderType === 'market' ? 'ioc' : 'limit',
           // This will be null if a token with the symbol SRM does
           // not exist in the supported asset list
           feeDiscountPubkey: serumDiscountFeeKey,
           // serum fee rate. Should use the taker fee even if limit order if it's likely to match an order
           feeRate:
             orderType === 'market' ||
-            parsedLimitPrice >= orderbook?.asks?.[0]?.price
+            parsedLimitPrice.isGreaterThanOrEqualTo(orderbook?.asks?.[0]?.price)
               ? serumFeeRates?.taker
               : undefined,
         },
@@ -409,18 +375,20 @@ const BuySellDialog = ({
                   type="number"
                   onChange={handleChangeSize}
                   onBlur={() => {
-                    if (orderSize !== parsedOrderSize) {
-                      setOrderSize(parsedOrderSize)
+                    if (orderSize !== `${parsedOrderSize}`) {
+                      setOrderSize(`${parsedOrderSize}`)
                     }
                   }}
                 />
                 <PlusMinusButton
-                  onClick={() => setOrderSize(Math.max(1, parsedOrderSize - 1))}
+                  onClick={() =>
+                    setOrderSize(`${Math.max(1, parsedOrderSize - 1)}`)
+                  }
                 >
                   -
                 </PlusMinusButton>
                 <PlusMinusButton
-                  onClick={() => setOrderSize(parsedOrderSize + 1)}
+                  onClick={() => setOrderSize(`${parsedOrderSize + 1}`)}
                 >
                   +
                 </PlusMinusButton>
@@ -465,7 +433,7 @@ const BuySellDialog = ({
               pt={2}
               color={
                 orderType === 'market'
-                  ? theme.palette.background.lighter
+                  ? (theme.palette.background as any).lighter
                   : theme.palette.primary.main
               }
             >
@@ -624,8 +592,6 @@ const BuySellDialog = ({
   )
 }
 
-BuySellDialog.propTypes = proptypes
-
 BuySellDialog.defaultProps = defaultProps
 
-export default BuySellDialog
+export default memo(BuySellDialog)

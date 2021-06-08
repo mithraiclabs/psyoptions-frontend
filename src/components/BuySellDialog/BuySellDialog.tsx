@@ -61,7 +61,9 @@ const BuySellDialog: React.VFC<{
   writerTokenMintKey: string
   serumKey: string
   date: Moment
-  markPrice: number
+  markPrice: number,
+  setLimitPrice: (price: string) => string,
+  limitPrice: string
 }> = ({
   open,
   onClose,
@@ -82,11 +84,12 @@ const BuySellDialog: React.VFC<{
   writerTokenMintKey,
   serumKey,
   date,
-  markPrice
+  markPrice,
+  setLimitPrice,
+  limitPrice
 }) => {
   const [orderType, setOrderType] = useState('limit')
   const [orderSize, setOrderSize] = useState('1')
-  const [limitPrice, setLimitPrice] = useState('0')
   const [initializingSerum, setInitializingSerum] = useState(false)
   const [placeOrderLoading, setPlaceOrderLoading] = useState(false)
   const { pushNotification } = useNotifications()

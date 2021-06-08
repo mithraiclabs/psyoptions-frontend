@@ -50,6 +50,7 @@ const CallPutRow = ({
   onClickBuySellCall,
   onClickBuySellPut,
   markPrice,
+  setLimitPrice
 }) => {
   const { connected } = useWallet()
   const { pushNotification } = useNotifications()
@@ -183,22 +184,21 @@ const CallPutRow = ({
 
   const openBuySellModal = (callOrPut, price = 0) => {
     // only allow full row clicking open for initialized markets
-    console.log('clicked row', price)
     if (callOrPut === 'call' && row.call?.initialized) {
       onClickBuySellCall({
         type: 'call',
         ...row.call,
-        strike: row.strike,
-        price: Number(price)
+        strike: row.strike
       })
+      setLimitPrice(price)
     }
     if (callOrPut === 'put' && row.put?.initialized) {
       onClickBuySellPut({
         type: 'put',
         ...row.put,
-        strike: row.strike,
-        price: Number(price)
+        strike: row.strike
       })
+      setLimitPrice(price)
     }
   }
 

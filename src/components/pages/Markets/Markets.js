@@ -83,6 +83,7 @@ const Markets = () => {
   const [callPutData, setCallPutData] = useState({ type: 'call' })
   const [showAllStrikes] = useState(true) // TODO: let user configure this
   const [page, setPage] = useState(0)
+  const [limitPrice, setLimitPrice] = useState('0')
   const rowsPerPage = 7
 
   // Unfortunately we need to set contract size in a useEffect because uAsset is asynchronously loaded
@@ -240,6 +241,8 @@ const Markets = () => {
         qAssetDecimals={
           callPutData?.type === 'call' ? qAsset?.decimals : uAsset?.decimals
         }
+        setLimitPrice={setLimitPrice}
+        limitPrice={limitPrice}
       />
       <Box
         display="flex"
@@ -421,6 +424,7 @@ const Markets = () => {
                       onClickBuySellCall={handleBuySellClick}
                       onClickBuySellPut={handleBuySellClick}
                       markPrice={markPrice}
+                      setLimitPrice={setLimitPrice}
                     />
                   )
                 })}

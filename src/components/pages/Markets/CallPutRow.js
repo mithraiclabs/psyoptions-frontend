@@ -1,6 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react'
 import PropTypes from 'prop-types'
-import TableRow from '@material-ui/core/TableRow'
 
 import CircularProgress from '@material-ui/core/CircularProgress'
 import Button from '@material-ui/core/Button'
@@ -26,7 +25,7 @@ import { useOptionMarket } from '../../../hooks/useOptionMarket'
 import ConnectButton from '../../ConnectButton'
 import { useInitializeMarkets } from '../../../hooks/useInitializeMarkets'
 
-import { TCell, TCellLoading, TCellStrike } from './styles'
+import { TCell, TCellLoading, TCellStrike, TRow } from './styles'
 
 const Empty = ({ children }) => (
   <span style={{ opacity: '0.3' }}>{children}</span>
@@ -50,6 +49,7 @@ const CallPutRow = ({
   onClickBuySellCall,
   onClickBuySellPut,
   markPrice,
+  setLimitPrice
 }) => {
   const { connected } = useWallet()
   const { pushNotification } = useNotifications()
@@ -181,8 +181,28 @@ const CallPutRow = ({
     ? { backgroundColor: theme.palette.background.tableHighlight }
     : undefined
 
+  const openBuySellModal = (callOrPut, price = 0) => {
+    // only allow full row clicking open for initialized markets
+    if (callOrPut === 'call' && row.call?.initialized) {
+      onClickBuySellCall({
+        type: 'call',
+        ...row.call,
+        strike: row.strike
+      })
+      setLimitPrice(price)
+    }
+    if (callOrPut === 'put' && row.put?.initialized) {
+      onClickBuySellPut({
+        type: 'put',
+        ...row.put,
+        strike: row.strike
+      })
+      setLimitPrice(price)
+    }
+  }
+
   return (
-    <TableRow hover role="checkbox" tabIndex={-1}>
+    <TRow hover role="checkbox" tabIndex={-1}>
       <TCell align="left" style={callCellStyle} width={'120px'}>
         {row.call?.emptyRow ? (
           ''
@@ -195,13 +215,7 @@ const CallPutRow = ({
             variant="outlined"
             color="primary"
             p="8px"
-            onClick={() =>
-              onClickBuySellCall({
-                type: 'call',
-                ...row.call,
-                strike: row.strike,
-              })
-            }
+            onClick={() => openBuySellModal('call')}
           >
             Buy/Sell
           </Button>
@@ -226,33 +240,33 @@ const CallPutRow = ({
         </TCellLoading>
       ) : (
         <>
-          <TCell align="left" style={callCellStyle} width={'70px'}>
+          <TCell align="left" style={callCellStyle} width={'70px'} onClick={() => openBuySellModal('call')}>
             {(callBidIV && `${callBidIV.toFixed(1)}%`) || <Empty>{'—'}</Empty>}
           </TCell>
-          <TCell align="left" style={callCellStyle} width={'90px'}>
+          <TCell align="left" style={callCellStyle} width={'90px'} onClick={() => openBuySellModal('call', callHighestBid?.toFixed(2))}>
             {callHighestBid ? (
               <Bid>${callHighestBid.toFixed(2)}</Bid>
             ) : (
               <Empty>{'—'}</Empty>
             )}
           </TCell>
-          <TCell align="left" style={callCellStyle} width={'90px'}>
+          <TCell align="left" style={callCellStyle} width={'90px'} onClick={() => openBuySellModal('call', callLowestAsk?.toFixed(2))}>
             {callLowestAsk ? (
               <Ask>${callLowestAsk.toFixed(2)}</Ask>
             ) : (
               <Empty>{'—'}</Empty>
             )}
           </TCell>
-          <TCell align="left" style={callCellStyle} width={'70px'}>
+          <TCell align="left" style={callCellStyle} width={'70px'} onClick={() => openBuySellModal('call')}>
             {(callAskIV && `${callAskIV.toFixed(1)}%`) || <Empty>{'—'}</Empty>}
           </TCell>
-          <TCell align="left" style={callCellStyle}>
+          <TCell align="left" style={callCellStyle} onClick={() => openBuySellModal('call')}>
             {row.call?.change || <Empty>{'—'}</Empty>}
           </TCell>
-          <TCell align="left" style={callCellStyle}>
+          <TCell align="left" style={callCellStyle} onClick={() => openBuySellModal('call')}>
             {row.call?.volume || <Empty>{'—'}</Empty>}
           </TCell>
-          <TCell align="left" style={callCellStyle}>
+          <TCell align="left" style={callCellStyle} onClick={() => openBuySellModal('call')}>
             {callOptionMintInfo?.supply.toString() || <Empty>{'—'}</Empty>}
           </TCell>
         </>
@@ -270,33 +284,33 @@ const CallPutRow = ({
         </TCellLoading>
       ) : (
         <>
-          <TCell align="right" style={putCellStyle} width={'70px'}>
+          <TCell align="right" style={putCellStyle} width={'70px'} onClick={() => openBuySellModal('put')}>
             {(putBidIV && `${putBidIV.toFixed(1)}%`) || <Empty>{'—'}</Empty>}
           </TCell>
-          <TCell align="right" style={putCellStyle} width={'90px'}>
+          <TCell align="right" style={putCellStyle} width={'90px'} onClick={() => openBuySellModal('put', putHighestBid?.toFixed(2))}>
             {putHighestBid ? (
               <Bid>${putHighestBid.toFixed(2)}</Bid>
             ) : (
               <Empty>{'—'}</Empty>
             )}
           </TCell>
-          <TCell align="right" style={putCellStyle} width={'90px'}>
+          <TCell align="right" style={putCellStyle} width={'90px'} onClick={() => openBuySellModal('put', putLowestAsk?.toFixed(2))}>
             {putLowestAsk ? (
               <Ask>${putLowestAsk.toFixed(2)}</Ask>
             ) : (
               <Empty>{'—'}</Empty>
             )}
           </TCell>
-          <TCell align="right" style={putCellStyle} width={'70px'}>
+          <TCell align="right" style={putCellStyle} width={'70px'} onClick={() => openBuySellModal('put')}>
             {(putAskIV && `${putAskIV.toFixed(1)}%`) || <Empty>{'—'}</Empty>}
           </TCell>
-          <TCell align="right" style={putCellStyle}>
+          <TCell align="right" style={putCellStyle} onClick={() => openBuySellModal('put')}>
             {row.put?.change || <Empty>{'—'}</Empty>}
           </TCell>
-          <TCell align="right" style={putCellStyle}>
+          <TCell align="right" style={putCellStyle} onClick={() => openBuySellModal('put')}>
             {row.put?.volume || <Empty>{'—'}</Empty>}
           </TCell>
-          <TCell align="right" style={putCellStyle}>
+          <TCell align="right" style={putCellStyle} onClick={() => openBuySellModal('put')}>
             {putOptionMintInfo?.supply.toString() || <Empty>{'—'}</Empty>}
           </TCell>
         </>
@@ -313,9 +327,7 @@ const CallPutRow = ({
             variant="outlined"
             color="primary"
             p="8px"
-            onClick={() =>
-              onClickBuySellPut({ type: 'put', ...row.put, strike: row.strike })
-            }
+            onClick={() => openBuySellModal('put')}
           >
             Buy/Sell
           </Button>
@@ -334,7 +346,7 @@ const CallPutRow = ({
           </Button>
         )}
       </TCell>
-    </TableRow>
+    </TRow>
   )
 }
 

@@ -30,6 +30,7 @@ import { UnsettledFunds } from './UnsettledFunds'
 import BuyButton from './BuyButton'
 import SellButton from './SellButton'
 import { StyledFilledInput, PlusMinusButton } from './styles'
+import ConnectButton from '../ConnectButton'
 
 const bgLighterColor = (theme.palette.background as any).lighter
 
@@ -60,7 +61,9 @@ const BuySellDialog: React.VFC<{
   writerTokenMintKey: string
   serumKey: string
   date: Moment
-  markPrice: number
+  markPrice: number,
+  setLimitPrice: (price: string) => string,
+  limitPrice: string
 }> = ({
   open,
   onClose,
@@ -82,15 +85,16 @@ const BuySellDialog: React.VFC<{
   serumKey,
   date,
   markPrice,
+  setLimitPrice,
+  limitPrice
 }) => {
   const [orderType, setOrderType] = useState('limit')
   const [orderSize, setOrderSize] = useState('1')
-  const [limitPrice, setLimitPrice] = useState('0')
   const [initializingSerum, setInitializingSerum] = useState(false)
   const [placeOrderLoading, setPlaceOrderLoading] = useState(false)
   const { pushNotification } = useNotifications()
   const { connection, dexProgramId } = useConnection()
-  const { balance, wallet, pubKey } = useWallet()
+  const { balance, wallet, pubKey, connected } = useWallet()
   const placeSellOrder = usePlaceSellOrder(serumKey)
   const placeBuyOrder = usePlaceBuyOrder(serumKey)
   const { serumMarkets, fetchSerumMarket } = useSerum()
@@ -499,43 +503,43 @@ const BuySellDialog: React.VFC<{
                     justifyContent="center"
                     width="100%"
                   >
-                    {placeOrderLoading ? (
-                      <CircularProgress />
-                    ) : (
-                      <>
-                        <Box pr={1} width="50%">
-                          <BuyButton
-                            parsedLimitPrice={parsedLimitPrice}
-                            numberOfAsks={orderbook?.asks?.length || 0}
-                            orderType={orderType}
-                            orderCost={parsedLimitPrice.multipliedBy(
-                              parsedOrderSize,
-                            )}
-                            parsedOrderSize={parsedOrderSize}
-                            qAssetSymbol={
-                              type === 'put' ? uAssetSymbol : qAssetSymbol
-                            }
-                            qAssetBalance={
-                              type === 'put' ? uAssetBalance : qAssetBalance
-                            }
-                            onClick={handleBuyOrder}
-                          />
-                        </Box>
-                        <Box pl={1} width="50%">
-                          <SellButton
-                            amountPerContract={amountPerContract}
-                            parsedLimitPrice={parsedLimitPrice}
-                            openPositionSize={openPositionSize}
-                            numberOfBids={orderbook?.bids?.length || 0}
-                            uAssetSymbol={uAssetSymbol}
-                            uAssetBalance={uAssetBalance}
-                            orderType={orderType}
-                            parsedOrderSize={parsedOrderSize}
-                            onClick={handlePlaceSellOrder}
-                          />
-                        </Box>
-                      </>
-                    )}
+                    {
+                      !connected ?
+                        <ConnectButton fullWidth>Connect Wallet</ConnectButton>
+                      : placeOrderLoading ? (
+                        <CircularProgress />
+                      ) : (
+                        <>
+                          <Box pr={1} width="50%">
+                            <BuyButton
+                              parsedLimitPrice={parsedLimitPrice}
+                              numberOfAsks={orderbook?.asks?.length || 0}
+                              qAssetSymbol={qAssetSymbol}
+                              orderType={orderType}
+                              orderCost={parsedLimitPrice.multipliedBy(
+                                parsedOrderSize,
+                              )}
+                              parsedOrderSize={parsedOrderSize}
+                              qAssetBalance={qAssetBalance}
+                              onClick={handleBuyOrder}
+                            />
+                          </Box>
+                          <Box pl={1} width="50%">
+                            <SellButton
+                              amountPerContract={amountPerContract}
+                              parsedLimitPrice={parsedLimitPrice}
+                              openPositionSize={openPositionSize}
+                              numberOfBids={orderbook?.bids?.length || 0}
+                              uAssetSymbol={uAssetSymbol}
+                              uAssetBalance={uAssetBalance}
+                              orderType={orderType}
+                              parsedOrderSize={parsedOrderSize}
+                              onClick={handlePlaceSellOrder}
+                            />
+                          </Box>
+                        </>
+                      )
+                    }
                   </Box>
                   <Box pt={1} pb={2}>
                     {orderType === 'limit' &&
@@ -566,24 +570,30 @@ const BuySellDialog: React.VFC<{
                     qAssetDecimals={qAssetDecimals}
                   />
                 </>
-              ) : (
-                <>
-                  <Box textAlign="center" px={2} pb={2}>
-                    Initialize Serum Market to Place Order
-                  </Box>
-                  {initializingSerum ? (
-                    <CircularProgress />
-                  ) : (
-                    <Button
-                      variant="outlined"
-                      color="primary"
-                      onClick={handleInitializeSerum}
-                    >
-                      Initialize Serum
-                    </Button>
-                  )}
-                </>
-              )}
+              ) : !connected
+                    ? <>
+                        <Box textAlign="center" px={2} pb={2}>
+                          Connect to Initialize Serum Market
+                        </Box>
+                        <ConnectButton>Connect Wallet</ConnectButton>
+                      </>
+                    : <>
+                        <Box textAlign="center" px={2} pb={2}>
+                          Initialize Serum Market to Place Order
+                        </Box>
+                        {initializingSerum ? (
+                          <CircularProgress />
+                        ) : (
+                          <Button
+                            variant="outlined"
+                            color="primary"
+                            onClick={handleInitializeSerum}
+                          >
+                            Initialize Serum
+                          </Button>
+                        )}
+                      </>
+              }
             </Box>
           </Box>
         </Box>

@@ -68,7 +68,7 @@ const OpenOrdersForMarket: React.FC<{
     actualOpenOrders &&
     actualOpenOrders.map((order) => {
       return (
-        <TableRow key={`${JSON.stringify(order)}`}>
+        <TableRow hover key={`${JSON.stringify(order)}`}>
           <TCell>{order?.side}</TCell>
           <TCell>{type}</TCell>
           <TCell>{`${qAssetSymbol}/${uAssetSymbol}`}</TCell>

@@ -1,6 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react'
 import PropTypes from 'prop-types'
-import TableRow from '@material-ui/core/TableRow'
 
 import CircularProgress from '@material-ui/core/CircularProgress'
 import Button from '@material-ui/core/Button'
@@ -26,7 +25,7 @@ import { useOptionMarket } from '../../../hooks/useOptionMarket'
 import ConnectButton from '../../ConnectButton'
 import { useInitializeMarkets } from '../../../hooks/useInitializeMarkets'
 
-import { TCell, TCellLoading, TCellStrike } from './styles'
+import { TCell, TCellLoading, TCellStrike, TRow } from './styles'
 
 const Empty = ({ children }) => (
   <span style={{ opacity: '0.3' }}>{children}</span>
@@ -203,7 +202,7 @@ const CallPutRow = ({
   }
 
   return (
-    <TableRow hover role="checkbox" tabIndex={-1}>
+    <TRow hover role="checkbox" tabIndex={-1}>
       <TCell align="left" style={callCellStyle} width={'120px'}>
         {row.call?.emptyRow ? (
           ''
@@ -347,7 +346,7 @@ const CallPutRow = ({
           </Button>
         )}
       </TCell>
-    </TableRow>
+    </TRow>
   )
 }
 

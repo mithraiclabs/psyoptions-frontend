@@ -1,4 +1,5 @@
 import TableCell from '@material-ui/core/TableCell'
+import TableRow from '@material-ui/core/TableRow'
 import Button from '@material-ui/core/Button'
 import { withStyles } from '@material-ui/core/styles'
 import theme from '../../../utils/theme'
@@ -25,6 +26,7 @@ export const TCell = withStyles({
     border: 'none',
     height: '48px',
     background: theme.palette.background.medium,
+    opacity: 0.95
   },
 })(TableCell)
 
@@ -77,3 +79,11 @@ export const TCellStrike = withStyles({
     background: theme.palette.background.paper,
   },
 })(TableCell)
+
+export const TRow = withStyles({
+  hover: {
+    '&:hover': {
+      backgroundColor: `${theme.palette.background.lighter} !important`
+    }
+  }
+})(TableRow)

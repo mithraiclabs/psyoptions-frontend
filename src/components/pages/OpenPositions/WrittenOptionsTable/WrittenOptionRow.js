@@ -173,7 +173,7 @@ export const WrittenOptionRow = React.memo(
     }
 
     return (
-      <TableRow key={marketKey}>
+      <TableRow hover key={marketKey}>
         <TableCell width="5%" />
         {/* <TableCell width="12%">Asset Pair</TableCell>
             <TableCell width="10%">Type</TableCell>

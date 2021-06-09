@@ -23,8 +23,8 @@ const useExerciseOpenPosition = (
         connection,
         payer: { publicKey: pubKey },
         programId: endpoint.programId,
-        optionMintKey: new PublicKey(market.optionMintAddress),
-        optionMarketKey: new PublicKey(market.optionMarketDataAddress),
+        optionMintKey: market.optionMintKey,
+        optionMarketKey: market.optionMarketKey,
         exerciserQuoteAssetKey: new PublicKey(exerciserQuoteAssetAddress),
         exerciserUnderlyingAssetKey: new PublicKey(
           exerciserUnderlyingAssetAddress,

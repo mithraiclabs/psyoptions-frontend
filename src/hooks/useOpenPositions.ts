@@ -15,7 +15,7 @@ const useOpenPositions = (): Record<string, TokenAccount[]> => {
   return useMemo(() => {
     const positions = Object.keys(markets).reduce((acc, marketKey) => {
       const accountsWithHoldings = ownedTokenAccounts[
-        markets[marketKey].optionMintAddress
+        markets[marketKey].optionMintKey.toString()
       ]?.filter((optionTokenAcct) => optionTokenAcct.amount > 0)
       if (accountsWithHoldings?.length) {
         acc[marketKey] = accountsWithHoldings

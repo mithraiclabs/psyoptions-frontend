@@ -32,12 +32,8 @@ const expirations = getLastFridayOfMonths(10)
 const Mint = () => {
   const { pushNotification } = useNotifications()
   const { connected } = useWallet()
-  const {
-    getStrikePrices,
-    getSizes,
-    createAccountsAndMint,
-    fetchMarketData,
-  } = useOptionsMarkets()
+  const { getStrikePrices, getSizes, createAccountsAndMint, fetchMarketData } =
+    useOptionsMarkets()
   const { ownedTokenAccounts } = useOwnedTokenAccounts()
 
   const dates = expirations
@@ -69,7 +65,8 @@ const Mint = () => {
   )
   const ownedMintedOptionAccounts = useMemo(
     () =>
-      (marketData && ownedTokenAccounts[marketData.optionMintAddress]) || [],
+      (marketData && ownedTokenAccounts[marketData.optionMintKey.toString()]) ||
+      [],
     [marketData, ownedTokenAccounts],
   )
   const ownedWriterTokenMintAccounts = useMemo(

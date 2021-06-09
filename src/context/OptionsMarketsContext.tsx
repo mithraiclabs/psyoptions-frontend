@@ -1,10 +1,17 @@
 import React, { useState, createContext } from 'react'
 import PropTypes from 'prop-types'
 
-const OptionsMarketsContext = createContext()
+import { OptionMarket } from '../types'
+
+const OptionsMarketsContext = createContext({
+  markets: {},
+  setMarkets: null,
+  marketsLoading: false,
+  setMarketsLoading: null,
+})
 
 const OptionsMarketsProvider = ({ children }) => {
-  const [markets, setMarkets] = useState({})
+  const [markets, setMarkets] = useState<Record<string, OptionMarket>>({})
   const [marketsLoading, setMarketsLoading] = useState(false)
 
   return (

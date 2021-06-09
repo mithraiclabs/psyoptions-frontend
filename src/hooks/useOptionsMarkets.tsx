@@ -2,43 +2,25 @@ import React, { useContext, useCallback } from 'react'
 import BigNumber from 'bignumber.js'
 import Link from '@material-ui/core/Link'
 import { Market } from '@mithraic-labs/psyoptions'
-
 import { Connection, PublicKey } from '@solana/web3.js'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 
-import { buildSolanaExplorerUrl } from '../utils/solanaExplorer'
 import useNotifications from './useNotifications'
 import useWallet from './useWallet'
 import useConnection from './useConnection'
 import useAssetList from './useAssetList'
 
 import { OptionsMarketsContext } from '../context/OptionsMarketsContext'
+import { useSolanaMeta } from '../context/SolanaMetaContext'
 
+import { buildSolanaExplorerUrl } from '../utils/solanaExplorer'
 import { WRAPPED_SOL_ADDRESS } from '../utils/token'
-
 import {
   createMissingMintAccounts,
   mintInstructions,
 } from '../utils/instructions/index'
-import { useSolanaMeta } from '../context/SolanaMetaContext'
 
-// Example of how markets data should look:
-// const markets = {
-//   '1614556800-SOL-USDC-700-14': {
-//     createdByMe: true
-//     expiration: 1614556800
-//     key: "1614556800-SOL-USDC-700-14"
-//     optionMarketDataAddress: "HtHcqroXGpRe5UATqYSAWenEgXK6wac3iMa8GWUaqA9j"
-//     optionMintAddress: "8ovRGAZKbD6VD67h4BdnPY83iQohSeA4B1YZY5LwErFu"
-//     qAssetMint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
-//     qAssetSymbol: "USDC"
-//     size: 700
-//     strikePrice: 14
-//     uAssetMint: "So11111111111111111111111111111111111111112"
-//     uAssetSymbol: "SOL"
-//     writerRegistryAddress: PublicKey
-//   },
-// }
+import type { OptionMarket } from '../types'
 
 const useOptionsMarkets = () => {
   const { pushNotification } = useNotifications()
@@ -81,6 +63,7 @@ const useOptionsMarkets = () => {
         )[0]
 
         // BN.js doesn't handle decimals while bignumber.js can handle decimals of arbitrary sizes
+        // So convert all BN types to BigNumber
         const amountPerContract = new BigNumber(
           market.marketData.amountPerContract.toString(10),
         ).div(10 ** uAsset.decimals)
@@ -93,29 +76,37 @@ const useOptionsMarkets = () => {
           amountPerContract.toString(10),
         )
 
-        // TODO clean up these values, not sure if everything is still used or the correct type
-        const newMarket = {
+        const {
+          expirationUnixTimestamp: expiration,
+          optionMintKey,
+          writerTokenMintKey,
+          underlyingAssetPoolKey,
+          underlyingAssetMintKey,
+          quoteAssetPoolKey,
+          quoteAssetMintKey,
+        } = market.marketData
+
+        const newMarket: OptionMarket = {
+          key: `${expiration}-${uAsset.tokenSymbol}-${
+            qAsset.tokenSymbol
+          }-${amountPerContract.toString()}-${amountPerContract.toString()}/${quoteAmountPerContract.toString()}`,
           // Leave these in tact as BigNumbers to use later for creating the reciprocal put/call
           amountPerContract,
           quoteAmountPerContract,
           size: `${amountPerContract.toString(10)}`,
-          expiration: market.marketData.expirationUnixTimestamp,
           uAssetSymbol: uAsset.tokenSymbol,
           qAssetSymbol: qAsset.tokenSymbol,
           uAssetMint: uAsset.mintAddress,
           qAssetMint: qAsset.mintAddress,
           strikePrice: `${strike.toString(10)}`,
-          // optionMintAddress is deprecated and references should be removed
-          optionMintAddress: market.marketData.optionMintKey.toString(),
-          optionMintKey: market.marketData.optionMintKey,
-          // optionMarketDataAddress is deprecated and references should be removed
-          optionMarketDataAddress: market.pubkey.toString(),
           optionMarketKey: market.pubkey,
-          writerTokenMintKey: market.marketData.writerTokenMintKey,
-          underlyingAssetPoolKey: market.marketData.underlyingAssetPoolKey,
-          underlyingAssetMintKey: market.marketData.underlyingAssetMintKey,
-          quoteAssetPoolKey: market.marketData.quoteAssetPoolKey,
-          quoteAssetMintKey: market.marketData.quoteAssetMintKey,
+          expiration,
+          optionMintKey,
+          writerTokenMintKey,
+          underlyingAssetPoolKey,
+          underlyingAssetMintKey,
+          quoteAssetPoolKey,
+          quoteAssetMintKey,
         }
 
         const key = `${newMarket.expiration}-${newMarket.uAssetSymbol}-${
@@ -154,7 +145,7 @@ const useOptionsMarkets = () => {
   }
 
   const getDates = () => {
-    const dates = Object.values(markets).map((m) => m.expiration)
+    const dates = Object.values(markets).map((m: OptionMarket) => m.expiration)
     const deduped = [...new Set(dates)]
     return deduped
   }

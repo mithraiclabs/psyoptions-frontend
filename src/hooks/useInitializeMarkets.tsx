@@ -12,6 +12,8 @@ import useWallet from './useWallet'
 import { buildSolanaExplorerUrl } from '../utils/solanaExplorer'
 import { OptionsMarketsContext } from '../context/OptionsMarketsContext'
 
+import { OptionMarket } from '../types'
+
 type InitMarketParams = {
   amountPerContract: BigNumber
   quoteAmountsPerContract: BigNumber[]
@@ -74,9 +76,8 @@ export const useInitializeMarkets = (): ((
               createAccountsSigned.serialize(),
             )
 
-            const createAccountsExplorerUrl = buildSolanaExplorerUrl(
-              createAccountsTxId,
-            )
+            const createAccountsExplorerUrl =
+              buildSolanaExplorerUrl(createAccountsTxId)
 
             pushNotification({
               severity: 'info',
@@ -130,9 +131,8 @@ export const useInitializeMarkets = (): ((
             const transaction = new Transaction()
             transaction.add(initializeMarketIx)
             transaction.feePayer = wallet.publicKey
-            const {
-              blockhash: initMarketBlockHash,
-            } = await connection.getRecentBlockhash()
+            const { blockhash: initMarketBlockHash } =
+              await connection.getRecentBlockhash()
             transaction.recentBlockhash = initMarketBlockHash
 
             const signed = await wallet.signTransaction(transaction)
@@ -162,20 +162,18 @@ export const useInitializeMarkets = (): ((
               ),
             })
 
-            const marketData = {
+            const marketData: OptionMarket = {
               key: `${expiration}-${uAssetSymbol}-${qAssetSymbol}-${amountPerContract.toString()}-${amountPerContract.toString()}/${qAmount.toString()}`,
               amountPerContract,
               quoteAmountPerContract: qAmount,
-              size: amountPerContract.toNumber(),
-              strikePrice: qAmount.div(amountPerContract).toNumber(),
+              size: `${amountPerContract.toNumber()}`,
+              strikePrice: `${qAmount.div(amountPerContract).toNumber()}`,
               uAssetSymbol,
               qAssetSymbol,
               uAssetMint,
               qAssetMint,
               expiration,
-              optionMarketDataAddress: optionMarketKey.toString(),
               optionMarketKey,
-              optionMintAddress: optionMintKey.toString(),
               optionMintKey,
               writerTokenMintKey,
               underlyingAssetPoolKey,

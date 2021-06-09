@@ -44,13 +44,11 @@ const OpenPositions = () => {
       0,
     ),
     strikePrice: markets[key]?.strikePrice,
-    optionMarketKey: markets[key]?.optionMarketDataAddress,
     market: markets[key],
     qAssetMintAddress: markets[key]?.qAssetMint,
     uAssetMintAddress: markets[key]?.uAssetMint,
     qAssetSymbol: markets[key]?.qAssetSymbol,
     uAssetSymbol: markets[key]?.uAssetSymbol,
-    optionContractTokenKey: markets[key]?.optionMintAddress,
     amountPerContract: markets[key]?.amountPerContract,
     quoteAmountPerContract: markets[key]?.quoteAmountPerContract,
   }))
@@ -103,7 +101,10 @@ const OpenPositions = () => {
                   {positionRows
                     .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                     .map((row) => (
-                      <PositionRow key={row.optionContractTokenKey} row={row} />
+                      <PositionRow
+                        key={row.market.optionMintKey.toString()}
+                        row={row}
+                      />
                     ))}
                 </TableBody>
               </Table>

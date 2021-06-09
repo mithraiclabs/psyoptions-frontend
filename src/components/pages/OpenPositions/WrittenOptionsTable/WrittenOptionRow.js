@@ -34,7 +34,7 @@ export const WrittenOptionRow = React.memo(
     const ownedUAssetKey = ownedTokenAccounts[market.uAssetMint]?.[0]?.pubKey
     const ownedQAssetKey = ownedTokenAccounts[market.qAssetMint]?.[0]?.pubKey
     const ownedOptionTokenAccounts =
-      ownedTokenAccounts[market.optionMintAddress]
+      ownedTokenAccounts[market.optionMintKey.toString()]
     const { closeOptionPostExpiration } = useCloseWrittenOptionPostExpiration(
       market,
       ownedUAssetKey,

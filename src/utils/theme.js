@@ -54,10 +54,11 @@ const theme = createMuiTheme({
       lighter: '#5C585F',
       light: '#34343E',
       paper: '#34343E',
-      tableHighlight: '#2A2A34',
+      tableHighlight: 'rgba(42, 42, 52, 0.85)',
       medium: '#22222A',
       main: '#101017',
       default: '#101017',
+      marketsCallPutRow: 'rgba(34, 34, 42, 0.85)'
     },
     border: {
       main: '#686775',

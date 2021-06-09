@@ -25,8 +25,7 @@ export const TCell = withStyles({
     fontSize: '14px',
     border: 'none',
     height: '48px',
-    background: theme.palette.background.medium,
-    opacity: 0.95
+    background: theme.palette.background.marketsCallPutRow
   },
 })(TableCell)
 

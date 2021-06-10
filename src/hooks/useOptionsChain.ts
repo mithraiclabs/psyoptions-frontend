@@ -1,5 +1,6 @@
 import { useCallback, useContext } from 'react'
 import BigNumber from 'bignumber.js'
+import { PublicKey } from '@solana/web3.js'
 
 import useOptionsMarkets from './useOptionsMarkets'
 import { OptionsChainContext } from '../context/OptionsChainContext'
@@ -15,6 +16,7 @@ type OptionRow = OptionMarket & {
   volume: string
   openInterest: string
   serumKey: string
+  serumMarketKey?: PublicKey
   initialized: boolean
   fraction: string
   reciprocalFraction: string

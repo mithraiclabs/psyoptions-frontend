@@ -36,6 +36,7 @@ import OpenOrders from '../../OpenOrders'
 import { ContractSizeSelector } from '../../ContractSizeSelector'
 
 import { TCellLoading, THeadCell, TCellStrike, PageButton } from './styles'
+import { MarketDataProvider } from '../../../context/MarketDataContext'
 
 const dblsp = `${'\u00A0'}${'\u00A0'}`
 
@@ -132,10 +133,24 @@ const Markets = () => {
 
   const filteredChain = useMemo(
     () =>
-      chain.filter((row) => {
-        return supportedStrikePrices.includes(row.strike.toNumber())
-      }),
-    [chain, supportedStrikePrices],
+      chain
+        .filter((row) => {
+          return supportedStrikePrices.includes(row.strike.toNumber())
+        })
+        .map((row) => ({
+          ...row,
+          put: {
+            ...row.put,
+            serumMarketKey:
+              serumMarkets[row.put.serumKey]?.serumMarket?.marketAddress,
+          },
+          call: {
+            ...row.call,
+            serumMarketKey:
+              serumMarkets[row.call.serumKey]?.serumMarket?.marketAddress,
+          },
+        })),
+    [chain, serumMarkets, supportedStrikePrices],
   )
 
   const numberOfPages = Math.ceil(filteredChain.length / rowsPerPage)
@@ -225,285 +240,287 @@ const Markets = () => {
       : `${currentPageStart} of ${filteredChain.length}`
 
   return (
-    <Page>
-      <BuySellDialog
-        {...callPutData}
-        markPrice={markPrice}
-        heading={buySellDialogHeading}
-        open={buySellDialogOpen}
-        onClose={() => setBuySellDialogOpen(false)}
-        round={round}
-        precision={precision}
-        date={date}
-        uAssetDecimals={
-          callPutData?.type === 'call' ? uAsset?.decimals : qAsset?.decimals
-        }
-        qAssetDecimals={
-          callPutData?.type === 'call' ? qAsset?.decimals : uAsset?.decimals
-        }
-        setLimitPrice={setLimitPrice}
-        limitPrice={limitPrice}
-      />
-      <Box
-        display="flex"
-        justifyContent="center"
-        flexDirection="column"
-        minHeight="100%"
-      >
+    <MarketDataProvider chain={chain}>
+      <Page>
+        <BuySellDialog
+          {...callPutData}
+          markPrice={markPrice}
+          heading={buySellDialogHeading}
+          open={buySellDialogOpen}
+          onClose={() => setBuySellDialogOpen(false)}
+          round={round}
+          precision={precision}
+          date={date}
+          uAssetDecimals={
+            callPutData?.type === 'call' ? uAsset?.decimals : qAsset?.decimals
+          }
+          qAssetDecimals={
+            callPutData?.type === 'call' ? qAsset?.decimals : uAsset?.decimals
+          }
+          setLimitPrice={setLimitPrice}
+          limitPrice={limitPrice}
+        />
         <Box
-          py={[0, 0, 2]}
           display="flex"
-          flexDirection={['column', 'column', 'row']}
-          alignItems="center"
-          justifyContent="space-between"
+          justifyContent="center"
+          flexDirection="column"
+          minHeight="100%"
         >
           <Box
-            width={['100%', '100%', 'auto']}
+            py={[0, 0, 2]}
             display="flex"
             flexDirection={['column', 'column', 'row']}
-            alignItems={['left', 'left', 'center']}
+            alignItems="center"
             justifyContent="space-between"
           >
-            <Box px={0} py={0} width={['100%', '100%', '300px']}>
-              <Select
-                variant="filled"
-                label="Expiration Date"
-                value={date.toISOString()}
-                onChange={(e) => setSelectedDate(moment.utc(e.target.value))}
-                options={dates.map((d) => ({
-                  value: d.toISOString(),
-                  text: `${d.format('ll')} | 23:59:59 UTC`,
-                }))}
-                style={{
-                  minWidth: '100%',
-                }}
-              />
-            </Box>
-            <Box px={[0, 0, 2]} py={0} width={['100%', '100%', '200px']}>
-              <ContractSizeSelector
-                onChange={updateContractSize}
-                value={contractSize}
-              />
-            </Box>
-          </Box>
-          <Box px={[1, 1, 0]} py={[2, 2, 1]} width={['100%', '100%', 'auto']}>
-            <Box pb={'6px'} pl="10px" fontSize={'14px'}>
-              Asset Pair:
-            </Box>
             <Box
-              fontSize="12px"
+              width={['100%', '100%', 'auto']}
               display="flex"
-              alignItems="center"
-              border={`1px solid ${theme.palette.background.lighter}`}
-              borderRadius={'20px'}
-              width={'fit-content'}
+              flexDirection={['column', 'column', 'row']}
+              alignItems={['left', 'left', 'center']}
+              justifyContent="space-between"
             >
-              <Box pr={1}>
-                <Box>
-                  <SelectAsset
-                    selectedAsset={uAsset}
-                    onSelectAsset={(asset) => {
-                      setUAsset(asset)
-                    }}
-                  />
+              <Box px={0} py={0} width={['100%', '100%', '300px']}>
+                <Select
+                  variant="filled"
+                  label="Expiration Date"
+                  value={date.toISOString()}
+                  onChange={(e) => setSelectedDate(moment.utc(e.target.value))}
+                  options={dates.map((d) => ({
+                    value: d.toISOString(),
+                    text: `${d.format('ll')} | 23:59:59 UTC`,
+                  }))}
+                  style={{
+                    minWidth: '100%',
+                  }}
+                />
+              </Box>
+              <Box px={[0, 0, 2]} py={0} width={['100%', '100%', '200px']}>
+                <ContractSizeSelector
+                  onChange={updateContractSize}
+                  value={contractSize}
+                />
+              </Box>
+            </Box>
+            <Box px={[1, 1, 0]} py={[2, 2, 1]} width={['100%', '100%', 'auto']}>
+              <Box pb={'6px'} pl="10px" fontSize={'14px'}>
+                Asset Pair:
+              </Box>
+              <Box
+                fontSize="12px"
+                display="flex"
+                alignItems="center"
+                border={`1px solid ${theme.palette.background.lighter}`}
+                borderRadius={'20px'}
+                width={'fit-content'}
+              >
+                <Box pr={1}>
+                  <Box>
+                    <SelectAsset
+                      selectedAsset={uAsset}
+                      onSelectAsset={(asset) => {
+                        setUAsset(asset)
+                      }}
+                    />
+                  </Box>
+                </Box>
+                <h3 style={{ margin: 0 }}>/</h3>
+                <Box pl={'4px'}>
+                  <SelectAsset disabled selectedAsset={qAsset} />
                 </Box>
               </Box>
-              <h3 style={{ margin: 0 }}>/</h3>
-              <Box pl={'4px'}>
-                <SelectAsset disabled selectedAsset={qAsset} />
-              </Box>
+            </Box>
+          </Box>
+          <Box position="relative">
+            <TableContainer>
+              <Table stickyHeader aria-label="sticky table">
+                <TableHead>
+                  <TableRow>
+                    <THeadCell
+                      colSpan={8}
+                      style={{ borderTop: 'none', padding: '16px 20px' }}
+                    >
+                      <h3 style={{ margin: 0 }}>
+                        {`Calls${
+                          uAsset && qAsset && !assetListLoading
+                            ? `  (${uAsset.tokenSymbol}/${qAsset.tokenSymbol})`
+                            : ''
+                        }`}
+                      </h3>
+                    </THeadCell>
+                    <TCellStrike colSpan={1} />
+                    <THeadCell
+                      colSpan={8}
+                      style={{ borderTop: 'none', padding: '16px 20px' }}
+                    >
+                      <h3 style={{ margin: 0 }}>
+                        {`Puts${
+                          uAsset && qAsset && !assetListLoading
+                            ? `  (${qAsset.tokenSymbol}/${uAsset.tokenSymbol})`
+                            : ''
+                        }`}
+                      </h3>
+                    </THeadCell>
+                  </TableRow>
+                  <TableRow>
+                    <THeadCell align="left" style={{ paddingLeft: '16px' }}>
+                      Action
+                    </THeadCell>
+                    {/* <THeadCell align="left">Size</THeadCell> */}
+                    <THeadCell align="left" width={'70px'}>
+                      IV
+                    </THeadCell>
+                    <THeadCell align="left" width={'90px'}>
+                      Bid
+                    </THeadCell>
+                    <THeadCell align="left" width={'90px'}>
+                      Ask
+                    </THeadCell>
+                    <THeadCell align="left" width={'70px'}>
+                      IV
+                    </THeadCell>
+                    <THeadCell align="left">Change</THeadCell>
+                    <THeadCell align="left">Volume</THeadCell>
+                    <THeadCell align="left">Open</THeadCell>
+
+                    <TCellStrike align="center">Strike</TCellStrike>
+
+                    {/* <THeadCell align="right">Size</THeadCell> */}
+                    <THeadCell align="right" width={'70px'}>
+                      IV
+                    </THeadCell>
+                    <THeadCell align="right" width={'90px'}>
+                      Bid
+                    </THeadCell>
+                    <THeadCell align="right" width={'90px'}>
+                      Ask
+                    </THeadCell>
+                    <THeadCell align="right" width={'70px'}>
+                      IV
+                    </THeadCell>
+                    <THeadCell align="right">Change</THeadCell>
+                    <THeadCell align="right">Volume</THeadCell>
+                    <THeadCell align="right">Open</THeadCell>
+                    <THeadCell align="right" style={{ paddingRight: '16px' }}>
+                      Action
+                    </THeadCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {rows.map((row) => {
+                    return fullPageLoading ? (
+                      <tr key={`${row.key}`}>
+                        <TCellLoading
+                          colSpan={8}
+                          style={{
+                            backgroundColor: theme.palette.background.medium,
+                          }}
+                        >
+                          <Loading />
+                        </TCellLoading>
+                        <TCellStrike />
+                        <TCellLoading
+                          colSpan={8}
+                          style={{
+                            backgroundColor: theme.palette.background.medium,
+                          }}
+                        >
+                          <Loading />
+                        </TCellLoading>
+                      </tr>
+                    ) : (
+                      <CallPutRow
+                        key={`${row.key}`}
+                        row={row}
+                        uAsset={uAsset}
+                        qAsset={qAsset}
+                        date={date}
+                        precision={precision}
+                        round={round}
+                        onClickBuySellCall={handleBuySellClick}
+                        onClickBuySellPut={handleBuySellClick}
+                        markPrice={markPrice}
+                        setLimitPrice={setLimitPrice}
+                      />
+                    )
+                  })}
+                  <TableRow>
+                    <THeadCell colSpan={17} style={{ borderBottom: 'none' }}>
+                      <Box
+                        py={1}
+                        px={[1, 1, 0]}
+                        display="flex"
+                        justifyContent="space-between"
+                        alignItems="center"
+                      >
+                        <Box width="33%" align="left">
+                          {!!uAsset?.tokenSymbol && !!markPrice && (
+                            <>
+                              {uAsset?.tokenSymbol} Market Price: $
+                              {markPrice && markPrice.toFixed(precision)}
+                            </>
+                          )}
+                        </Box>
+                        <Box
+                          width="33%"
+                          align="center"
+                          display="flex"
+                          justifyContent="center"
+                          alignItems="center"
+                        >
+                          {numberOfPages > 1 && (
+                            <>
+                              <PageButton
+                                disabled={page === 0}
+                                onClick={() => setPage(Math.max(page - 1, 0))}
+                              >
+                                <ChevronLeft />
+                              </PageButton>
+                              <Box width="80px">{currentPageLabel}</Box>
+                              <PageButton
+                                disabled={page === numberOfPages - 1}
+                                onClick={() =>
+                                  setPage(Math.min(page + 1, numberOfPages))
+                                }
+                              >
+                                <ChevronRight />
+                              </PageButton>
+                            </>
+                          )}
+                        </Box>
+                        <Box width="33%" align="right">
+                          <FormControlLabel
+                            labelPlacement="start"
+                            control={
+                              <Switch
+                                checked={round}
+                                onChange={() => setRound(!round)}
+                                name="round-strike-prices"
+                                color="primary"
+                                size="small"
+                              />
+                            }
+                            label={
+                              <span style={{ fontSize: '14px' }}>
+                                Round Strike Prices
+                              </span>
+                            }
+                            style={{ margin: '0' }}
+                          />
+                        </Box>
+                      </Box>
+                    </THeadCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </TableContainer>
+            <Box>
+              <OpenOrders optionMarkets={marketsFlat} />
             </Box>
           </Box>
         </Box>
-        <Box position="relative">
-          <TableContainer>
-            <Table stickyHeader aria-label="sticky table">
-              <TableHead>
-                <TableRow>
-                  <THeadCell
-                    colSpan={8}
-                    style={{ borderTop: 'none', padding: '16px 20px' }}
-                  >
-                    <h3 style={{ margin: 0 }}>
-                      {`Calls${
-                        uAsset && qAsset && !assetListLoading
-                          ? `  (${uAsset.tokenSymbol}/${qAsset.tokenSymbol})`
-                          : ''
-                      }`}
-                    </h3>
-                  </THeadCell>
-                  <TCellStrike colSpan={1} />
-                  <THeadCell
-                    colSpan={8}
-                    style={{ borderTop: 'none', padding: '16px 20px' }}
-                  >
-                    <h3 style={{ margin: 0 }}>
-                      {`Puts${
-                        uAsset && qAsset && !assetListLoading
-                          ? `  (${qAsset.tokenSymbol}/${uAsset.tokenSymbol})`
-                          : ''
-                      }`}
-                    </h3>
-                  </THeadCell>
-                </TableRow>
-                <TableRow>
-                  <THeadCell align="left" style={{ paddingLeft: '16px' }}>
-                    Action
-                  </THeadCell>
-                  {/* <THeadCell align="left">Size</THeadCell> */}
-                  <THeadCell align="left" width={'70px'}>
-                    IV
-                  </THeadCell>
-                  <THeadCell align="left" width={'90px'}>
-                    Bid
-                  </THeadCell>
-                  <THeadCell align="left" width={'90px'}>
-                    Ask
-                  </THeadCell>
-                  <THeadCell align="left" width={'70px'}>
-                    IV
-                  </THeadCell>
-                  <THeadCell align="left">Change</THeadCell>
-                  <THeadCell align="left">Volume</THeadCell>
-                  <THeadCell align="left">Open</THeadCell>
-
-                  <TCellStrike align="center">Strike</TCellStrike>
-
-                  {/* <THeadCell align="right">Size</THeadCell> */}
-                  <THeadCell align="right" width={'70px'}>
-                    IV
-                  </THeadCell>
-                  <THeadCell align="right" width={'90px'}>
-                    Bid
-                  </THeadCell>
-                  <THeadCell align="right" width={'90px'}>
-                    Ask
-                  </THeadCell>
-                  <THeadCell align="right" width={'70px'}>
-                    IV
-                  </THeadCell>
-                  <THeadCell align="right">Change</THeadCell>
-                  <THeadCell align="right">Volume</THeadCell>
-                  <THeadCell align="right">Open</THeadCell>
-                  <THeadCell align="right" style={{ paddingRight: '16px' }}>
-                    Action
-                  </THeadCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {rows.map((row) => {
-                  return fullPageLoading ? (
-                    <tr key={`${row.key}`}>
-                      <TCellLoading
-                        colSpan={8}
-                        style={{
-                          backgroundColor: theme.palette.background.medium,
-                        }}
-                      >
-                        <Loading />
-                      </TCellLoading>
-                      <TCellStrike />
-                      <TCellLoading
-                        colSpan={8}
-                        style={{
-                          backgroundColor: theme.palette.background.medium,
-                        }}
-                      >
-                        <Loading />
-                      </TCellLoading>
-                    </tr>
-                  ) : (
-                    <CallPutRow
-                      key={`${row.key}`}
-                      row={row}
-                      uAsset={uAsset}
-                      qAsset={qAsset}
-                      date={date}
-                      precision={precision}
-                      round={round}
-                      onClickBuySellCall={handleBuySellClick}
-                      onClickBuySellPut={handleBuySellClick}
-                      markPrice={markPrice}
-                      setLimitPrice={setLimitPrice}
-                    />
-                  )
-                })}
-                <TableRow>
-                  <THeadCell colSpan={17} style={{ borderBottom: 'none' }}>
-                    <Box
-                      py={1}
-                      px={[1, 1, 0]}
-                      display="flex"
-                      justifyContent="space-between"
-                      alignItems="center"
-                    >
-                      <Box width="33%" align="left">
-                        {!!uAsset?.tokenSymbol && !!markPrice && (
-                          <>
-                            {uAsset?.tokenSymbol} Market Price: $
-                            {markPrice && markPrice.toFixed(precision)}
-                          </>
-                        )}
-                      </Box>
-                      <Box
-                        width="33%"
-                        align="center"
-                        display="flex"
-                        justifyContent="center"
-                        alignItems="center"
-                      >
-                        {numberOfPages > 1 && (
-                          <>
-                            <PageButton
-                              disabled={page === 0}
-                              onClick={() => setPage(Math.max(page - 1, 0))}
-                            >
-                              <ChevronLeft />
-                            </PageButton>
-                            <Box width="80px">{currentPageLabel}</Box>
-                            <PageButton
-                              disabled={page === numberOfPages - 1}
-                              onClick={() =>
-                                setPage(Math.min(page + 1, numberOfPages))
-                              }
-                            >
-                              <ChevronRight />
-                            </PageButton>
-                          </>
-                        )}
-                      </Box>
-                      <Box width="33%" align="right">
-                        <FormControlLabel
-                          labelPlacement="start"
-                          control={
-                            <Switch
-                              checked={round}
-                              onChange={() => setRound(!round)}
-                              name="round-strike-prices"
-                              color="primary"
-                              size="small"
-                            />
-                          }
-                          label={
-                            <span style={{ fontSize: '14px' }}>
-                              Round Strike Prices
-                            </span>
-                          }
-                          style={{ margin: '0' }}
-                        />
-                      </Box>
-                    </Box>
-                  </THeadCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          </TableContainer>
-          <Box>
-            <OpenOrders optionMarkets={marketsFlat} />
-          </Box>
-        </Box>
-      </Box>
-    </Page>
+      </Page>
+    </MarketDataProvider>
   )
 }
 

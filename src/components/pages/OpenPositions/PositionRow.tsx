@@ -34,8 +34,6 @@ const PositionRow: React.VFC<{
     uAssetSymbol: string
     expiration: number
     market: OptionMarket
-    optionContractTokenKey: string
-    optionMarketKey: string
     size: number
     strikePrice: string
     uAssetMintAddress: string
@@ -84,7 +82,7 @@ const PositionRow: React.VFC<{
   const ownedQAssetKey = ownedTokenAccounts[row.qAssetMintAddress]?.[0]?.pubKey
   const ownedUAssetKey = ownedTokenAccounts[row.uAssetMintAddress]?.[0]?.pubKey
   const ownedOAssetKey =
-    ownedTokenAccounts[row.optionContractTokenKey]?.[0]?.pubKey
+    ownedTokenAccounts[row.market.optionMintKey.toString()]?.[0]?.pubKey
 
   const { exercise } = useExerciseOpenPosition(
     row.market,
@@ -113,7 +111,7 @@ const PositionRow: React.VFC<{
         onClick={onRowClick}
         role="checkbox"
         tabIndex={-1}
-        key={row.optionContractTokenKey}
+        key={row.market.optionMintKey.toString()}
       >
         <TableCell width="5%">
           {row.accounts.length > 1 && (
@@ -148,7 +146,7 @@ const PositionRow: React.VFC<{
           )}
         </TableCell>
       </TableRow>
-      <TableRow key={`${row.optionContractTokenKey}Collapsible`}>
+      <TableRow key={`${row.market.optionMintKey}Collapsible`}>
         <TableCell
           style={{ borderWidth: 0, padding: 0, margin: 0 }}
           colSpan={7}

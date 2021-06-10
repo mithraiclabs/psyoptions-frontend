@@ -16,6 +16,7 @@ export type TokenAccount = {
 }
 
 export type OptionMarket = {
+  key: string
   // Leave these in tact as BigNumbers to use later for creating the reciprocal put/call
   amountPerContract: BigNumber
   quoteAmountPerContract: BigNumber
@@ -26,16 +27,13 @@ export type OptionMarket = {
   uAssetMint: string
   qAssetMint: string
   strikePrice: string
-  /** @deprecated */
-  optionMintAddress: string
   optionMintKey: PublicKey
-  /** @deprecated */
-  optionMarketDataAddress: string
   optionMarketKey: PublicKey
   writerTokenMintKey: PublicKey
   underlyingAssetPoolKey: PublicKey
-  quoteAssetPoolKey: PublicKey
   underlyingAssetMintKey: PublicKey
+  quoteAssetPoolKey: PublicKey
+  quoteAssetMintKey: PublicKey
 }
 
 export type OptionMarketMeta = {

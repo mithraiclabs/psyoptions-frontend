@@ -65,7 +65,7 @@ export const useCloseWrittenOptionPostExpiration = (
           const ix = await closePostExpirationCoveredCallInstruction({
             // eslint-disable-line
             programId: new PublicKey(endpoint.programId),
-            optionMarketKey: new PublicKey(market.optionMarketDataAddress),
+            optionMarketKey: market.optionMarketKey,
             optionMintKey: market.optionMintKey,
             underlyingAssetDestKey: _underlyingAssetDestKey,
             underlyingAssetPoolKey: market.underlyingAssetPoolKey,
@@ -146,7 +146,7 @@ export const useCloseWrittenOptionPostExpiration = (
     [
       underlyingAssetDestKey,
       market.uAssetMint,
-      market.optionMarketDataAddress,
+      market.optionMarketKey,
       market.optionMintKey,
       market.underlyingAssetPoolKey,
       market.writerTokenMintKey,

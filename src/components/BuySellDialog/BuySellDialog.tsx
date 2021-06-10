@@ -57,8 +57,8 @@ const BuySellDialog: React.VFC<{
   round: boolean
   precision: number
   type: string
-  optionMintAddress: string
-  writerTokenMintKey: string
+  optionMintKey: PublicKey
+  writerTokenMintKey: PublicKey
   serumKey: string
   date: Moment
   markPrice: number,
@@ -80,7 +80,7 @@ const BuySellDialog: React.VFC<{
   round,
   precision,
   type,
-  optionMintAddress,
+  optionMintKey,
   writerTokenMintKey,
   serumKey,
   date,
@@ -112,8 +112,8 @@ const BuySellDialog: React.VFC<{
     quoteAmountPerContract,
   })
 
-  const optionAccounts = ownedTokenAccounts[optionMintAddress] || []
-  const writerAccounts = ownedTokenAccounts[writerTokenMintKey] || []
+  const optionAccounts = ownedTokenAccounts[`${optionMintKey}`] || []
+  const writerAccounts = ownedTokenAccounts[`${writerTokenMintKey}`] || []
   const uAssetAccounts = ownedTokenAccounts[uAssetMint] || []
   const qAssetAccounts = ownedTokenAccounts[qAssetMint] || []
 
@@ -186,7 +186,7 @@ const BuySellDialog: React.VFC<{
       const { tx1, tx2 } = await createInitializeMarketTx({
         connection,
         payer: pubKey,
-        baseMint: new PublicKey(optionMintAddress),
+        baseMint: optionMintKey,
         quoteMint:
           type === 'call'
             ? new PublicKey(qAssetMint)

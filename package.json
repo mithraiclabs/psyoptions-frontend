@@ -67,7 +67,6 @@
     "buffer-layout": "^1.2.0",
     "cookie": "^0.4.1",
     "cookie-parser": "^1.4.5",
-    "date-fns": "^2.22.1",
     "dotenv": "^8.2.0",
     "dotenv-webpack": "^6.0.0",
     "eventemitter3": "^4.0.7",

@@ -5,8 +5,9 @@ Copy `.env-example` and rename it `.env`
 OR run `touch .env` and add the following lines to it:
 
 ```
-DEVNET_PROGRAM_ID='GDvqQy3FkDB2wyNwgZGp5YkmRMUmWbhNNWDMYKbLSZ5N'
-DEVNET_DEX_PROGRAM_ID='DESVgJVGajEgKGXhb6XmqDHGz3VjdgP7rEVESBgxmroY'
+DEVNET_PROGRAM_ID=GDvqQy3FkDB2wyNwgZGp5YkmRMUmWbhNNWDMYKbLSZ5N
+DEVNET_DEX_PROGRAM_ID=DESVgJVGajEgKGXhb6XmqDHGz3VjdgP7rEVESBgxmroY
+GRAPHQL_URL=http://localhost:8080/v1/graphql
 APP_ENABLED=true
 ```
 

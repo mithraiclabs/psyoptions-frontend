@@ -49,6 +49,7 @@ server.get(/rate-limited-fetch-worker/, (req, res) => {
 })
 
 const {
+  GRAPHQL_URL,
   LOCAL_PROGRAM_ID,
   MAINNET_PROGRAM_ID,
   TESTNET_PROGRAM_ID,
@@ -85,6 +86,7 @@ server.use((req, res) => {
         />
       )
       env = {
+        GRAPHQL_URL,
         LOCAL_PROGRAM_ID,
         MAINNET_PROGRAM_ID,
         TESTNET_PROGRAM_ID,

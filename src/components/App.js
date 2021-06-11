@@ -1,14 +1,16 @@
 import React, { useEffect } from 'react'
-
 import Store from '../context/store'
-import Router from './Router'
 import useOptionsMarkets from '../hooks/useOptionsMarkets'
+import { GraphQLProvider } from './GraphQLProvider'
+import Router from './Router'
 
 const WrappedApp = (props) => {
   return (
-    <Store>
-      <App {...props} />
-    </Store>
+    <GraphQLProvider>
+      <Store>
+        <App {...props} />
+      </Store>
+    </GraphQLProvider>
   )
 }
 

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import {
   Commitment,
   Connection,
@@ -8,14 +9,7 @@ import {
   TransactionSignature,
 } from '@solana/web3.js'
 import Wallet from '@project-serum/sol-wallet-adapter'
-
-export class TransactionError extends Error {
-  public txid: string
-  constructor(message: string, txid?: string) {
-    super(message)
-    this.txid = txid
-  }
-}
+import { TimeoutError } from './transactionErrors/TimeoutError'
 
 export async function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms))
@@ -38,14 +32,13 @@ export async function signTransaction({
   signers?: Array<Keypair>
   connection: Connection
 }) {
-  transaction.recentBlockhash = (
-    await connection.getRecentBlockhash('max')
-  ).blockhash
-  transaction.setSigners(wallet.publicKey, ...signers.map((s) => s.publicKey))
+  const tx = transaction
+  tx.recentBlockhash = (await connection.getRecentBlockhash('max')).blockhash
+
   if (signers.length > 0) {
-    transaction.partialSign(...signers)
+    tx.partialSign(...signers)
   }
-  return await wallet.signTransaction(transaction)
+  return wallet.signTransaction(tx)
 }
 
 export async function signTransactions({
@@ -60,16 +53,23 @@ export async function signTransactions({
   wallet: Wallet
   connection: Connection
 }) {
-  const blockhash = (await connection.getRecentBlockhash('max')).blockhash
-  transactionsAndSigners.forEach(({ transaction, signers = [] }) => {
-    transaction.recentBlockhash = blockhash
-    transaction.setSigners(wallet.publicKey, ...signers.map((s) => s.publicKey))
-    if (signers?.length > 0) {
-      transaction.partialSign(...signers)
-    }
-  })
-  return await wallet.signAllTransactions(
-    transactionsAndSigners.map(({ transaction }) => transaction),
+  const { blockhash } = await connection.getRecentBlockhash('max')
+  const tempTransactionsAndSigners = transactionsAndSigners.map(
+    ({ transaction, signers = [] }) => {
+      const tx = transaction
+      tx.recentBlockhash = blockhash
+
+      if (signers?.length > 0) {
+        transaction.partialSign(...signers)
+      }
+      return {
+        transaction: tx,
+        signers,
+      }
+    },
+  )
+  return wallet.signAllTransactions(
+    tempTransactionsAndSigners.map(({ transaction }) => transaction),
   )
 }
 
@@ -79,7 +79,7 @@ export async function awaitTransactionSignatureConfirmation(
   connection: Connection,
 ) {
   let done = false
-  const result = await new Promise((resolve, reject) => {
+  const res = await new Promise((resolve, reject) => {
     // eslint-disable-next-line
     ;(async () => {
       setTimeout(() => {
@@ -88,7 +88,7 @@ export async function awaitTransactionSignatureConfirmation(
         }
         done = true
         console.log('Timed out for txid', txid)
-        reject({ timeout: true })
+        reject(new TimeoutError('TX timed out', txid))
       }, timeout)
       try {
         connection.onSignature(
@@ -124,9 +124,7 @@ export async function awaitTransactionSignatureConfirmation(
                 console.log('REST error for', txid, result)
                 done = true
                 reject(result.err)
-              }
-              // @ts-ignore
-              else if (
+              } else if (
                 !(
                   result.confirmations ||
                   result.confirmationStatus === 'confirmed' ||
@@ -151,7 +149,7 @@ export async function awaitTransactionSignatureConfirmation(
     })()
   })
   done = true
-  return result
+  return res
 }
 
 /** Copy of Connection.simulateTransaction that takes a commitment parameter. */
@@ -160,15 +158,16 @@ export async function simulateTransaction(
   transaction: Transaction,
   commitment: Commitment,
 ): Promise<RpcResponseAndContext<SimulatedTransactionResponse>> {
+  const tx = transaction
   // @ts-ignore
-  transaction.recentBlockhash = await connection._recentBlockhash(
+  tx.recentBlockhash = await connection._recentBlockhash(
     // @ts-ignore
     connection._disableBlockhashCaching,
   )
 
-  const signData = transaction.serializeMessage()
+  const signData = tx.serializeMessage()
   // @ts-ignore
-  const wireTransaction = transaction._serialize(signData)
+  const wireTransaction = tx._serialize(signData)
   const encodedTransaction = wireTransaction.toString('base64')
   const config: any = { encoding: 'base64', commitment }
   const args = [encodedTransaction, config]
@@ -176,7 +175,7 @@ export async function simulateTransaction(
   // @ts-ignore
   const res = await connection._rpcRequest('simulateTransaction', args)
   if (res.error) {
-    throw new Error('failed to simulate transaction: ' + res.error.message)
+    throw new Error(`failed to simulate transaction: ${res.error.message}`)
   }
   return res.result
 }

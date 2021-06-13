@@ -1,4 +1,5 @@
-import React, { useCallback, useContext } from 'react'
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+import { useCallback, useContext } from 'react'
 import { Account, Keypair, PublicKey, Transaction } from '@solana/web3.js'
 import BigNumber from 'bignumber.js'
 import {
@@ -9,7 +10,7 @@ import useConnection from './useConnection'
 import useNotifications from './useNotifications'
 import useWallet from './useWallet'
 import { OptionsMarketsContext } from '../context/OptionsMarketsContext'
-import useSendTransaction from '../hooks/useSendTransaction'
+import useSendTransaction from './useSendTransaction'
 
 import { OptionMarket } from '../types'
 
@@ -163,6 +164,7 @@ export const useInitializeMarkets = (): ((
       pubKey,
       pushNotification,
       setMarkets,
+      sendTransaction,
       wallet,
     ],
   )

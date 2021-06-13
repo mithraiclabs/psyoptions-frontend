@@ -14,11 +14,11 @@ import {
   signTransaction,
   simulateTransaction,
   sleep,
-  TransactionError,
 } from '../utils/send'
 import useNotifications from './useNotifications'
 import { NotificationSeverity } from '../types'
 import { buildSolanaExplorerUrl } from '../utils/solanaExplorer'
+import TransactionError from '../utils/transactionErrors/TransactionError'
 
 const DEFAULT_TIMEOUT = 30000
 
@@ -84,11 +84,11 @@ const useSendTransaction = () => {
         }
         if (simulateResult && simulateResult.err) {
           if (simulateResult.logs) {
-            for (let i = simulateResult.logs.length - 1; i >= 0; --i) {
+            for (let i = simulateResult.logs.length - 1; i >= 0; i -= 1) {
               const line = simulateResult.logs[i]
               if (line.startsWith('Program log: ')) {
                 throw new TransactionError(
-                  'Transaction failed: ' + line.slice('Program log: '.length),
+                  `Transaction failed: ${line.slice('Program log: '.length)}`,
                   txid,
                 )
               }
@@ -139,7 +139,7 @@ const useSendTransaction = () => {
       signers,
       connection,
     })
-    return await sendSignedTransaction({
+    return sendSignedTransaction({
       signedTransaction,
       connection,
       sendingMessage,

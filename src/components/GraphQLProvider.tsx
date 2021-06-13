@@ -11,7 +11,7 @@ import { isBrowser } from '../utils/isNode'
 
 export const GraphQLProvider: React.FC = ({ children }) => {
   const client = useMemo(() => {
-    if (!isBrowser) {
+    if (!isBrowser || !process.env.GRAPHQL_URL) {
       return null
     }
     const subscriptionClient = new SubscriptionClient(
@@ -31,7 +31,7 @@ export const GraphQLProvider: React.FC = ({ children }) => {
     })
   }, [])
 
-  if (isBrowser) {
+  if (isBrowser && process.env.GRAPHQL_URL) {
     return <Provider value={client}>{children}</Provider>
   }
 

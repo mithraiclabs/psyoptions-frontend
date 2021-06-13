@@ -77,20 +77,20 @@ const useOptionsMarkets = () => {
         )
 
         const {
-          expirationUnixTimestamp: expiration,
+          expiration,
           optionMintKey,
           writerTokenMintKey,
           underlyingAssetPoolKey,
           underlyingAssetMintKey,
           quoteAssetPoolKey,
           quoteAssetMintKey,
+          optionMarketKey,
         } = market.marketData
 
         const newMarket: OptionMarket = {
           key: `${expiration}-${uAsset.tokenSymbol}-${
             qAsset.tokenSymbol
           }-${amountPerContract.toString()}-${amountPerContract.toString()}/${quoteAmountPerContract.toString()}`,
-          // Leave these in tact as BigNumbers to use later for creating the reciprocal put/call
           amountPerContract,
           quoteAmountPerContract,
           size: `${amountPerContract.toString(10)}`,
@@ -99,7 +99,7 @@ const useOptionsMarkets = () => {
           uAssetMint: uAsset.mintAddress,
           qAssetMint: qAsset.mintAddress,
           strikePrice: `${strike.toString(10)}`,
-          optionMarketKey: market.pubkey,
+          optionMarketKey,
           expiration,
           optionMintKey,
           writerTokenMintKey,

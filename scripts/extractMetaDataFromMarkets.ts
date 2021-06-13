@@ -37,7 +37,8 @@ const DEX_PROGRAM_ID = new PublicKey(
   await Promise.all(
     res.map(async (market) => {
       try {
-        const underlyingAssetMint = market.marketData.underlyingAssetMintKey.toString()
+        const underlyingAssetMint =
+          market.marketData.underlyingAssetMintKey.toString()
         const quoteAssetMint = market.marketData.quoteAssetMintKey.toString()
         let quoteAssetSymbol, underlyingAssetSymbol
         if (quoteAssetMint === devnetBTCKey.toString()) {
@@ -59,16 +60,19 @@ const DEX_PROGRAM_ID = new PublicKey(
         )
 
         marketMetaData.push({
-          expiration: market.marketData.expirationUnixTimestamp,
-          optionMarketAddress: market.pubkey.toString(),
+          expiration: market.marketData.expiration,
+          optionMarketAddress: market.marketData.optionMarketKey.toString(),
           optionContractMintAddress: market.marketData.optionMintKey.toString(),
-          optionWriterTokenMintAddress: market.marketData.writerTokenMintKey.toString(),
+          optionWriterTokenMintAddress:
+            market.marketData.writerTokenMintKey.toString(),
           quoteAssetMint,
           quoteAssetSymbol,
           underlyingAssetMint,
           underlyingAssetSymbol,
-          underlyingAssetPerContract: market.marketData.amountPerContract.toString(),
-          quoteAssetPerContract: market.marketData.quoteAmountPerContract.toString(),
+          underlyingAssetPerContract:
+            market.marketData.amountPerContract.toString(),
+          quoteAssetPerContract:
+            market.marketData.quoteAmountPerContract.toString(),
           serumMarketAddress: serumMarketMeta[0].publicKey.toString(),
         })
       } catch (error) {

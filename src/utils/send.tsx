@@ -34,7 +34,7 @@ export async function signTransaction({
 }) {
   const tx = transaction
   tx.recentBlockhash = (await connection.getRecentBlockhash('max')).blockhash
-
+  tx.feePayer = wallet.publicKey
   if (signers.length > 0) {
     tx.partialSign(...signers)
   }
@@ -58,6 +58,7 @@ export async function signTransactions({
     ({ transaction, signers = [] }) => {
       const tx = transaction
       tx.recentBlockhash = blockhash
+      tx.feePayer = wallet.publicKey
 
       if (signers?.length > 0) {
         transaction.partialSign(...signers)

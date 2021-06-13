@@ -29,7 +29,7 @@ export const useInitializeMarkets = (): ((
   obj: InitMarketParams,
   // TODO use right type
 ) => Promise<any[]>) => {
-  const { pushNotification } = useNotifications()
+  const { pushErrorNotification } = useNotifications()
   const { wallet, pubKey } = useWallet()
   const { connection, endpoint } = useConnection()
   const { setMarkets } = useContext(OptionsMarketsContext)
@@ -150,11 +150,7 @@ export const useInitializeMarkets = (): ((
 
         return results
       } catch (err) {
-        console.error(err)
-        pushNotification({
-          severity: 'error',
-          message: `${err}`,
-        })
+        pushErrorNotification(err)
       }
       return []
     },
@@ -162,7 +158,7 @@ export const useInitializeMarkets = (): ((
       connection,
       endpoint.programId,
       pubKey,
-      pushNotification,
+      pushErrorNotification,
       setMarkets,
       sendTransaction,
       wallet,

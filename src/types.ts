@@ -51,6 +51,7 @@ export type OptionMarketMeta = {
 }
 
 export enum NotificationSeverity {
+  ERROR = 'error',
   SUCCESS = 'success',
   INFO = 'info',
   WARNING = 'warning',

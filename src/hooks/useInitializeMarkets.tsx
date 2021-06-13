@@ -11,6 +11,7 @@ import useNotifications from './useNotifications'
 import useWallet from './useWallet'
 import { buildSolanaExplorerUrl } from '../utils/solanaExplorer'
 import { OptionsMarketsContext } from '../context/OptionsMarketsContext'
+import { sendTransaction } from '../utils/send'
 
 import { OptionMarket } from '../types'
 
@@ -64,41 +65,13 @@ export const useInitializeMarkets = (): ((
               payer: { publicKey: pubKey } as Account,
               programId: endpoint.programId,
             })
-
-            createAccountsTx.feePayer = wallet.publicKey
-            const { blockhash } = await connection.getRecentBlockhash()
-            createAccountsTx.recentBlockhash = blockhash
-            createAccountsTx.partialSign(...signers)
-            const createAccountsSigned = await wallet.signTransaction(
-              createAccountsTx,
-            )
-            const createAccountsTxId = await connection.sendRawTransaction(
-              createAccountsSigned.serialize(),
-            )
-
-            const createAccountsExplorerUrl =
-              buildSolanaExplorerUrl(createAccountsTxId)
-
-            pushNotification({
-              severity: 'info',
-              message: `Processing: Create Market Accounts`,
-              link: (
-                <Link href={createAccountsExplorerUrl} target="_new">
-                  View on Solana Explorer
-                </Link>
-              ),
-            })
-
-            await connection.confirmTransaction(createAccountsTxId)
-
-            pushNotification({
-              severity: 'success',
-              message: `Confirmed: Create Market Accounts`,
-              link: (
-                <Link href={createAccountsExplorerUrl} target="_new">
-                  View on Solana Explorer
-                </Link>
-              ),
+            await sendTransaction({
+              transaction: createAccountsTx,
+              wallet,
+              signers,
+              connection,
+              sendingMessage: 'Processing: Create Market Accounts',
+              successMessage: 'Confirmed: Create Market Accounts',
             })
 
             // TODO -- can we encode these to the buffer without converting back to the built-in number type?

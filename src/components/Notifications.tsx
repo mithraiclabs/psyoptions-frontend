@@ -43,6 +43,7 @@ const SimpleSnackbar = ({
       justifyContent="space-between"
       color={theme.palette.primary.light}
       style={{
+        // @ts-ignore: idk how to fix the Mui Theme
         background: theme.gradients[severity],
       }}
     >

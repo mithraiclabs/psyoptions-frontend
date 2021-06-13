@@ -1,4 +1,4 @@
-import { Account, PublicKey, Transaction, SystemProgram } from '@solana/web3.js'
+import { Keypair, PublicKey, Transaction, SystemProgram } from '@solana/web3.js'
 
 import { DexInstructions, Market } from '@mithraic-labs/serum'
 import BN from 'bn.js'
@@ -29,13 +29,13 @@ export const createInitializeMarketTx = async ({
   dexProgramId,
 }) => {
   const tokenProgramId = TOKEN_PROGRAM_ID
-  const market = new Account()
-  const requestQueue = new Account()
-  const eventQueue = new Account()
-  const bids = new Account()
-  const asks = new Account()
-  const baseVault = new Account()
-  const quoteVault = new Account()
+  const market = new Keypair()
+  const requestQueue = new Keypair()
+  const eventQueue = new Keypair()
+  const bids = new Keypair()
+  const asks = new Keypair()
+  const baseVault = new Keypair()
+  const quoteVault = new Keypair()
   const feeRateBps = 0
   const quoteDustThreshold = new BN(100)
 

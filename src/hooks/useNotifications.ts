@@ -2,9 +2,8 @@ import { useContext } from 'react'
 import { NotificationsContext } from '../context/NotificationsContext'
 
 const useNotifications = () => {
-  const { closeNotification, notifications, pushNotification } = useContext(
-    NotificationsContext
-  )
+  const { closeNotification, notifications, pushNotification } =
+    useContext(NotificationsContext)
 
   return {
     closeNotification,

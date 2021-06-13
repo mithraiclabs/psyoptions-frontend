@@ -1,20 +1,15 @@
 import {
-  Account,
-  AccountInfo,
   Commitment,
   Connection,
-  PublicKey,
+  Keypair,
   RpcResponseAndContext,
   SimulatedTransactionResponse,
   Transaction,
   TransactionSignature,
 } from '@solana/web3.js'
 import Wallet from '@project-serum/sol-wallet-adapter'
-import { Buffer } from 'buffer'
-import assert from 'assert'
-import { define, struct } from 'superstruct'
 
-class TransactionError extends Error {
+export class TransactionError extends Error {
   public txid: string
   constructor(message: string, txid?: string) {
     super(message)
@@ -32,38 +27,6 @@ export const getUnixTs = () => {
 
 const DEFAULT_TIMEOUT = 30000
 
-export async function sendTransaction({
-  transaction,
-  wallet,
-  signers = [],
-  connection,
-  sendingMessage = 'Sending transaction...',
-  successMessage = 'Transaction confirmed',
-  timeout = DEFAULT_TIMEOUT,
-}: {
-  transaction: Transaction
-  wallet: Wallet
-  signers?: Array<Account>
-  connection: Connection
-  sendingMessage?: string
-  successMessage?: string
-  timeout?: number
-}) {
-  const signedTransaction = await signTransaction({
-    transaction,
-    wallet,
-    signers,
-    connection,
-  })
-  return await sendSignedTransaction({
-    signedTransaction,
-    connection,
-    sendingMessage,
-    successMessage,
-    timeout,
-  })
-}
-
 export async function signTransaction({
   transaction,
   wallet,
@@ -72,7 +35,7 @@ export async function signTransaction({
 }: {
   transaction: Transaction
   wallet: Wallet
-  signers?: Array<Account>
+  signers?: Array<Keypair>
   connection: Connection
 }) {
   transaction.recentBlockhash = (
@@ -92,7 +55,7 @@ export async function signTransactions({
 }: {
   transactionsAndSigners: {
     transaction: Transaction
-    signers?: Array<Account>
+    signers?: Array<Keypair>
   }[]
   wallet: Wallet
   connection: Connection
@@ -110,79 +73,7 @@ export async function signTransactions({
   )
 }
 
-export async function sendSignedTransaction({
-  signedTransaction,
-  connection,
-  sendingMessage = 'Sending transaction...',
-  successMessage = 'Transaction confirmed',
-  timeout = DEFAULT_TIMEOUT,
-}: {
-  signedTransaction: Transaction
-  connection: Connection
-  sendingMessage?: string
-  successMessage?: string
-  timeout?: number
-}): Promise<string> {
-  const rawTransaction = signedTransaction.serialize()
-  const startTime = getUnixTs()
-  console.log('**** NOTIFY ', { message: sendingMessage })
-  const txid: TransactionSignature = await connection.sendRawTransaction(
-    rawTransaction,
-    {
-      skipPreflight: true,
-    },
-  )
-
-  console.log('Started awaiting confirmation for', txid)
-
-  let done = false
-  ;(async () => {
-    while (!done && getUnixTs() - startTime < timeout) {
-      connection.sendRawTransaction(rawTransaction, {
-        skipPreflight: true,
-      })
-      await sleep(300)
-    }
-  })()
-  try {
-    await awaitTransactionSignatureConfirmation(txid, timeout, connection)
-  } catch (err) {
-    if (err.timeout) {
-      throw new Error('Timed out awaiting confirmation on transaction')
-    }
-    let simulateResult: SimulatedTransactionResponse | null = null
-    try {
-      simulateResult = (
-        await simulateTransaction(connection, signedTransaction, 'single')
-      ).value
-    } catch (e) {
-      console.log('Error: ', e)
-    }
-    if (simulateResult && simulateResult.err) {
-      if (simulateResult.logs) {
-        for (let i = simulateResult.logs.length - 1; i >= 0; --i) {
-          const line = simulateResult.logs[i]
-          if (line.startsWith('Program log: ')) {
-            throw new TransactionError(
-              'Transaction failed: ' + line.slice('Program log: '.length),
-              txid,
-            )
-          }
-        }
-      }
-      throw new TransactionError(JSON.stringify(simulateResult.err), txid)
-    }
-    throw new TransactionError('Transaction failed', txid)
-  } finally {
-    done = true
-  }
-  console.log('*** NOTIFY ', { message: successMessage, type: 'success', txid })
-
-  console.log('Latency', txid, getUnixTs() - startTime)
-  return txid
-}
-
-async function awaitTransactionSignatureConfirmation(
+export async function awaitTransactionSignatureConfirmation(
   txid: TransactionSignature,
   timeout: number,
   connection: Connection,
@@ -264,7 +155,7 @@ async function awaitTransactionSignatureConfirmation(
 }
 
 /** Copy of Connection.simulateTransaction that takes a commitment parameter. */
-async function simulateTransaction(
+export async function simulateTransaction(
   connection: Connection,
   transaction: Transaction,
   commitment: Commitment,

@@ -1,7 +1,6 @@
 import React, { useCallback, useContext } from 'react'
-import { Account, PublicKey, Transaction } from '@solana/web3.js'
+import { Account, Keypair, PublicKey, Transaction } from '@solana/web3.js'
 import BigNumber from 'bignumber.js'
-import Link from '@material-ui/core/Link'
 import {
   initializeAccountsForMarket,
   initializeMarketInstruction,
@@ -9,9 +8,8 @@ import {
 import useConnection from './useConnection'
 import useNotifications from './useNotifications'
 import useWallet from './useWallet'
-import { buildSolanaExplorerUrl } from '../utils/solanaExplorer'
 import { OptionsMarketsContext } from '../context/OptionsMarketsContext'
-import { sendTransaction } from '../utils/send'
+import useSendTransaction from '../hooks/useSendTransaction'
 
 import { OptionMarket } from '../types'
 
@@ -34,6 +32,7 @@ export const useInitializeMarkets = (): ((
   const { wallet, pubKey } = useWallet()
   const { connection, endpoint } = useConnection()
   const { setMarkets } = useContext(OptionsMarketsContext)
+  const sendTransaction = useSendTransaction()
 
   return useCallback(
     async ({
@@ -68,6 +67,7 @@ export const useInitializeMarkets = (): ((
             await sendTransaction({
               transaction: createAccountsTx,
               wallet,
+              // @ts-ignore: need to transition psyoptions-ts to use Keypair instead of account for this to go away
               signers,
               connection,
               sendingMessage: 'Processing: Create Market Accounts',
@@ -103,36 +103,13 @@ export const useInitializeMarkets = (): ((
 
             const transaction = new Transaction()
             transaction.add(initializeMarketIx)
-            transaction.feePayer = wallet.publicKey
-            const { blockhash: initMarketBlockHash } =
-              await connection.getRecentBlockhash()
-            transaction.recentBlockhash = initMarketBlockHash
-
-            const signed = await wallet.signTransaction(transaction)
-            const txid = await connection.sendRawTransaction(signed.serialize())
-
-            const explorerUrl = buildSolanaExplorerUrl(txid)
-
-            pushNotification({
-              severity: 'info',
-              message: `Processing: Initialize Market`,
-              link: (
-                <Link href={explorerUrl} target="_new">
-                  View on Solana Explorer
-                </Link>
-              ),
-            })
-
-            await connection.confirmTransaction(txid)
-
-            pushNotification({
-              severity: 'success',
-              message: `Confirmed: Initialize Market`,
-              link: (
-                <Link href={explorerUrl} target="_new">
-                  View on Solana Explorer
-                </Link>
-              ),
+            await sendTransaction({
+              transaction,
+              wallet,
+              signers: [],
+              connection,
+              sendingMessage: 'Processing: Initialize Market',
+              successMessage: 'Confirmed: Initialize Market',
             })
 
             const marketData: OptionMarket = {

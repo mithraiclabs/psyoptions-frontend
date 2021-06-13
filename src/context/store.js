@@ -21,8 +21,8 @@ import { ExpirationDateProvider } from './ExpirationDateContext'
 const _providers = [
   // eslint-disable-next-line react/no-children-prop
   <ThemeProvider theme={theme} children={<div />} />,
-  <NotificationsProvider />,
   <ConnectionProvider />,
+  <NotificationsProvider />,
   <SolanaMetaProvider />,
   <AssetListProvider />,
   <WalletProvider />,

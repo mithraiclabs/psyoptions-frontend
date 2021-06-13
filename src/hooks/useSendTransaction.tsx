@@ -82,6 +82,7 @@ const useSendTransaction = () => {
         } catch (e) {
           console.log('Error: ', e)
         }
+        console.log('*** simulateResult', simulateResult)
         if (simulateResult && simulateResult.err) {
           if (simulateResult.logs) {
             for (let i = simulateResult.logs.length - 1; i >= 0; i -= 1) {
@@ -89,14 +90,23 @@ const useSendTransaction = () => {
               if (line.startsWith('Program log: ')) {
                 throw new TransactionError(
                   `Transaction failed: ${line.slice('Program log: '.length)}`,
+                  signedTransaction,
                   txid,
                 )
               }
             }
           }
-          throw new TransactionError(JSON.stringify(simulateResult.err), txid)
+          throw new TransactionError(
+            JSON.stringify(simulateResult.err),
+            signedTransaction,
+            txid,
+          )
         }
-        throw new TransactionError('Transaction failed', txid)
+        throw new TransactionError(
+          'Transaction failed',
+          signedTransaction,
+          txid,
+        )
       } finally {
         done = true
       }

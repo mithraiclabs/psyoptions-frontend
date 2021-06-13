@@ -1,6 +1,4 @@
-import TransactionError from './TransactionError'
-
-export class TimeoutError extends TransactionError {
+export class TimeoutError extends Error {
   public timeout: boolean
 
   constructor(message: string, txid?: string) {

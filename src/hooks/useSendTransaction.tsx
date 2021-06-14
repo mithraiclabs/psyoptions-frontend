@@ -124,37 +124,40 @@ const useSendTransaction = () => {
     },
     [pushNotification],
   )
-  const sendTransaction = async ({
-    transaction,
-    wallet,
-    signers = [],
-    connection,
-    sendingMessage = 'Sending transaction...',
-    successMessage = 'Transaction confirmed',
-    timeout = DEFAULT_TIMEOUT,
-  }: {
-    transaction: Transaction
-    wallet: Wallet
-    signers?: Array<Keypair>
-    connection: Connection
-    sendingMessage?: string
-    successMessage?: string
-    timeout?: number
-  }) => {
-    const signedTransaction = await signTransaction({
+  const sendTransaction = useCallback(
+    async ({
       transaction,
       wallet,
-      signers,
+      signers = [],
       connection,
-    })
-    return sendSignedTransaction({
-      signedTransaction,
-      connection,
-      sendingMessage,
-      successMessage,
-      timeout,
-    })
-  }
+      sendingMessage = 'Sending transaction...',
+      successMessage = 'Transaction confirmed',
+      timeout = DEFAULT_TIMEOUT,
+    }: {
+      transaction: Transaction
+      wallet: Wallet
+      signers?: Array<Keypair>
+      connection: Connection
+      sendingMessage?: string
+      successMessage?: string
+      timeout?: number
+    }) => {
+      const signedTransaction = await signTransaction({
+        transaction,
+        wallet,
+        signers,
+        connection,
+      })
+      return sendSignedTransaction({
+        signedTransaction,
+        connection,
+        sendingMessage,
+        successMessage,
+        timeout,
+      })
+    },
+    [sendSignedTransaction],
+  )
   return { sendTransaction, sendSignedTransaction }
 }
 

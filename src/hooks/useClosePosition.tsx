@@ -6,6 +6,7 @@ import { TOKEN_PROGRAM_ID, Token } from '@solana/spl-token'
 import useConnection from './useConnection'
 import useWallet from './useWallet'
 import useNotifications from './useNotifications'
+import useSendTransaction from './useSendTransaction'
 import { buildSolanaExplorerUrl } from '../utils/solanaExplorer'
 import { initializeTokenAccountTx, WRAPPED_SOL_ADDRESS } from '../utils/token'
 import { useSolanaMeta } from '../context/SolanaMetaContext'
@@ -33,9 +34,10 @@ export const useClosePosition = (
   writerTokenSourceKey,
 ) => {
   const { connection, endpoint } = useConnection()
-  const { pushNotification } = useNotifications()
+  const { pushErrorNotification } = useNotifications()
   const { pubKey, wallet } = useWallet()
   const { splTokenAccountRentBalance } = useSolanaMeta()
+  const { sendSignedTransaction } = useSendTransaction()
 
   const closePosition = useCallback(
     async (contractsToClose = 1) => {
@@ -112,36 +114,16 @@ export const useClosePosition = (
 
         await Promise.all(
           signed.map(async (signedTx) => {
-            const txid = await connection.sendRawTransaction(
-              signedTx.serialize(),
-            )
-            pushNotification({
-              severity: 'info',
-              message: `Submitted Transaction: Close Position`,
-              link: (
-                <Link href={buildSolanaExplorerUrl(txid)} target="_new">
-                  View on Solana Explorer
-                </Link>
-              ),
-            })
-            await connection.confirmTransaction(txid)
-
-            pushNotification({
-              severity: 'success',
-              message: `Transaction Confirmed: Close Position`,
-              link: (
-                <Link href={buildSolanaExplorerUrl(txid)} target="_new">
-                  View on Solana Explorer
-                </Link>
-              ),
+            await sendSignedTransaction({
+              signedTransaction: signedTx,
+              connection,
+              sendingMessage: 'Sending: Close Position',
+              successMessage: 'Confirmed: Close Position',
             })
           }),
         )
       } catch (err) {
-        pushNotification({
-          severity: 'error',
-          message: `${err}`,
-        })
+        pushErrorNotification(err)
       }
     },
     [
@@ -156,8 +138,9 @@ export const useClosePosition = (
       pubKey,
       writerTokenSourceKey,
       connection,
+      sendSignedTransaction,
       wallet,
-      pushNotification,
+      pushErrorNotification,
       splTokenAccountRentBalance,
     ],
   )

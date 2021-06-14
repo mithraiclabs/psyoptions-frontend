@@ -17,9 +17,9 @@ import useNotifications from '../../hooks/useNotifications'
 import useWallet from '../../hooks/useWallet'
 import useAssetList from '../../hooks/useAssetList'
 import useConnection from '../../hooks/useConnection'
+import useSendTransaction from '../../hooks/useSendTransaction'
 import { buildAirdropTokensIx } from '../../utils/airdropInstructions'
 import { createAssociatedTokenAccountInstruction } from '../../utils/instructions/token'
-import { buildSolanaExplorerUrl } from '../../utils/solanaExplorer'
 
 const darkBorder = `1px solid ${(theme.palette.background as any).main}`
 
@@ -38,10 +38,11 @@ const LoadingAirdrop = () => (
 )
 
 const Faucets = () => {
-  const { pushNotification } = useNotifications()
+  const { pushErrorNotification } = useNotifications()
   const { balance: solBalance, connected, wallet, pubKey } = useWallet()
   const { connection } = useConnection()
   const { supportedAssets: assets } = useAssetList()
+  const { sendTransaction } = useSendTransaction()
   const {
     ownedTokenAccounts: accounts,
     subscribeToTokenAccount,
@@ -93,14 +94,12 @@ const Faucets = () => {
       const mintPublicKey = new PublicKey(asset.mintAddress)
 
       if (!existingAccount) {
-        const [
-          ix,
-          associatedTokenPublicKey,
-        ] = await createAssociatedTokenAccountInstruction({
-          payer: pubKey,
-          owner: pubKey,
-          mintPublicKey,
-        })
+        const [ix, associatedTokenPublicKey] =
+          await createAssociatedTokenAccountInstruction({
+            payer: pubKey,
+            owner: pubKey,
+            mintPublicKey,
+          })
         tx.add(ix)
         receivingAccountPublicKey = associatedTokenPublicKey
         subscribeToTokenAccount(receivingAccountPublicKey)
@@ -119,41 +118,16 @@ const Faucets = () => {
       )
       tx.add(airdropIx)
 
-      const recentBlockhash = (await connection.getRecentBlockhash('max'))
-        .blockhash
-      tx.recentBlockhash = recentBlockhash
-      tx.feePayer = pubKey
-
-      const signed = await wallet.signTransaction(tx)
-      const txid = await connection.sendRawTransaction(signed.serialize())
-
-      pushNotification({
-        severity: 'info',
-        message: `Processing: ${message}`,
-        link: (
-          <Link href={buildSolanaExplorerUrl(txid)} target="_new">
-            View on Solana Explorer
-          </Link>
-        ),
-      })
-
-      await connection.confirmTransaction(txid)
-
-      pushNotification({
-        severity: 'success',
-        message: `Confirmed: ${message}`,
-        link: (
-          <Link href={buildSolanaExplorerUrl(txid)} target="_new">
-            View on Solana Explorer
-          </Link>
-        ),
+      await sendTransaction({
+        transaction: tx,
+        wallet,
+        signers: [],
+        connection,
+        sendingMessage: `Processing: ${message}`,
+        successMessage: `Confirmed: ${message}`,
       })
     } catch (err) {
-      console.error(err)
-      pushNotification({
-        severity: 'error',
-        message: `${err}`,
-      })
+      pushErrorNotification(err)
     }
   }
 
@@ -169,7 +143,7 @@ const Faucets = () => {
       USDC,
       usdcAccount,
       10000,
-      'Claim 10,000 USDC',
+      'Claim 100,000 USDC',
     )
     setLoadingUSDC(false)
   }

@@ -7,6 +7,7 @@ import { createAssociatedTokenAccountInstruction } from '../utils/instructions/t
 import useWallet from './useWallet'
 import useNotifications from './useNotifications'
 import useConnection from './useConnection'
+import useSendTransaction from './useSendTransaction'
 import useOwnedTokenAccounts from './useOwnedTokenAccounts'
 import { SerumMarket } from '../utils/serum'
 import { buildSolanaExplorerUrl } from '../utils/solanaExplorer'
@@ -22,13 +23,13 @@ type PlaceBuyOrderArgs = {
 const usePlaceBuyOrder = (
   serumKey: string,
 ): ((obj: PlaceBuyOrderArgs) => Promise<void>) => {
-  const { pushNotification } = useNotifications()
+  const { pushErrorNotification } = useNotifications()
   const { wallet, pubKey } = useWallet()
   const { connection } = useConnection()
+  const { sendTransaction } = useSendTransaction()
   const { subscribeToTokenAccount } = useOwnedTokenAccounts()
-  const createAdHocOpenOrdersSub = useCreateAdHocOpenOrdersSubscription(
-    serumKey,
-  )
+  const createAdHocOpenOrdersSub =
+    useCreateAdHocOpenOrdersSubscription(serumKey)
 
   return useCallback(
     async ({
@@ -44,14 +45,12 @@ const usePlaceBuyOrder = (
 
         if (!_optionDestinationKey) {
           // Create a SPL Token account for this option market if the wallet doesn't have one
-          const [
-            createOptAccountIx,
-            newPublicKey,
-          ] = await createAssociatedTokenAccountInstruction({
-            payer: pubKey,
-            owner: pubKey,
-            mintPublicKey: optionMarket.optionMintKey,
-          })
+          const [createOptAccountIx, newPublicKey] =
+            await createAssociatedTokenAccountInstruction({
+              payer: pubKey,
+              owner: pubKey,
+              mintPublicKey: optionMarket.optionMintKey,
+            })
 
           transaction.add(createOptAccountIx)
           subscribeToTokenAccount(newPublicKey)
@@ -71,49 +70,24 @@ const usePlaceBuyOrder = (
           createAdHocOpenOrdersSub(createdOpenOrdersKey)
         }
 
-        transaction.feePayer = pubKey
-        const { blockhash } = await connection.getRecentBlockhash()
-        transaction.recentBlockhash = blockhash
-
-        if (signers.length) {
-          transaction.partialSign(...signers)
-        }
-        const signed = await wallet.signTransaction(transaction)
-        const txid = await connection.sendRawTransaction(signed.serialize())
-
-        pushNotification({
-          severity: NotificationSeverity.INFO,
-          message: 'Processing: Buy contracts',
-          link: (
-            <Link href={buildSolanaExplorerUrl(txid)} target="_new">
-              View on Solana Explorer
-            </Link>
-          ),
-        })
-
-        await connection.confirmTransaction(txid)
-
-        pushNotification({
-          severity: NotificationSeverity.SUCCESS,
-          message: 'Confirmed: Buy contracts',
-          link: (
-            <Link href={buildSolanaExplorerUrl(txid)} target="_new">
-              View on Solana Explorer
-            </Link>
-          ),
+        await sendTransaction({
+          transaction,
+          wallet,
+          signers,
+          connection,
+          sendingMessage: 'Processing: Buy contracts',
+          successMessage: 'Confirmed: Buy contracts',
         })
       } catch (err) {
-        pushNotification({
-          severity: 'error',
-          message: `${err}`,
-        })
+        pushErrorNotification(err)
       }
     },
     [
       connection,
       createAdHocOpenOrdersSub,
       pubKey,
-      pushNotification,
+      pushErrorNotification,
+      sendTransaction,
       subscribeToTokenAccount,
       wallet,
     ],

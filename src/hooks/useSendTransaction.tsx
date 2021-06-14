@@ -157,7 +157,7 @@ const useSendTransaction = () => {
       timeout,
     })
   }
-  return sendTransaction
+  return { sendTransaction, sendSignedTransaction }
 }
 
 export default useSendTransaction

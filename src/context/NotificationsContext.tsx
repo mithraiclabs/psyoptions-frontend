@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useMemo, createContext } from 'react'
+import { PsyOptionError } from '@mithraic-labs/psyoptions'
 import TransactionError from '../utils/transactionErrors/TransactionError'
 import { NotificationSeverity } from '../types'
 import useConnection from '../hooks/useConnection'
@@ -31,22 +32,33 @@ const NotificationsProvider = ({ children }) => {
    * Parse an instruction error and decode errors from known programs
    */
   const parseInstructionError = useCallback(
-    (transactionError: TransactionError) => {
+    (
+      transactionError: TransactionError,
+    ): {
+      parsedError?: string
+      errorMessage: string
+    } => {
       const { transaction, instructionError } = transactionError
       if (!instructionError) {
-        return
+        return {
+          errorMessage: `Unknown program error: ${instructionError}`,
+        }
       }
       const [failedInstructionIndex, customError] = instructionError
       const failedInstruction = transaction.instructions[failedInstructionIndex]
-      console.log('*** programId = ', failedInstruction.programId.toString())
-      console.log('endpoint', transactionError.message)
+      // use the programId of the failed instruction to determine which program errored
       if (
         failedInstruction.programId.toString() === endpoint.programId.toString()
       ) {
-        console.log('*** error came from options program')
-        return
+        const parsedError = PsyOptionError[customError.Custom]
+        return {
+          parsedError,
+          errorMessage: `PsyOptionsError: ${parsedError}`,
+        }
       }
-      console.log('*** error came from some other program')
+      return {
+        errorMessage: `Other program error: ${instructionError}`,
+      }
     },
     [endpoint],
   )
@@ -69,13 +81,10 @@ const NotificationsProvider = ({ children }) => {
       // Log the error for dev debugging purposes
       console.error(error)
       if (error instanceof TransactionError) {
-        console.log('*** caught TransactionError', error)
-        // TODO use programId to determine which program errored
-        parseInstructionError(error)
-        // TODO if known program map the error code to the error enum
+        const { errorMessage } = parseInstructionError(error)
         content = {
           severity: NotificationSeverity.ERROR,
-          message: `${error}`,
+          message: errorMessage,
         }
       } else {
         content = {

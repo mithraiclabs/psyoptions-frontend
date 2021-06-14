@@ -1,24 +1,18 @@
 import React, { useCallback } from 'react'
 import { PublicKey, Transaction } from '@solana/web3.js'
-import Link from '@material-ui/core/Link'
 
 import { SerumMarket } from 'src/utils/serum'
 import { OrderParams } from '@mithraic-labs/serum/lib/market'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import {
-  Asset,
-  NotificationSeverity,
-  OptionMarket,
-  TokenAccount,
-} from '../types'
+import { Asset, OptionMarket, TokenAccount } from '../types'
 import { WRAPPED_SOL_ADDRESS } from '../utils/token'
 import useNotifications from './useNotifications'
+import useSendTransaction from './useSendTransaction'
 import useOwnedTokenAccounts from './useOwnedTokenAccounts'
 import { useSolanaMeta } from '../context/SolanaMetaContext'
 import useConnection from './useConnection'
 import useWallet from './useWallet'
 import { createMissingAccountsAndMint } from '../utils/instructions/index'
-import { buildSolanaExplorerUrl } from '../utils/solanaExplorer'
 import { useCreateAdHocOpenOrdersSubscription } from './Serum'
 
 // Solana has a maximum packet size when sending a transaction.
@@ -41,14 +35,14 @@ type PlaceSellOrderArgs = {
 const usePlaceSellOrder = (
   serumKey: string,
 ): ((obj: PlaceSellOrderArgs) => Promise<void>) => {
-  const { pushNotification } = useNotifications()
+  const { pushErrorNotification } = useNotifications()
   const { wallet, pubKey } = useWallet()
   const { connection, endpoint } = useConnection()
   const { splTokenAccountRentBalance } = useSolanaMeta()
   const { subscribeToTokenAccount } = useOwnedTokenAccounts()
-  const createAdHocOpenOrdersSub = useCreateAdHocOpenOrdersSubscription(
-    serumKey,
-  )
+  const { sendSignedTransaction } = useSendTransaction()
+  const createAdHocOpenOrdersSub =
+    useCreateAdHocOpenOrdersSubscription(serumKey)
 
   return useCallback(
     async ({
@@ -108,7 +102,7 @@ const usePlaceSellOrder = (
             if (error) {
               // eslint-disable-next-line no-console
               console.error(error)
-              pushNotification(error)
+              pushErrorNotification(error)
               return
             }
             const {
@@ -210,98 +204,46 @@ const usePlaceSellOrder = (
           const contractsMinted = numberOfContractsDistribution.shift()
           mintTXs.shift()
           const tx = signed.shift()
-          const txid = await connection.sendRawTransaction(tx.serialize())
-          pushNotification({
-            severity: NotificationSeverity.INFO,
-            message: `Processing: Write ${contractsMinted} contract${
-              numberOfContractsToMint > 1 ? 's' : ''
-            }`,
-            link: (
-              <Link href={buildSolanaExplorerUrl(txid)} target="_new">
-                View on Solana Explorer
-              </Link>
-            ),
-          })
-          await connection.confirmTransaction(txid)
 
-          pushNotification({
-            severity: NotificationSeverity.SUCCESS,
-            message: `Confirmed: Write ${contractsMinted} contract${
+          await sendSignedTransaction({
+            signedTransaction: tx,
+            connection,
+            sendingMessage: `Processing: Write ${contractsMinted} contract${
               numberOfContractsToMint > 1 ? 's' : ''
             }`,
-            link: (
-              <Link href={buildSolanaExplorerUrl(txid)} target="_new">
-                View on Solana Explorer
-              </Link>
-            ),
+            successMessage: `Confirmed: Write ${contractsMinted} contract${
+              numberOfContractsToMint > 1 ? 's' : ''
+            }`,
           })
         }
 
         await Promise.all(
-          mintTXs.map(async (_mintTx, index) => {
-            const txid = await connection.sendRawTransaction(
-              signed[index].serialize(),
-            )
-            pushNotification({
-              severity: NotificationSeverity.INFO,
-              message: `Processing: Write ${
+          mintTXs.map(async (_mintTx, index) =>
+            sendSignedTransaction({
+              signedTransaction: signed[index],
+              connection,
+              sendingMessage: `Processing: Write ${
                 numberOfContractsDistribution[index]
               } contract${numberOfContractsToMint > 1 ? 's' : ''}`,
-              link: (
-                <Link href={buildSolanaExplorerUrl(txid)} target="_new">
-                  View on Solana Explorer
-                </Link>
-              ),
-            })
-            await connection.confirmTransaction(txid)
-
-            pushNotification({
-              severity: NotificationSeverity.SUCCESS,
-              message: `Confirmed: Write ${
+              successMessage: `Confirmed: Write ${
                 numberOfContractsDistribution[index]
               } contract${numberOfContractsToMint > 1 ? 's' : ''}`,
-              link: (
-                <Link href={buildSolanaExplorerUrl(txid)} target="_new">
-                  View on Solana Explorer
-                </Link>
-              ),
-            })
-          }),
+            }),
+          ),
         )
 
-        const placeOrderTxId = await connection.sendRawTransaction(
-          signed[signed.length - 1].serialize(),
-        )
-        pushNotification({
-          severity: NotificationSeverity.INFO,
-          message: `Processing: Sell ${orderArgs.size} contract${
+        await sendSignedTransaction({
+          signedTransaction: signed[signed.length - 1],
+          connection,
+          sendingMessage: `Processing: Sell ${orderArgs.size} contract${
             numberOfContractsToMint > 1 ? 's' : ''
           }`,
-          link: (
-            <Link href={buildSolanaExplorerUrl(placeOrderTxId)} target="_new">
-              View on Solana Explorer
-            </Link>
-          ),
-        })
-        await connection.confirmTransaction(placeOrderTxId)
-
-        pushNotification({
-          severity: NotificationSeverity.SUCCESS,
-          message: `Confirmed: Sell ${orderArgs.size} contract${
+          successMessage: `Confirmed: Sell ${orderArgs.size} contract${
             numberOfContractsToMint > 1 ? 's' : ''
           }`,
-          link: (
-            <Link href={buildSolanaExplorerUrl(placeOrderTxId)} target="_new">
-              View on Solana Explorer
-            </Link>
-          ),
         })
       } catch (err) {
-        console.error(err)
-        pushNotification({
-          severity: 'error',
-          message: `${err}`,
-        })
+        pushErrorNotification(err)
       }
     },
     [
@@ -309,7 +251,8 @@ const usePlaceSellOrder = (
       createAdHocOpenOrdersSub,
       endpoint.programId,
       pubKey,
-      pushNotification,
+      pushErrorNotification,
+      sendSignedTransaction,
       splTokenAccountRentBalance,
       subscribeToTokenAccount,
       wallet,

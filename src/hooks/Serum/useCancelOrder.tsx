@@ -6,6 +6,7 @@ import useWallet from '../useWallet'
 import useConnection from '../useConnection'
 import { useSettleFunds } from './useSettleFunds'
 import useNotifications from '../useNotifications'
+import useSendTransaction from '../useSendTransaction'
 
 import { buildSolanaExplorerUrl } from '../../utils/solanaExplorer'
 
@@ -15,7 +16,8 @@ export const useCancelOrder = (serumKey: string) => {
   const { serumMarkets } = useSerum()
   const { serumMarket } = serumMarkets[serumKey] || {}
   const { makeSettleFundsTx } = useSettleFunds(serumKey)
-  const { pushNotification } = useNotifications()
+  const { pushErrorNotification } = useNotifications()
+  const { sendSignedTransaction } = useSendTransaction()
 
   return useCallback(
     async (order) => {
@@ -31,68 +33,24 @@ export const useCancelOrder = (serumKey: string) => {
           const { blockhash } = await connection.getRecentBlockhash()
           cancelTx.recentBlockhash = blockhash
           cancelTx.feePayer = pubKey
-          const [
-            signedCancelTx,
-            signedSettleTx,
-          ] = await wallet.signAllTransactions([cancelTx, settleTx])
-          const cancelTxId = await connection.sendRawTransaction(
-            signedCancelTx.serialize(),
-          )
+          const [signedCancelTx, signedSettleTx] =
+            await wallet.signAllTransactions([cancelTx, settleTx])
 
-          pushNotification({
-            severity: 'info',
-            message: `Processing: Cancel Order`,
-            link: (
-              <Link href={buildSolanaExplorerUrl(cancelTxId)} target="_new">
-                View on Solana Explorer
-              </Link>
-            ),
+          sendSignedTransaction({
+            signedTransaction: signedCancelTx,
+            connection,
+            sendingMessage: 'Processing: Cancel Order',
+            successMessage: 'Confirmed: Cancel Order',
           })
 
-          await connection.confirmTransaction(cancelTxId)
-
-          pushNotification({
-            severity: 'success',
-            message: `Confirmed: Cancel Order`,
-            link: (
-              <Link href={buildSolanaExplorerUrl(cancelTxId)} target="_new">
-                View on Solana Explorer
-              </Link>
-            ),
+          sendSignedTransaction({
+            signedTransaction: signedSettleTx,
+            connection,
+            sendingMessage: 'Processing: Settle Funds',
+            successMessage: 'Confirmed: Settle Funds',
           })
-
-          const settleTxId = await connection.sendRawTransaction(
-            signedSettleTx.serialize(),
-          )
-
-          pushNotification({
-            severity: 'info',
-            message: `Processing: Settle Funds`,
-            link: (
-              <Link href={buildSolanaExplorerUrl(settleTxId)} target="_new">
-                View on Solana Explorer
-              </Link>
-            ),
-          })
-
-          await connection.confirmTransaction(settleTxId)
-
-          pushNotification({
-            severity: 'success',
-            message: `Confirmed: Settle Funds`,
-            link: (
-              <Link href={buildSolanaExplorerUrl(settleTxId)} target="_new">
-                View on Solana Explorer
-              </Link>
-            ),
-          })
-
-          // We shouldn't have to update open orders state here because we will subscribe to changes
         } catch (err) {
-          pushNotification({
-            severity: 'error',
-            message: `Transaction Failed: Cancel Order | Error: ${err}`,
-          })
+          pushErrorNotification(err)
         }
       }
     },
@@ -100,7 +58,8 @@ export const useCancelOrder = (serumKey: string) => {
       connection,
       makeSettleFundsTx,
       pubKey,
-      pushNotification,
+      pushErrorNotification,
+      sendSignedTransaction,
       serumMarket,
       wallet,
     ],

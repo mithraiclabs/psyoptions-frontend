@@ -1,6 +1,5 @@
-import React, { useContext, useCallback } from 'react'
+import { useContext, useCallback } from 'react'
 import BigNumber from 'bignumber.js'
-import Link from '@material-ui/core/Link'
 import { Market } from '@mithraic-labs/psyoptions'
 import { Connection, PublicKey } from '@solana/web3.js'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
@@ -9,11 +8,11 @@ import useNotifications from './useNotifications'
 import useWallet from './useWallet'
 import useConnection from './useConnection'
 import useAssetList from './useAssetList'
+import useSendTransaction from './useSendTransaction'
 
 import { OptionsMarketsContext } from '../context/OptionsMarketsContext'
 import { useSolanaMeta } from '../context/SolanaMetaContext'
 
-import { buildSolanaExplorerUrl } from '../utils/solanaExplorer'
 import { WRAPPED_SOL_ADDRESS } from '../utils/token'
 import {
   createMissingMintAccounts,
@@ -23,10 +22,11 @@ import {
 import type { OptionMarket } from '../types'
 
 const useOptionsMarkets = () => {
-  const { pushNotification } = useNotifications()
+  const { pushErrorNotification, pushNotification } = useNotifications()
   const { wallet, pubKey } = useWallet()
   const { connection, endpoint } = useConnection()
   const { splTokenAccountRentBalance } = useSolanaMeta()
+  const { sendTransaction } = useSendTransaction()
   const { markets, setMarkets, marketsLoading, setMarketsLoading } = useContext(
     OptionsMarketsContext,
   )
@@ -185,36 +185,13 @@ const useOptionsMarkets = () => {
         )
       }
 
-      tx.feePayer = pubKey
-      const { blockhash } = await connection.getRecentBlockhash()
-      tx.recentBlockhash = blockhash
-
-      if (signers.length) {
-        tx.partialSign(...signers)
-      }
-      const signed = await wallet.signTransaction(tx)
-      const txid = await connection.sendRawTransaction(signed.serialize())
-
-      pushNotification({
-        severity: 'info',
-        message: 'Processing: Mint Options Token',
-        link: (
-          <Link href={buildSolanaExplorerUrl(txid)} target="_new">
-            View on Solana Explorer
-          </Link>
-        ),
-      })
-
-      await connection.confirmTransaction(txid)
-
-      pushNotification({
-        severity: 'success',
-        message: 'Confirmed: Mint Options Token',
-        link: (
-          <Link href={buildSolanaExplorerUrl(txid)} target="_new">
-            View on Solana Explorer
-          </Link>
-        ),
+      sendTransaction({
+        transaction: tx,
+        wallet,
+        signers,
+        connection,
+        sendingMessage: 'Processing: Mint Options Token',
+        successMessage: 'Confirmed: Mint Options Token',
       })
 
       return {
@@ -222,11 +199,7 @@ const useOptionsMarkets = () => {
         writerTokenDestKey,
       }
     } catch (err) {
-      console.error(err)
-      pushNotification({
-        severity: 'error',
-        message: `${err}`,
-      })
+      pushErrorNotification(err)
     }
     return {}
   }

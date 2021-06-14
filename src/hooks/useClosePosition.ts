@@ -63,7 +63,6 @@ export const useClosePosition = (
           }
 
           const closePositionIx = await closePositionInstruction({
-            // eslint-disable-line
             programId: new PublicKey(endpoint.programId),
             optionMarketKey: market.optionMarketKey,
             underlyingAssetPoolKey: market.underlyingAssetPoolKey,

@@ -1,13 +1,15 @@
 import {
-  Account,
   Connection,
+  Keypair,
   PublicKey,
   sendAndConfirmRawTransaction,
   Transaction,
-  TransactionInstruction,
 } from '@solana/web3.js'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { Market, initializeMarket } from '@mithraic-labs/psyoptions'
+import {
+  initializeAccountsForMarket,
+  initializeMarketInstruction,
+} from '@mithraic-labs/psyoptions'
 import BigNumber from 'bignumber.js'
 import { getSolanaConfig } from './helpers'
 
@@ -30,7 +32,7 @@ const OPTION_PROGRAM_ID = new PublicKey(
 
   const solanaConfig = getSolanaConfig()
   const keyBuffer = fs.readFileSync(solanaConfig.keypair_path)
-  const payer = new Account(JSON.parse(keyBuffer))
+  const payer = new Keypair(JSON.parse(keyBuffer))
 
   const newOptionMarketAddresses = []
   const starterPromise = Promise.resolve(null)
@@ -56,25 +58,56 @@ const OPTION_PROGRAM_ID = new PublicKey(
         payer,
       )
       const quoteMintInfo = await quoteAsset.getMintInfo()
+
+      // Create and send transaction for creating/initializing accounts needed
+      // for option market
       const {
-        transaction,
+        transaction: createAccountsTx,
         signers,
-        optionMarketDataKey,
-      } = await initializeMarket({
+        optionMarketKey,
+        optionMintKey,
+        writerTokenMintKey,
+        quoteAssetPoolKey,
+        underlyingAssetPoolKey,
+      } = await initializeAccountsForMarket({
         connection,
-        payer,
+        payerKey: payer.publicKey,
         programId: OPTION_PROGRAM_ID,
+      })
+      createAccountsTx.partialSign(...signers)
+      await sendAndConfirmRawTransaction(
+        connection,
+        createAccountsTx.serialize(),
+        {
+          skipPreflight: false,
+          preflightCommitment: 'recent',
+          commitment: 'max',
+        },
+      )
+
+      // create and send transaction for initializing the option market
+      const initializeMarketIx = await initializeMarketInstruction({
+        programId: OPTION_PROGRAM_ID,
+        fundingAccountKey: payer.publicKey,
         underlyingAssetMintKey,
         quoteAssetMintKey,
-        underlyingAssetDecimals: underlyingMintInfo.decimals,
-        quoteAssetDecimals: quoteMintInfo.decimals,
+        optionMintKey,
+        writerTokenMintKey,
+        optionMarketKey,
+        underlyingAssetPoolKey,
+        quoteAssetPoolKey,
         underlyingAmountPerContract: new BigNumber(
           marketMeta.underlyingAssetPerContract,
-        ),
-        quoteAmountPerContract: new BigNumber(marketMeta.quoteAssetPerContract),
+        ).toNumber(),
+        quoteAmountPerContract: new BigNumber(
+          marketMeta.quoteAssetPerContract,
+        ).toNumber(),
         expirationUnixTimestamp: marketMeta.expiration,
       })
+      const transaction = new Transaction()
+      transaction.add(initializeMarketIx)
       transaction.partialSign(payer)
+
       const txId = await sendAndConfirmRawTransaction(
         connection,
         transaction.serialize(),
@@ -85,7 +118,7 @@ const OPTION_PROGRAM_ID = new PublicKey(
         },
       )
       console.log(`* confirmed mint TX id: ${txId}`)
-      newOptionMarketAddresses.push(optionMarketDataKey.toString())
+      newOptionMarketAddresses.push(optionMarketKey.toString())
     })()
   }, starterPromise)
 

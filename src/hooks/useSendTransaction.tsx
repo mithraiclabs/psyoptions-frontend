@@ -57,8 +57,6 @@ const useSendTransaction = () => {
 
       const explorerUrl = buildSolanaExplorerUrl(txid)
 
-      console.log('Started awaiting confirmation for', txid)
-
       let done = false
       ;(async () => {
         while (!done && getUnixTs() - startTime < timeout) {
@@ -80,9 +78,9 @@ const useSendTransaction = () => {
             await simulateTransaction(connection, signedTransaction, 'single')
           ).value
         } catch (e) {
-          console.log('Error: ', e)
+          console.error('Error: ', e)
         }
-        console.log('*** simulateResult', simulateResult)
+
         if (simulateResult && simulateResult.err) {
           if (simulateResult.logs) {
             for (let i = simulateResult.logs.length - 1; i >= 0; i -= 1) {

@@ -88,14 +88,12 @@ export async function awaitTransactionSignatureConfirmation(
           return
         }
         done = true
-        console.log('Timed out for txid', txid)
         reject(new TimeoutError('TX timed out', txid))
       }, timeout)
       try {
         connection.onSignature(
           txid,
           (result) => {
-            console.log('WS confirmed', txid, result)
             done = true
             if (result.err) {
               reject(result.err)
@@ -105,10 +103,8 @@ export async function awaitTransactionSignatureConfirmation(
           },
           connection.commitment,
         )
-        console.log('Set up WS connection', txid)
       } catch (e) {
         done = true
-        console.log('WS error in setup', txid, e)
       }
       while (!done) {
         // eslint-disable-next-line
@@ -120,7 +116,7 @@ export async function awaitTransactionSignatureConfirmation(
             const result = signatureStatuses && signatureStatuses.value[0]
             if (!done) {
               if (!result) {
-                // console.log('REST null result for', txid, result);
+                console.log('REST null result for', txid, result)
               } else if (result.err) {
                 console.log('REST error for', txid, result)
                 done = true

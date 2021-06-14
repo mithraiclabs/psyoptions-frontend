@@ -1,12 +1,11 @@
-import React, { useCallback } from 'react'
+import { useCallback } from 'react'
+import { closePositionInstruction } from '@mithraic-labs/psyoptions'
 import { PublicKey, Transaction } from '@solana/web3.js'
-import Link from '@material-ui/core/Link'
-import { closePostExpirationCoveredCallInstruction } from '@mithraic-labs/psyoptions'
-import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import { TOKEN_PROGRAM_ID, Token } from '@solana/spl-token'
 import useConnection from './useConnection'
 import useWallet from './useWallet'
 import useNotifications from './useNotifications'
-import { buildSolanaExplorerUrl } from '../utils/solanaExplorer'
+import useSendTransaction from './useSendTransaction'
 import { initializeTokenAccountTx, WRAPPED_SOL_ADDRESS } from '../utils/token'
 import { useSolanaMeta } from '../context/SolanaMetaContext'
 
@@ -21,59 +20,61 @@ const maxClosesPerTx = 25
  * underlying asset to the option writer
  *
  * @param market Market for the option to be closed
+ * @param optionTokenSrcKey PublicKey where the Option Token will be burned from
  * @param underlyingAssetDestKEy PublicKey where the unlocked underlying asset will be sent
  * @param writerTokenSourceKey PublicKey of the address where the Writer Token will be burned from
  */
 
-export const useCloseWrittenOptionPostExpiration = (
+export const useClosePosition = (
   market,
+  optionTokenSrcKey,
   underlyingAssetDestKey,
   writerTokenSourceKey,
 ) => {
   const { connection, endpoint } = useConnection()
-  const { pushNotification } = useNotifications()
+  const { pushErrorNotification } = useNotifications()
   const { pubKey, wallet } = useWallet()
   const { splTokenAccountRentBalance } = useSolanaMeta()
+  const { sendSignedTransaction } = useSendTransaction()
 
-  const closeOptionPostExpiration = useCallback(
+  const closePosition = useCallback(
     async (contractsToClose = 1) => {
       try {
         let remaining = contractsToClose
         const closeTxs = []
 
         while (remaining > 0) {
-          const transaction = new Transaction()
+          const tx = new Transaction()
           const signers = []
           let _underlyingAssetDestKey = underlyingAssetDestKey
           if (market.uAssetMint === WRAPPED_SOL_ADDRESS) {
             // need to create a sol account
-            const {
-              transaction: initWrappedSolAcctIx,
-              newTokenAccount: wrappedSolAccount,
-            } = await initializeTokenAccountTx({
-              // eslint-disable-line
-              connection,
-              payerKey: pubKey,
-              mintPublicKey: new PublicKey(WRAPPED_SOL_ADDRESS),
-              owner: pubKey,
-              rentBalance: splTokenAccountRentBalance,
-            })
-            transaction.add(initWrappedSolAcctIx)
+            const { transaction, newTokenAccount: wrappedSolAccount } =
+              await initializeTokenAccountTx({
+                connection,
+                payerKey: pubKey,
+                mintPublicKey: new PublicKey(WRAPPED_SOL_ADDRESS),
+                owner: pubKey,
+                rentBalance: splTokenAccountRentBalance,
+              })
+            tx.add(transaction)
             signers.push(wrappedSolAccount)
             _underlyingAssetDestKey = wrappedSolAccount.publicKey
           }
-          const ix = await closePostExpirationCoveredCallInstruction({
+
+          const closePositionIx = await closePositionInstruction({
             // eslint-disable-line
             programId: new PublicKey(endpoint.programId),
             optionMarketKey: market.optionMarketKey,
-            optionMintKey: market.optionMintKey,
-            underlyingAssetDestKey: _underlyingAssetDestKey,
             underlyingAssetPoolKey: market.underlyingAssetPoolKey,
+            optionMintKey: market.optionMintKey,
+            optionTokenSrcKey,
+            optionTokenSrcAuthKey: pubKey,
             writerTokenMintKey: market.writerTokenMintKey,
             writerTokenSourceKey,
             writerTokenSourceAuthorityKey: pubKey,
+            underlyingAssetDestKey: _underlyingAssetDestKey,
           })
-
           // loop this by # of times given by parameter
           const loopRemaining = remaining
           for (
@@ -81,13 +82,12 @@ export const useCloseWrittenOptionPostExpiration = (
             i <= Math.min(maxClosesPerTx, loopRemaining);
             i += 1
           ) {
-            transaction.add(ix)
+            tx.add(closePositionIx)
             remaining -= 1
           }
-
           // Close out the wrapped SOL account so it feels native
           if (market.uAssetMint === WRAPPED_SOL_ADDRESS) {
-            transaction.add(
+            tx.add(
               Token.createCloseAccountInstruction(
                 TOKEN_PROGRAM_ID,
                 _underlyingAssetDestKey,
@@ -97,70 +97,53 @@ export const useCloseWrittenOptionPostExpiration = (
               ),
             )
           }
-          transaction.feePayer = pubKey
+
+          tx.feePayer = pubKey
           const { blockhash } = await connection.getRecentBlockhash() // eslint-disable-line
-          transaction.recentBlockhash = blockhash
+          tx.recentBlockhash = blockhash
 
           if (signers.length) {
-            transaction.partialSign(...signers)
+            tx.partialSign(...signers)
           }
 
-          closeTxs.push(transaction)
+          closeTxs.push(tx)
         }
-
         const signed = await wallet.signAllTransactions(closeTxs)
 
         await Promise.all(
           signed.map(async (signedTx) => {
-            const txid = await connection.sendRawTransaction(
-              signedTx.serialize(),
-            )
-            pushNotification({
-              severity: 'info',
-              message: `Submitted Transaction: Close Option`,
-              link: (
-                <Link href={buildSolanaExplorerUrl(txid)} target="_new">
-                  View on Solana Explorer
-                </Link>
-              ),
-            })
-            await connection.confirmTransaction(txid)
-            pushNotification({
-              severity: 'success',
-              message: `Transaction Confirmed: Close Option`,
-              link: (
-                <Link href={buildSolanaExplorerUrl(txid)} target="_new">
-                  View on Solana Explorer
-                </Link>
-              ),
+            await sendSignedTransaction({
+              signedTransaction: signedTx,
+              connection,
+              sendingMessage: 'Sending: Close Position',
+              successMessage: 'Confirmed: Close Position',
             })
           }),
         )
       } catch (err) {
-        pushNotification({
-          severity: 'error',
-          message: `${err}`,
-        })
+        pushErrorNotification(err)
       }
     },
     [
       underlyingAssetDestKey,
       market.uAssetMint,
       market.optionMarketKey,
-      market.optionMintKey,
       market.underlyingAssetPoolKey,
+      market.optionMintKey,
       market.writerTokenMintKey,
       endpoint.programId,
-      writerTokenSourceKey,
+      optionTokenSrcKey,
       pubKey,
+      writerTokenSourceKey,
       connection,
+      sendSignedTransaction,
       wallet,
-      pushNotification,
+      pushErrorNotification,
       splTokenAccountRentBalance,
     ],
   )
 
   return {
-    closeOptionPostExpiration,
+    closePosition,
   }
 }

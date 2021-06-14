@@ -1,12 +1,11 @@
-import React, { useCallback } from 'react'
+import { useCallback } from 'react'
 import { exchangeWriterTokenForQuoteInstruction } from '@mithraic-labs/psyoptions'
-import Link from '@material-ui/core/Link'
 import { PublicKey, Transaction } from '@solana/web3.js'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import useNotifications from './useNotifications'
 import useConnection from './useConnection'
 import useWallet from './useWallet'
-import { buildSolanaExplorerUrl } from '../utils/solanaExplorer'
+import useSendTransaction from './useSendTransaction'
 import { initializeTokenAccountTx, WRAPPED_SOL_ADDRESS } from '../utils/token'
 import { useSolanaMeta } from '../context/SolanaMetaContext'
 
@@ -27,7 +26,8 @@ export const useExchangeWriterTokenForQuote = (
   const { connection, endpoint } = useConnection()
   const { pubKey, wallet } = useWallet()
   const { splTokenAccountRentBalance } = useSolanaMeta()
-  const { pushNotification } = useNotifications()
+  const { pushErrorNotification } = useNotifications()
+  const { sendTransaction } = useSendTransaction()
 
   const _exchangeWriterTokenFoQuote = useCallback(async () => {
     try {
@@ -53,7 +53,6 @@ export const useExchangeWriterTokenForQuote = (
       const ix = await exchangeWriterTokenForQuoteInstruction({
         programId: new PublicKey(endpoint.programId),
         optionMarketKey: market.optionMarketKey,
-        optionMintKey: market.optionMintKey,
         writerTokenMintKey: market.writerTokenMintKey,
         writerTokenSourceAuthorityKey: pubKey,
         quoteAssetPoolKey: market.quoteAssetPoolKey,
@@ -74,46 +73,22 @@ export const useExchangeWriterTokenForQuote = (
           ),
         )
       }
-      transaction.feePayer = pubKey
-      const { blockhash } = await connection.getRecentBlockhash()
-      transaction.recentBlockhash = blockhash
 
-      if (signers.length) {
-        transaction.partialSign(...signers)
-      }
-
-      const signed = await wallet.signTransaction(transaction)
-      const txid = await connection.sendRawTransaction(signed.serialize())
-      pushNotification({
-        severity: 'info',
-        message: `Submitted Transaction: Close Position`,
-        link: (
-          <Link href={buildSolanaExplorerUrl(txid)} target="_new">
-            View on Solana Explorer
-          </Link>
-        ),
-      })
-      await connection.confirmTransaction(txid)
-      pushNotification({
-        severity: 'success',
-        message: `Transaction Confirmed: Close Position`,
-        link: (
-          <Link href={buildSolanaExplorerUrl(txid)} target="_new">
-            View on Solana Explorer
-          </Link>
-        ),
+      sendTransaction({
+        transaction,
+        wallet,
+        signers,
+        connection,
+        sendingMessage: 'Sending: Burn Writer Token for quote assets',
+        successMessage: 'Confirmed: Burn Writer Token for quote assets',
       })
     } catch (err) {
-      pushNotification({
-        severity: 'error',
-        message: `${err}`,
-      })
+      pushErrorNotification(err)
     }
   }, [
     quoteAssetDestKey,
     market.qAssetMint,
     market.optionMarketKey,
-    market.optionMintKey,
     market.writerTokenMintKey,
     market.quoteAssetPoolKey,
     endpoint.programId,
@@ -121,7 +96,8 @@ export const useExchangeWriterTokenForQuote = (
     writerTokenSourceKey,
     connection,
     wallet,
-    pushNotification,
+    pushErrorNotification,
+    sendTransaction,
     splTokenAccountRentBalance,
   ])
 

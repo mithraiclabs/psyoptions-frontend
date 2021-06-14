@@ -49,17 +49,14 @@ export const useClosePosition = (
           let _underlyingAssetDestKey = underlyingAssetDestKey
           if (market.uAssetMint === WRAPPED_SOL_ADDRESS) {
             // need to create a sol account
-            const {
-              transaction,
-              newTokenAccount: wrappedSolAccount,
-            } = await initializeTokenAccountTx({
-              // eslint-disable-line
-              connection,
-              payer: { publicKey: pubKey },
-              mintPublicKey: new PublicKey(WRAPPED_SOL_ADDRESS),
-              owner: pubKey,
-              rentBalance: splTokenAccountRentBalance,
-            })
+            const { transaction, newTokenAccount: wrappedSolAccount } =
+              await initializeTokenAccountTx({
+                connection,
+                payerKey: pubKey,
+                mintPublicKey: new PublicKey(WRAPPED_SOL_ADDRESS),
+                owner: pubKey,
+                rentBalance: splTokenAccountRentBalance,
+              })
             tx.add(transaction)
             signers.push(wrappedSolAccount)
             _underlyingAssetDestKey = wrappedSolAccount.publicKey

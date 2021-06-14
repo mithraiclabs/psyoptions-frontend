@@ -53,7 +53,7 @@ export const useCloseWrittenOptionPostExpiration = (
             } = await initializeTokenAccountTx({
               // eslint-disable-line
               connection,
-              payer: { publicKey: pubKey },
+              payerKey: pubKey,
               mintPublicKey: new PublicKey(WRAPPED_SOL_ADDRESS),
               owner: pubKey,
               rentBalance: splTokenAccountRentBalance,

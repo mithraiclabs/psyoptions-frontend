@@ -18,7 +18,7 @@ export const useCreateNewTokenAccount = () => {
       try {
         const [tx, newAccount] = await initializeTokenAccountTx({
           connection,
-          payer: { publicKey: pubKey },
+          payerKey: pubKey,
           mintPublicKey: mintKey,
           owner: pubKey,
           rentBalance: splTokenAccountRentBalance,

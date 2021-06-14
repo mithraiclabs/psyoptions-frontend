@@ -41,7 +41,7 @@ export const useExchangeWriterTokenForQuote = (
           newTokenAccount: wrappedSolAccount,
         } = await initializeTokenAccountTx({
           connection,
-          payer: { publicKey: pubKey },
+          payerKey: pubKey,
           mintPublicKey: new PublicKey(WRAPPED_SOL_ADDRESS),
           owner: pubKey,
           rentBalance: splTokenAccountRentBalance,

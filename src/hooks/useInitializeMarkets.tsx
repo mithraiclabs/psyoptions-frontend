@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import { useCallback, useContext } from 'react'
-import { Account, Keypair, PublicKey, Transaction } from '@solana/web3.js'
+import { PublicKey, Transaction } from '@solana/web3.js'
 import BigNumber from 'bignumber.js'
 import {
   initializeAccountsForMarket,
@@ -62,7 +62,7 @@ export const useInitializeMarkets = (): ((
               underlyingAssetPoolKey,
             } = await initializeAccountsForMarket({
               connection,
-              payer: { publicKey: pubKey } as Account,
+              payerKey: pubKey,
               programId: endpoint.programId,
             })
             await sendTransaction({

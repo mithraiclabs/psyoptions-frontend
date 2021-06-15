@@ -1,12 +1,11 @@
-import React, { useCallback } from 'react'
-import Link from '@material-ui/core/Link'
+import { useCallback } from 'react'
 import { closePositionInstruction } from '@mithraic-labs/psyoptions'
 import { PublicKey, Transaction } from '@solana/web3.js'
 import { TOKEN_PROGRAM_ID, Token } from '@solana/spl-token'
 import useConnection from './useConnection'
 import useWallet from './useWallet'
 import useNotifications from './useNotifications'
-import { buildSolanaExplorerUrl } from '../utils/solanaExplorer'
+import useSendTransaction from './useSendTransaction'
 import { initializeTokenAccountTx, WRAPPED_SOL_ADDRESS } from '../utils/token'
 import { useSolanaMeta } from '../context/SolanaMetaContext'
 
@@ -33,9 +32,10 @@ export const useClosePosition = (
   writerTokenSourceKey,
 ) => {
   const { connection, endpoint } = useConnection()
-  const { pushNotification } = useNotifications()
+  const { pushErrorNotification } = useNotifications()
   const { pubKey, wallet } = useWallet()
   const { splTokenAccountRentBalance } = useSolanaMeta()
+  const { sendSignedTransaction } = useSendTransaction()
 
   const closePosition = useCallback(
     async (contractsToClose = 1) => {
@@ -49,24 +49,20 @@ export const useClosePosition = (
           let _underlyingAssetDestKey = underlyingAssetDestKey
           if (market.uAssetMint === WRAPPED_SOL_ADDRESS) {
             // need to create a sol account
-            const {
-              transaction,
-              newTokenAccount: wrappedSolAccount,
-            } = await initializeTokenAccountTx({
-              // eslint-disable-line
-              connection,
-              payer: { publicKey: pubKey },
-              mintPublicKey: new PublicKey(WRAPPED_SOL_ADDRESS),
-              owner: pubKey,
-              rentBalance: splTokenAccountRentBalance,
-            })
+            const { transaction, newTokenAccount: wrappedSolAccount } =
+              await initializeTokenAccountTx({
+                connection,
+                payerKey: pubKey,
+                mintPublicKey: new PublicKey(WRAPPED_SOL_ADDRESS),
+                owner: pubKey,
+                rentBalance: splTokenAccountRentBalance,
+              })
             tx.add(transaction)
             signers.push(wrappedSolAccount)
             _underlyingAssetDestKey = wrappedSolAccount.publicKey
           }
 
           const closePositionIx = await closePositionInstruction({
-            // eslint-disable-line
             programId: new PublicKey(endpoint.programId),
             optionMarketKey: market.optionMarketKey,
             underlyingAssetPoolKey: market.underlyingAssetPoolKey,
@@ -115,36 +111,16 @@ export const useClosePosition = (
 
         await Promise.all(
           signed.map(async (signedTx) => {
-            const txid = await connection.sendRawTransaction(
-              signedTx.serialize(),
-            )
-            pushNotification({
-              severity: 'info',
-              message: `Submitted Transaction: Close Position`,
-              link: (
-                <Link href={buildSolanaExplorerUrl(txid)} target="_new">
-                  View on Solana Explorer
-                </Link>
-              ),
-            })
-            await connection.confirmTransaction(txid)
-
-            pushNotification({
-              severity: 'success',
-              message: `Transaction Confirmed: Close Position`,
-              link: (
-                <Link href={buildSolanaExplorerUrl(txid)} target="_new">
-                  View on Solana Explorer
-                </Link>
-              ),
+            await sendSignedTransaction({
+              signedTransaction: signedTx,
+              connection,
+              sendingMessage: 'Sending: Close Position',
+              successMessage: 'Confirmed: Close Position',
             })
           }),
         )
       } catch (err) {
-        pushNotification({
-          severity: 'error',
-          message: `${err}`,
-        })
+        pushErrorNotification(err)
       }
     },
     [
@@ -159,8 +135,9 @@ export const useClosePosition = (
       pubKey,
       writerTokenSourceKey,
       connection,
+      sendSignedTransaction,
       wallet,
-      pushNotification,
+      pushErrorNotification,
       splTokenAccountRentBalance,
     ],
   )

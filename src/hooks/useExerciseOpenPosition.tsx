@@ -1,11 +1,10 @@
-import React, { useCallback } from 'react'
+import { useCallback } from 'react'
 import { PublicKey } from '@solana/web3.js'
-import Link from '@material-ui/core/Link'
 import { exerciseCoveredCall } from '@mithraic-labs/psyoptions'
 import useConnection from './useConnection'
 import useWallet from './useWallet'
 import useNotifications from './useNotifications'
-import { buildSolanaExplorerUrl } from '../utils/solanaExplorer'
+import useSendTransaction from './useSendTransaction'
 
 const useExerciseOpenPosition = (
   market,
@@ -13,15 +12,16 @@ const useExerciseOpenPosition = (
   exerciserUnderlyingAssetAddress,
   exerciserContractTokenAddress,
 ) => {
-  const { pushNotification } = useNotifications()
+  const { pushErrorNotification } = useNotifications()
   const { connection, endpoint } = useConnection()
+  const { sendTransaction } = useSendTransaction()
   const { wallet, pubKey } = useWallet()
 
   const exercise = useCallback(async () => {
     try {
       const { transaction: tx } = await exerciseCoveredCall({
         connection,
-        payer: { publicKey: pubKey },
+        payerKey: pubKey,
         programId: endpoint.programId,
         optionMintKey: market.optionMintKey,
         optionMarketKey: market.optionMarketKey,
@@ -29,46 +29,24 @@ const useExerciseOpenPosition = (
         exerciserUnderlyingAssetKey: new PublicKey(
           exerciserUnderlyingAssetAddress,
         ),
-        exerciserQuoteAssetAuthorityAccount: { publicKey: pubKey },
+        exerciserQuoteAssetAuthorityKey: pubKey,
         underlyingAssetPoolKey: market.underlyingAssetPoolKey,
         quoteAssetPoolKey: market.quoteAssetPoolKey,
         optionTokenKey: new PublicKey(exerciserContractTokenAddress),
-        optionTokenAuthorityAccount: { publicKey: pubKey },
+        optionTokenAuthorityKey: pubKey,
         quoteAssetMintKey: market.quoteAssetMintKey,
       })
 
-      const signed = await wallet.signTransaction(tx)
-      const txid = await connection.sendRawTransaction(signed.serialize())
-
-      // TODO add the Asset Pair to the push note
-      pushNotification({
-        severity: 'info',
-        message: `Processing: Exercise Option`,
-        link: (
-          <Link href={buildSolanaExplorerUrl(txid)} target="_new">
-            View on Solana Explorer
-          </Link>
-        ),
+      // TODO add the Asset Pair to the push note messages
+      sendTransaction({
+        transaction: tx,
+        wallet,
+        connection,
+        sendingMessage: 'Processing: Exercise Option',
+        successMessage: 'Confirmed: Exercise Option',
       })
-
-      await connection.confirmTransaction(txid)
-
-      pushNotification({
-        severity: 'success',
-        message: `Confirmed: Exercise Option`,
-        link: (
-          <Link href={buildSolanaExplorerUrl(txid)} target="_new">
-            View on Solana Explorer
-          </Link>
-        ),
-      })
-
-      return txid
     } catch (err) {
-      pushNotification({
-        severity: 'error',
-        message: `${err}`,
-      })
+      pushErrorNotification(err)
     }
     return null
   }, [
@@ -80,7 +58,8 @@ const useExerciseOpenPosition = (
     exerciserUnderlyingAssetAddress,
     exerciserContractTokenAddress,
     wallet,
-    pushNotification,
+    pushErrorNotification,
+    sendTransaction,
   ])
 
   return {

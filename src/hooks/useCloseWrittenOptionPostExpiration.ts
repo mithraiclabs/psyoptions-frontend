@@ -1,12 +1,11 @@
-import React, { useCallback } from 'react'
+import { useCallback } from 'react'
 import { PublicKey, Transaction } from '@solana/web3.js'
-import Link from '@material-ui/core/Link'
 import { closePostExpirationCoveredCallInstruction } from '@mithraic-labs/psyoptions'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import useConnection from './useConnection'
 import useWallet from './useWallet'
 import useNotifications from './useNotifications'
-import { buildSolanaExplorerUrl } from '../utils/solanaExplorer'
+import useSendTransaction from './useSendTransaction'
 import { initializeTokenAccountTx, WRAPPED_SOL_ADDRESS } from '../utils/token'
 import { useSolanaMeta } from '../context/SolanaMetaContext'
 
@@ -31,9 +30,10 @@ export const useCloseWrittenOptionPostExpiration = (
   writerTokenSourceKey,
 ) => {
   const { connection, endpoint } = useConnection()
-  const { pushNotification } = useNotifications()
+  const { pushErrorNotification } = useNotifications()
   const { pubKey, wallet } = useWallet()
   const { splTokenAccountRentBalance } = useSolanaMeta()
+  const { sendSignedTransaction } = useSendTransaction()
 
   const closeOptionPostExpiration = useCallback(
     async (contractsToClose = 1) => {
@@ -53,7 +53,7 @@ export const useCloseWrittenOptionPostExpiration = (
             } = await initializeTokenAccountTx({
               // eslint-disable-line
               connection,
-              payer: { publicKey: pubKey },
+              payerKey: pubKey,
               mintPublicKey: new PublicKey(WRAPPED_SOL_ADDRESS),
               owner: pubKey,
               rentBalance: splTokenAccountRentBalance,
@@ -63,10 +63,8 @@ export const useCloseWrittenOptionPostExpiration = (
             _underlyingAssetDestKey = wrappedSolAccount.publicKey
           }
           const ix = await closePostExpirationCoveredCallInstruction({
-            // eslint-disable-line
             programId: new PublicKey(endpoint.programId),
             optionMarketKey: market.optionMarketKey,
-            optionMintKey: market.optionMintKey,
             underlyingAssetDestKey: _underlyingAssetDestKey,
             underlyingAssetPoolKey: market.underlyingAssetPoolKey,
             writerTokenMintKey: market.writerTokenMintKey,
@@ -112,42 +110,22 @@ export const useCloseWrittenOptionPostExpiration = (
 
         await Promise.all(
           signed.map(async (signedTx) => {
-            const txid = await connection.sendRawTransaction(
-              signedTx.serialize(),
-            )
-            pushNotification({
-              severity: 'info',
-              message: `Submitted Transaction: Close Option`,
-              link: (
-                <Link href={buildSolanaExplorerUrl(txid)} target="_new">
-                  View on Solana Explorer
-                </Link>
-              ),
-            })
-            await connection.confirmTransaction(txid)
-            pushNotification({
-              severity: 'success',
-              message: `Transaction Confirmed: Close Option`,
-              link: (
-                <Link href={buildSolanaExplorerUrl(txid)} target="_new">
-                  View on Solana Explorer
-                </Link>
-              ),
+            await sendSignedTransaction({
+              signedTransaction: signedTx,
+              connection,
+              sendingMessage: 'Sending Transaction: Close Option',
+              successMessage: 'Transaction Confirmed: Close Option',
             })
           }),
         )
       } catch (err) {
-        pushNotification({
-          severity: 'error',
-          message: `${err}`,
-        })
+        pushErrorNotification(err)
       }
     },
     [
       underlyingAssetDestKey,
       market.uAssetMint,
       market.optionMarketKey,
-      market.optionMintKey,
       market.underlyingAssetPoolKey,
       market.writerTokenMintKey,
       endpoint.programId,
@@ -155,7 +133,8 @@ export const useCloseWrittenOptionPostExpiration = (
       pubKey,
       connection,
       wallet,
-      pushNotification,
+      pushErrorNotification,
+      sendSignedTransaction,
       splTokenAccountRentBalance,
     ],
   )

@@ -9,6 +9,8 @@ import { useSerumOrderbooks } from '../../context/SerumOrderbookContext'
 import { useSubscribeOpenOrders, useCancelOrder } from '../../hooks/Serum'
 import useNotifications from '../../hooks/useNotifications'
 
+import theme from '../../utils/theme'
+
 import { TCell } from './OpenOrderStyles'
 
 // Render all open orders for a given market as table rows
@@ -69,7 +71,16 @@ const OpenOrdersForMarket: React.FC<{
     actualOpenOrders.map((order) => {
       return (
         <TableRow hover key={`${JSON.stringify(order)}`}>
-          <TCell>{order?.side}</TCell>
+          <TCell
+            style={{
+              color:
+                order?.side === 'buy'
+                  ? theme.palette.success.main
+                  : theme.palette.error.main,
+            }}
+          >
+            {order?.side}
+          </TCell>
           <TCell>{type}</TCell>
           <TCell>{`${qAssetSymbol}/${uAssetSymbol}`}</TCell>
           <TCell>
@@ -78,7 +89,16 @@ const OpenOrdersForMarket: React.FC<{
           <TCell>{strikePrice}</TCell>
           <TCell>{`${contractSize} ${uAssetSymbol}`}</TCell>
           <TCell>{order?.size}</TCell>
-          <TCell>{order?.price}</TCell>
+          <TCell
+            style={{
+              color:
+                order?.side === 'buy'
+                  ? theme.palette.success.main
+                  : theme.palette.error.main,
+            }}
+          >
+            {order?.price}
+          </TCell>
           {/* <TCell>TODO</TCell> */}
           <TCell align="right">
             <Button

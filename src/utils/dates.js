@@ -6,9 +6,12 @@ export const getLastFridayOfMonths = (n = 10) =>
   Array(n)
     .fill(0)
     .map((_, i) => {
-      const lastDay = moment.utc().endOf('month').add(i, 'month')
+      const lastDay = moment
+        .utc()
+        .startOf('month')
+        .add(i, 'month')
+        .endOf('month')
       const lastFriday = lastDay.subtract(subtractDays[lastDay.day()], 'day')
       return lastFriday
     })
     .filter((date) => date.isSameOrAfter(moment.utc()))
-    

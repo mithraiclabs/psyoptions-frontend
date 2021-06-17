@@ -35,6 +35,8 @@ import Loading from '../../Loading'
 import OpenOrders from '../../OpenOrders'
 import { ContractSizeSelector } from '../../ContractSizeSelector'
 
+import Balances from './MarketsBalances'
+
 import { TCellLoading, THeadCell, TCellStrike, PageButton } from './styles'
 import { MarketDataProvider } from '../../../context/MarketDataContext'
 
@@ -300,6 +302,9 @@ const Markets = () => {
                   onChange={updateContractSize}
                   value={contractSize}
                 />
+              </Box>
+              <Box py={[2, 2, 0]}>
+                <Balances />
               </Box>
             </Box>
             <Box px={[1, 1, 0]} py={[2, 2, 1]} width={['100%', '100%', 'auto']}>

@@ -1,4 +1,5 @@
 import React, { useState, memo } from 'react'
+import Close from '@material-ui/icons/Close'
 import Box from '@material-ui/core/Box'
 import Chip from '@material-ui/core/Chip'
 import Dialog from '@material-ui/core/Dialog'
@@ -339,8 +340,18 @@ const BuySellDialog: React.VFC<{
   return (
     <Dialog open={open} onClose={onClose} maxWidth={'lg'}>
       <Box py={1} px={2} width="680px" maxWidth={['100%']}>
-        <Box p={1} pt={2}>
+        <Box
+          p={1}
+          pr={0}
+          display="flex"
+          flexDirection="row"
+          justifyContent="space-between"
+          alignItems="center"
+        >
           <h2 style={{ margin: '0' }}>{heading}</h2>
+          <Button onClick={onClose} style={{ minWidth: '40px' }}>
+            <Close />
+          </Button>
         </Box>
         <Box flexDirection={['column', 'column', 'row']} display="flex" pb={1}>
           <Box p={1} width={['100%', '100%', '50%']}>

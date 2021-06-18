@@ -9,7 +9,7 @@ const MarketDataContext = createContext<Record<string, TrackerMarketData>>({})
 
 export const MarketDataProvider: React.FC<{ chain: ChainRow[] | undefined }> =
   ({ chain, children }) => {
-    const data = useChainMarketData(chain)
+    const data = {} // useChainMarketData(chain)
 
     return (
       <MarketDataContext.Provider value={data}>

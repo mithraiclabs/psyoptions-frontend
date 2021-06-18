@@ -19,6 +19,51 @@ Parameters:
     Type: String
     Default: DemoFleet
 Resources:
+  DockerImageRepository:
+    Type: 'AWS::ECR::Repository'
+    Properties:
+      RepositoryName: psyoptions-frontend
+      # RepositoryPolicyText: Json
+  CodeBuildServiceRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - codebuild.amazonaws.com
+            Action: 'sts:AssumeRole'
+      Path: /
+      Policies:
+        - PolicyName: AWS-CodeBuild-Service-ECR
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'ecr:BatchCheckLayerAvailability'
+                  - 'ecr:CompleteLayerUpload'
+                  - 'ecr:GetAuthorizationToken'
+                  - 'ecr:InitiateLayerUpload'
+                  - 'ecr:PutImage'
+                  - 'ecr:UploadLayerPart'
+                Resource: !GetAtt DockerImageRepository.Arn
+  CodeBuildProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: psyoptions-fronted
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/standard:4.0
+        PrivilegedMode: true
+        Type: LINUX_CONTAINER
+      ServiceRole: !GetAtt CodeBuildServiceRole.Arn
+      Source:
+
   CodePipelineArtifactStoreBucket:
     Type: 'AWS::S3::Bucket'
   CodePipelineArtifactStoreBucketPolicy:
@@ -79,7 +124,7 @@ Resources:
                 DetectChanges: true
                 OutputArtifactFormat: 'CODE_ZIP'
               RunOrder: 1
-        - Name: Beta
+        - Name: Build
           Actions:
             - Name: BetaAction
               InputArtifacts:

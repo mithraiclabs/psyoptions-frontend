@@ -6,6 +6,9 @@ Parameters:
   AwsAccontId:
     Description: The AWS account resources should be deployed to
     Type: String
+  EcrRepositoryUrl:
+    Description: The full URL for the ECR repository
+    Type: String
   BranchName:
     Description: GitHub branch name
     Type: String
@@ -105,6 +108,60 @@ Resources:
           FromPort: 80
           ToPort: 80
           CidrIp: 0.0.0.0/0
+  FrontEndServerTask:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      ContainerDefinitions:
+        - Command:
+            - node ./dist/index.js
+          Cpu: 512
+          Environment:
+            - name: DEVNET_PROGRAM_ID
+              value: GDvqQy3FkDB2wyNwgZGp5YkmRMUmWbhNNWDMYKbLSZ5N
+            - name: APP_ENABLED
+              value: 'true'
+            - name: DEVNET_DEX_PROGRAM_ID
+              value: DESVgJVGajEgKGXhb6XmqDHGz3VjdgP7rEVESBgxmroY
+            - name: APP_PASSWORD
+              value: 89fe0dbb9a8e940c4e88f40ae9738db57dbe38a8
+            - name: APP_PASSWORD_PROTECTED
+              value: 'true'
+            - name: INITIALIZE_PAGE_ENABLED
+              value: 'true'
+            - name: TAG_NAME
+            - name: SHORT_SHA
+              value: ef94cee
+            - name: BRANCH_NAME
+              value: master
+            - name: SENTRY_ENVIRONMENT
+              value: staging
+            - name: DEVNET_FAUCET_USDC
+              value: E6wQSMPGqHn7dqEMeWcSVfjdkwd8ED5CncQ9BtMNGtUG
+            - name: DEVNET_FAUCET_BTC
+              value: 97z3NzcDxqRMyE7F73PuHEmAbA72S7eDopjhe7GTymTk
+            - name: DEVNET_FAUCET_PSY
+              value: 7jJJnHWagPPG544FtxSVp8eD52FwCsARcqqup1q3XVio
+          Essential: true
+          # Hostname: String
+          Image: !Ref EcrRepositoryUrl
+          # LogConfiguration: LogConfiguration
+          Memory: 256
+          MemoryReservation: 256
+          Name: PsyOptions-Frontend-Server
+          PortMappings:
+            - ContainerPort: 3000
+              HostPort: 80
+              Protocol: tcp
+          # ReadonlyRootFilesystem: Boolean
+          StartTimeout: 1800
+          StopTimeout: 1800
+          # WorkingDirectory: app
+      Cpu: 512
+      # EphemeralStorage: EphemeralStorage
+      ExecutionRoleArn: arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      Memory: 256
+      NetworkMode: awsvpc
+      # TaskRoleArn: String
   EcsService:
     Type: AWS::ECS::Service
     Properties:
@@ -120,15 +177,8 @@ Resources:
           AssignPublicIp: ENABLED
           SecurityGroups:
             - !Ref EcsSecurityGroup
-      PropagateTags: String
-      Role: String
-      SchedulingStrategy: String
-      ServiceName: String
-      ServiceRegistries:
-        - ServiceRegistry
-      Tags:
-        - Tag
-      TaskDefinition: String
+      ServiceName: PsyOptions-Frontend-Server
+      TaskDefinition: !Ref FrontEndServerTask
   CodePipelineArtifactStoreBucket:
     Type: 'AWS::S3::Bucket'
   CodePipelineArtifactStoreBucketPolicy:
@@ -164,62 +214,6 @@ Resources:
             Condition:
               Bool:
                 'aws:SecureTransport': false
-  AppPipeline:
-    Type: 'AWS::CodePipeline::Pipeline'
-    Properties:
-      Name: github-events-pipeline
-      RoleArn: !GetAtt
-        - CodePipelineServiceRole
-        - Arn
-      Stages:
-        - Name: Source
-          Actions:
-            - Name: SourceAction
-              ActionTypeId:
-                Category: Source
-                Owner: AWS
-                Version: 1
-                Provider: CodeStarSourceConnection
-              OutputArtifacts:
-                - Name: SourceArtifact
-              Configuration:
-                ConnectionArn: !Ref CodeStarGithubConnectionArn
-                FullRepositoryId: !Ref FullRepositoryId
-                BranchName: !Ref BranchName
-                DetectChanges: true
-                OutputArtifactFormat: 'CODE_ZIP'
-              Region: !Ref AwsRegion
-              RunOrder: 1
-        - Name: Build
-          Actions:
-            - Name: BuildAction
-              ActionTypeId:
-                Category: Build
-                Owner: AWS
-                Provider: CodeBuild
-                Version: 1
-              InputArtifacts:
-                - Name: SourceArtifact
-              OutputArtifacts:
-                - Name: BuildArtifact
-              Region: !Ref AwsRegion
-              RunOrder: 2
-        - Name: Deploy
-          Actions:
-            - Name: DeployAction
-              ActionTypeId:
-                Category: Deploy
-                Owner: AWS
-                Provider: Amazon ECS
-                Version: 1
-              Configuration:
-                ClusterName: !Ref EcsCluster
-                ServiceName:
-                FileName: imagedefinitions.json
-                DeploymentTimeout: 15
-      ArtifactStore:
-        Type: S3
-        Location: !Ref CodePipelineArtifactStoreBucket
   CodePipelineServiceRole:
     Type: 'AWS::IAM::Role'
     Properties:
@@ -290,3 +284,57 @@ Resources:
                   - 'sqs:*'
                   - 'ecs:*'
                 Resource: '*'
+  AppPipeline:
+    Type: 'AWS::CodePipeline::Pipeline'
+    Properties:
+      Name: github-events-pipeline
+      RoleArn: !GetAtt CodePipelineServiceRole.Arn
+      Stages:
+        - Name: Source
+          Actions:
+            - Name: SourceAction
+              ActionTypeId:
+                Category: Source
+                Owner: AWS
+                Version: 1
+                Provider: CodeStarSourceConnection
+              OutputArtifacts:
+                - Name: SourceArtifact
+              Configuration:
+                ConnectionArn: !Ref CodeStarGithubConnectionArn
+                FullRepositoryId: !Ref FullRepositoryId
+                BranchName: !Ref BranchName
+                DetectChanges: true
+                OutputArtifactFormat: 'CODE_ZIP'
+              Region: !Ref AwsRegion
+              RunOrder: 1
+        - Name: Build
+          Actions:
+            - Name: BuildAction
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: 1
+              InputArtifacts:
+                - Name: SourceArtifact
+              OutputArtifacts:
+                - Name: BuildArtifact
+              Region: !Ref AwsRegion
+              RunOrder: 2
+        - Name: Deploy
+          Actions:
+            - Name: DeployAction
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Provider: Amazon ECS
+                Version: 1
+              Configuration:
+                ClusterName: !Ref EcsCluster
+                ServiceName: !GetAtt EcsService.name
+                FileName: imagedefinitions.json
+                DeploymentTimeout: 15
+      ArtifactStore:
+        Type: S3
+        Location: !Ref CodePipelineArtifactStoreBucket

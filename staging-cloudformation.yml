@@ -1,4 +1,11 @@
 Parameters:
+  AwsRegion:
+    Description: The AWS region resources should be deployed to
+    Type: String
+    Default: us-east-1
+  AwsAccontId:
+    Description: The AWS account resources should be deployed to
+    Type: String
   BranchName:
     Description: GitHub branch name
     Type: String
@@ -61,9 +68,22 @@ Resources:
         Image: aws/codebuild/standard:4.0
         PrivilegedMode: true
         Type: LINUX_CONTAINER
+        EnvironmentVariables:
+          - Name: AWS_DEFAULT_REGION
+            Type: PLAINTEXT
+            Value: !Ref AwsRegion
+          - Name: AWS_ACCOUNT_ID
+            Type: PLAINTEXT
+            Value: !Ref AwsAccontId
+          - Name: IMAGE_REPO_NAME
+            Type: PLAINTEXT
+            Value: psyoptions-frontend
+          - Name: IMAGE_TAG
+            Type: PLAINTEXT
+            Value: latest
       ServiceRole: !GetAtt CodeBuildServiceRole.Arn
       Source:
-
+        Type: CODEPIPELINE
   CodePipelineArtifactStoreBucket:
     Type: 'AWS::S3::Bucket'
   CodePipelineArtifactStoreBucketPolicy:

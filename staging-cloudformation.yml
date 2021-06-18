@@ -84,6 +84,51 @@ Resources:
       ServiceRole: !GetAtt CodeBuildServiceRole.Arn
       Source:
         Type: CODEPIPELINE
+  EcsCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      CapacityProviders:
+        - FARGATE
+      ClusterName: PsyOptions-Frontend
+  EcsSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Opens port 80 for the instance
+      GroupName: PsyOptions-Frontend
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+  EcsService:
+    Type: AWS::ECS::Service
+    Properties:
+      CapacityProviderStrategy:
+        - FARGATE
+      Cluster: !GetAtt EcsCluster.arn
+      DeploymentController:
+        Type: ECS
+      DesiredCount: 1
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups:
+            - !Ref EcsSecurityGroup
+      PropagateTags: String
+      Role: String
+      SchedulingStrategy: String
+      ServiceName: String
+      ServiceRegistries:
+        - ServiceRegistry
+      Tags:
+        - Tag
+      TaskDefinition: String
   CodePipelineArtifactStoreBucket:
     Type: 'AWS::S3::Bucket'
   CodePipelineArtifactStoreBucketPolicy:
@@ -143,21 +188,35 @@ Resources:
                 BranchName: !Ref BranchName
                 DetectChanges: true
                 OutputArtifactFormat: 'CODE_ZIP'
+              Region: !Ref AwsRegion
               RunOrder: 1
         - Name: Build
           Actions:
-            - Name: BetaAction
+            - Name: BuildAction
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: 1
               InputArtifacts:
-                - Name: SourceOutput
+                - Name: SourceArtifact
+              OutputArtifacts:
+                - Name: BuildArtifact
+              Region: !Ref AwsRegion
+              RunOrder: 2
+        - Name: Deploy
+          Actions:
+            - Name: DeployAction
               ActionTypeId:
                 Category: Deploy
                 Owner: AWS
+                Provider: Amazon ECS
                 Version: 1
-                Provider: CodeDeploy
               Configuration:
-                ApplicationName: !Ref ApplicationName
-                DeploymentGroupName: !Ref BetaFleet
-              RunOrder: 1
+                ClusterName: !Ref EcsCluster
+                ServiceName:
+                FileName: imagedefinitions.json
+                DeploymentTimeout: 15
       ArtifactStore:
         Type: S3
         Location: !Ref CodePipelineArtifactStoreBucket

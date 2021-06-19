@@ -176,7 +176,7 @@ export const MarketsTableHeader: React.FC<{
             title={
               <Box
                 p={1}
-              >{`The price of the underlying asset (${uAssetSymbol}) at which the option can be exercised`}</Box>
+              >{`The price of the underlying asset (${uAssetSymbol}) at which the option will be exercised`}</Box>
             }
           >
             <Box display="inline">Strike</Box>

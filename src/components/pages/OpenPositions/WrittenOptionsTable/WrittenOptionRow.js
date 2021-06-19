@@ -129,7 +129,7 @@ export const WrittenOptionRow = React.memo(
                   label="Close One"
                   color="primary"
                   variant="outlined"
-                  onClick={() => closeOptionPostExpiration()}
+                  onClick={closeOptionPostExpiration}
                 />
               </Box>
               <Box p={1}>
@@ -173,7 +173,7 @@ export const WrittenOptionRow = React.memo(
                       label="Close One"
                       color="primary"
                       variant="outlined"
-                      onClick={() => closePosition()}
+                      onClick={closePosition}
                     />
                   </Box>
                   <Box p={1}>

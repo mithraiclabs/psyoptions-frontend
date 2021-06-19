@@ -10,6 +10,7 @@ import useSerum from '../useSerum'
 import useWallet from '../useWallet'
 import useSendTransaction from '../useSendTransaction'
 import { useSerumOpenOrderAccounts } from './useSerumOpenOrderAccounts'
+import useAssetList from '../useAssetList'
 
 /**
  * Returns function for settling the funds of a specific market
@@ -25,6 +26,7 @@ export const useSettleFunds = (
   const { serumMarkets } = useSerum()
   const { wallet, pubKey } = useWallet()
   const { sendTransaction } = useSendTransaction()
+  const { USDCPublicKey } = useAssetList()
   const { ownedTokenAccounts, subscribeToTokenAccount } =
     useOwnedTokenAccounts()
   const openOrders = useSerumOpenOrderAccounts(key, true)
@@ -79,6 +81,10 @@ export const useSettleFunds = (
           openOrders[0],
           _baseTokenAccountKey,
           _quoteTokenAccountKey,
+          market.quoteMintAddress.equals(USDCPublicKey) &&
+            process.env.USDC_SERUM_REFERRER_ADDRESS
+            ? new PublicKey(process.env.USDC_SERUM_REFERRER_ADDRESS)
+            : undefined,
         )
       transaction.add(settleTx)
       signers = [...signers, ...settleSigners]
@@ -94,15 +100,16 @@ export const useSettleFunds = (
     }
     return undefined
   }, [
-    connection,
-    baseMintAddress,
-    quoteMintAddress,
-    pubKey,
-    serumMarket,
+    serumMarket?.market,
     openOrders,
     baseTokenAccountKey,
     quoteTokenAccountKey,
+    connection,
+    USDCPublicKey,
+    pubKey,
+    baseMintAddress,
     subscribeToTokenAccount,
+    quoteMintAddress,
   ])
 
   const settleFunds = useCallback(async () => {

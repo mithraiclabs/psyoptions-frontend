@@ -5,7 +5,6 @@ import Switch from '@material-ui/core/Switch'
 import Table from '@material-ui/core/Table'
 import TableBody from '@material-ui/core/TableBody'
 import TableContainer from '@material-ui/core/TableContainer'
-import TableHead from '@material-ui/core/TableHead'
 import TableRow from '@material-ui/core/TableRow'
 import ChevronLeft from '@material-ui/icons/ChevronLeft'
 import ChevronRight from '@material-ui/icons/ChevronRight'
@@ -26,6 +25,8 @@ import {
 } from '../../../hooks/Serum'
 import useExpirationDate from '../../../hooks/useExpirationDate'
 
+import { MarketDataProvider } from '../../../context/MarketDataContext'
+
 import Page from '../Page'
 import Select from '../../Select'
 import SelectAsset from '../../SelectAsset'
@@ -35,10 +36,9 @@ import Loading from '../../Loading'
 import OpenOrders from '../../OpenOrders'
 import { ContractSizeSelector } from '../../ContractSizeSelector'
 
-import Balances from './MarketsBalances'
-
 import { TCellLoading, THeadCell, TCellStrike, PageButton } from './styles'
-import { MarketDataProvider } from '../../../context/MarketDataContext'
+import Balances from './MarketsBalances'
+import { MarketsTableHeader } from './MarketsTableHeader'
 
 const dblsp = `${'\u00A0'}${'\u00A0'}`
 
@@ -339,78 +339,10 @@ const Markets = () => {
           <Box position="relative">
             <TableContainer>
               <Table stickyHeader aria-label="sticky table">
-                <TableHead>
-                  <TableRow>
-                    <THeadCell
-                      colSpan={8}
-                      style={{ borderTop: 'none', padding: '16px 20px' }}
-                    >
-                      <h3 style={{ margin: 0 }}>
-                        {`Calls${
-                          uAsset && qAsset && !assetListLoading
-                            ? `  (${uAsset.tokenSymbol}/${qAsset.tokenSymbol})`
-                            : ''
-                        }`}
-                      </h3>
-                    </THeadCell>
-                    <TCellStrike colSpan={1} />
-                    <THeadCell
-                      colSpan={8}
-                      style={{ borderTop: 'none', padding: '16px 20px' }}
-                    >
-                      <h3 style={{ margin: 0 }}>
-                        {`Puts${
-                          uAsset && qAsset && !assetListLoading
-                            ? `  (${qAsset.tokenSymbol}/${uAsset.tokenSymbol})`
-                            : ''
-                        }`}
-                      </h3>
-                    </THeadCell>
-                  </TableRow>
-                  <TableRow>
-                    <THeadCell align="left" style={{ paddingLeft: '16px' }}>
-                      Action
-                    </THeadCell>
-                    {/* <THeadCell align="left">Size</THeadCell> */}
-                    <THeadCell align="left" width={'70px'}>
-                      IV
-                    </THeadCell>
-                    <THeadCell align="left" width={'90px'}>
-                      Bid
-                    </THeadCell>
-                    <THeadCell align="left" width={'90px'}>
-                      Ask
-                    </THeadCell>
-                    <THeadCell align="left" width={'70px'}>
-                      IV
-                    </THeadCell>
-                    <THeadCell align="left">Change</THeadCell>
-                    <THeadCell align="left">Volume</THeadCell>
-                    <THeadCell align="left">Open</THeadCell>
-
-                    <TCellStrike align="center">Strike</TCellStrike>
-
-                    {/* <THeadCell align="right">Size</THeadCell> */}
-                    <THeadCell align="right" width={'70px'}>
-                      IV
-                    </THeadCell>
-                    <THeadCell align="right" width={'90px'}>
-                      Bid
-                    </THeadCell>
-                    <THeadCell align="right" width={'90px'}>
-                      Ask
-                    </THeadCell>
-                    <THeadCell align="right" width={'70px'}>
-                      IV
-                    </THeadCell>
-                    <THeadCell align="right">Change</THeadCell>
-                    <THeadCell align="right">Volume</THeadCell>
-                    <THeadCell align="right">Open</THeadCell>
-                    <THeadCell align="right" style={{ paddingRight: '16px' }}>
-                      Action
-                    </THeadCell>
-                  </TableRow>
-                </TableHead>
+                <MarketsTableHeader
+                  uAssetSymbol={uAsset?.tokenSymbol || ''}
+                  qAssetSymbol={qAsset?.tokenSymbol}
+                />
                 <TableBody>
                   {rows.map((row) => {
                     return fullPageLoading ? (

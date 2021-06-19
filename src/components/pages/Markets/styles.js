@@ -1,10 +1,20 @@
 import TableCell from '@material-ui/core/TableCell'
 import TableRow from '@material-ui/core/TableRow'
 import Button from '@material-ui/core/Button'
+import Tooltip from '@material-ui/core/Tooltip'
 import { withStyles } from '@material-ui/core/styles'
 import theme from '../../../utils/theme'
 
 const borderLight = `1px solid ${theme.palette.background.paper}`
+
+export const StyledTooltip = withStyles(() => ({
+  tooltip: {
+    backgroundColor: theme.palette.background.lighter,
+    maxWidth: 370,
+    fontSize: '14px',
+    lineHeight: '18px',
+  },
+}))(Tooltip)
 
 export const PageButton = withStyles({
   root: {
@@ -25,7 +35,7 @@ export const TCell = withStyles({
     fontSize: '14px',
     border: 'none',
     height: '48px',
-    background: theme.palette.background.marketsCallPutRow
+    background: theme.palette.background.marketsCallPutRow,
   },
 })(TableCell)
 
@@ -82,7 +92,7 @@ export const TCellStrike = withStyles({
 export const TRow = withStyles({
   hover: {
     '&:hover': {
-      backgroundColor: `${theme.palette.background.lighter} !important`
-    }
-  }
+      backgroundColor: `${theme.palette.background.lighter} !important`,
+    },
+  },
 })(TableRow)

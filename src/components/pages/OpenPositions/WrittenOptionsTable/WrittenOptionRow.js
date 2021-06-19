@@ -1,12 +1,15 @@
 /* eslint-disable react/forbid-prop-types */
 import React, { useEffect, useState } from 'react'
+import { PublicKey } from '@solana/web3.js'
+import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import Chip from '@material-ui/core/Chip'
 import TableCell from '@material-ui/core/TableCell'
 import TableRow from '@material-ui/core/TableRow'
-import PropTypes from 'prop-types'
-import { PublicKey } from '@solana/web3.js'
-import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import Tooltip from '@material-ui/core/Tooltip'
 import Box from '@material-ui/core/Box'
+import { withStyles } from '@material-ui/core/styles'
+import PropTypes from 'prop-types'
+
 import { formatExpirationTimestamp } from '../../../../utils/format'
 import useOptionsMarkets from '../../../../hooks/useOptionsMarkets'
 import { useCloseWrittenOptionPostExpiration } from '../../../../hooks/useCloseWrittenOptionPostExpiration'
@@ -15,6 +18,15 @@ import useOwnedTokenAccounts from '../../../../hooks/useOwnedTokenAccounts'
 import useConnection from '../../../../hooks/useConnection'
 import { useExchangeWriterTokenForQuote } from '../../../../hooks/useExchangeWriterTokenForQuote'
 import useNotifications from '../../../../hooks/useNotifications'
+
+const StyledTooltip = withStyles((theme) => ({
+  tooltip: {
+    backgroundColor: theme.palette.background.lighter,
+    maxWidth: 370,
+    fontSize: '14px',
+    lineHeight: '18px',
+  },
+}))(Tooltip)
 
 /**
  * Row to display the wallet's minted options
@@ -102,29 +114,43 @@ export const WrittenOptionRow = React.memo(
     if (expired) {
       ActionFragment = (
         <Box display="flex" flexDirection="row" justifyContent="flex-end">
-          <Chip
-            clickable
-            size="small"
-            label="Close"
-            color="primary"
-            variant="outlined"
-            onClick={() => closeOptionPostExpiration()}
-          />
-          <Chip
-            clickable
-            size="small"
-            label="Close All"
-            color="primary"
-            variant="outlined"
-            onClick={() => {
-              closeOptionPostExpiration(
-                Math.min(
-                  ownedOptionTokenAccounts?.[0]?.amount,
-                  initialWriterTokenAccount.amount,
-                ),
-              )
-            }}
-          />
+          <StyledTooltip
+            title={
+              <Box
+                p={1}
+              >{`The written option has expired, closing will return the locked underlying asset`}</Box>
+            }
+          >
+            <Box>
+              <Box p={1}>
+                <Chip
+                  size={'small'}
+                  clickable
+                  label="Close One"
+                  color="primary"
+                  variant="outlined"
+                  onClick={() => closeOptionPostExpiration()}
+                />
+              </Box>
+              <Box p={1}>
+                <Chip
+                  size={'small'}
+                  clickable
+                  label="Close All"
+                  color="primary"
+                  variant="outlined"
+                  onClick={() => {
+                    closeOptionPostExpiration(
+                      Math.min(
+                        ownedOptionTokenAccounts?.[0]?.amount,
+                        initialWriterTokenAccount.amount,
+                      ),
+                    )
+                  }}
+                />
+              </Box>
+            </Box>
+          </StyledTooltip>
         </Box>
       )
     } else {
@@ -132,41 +158,65 @@ export const WrittenOptionRow = React.memo(
         <Box display="flex" flexDirection="row" justifyContent="flex-end">
           {holdsContracts && (
             <div>
-              <Chip
-                clickable
-                size="small"
-                label="Close Position"
-                color="primary"
-                variant="outlined"
-                onClick={() => closePosition()}
-              />
-              <Chip
-                clickable
-                size="small"
-                label="Close Available"
-                color="primary"
-                variant="outlined"
-                onClick={() => {
-                  closePosition(
-                    Math.min(
-                      ownedOptionTokenAccounts?.[0]?.amount,
-                      initialWriterTokenAccount.amount,
-                    ),
-                  )
-                }}
-              />
+              <StyledTooltip
+                title={
+                  <Box
+                    p={1}
+                  >{`Unlock the underlying asset used to write the contract by burning the option and writer tokens`}</Box>
+                }
+              >
+                <Box>
+                  <Box p={1}>
+                    <Chip
+                      clickable
+                      size={'small'}
+                      label="Close One"
+                      color="primary"
+                      variant="outlined"
+                      onClick={() => closePosition()}
+                    />
+                  </Box>
+                  <Box p={1}>
+                    <Chip
+                      clickable
+                      size={'small'}
+                      label="Close All"
+                      color="primary"
+                      variant="outlined"
+                      onClick={() => {
+                        closePosition(
+                          Math.min(
+                            ownedOptionTokenAccounts?.[0]?.amount,
+                            initialWriterTokenAccount.amount,
+                          ),
+                        )
+                      }}
+                    />
+                  </Box>
+                </Box>
+              </StyledTooltip>
             </div>
           )}
           {quotePoolNotEmpty && (
-            <Chip
-              clickable
-              size="small"
-              label="Claim Quote"
-              color="primary"
-              variant="outlined"
-              onClick={exchangeWriterTokenForQuote}
-              style={{ marginLeft: holdsContracts ? 8 : 0 }}
-            />
+            <StyledTooltip
+              title={
+                <Box p={1}>
+                  Some option contracts have been exercised. Burn the writer
+                  token to claim the quote asset and forfeit the locked
+                  underlying asset
+                </Box>
+              }
+            >
+              <Chip
+                clickable
+                size={'small'}
+                label="Claim Quote"
+                color="primary"
+                variant="outlined"
+                onClick={exchangeWriterTokenForQuote}
+                style={{ marginLeft: holdsContracts ? 8 : 0 }}
+              />
+            </StyledTooltip>
           )}
         </Box>
       )

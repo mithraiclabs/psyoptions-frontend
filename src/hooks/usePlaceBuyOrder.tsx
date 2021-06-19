@@ -1,8 +1,7 @@
 import { PublicKey, Transaction } from '@solana/web3.js'
-import React, { useCallback } from 'react'
+import { useCallback } from 'react'
 import { OrderParams } from '@mithraic-labs/serum/lib/market'
-import Link from '@material-ui/core/Link'
-import { NotificationSeverity, OptionMarket } from '../types'
+import { OptionMarket } from '../types'
 import { createAssociatedTokenAccountInstruction } from '../utils/instructions/token'
 import useWallet from './useWallet'
 import useNotifications from './useNotifications'
@@ -10,7 +9,6 @@ import useConnection from './useConnection'
 import useSendTransaction from './useSendTransaction'
 import useOwnedTokenAccounts from './useOwnedTokenAccounts'
 import { SerumMarket } from '../utils/serum'
-import { buildSolanaExplorerUrl } from '../utils/solanaExplorer'
 import { useCreateAdHocOpenOrdersSubscription } from './Serum'
 
 type PlaceBuyOrderArgs = {

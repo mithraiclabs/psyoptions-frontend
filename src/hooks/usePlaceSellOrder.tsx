@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react'
+import { useCallback } from 'react'
 import { PublicKey, Transaction } from '@solana/web3.js'
 
 import { SerumMarket } from 'src/utils/serum'

@@ -36,7 +36,7 @@ export const TCellLoading = withStyles({
     fontSize: '14px',
     height: '48px',
     border: 'none',
-    background: theme.palette.background.medium,
+    background: 'transparent',
   },
 })(TableCell)
 
@@ -81,6 +81,7 @@ export const TCellStrike = withStyles({
 
 export const TRow = withStyles({
   hover: {
+    backgroundColor: `${theme.palette.background.medium}`,
     '&:hover': {
       backgroundColor: `${theme.palette.background.lighter} !important`
     }

@@ -178,10 +178,10 @@ const CallPutRow = ({
 
   const callCellStyle = row.strike?.lte(markPrice)
     ? { backgroundColor: theme.palette.background.tableHighlight }
-    : undefined
+    : { backgroundColor: theme.palette.background.marketsCallPutRow }
   const putCellStyle = row.strike?.gte(markPrice)
     ? { backgroundColor: theme.palette.background.tableHighlight }
-    : undefined
+    : { backgroundColor: theme.palette.background.marketsCallPutRow }
 
   const openBuySellModal = (callOrPut, price = 0) => {
     // only allow full row clicking open for initialized markets

@@ -1,3 +1,5 @@
+# TODO make sure CodePipeline is properly listening to triggers
+# TODO make the short sha dynamically update
 Parameters:
   AwsRegion:
     Description: The AWS region resources should be deployed to
@@ -23,14 +25,16 @@ Parameters:
   ApplicationName:
     Description: CodeDeploy application name
     Type: String
-    Default: DemoApplication
-  BetaFleet:
-    Description: Fleet configured in CodeDeploy
+    Default: PsyOptions-Frontend
+  SubnetId:
+    Description: Id of the subnet to use
     Type: String
-    Default: DemoFleet
+  VpcId:
+    Description: Id of the VPC to use
+    Type: String
 Resources:
   DockerImageRepository:
-    Type: 'AWS::ECR::Repository'
+    Type: 'AWS::ECR::PublicRepository'
     Properties:
       RepositoryName: psyoptions-frontend
       # RepositoryPolicyText: Json
@@ -60,6 +64,41 @@ Resources:
                   - 'ecr:PutImage'
                   - 'ecr:UploadLayerPart'
                 Resource: !GetAtt DockerImageRepository.Arn
+  EcsTaskRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ecs-tasks.amazonaws.com
+            Action: 'sts:AssumeRole'
+      Path: /
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      Policies:
+        - PolicyName: AWS-ECSTask-GetImage-PsyOptions-Frontend
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'ecr:BatchGetImage'
+                  - 'ecr:GetAuthorizationToken'
+                  - 'ecr:GetDownloadUrlForLayer'
+                Resource: '*'
+        - PolicyName: AWS-ECSTask-all-secrets
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'secretsmanager:*'
+                  - 'ssm:*'
+                Resource: '*'
+
   CodeBuildProject:
     Type: AWS::CodeBuild::Project
     Properties:
@@ -93,6 +132,9 @@ Resources:
       CapacityProviders:
         - FARGATE
       ClusterName: PsyOptions-Frontend
+      ClusterSettings:
+        - Name: containerInsights
+          Value: enabled
   EcsSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -103,11 +145,20 @@ Resources:
           FromPort: 80
           ToPort: 80
           CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 3000
+          ToPort: 3000
+          CidrIp: 0.0.0.0/0
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 80
           ToPort: 80
           CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 3000
+          ToPort: 3000
+          CidrIp: 0.0.0.0/0
+      VpcId: !Ref VpcId
   FrontEndServerTask:
     Type: AWS::ECS::TaskDefinition
     Properties:
@@ -116,67 +167,68 @@ Resources:
             - node ./dist/index.js
           Cpu: 512
           Environment:
-            - name: DEVNET_PROGRAM_ID
-              value: GDvqQy3FkDB2wyNwgZGp5YkmRMUmWbhNNWDMYKbLSZ5N
-            - name: APP_ENABLED
-              value: 'true'
-            - name: DEVNET_DEX_PROGRAM_ID
-              value: DESVgJVGajEgKGXhb6XmqDHGz3VjdgP7rEVESBgxmroY
-            - name: APP_PASSWORD
-              value: 89fe0dbb9a8e940c4e88f40ae9738db57dbe38a8
-            - name: APP_PASSWORD_PROTECTED
-              value: 'true'
-            - name: INITIALIZE_PAGE_ENABLED
-              value: 'true'
-            - name: TAG_NAME
-            - name: SHORT_SHA
-              value: ef94cee
-            - name: BRANCH_NAME
-              value: master
-            - name: SENTRY_ENVIRONMENT
-              value: staging
-            - name: DEVNET_FAUCET_USDC
-              value: E6wQSMPGqHn7dqEMeWcSVfjdkwd8ED5CncQ9BtMNGtUG
-            - name: DEVNET_FAUCET_BTC
-              value: 97z3NzcDxqRMyE7F73PuHEmAbA72S7eDopjhe7GTymTk
-            - name: DEVNET_FAUCET_PSY
-              value: 7jJJnHWagPPG544FtxSVp8eD52FwCsARcqqup1q3XVio
+            - Name: DEVNET_PROGRAM_ID
+              Value: GDvqQy3FkDB2wyNwgZGp5YkmRMUmWbhNNWDMYKbLSZ5N
+            - Name: APP_ENABLED
+              Value: 'true'
+            - Name: DEVNET_DEX_PROGRAM_ID
+              Value: DESVgJVGajEgKGXhb6XmqDHGz3VjdgP7rEVESBgxmroY
+            - Name: APP_PASSWORD
+              Value: 89fe0dbb9a8e940c4e88f40ae9738db57dbe38a8
+            - Name: APP_PASSWORD_PROTECTED
+              Value: 'true'
+            - Name: INITIALIZE_PAGE_ENABLED
+              Value: 'true'
+            - Name: SHORT_SHA
+              Value: ef94cee
+            - Name: BRANCH_NAME
+              Value: master
+            - Name: SENTRY_ENVIRONMENT
+              Value: staging
+            - Name: DEVNET_FAUCET_USDC
+              Value: E6wQSMPGqHn7dqEMeWcSVfjdkwd8ED5CncQ9BtMNGtUG
+            - Name: DEVNET_FAUCET_BTC
+              Value: 97z3NzcDxqRMyE7F73PuHEmAbA72S7eDopjhe7GTymTk
+            - Name: DEVNET_FAUCET_PSY
+              Value: 7jJJnHWagPPG544FtxSVp8eD52FwCsARcqqup1q3XVio
           Essential: true
           # Hostname: String
           Image: !Ref EcrRepositoryUrl
           # LogConfiguration: LogConfiguration
-          Memory: 256
+          Memory: 1024
           MemoryReservation: 256
           Name: PsyOptions-Frontend-Server
           PortMappings:
-            - ContainerPort: 3000
+            - ContainerPort: 80
               HostPort: 80
               Protocol: tcp
+            - ContainerPort: 3000
+              HostPort: 3000
+              Protocol: tcp
           # ReadonlyRootFilesystem: Boolean
-          StartTimeout: 1800
-          StopTimeout: 1800
           # WorkingDirectory: app
       Cpu: 512
       # EphemeralStorage: EphemeralStorage
-      ExecutionRoleArn: arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
-      Memory: 256
+      ExecutionRoleArn: !GetAtt EcsTaskRole.Arn
+      Memory: 1024
       NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
       # TaskRoleArn: String
   EcsService:
     Type: AWS::ECS::Service
     Properties:
-      CapacityProviderStrategy:
-        - FARGATE
-      Cluster: !GetAtt EcsCluster.arn
+      Cluster: !GetAtt EcsCluster.Arn
       DeploymentController:
         Type: ECS
-      DesiredCount: 1
       LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
           AssignPublicIp: ENABLED
           SecurityGroups:
             - !Ref EcsSecurityGroup
+          Subnets:
+            - !Ref SubnetId
       ServiceName: PsyOptions-Frontend-Server
       TaskDefinition: !Ref FrontEndServerTask
   CodePipelineArtifactStoreBucket:

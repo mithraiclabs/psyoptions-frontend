@@ -64,13 +64,13 @@ const NavOptions = React.memo(() => {
       )}
       <Box mx={2}>
         <Button
-          href="/open-positions"
+          href="/portfolio"
           onClick={(e) => {
             e.preventDefault()
-            history.push('/open-positions')
+            history.push('/portfolio')
           }}
         >
-          Open Positions
+          Portfolio
         </Button>
       </Box>
       {endpoint?.name === 'Devnet' && (

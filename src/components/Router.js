@@ -68,7 +68,7 @@ const Routes = (props) => {
         <Route exact path="/mint">
           <Mint />
         </Route>
-        <Route exact path="/open-positions">
+        <Route exact path="/portfolio">
           <OpenPositions />
         </Route>
         <Route exact path="/faucets">

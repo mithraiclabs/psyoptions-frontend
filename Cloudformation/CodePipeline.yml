@@ -5,18 +5,12 @@ Parameters:
   Stage:
     Type: String
     Default: dev
-  GithubUserName:
-    Type: String
-    Default: <USERNAME>
   GithubRepo:
     Type: String
     Default: Fargate-ECSCluster-Cloudformation
   GithubBranch:
     Type: String
     Default: <BRANCH>
-  GithubOAuthToken:
-    Type: String
-    Default: <GITHUB ACCESS TOKEN>
   ContainerPort:
     Type: Number
     Default: 8080
@@ -24,8 +18,11 @@ Parameters:
     Type: String
   FullRepositoryId:
     Description: GitHub organization / repository name
-      Type: String
-      Default: mithraiclabs/psyoptions-frontend
+    Type: String
+    Default: mithraiclabs/psyoptions-frontend
+  AwsRegion:
+    Type: String
+    Default: us-east-1
 
 Resources:
   # Create an ECR Repository to store docker images
@@ -180,7 +177,7 @@ Resources:
                 # Pass parameter values to Fargate-Cluster.yml for deployment
                 ParameterOverrides: !Sub |
                   {
-                    "ImageURI" : { "Fn::GetParam" : ["build-output-artifacts", "imageDetail.json", "ImageURI"] },
+                    "ImageURI" : { "Fn::GetParam" : ["build-output-artifacts", "imagedefinitions.json", "ImageURI"] },
                     "Stage":  "${Stage}",
                     "ContainerPort": "${ContainerPort}"
                   }

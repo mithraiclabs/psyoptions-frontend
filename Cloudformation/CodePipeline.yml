@@ -5,9 +5,6 @@ Parameters:
   Stage:
     Type: String
     Default: dev
-  GithubRepo:
-    Type: String
-    Default: Fargate-ECSCluster-Cloudformation
   GithubBranch:
     Type: String
     Default: <BRANCH>

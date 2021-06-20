@@ -9,7 +9,7 @@ phases:
     commands:
       - echo Logging in to Amazon ECR...
       - aws --version
-      - $(aws ecr get-login --region $AWS_DEFAULT_REGION --no-include-email)
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_REPOSITORY_URI
       - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
       - IMAGE_TAG=${COMMIT_HASH:=latest}
   build:
@@ -28,32 +28,3 @@ phases:
 artifacts:
   files:
     - imagedefinitions.json
-# version: 0.2
-
-# phases:
-#   install:
-#     commands:
-#       - nohup /usr/local/bin/dockerd --host=unix:///var/run/docker.sock --host=tcp://0.0.0.0:2375 --storage-driver=overlay&
-#       - timeout 15 sh -c "until docker info; do echo .; sleep 1; done
-#   pre_build:
-#     commands:
-#       - echo Logging in to Amazon ECR...
-#       - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_REPOSITORY_URI
-#       - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
-#       - IMAGE_TAG=${COMMIT_HASH:=latest}
-#   build:
-#     commands:
-#       - echo Build started on `date`
-#       - echo Building the Docker image...
-#       - docker build -t $ECR_REPOSITORY_URI:latest .
-#       - docker tag $ECR_REPOSITORY_URI:latest $ECR_REPOSITORY_URI:$IMAGE_TAG
-#   post_build:
-#     commands:
-#       - echo Build completed on `date`
-#       - echo Pushing the Docker image...
-#       - docker push $ECR_REPOSITORY_URI:latest
-#       - docker push $ECR_REPOSITORY_URI:$IMAGE_TAG
-#       - echo Writing image definitions file...
-#       - printf '[{"name": "${IMAGE_REPO_NAME}","imageUri":"%s"}]' $ECR_REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
-# artifacts:
-#   files: imagedefinitions.json

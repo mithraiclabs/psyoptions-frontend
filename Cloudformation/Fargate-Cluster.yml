@@ -140,7 +140,7 @@ Resources:
         - IpProtocol: tcp
           FromPort: !Ref ContainerPort
           ToPort: !Ref ContainerPort
-          SourceSecurityGroupId: !Ref LoadBalancerSecurityGroup
+          # SourceSecurityGroupId: !Ref LoadBalancerSecurityGroup
 
   # Create a LoadBalancer and attach the Security group and Subnets
   LoadBalancer:

@@ -12,6 +12,9 @@ Resources:
     Type: AWS::ECS::Cluster
     Properties:
       ClusterName: !Join ['-', [!Ref Stage, !Ref 'AWS::AccountId', 'Cluster']]
+      ClusterSettings:
+        - Name: containerInsights
+          Value: enabled
 
   # Create a VPC
   VPC:

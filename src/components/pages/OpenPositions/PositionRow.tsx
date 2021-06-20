@@ -1,12 +1,14 @@
 import Chip from '@material-ui/core/Chip'
 import React, { useCallback, useState } from 'react'
+import Box from '@material-ui/core/Box'
 import Collapse from '@material-ui/core/Collapse'
 import Table from '@material-ui/core/Table'
 import TableBody from '@material-ui/core/TableBody'
 import TableCell from '@material-ui/core/TableCell'
 import TableRow from '@material-ui/core/TableRow'
+import Tooltip from '@material-ui/core/Tooltip'
 import KeyboardArrowDown from '@material-ui/icons/KeyboardArrowDown'
-import { makeStyles } from '@material-ui/core/styles'
+import { makeStyles, withStyles } from '@material-ui/core/styles'
 import * as Sentry from '@sentry/react'
 import BigNumber from 'bignumber.js'
 
@@ -26,6 +28,15 @@ const useStyles = makeStyles({
     transform: 'rotate(0)',
   },
 })
+
+const StyledTooltip = withStyles((theme) => ({
+  tooltip: {
+    backgroundColor: (theme.palette.background as any).lighter,
+    maxWidth: 370,
+    fontSize: '14px',
+    lineHeight: '18px',
+  },
+}))(Tooltip)
 
 const PositionRow: React.VFC<{
   row: {
@@ -135,14 +146,26 @@ const PositionRow: React.VFC<{
         </TableCell>
         <TableCell align="right" width="15%">
           {!expired && (
-            <Chip
-              clickable
-              size="small"
-              label="Exercise"
-              color="primary"
-              variant="outlined"
-              onClick={handleExercisePosition}
-            />
+            <StyledTooltip
+              title={
+                <Box p={2}>
+                  {`${
+                    optionType === 'put' ? 'Sell' : 'Purchase'
+                  } ${contractSize} ${
+                    row?.uAssetSymbol || 'underlying asset'
+                  } for ${strike} ${row?.qAssetSymbol || 'quote asset'}`}
+                </Box>
+              }
+            >
+              <Chip
+                clickable
+                size="small"
+                label="Exercise"
+                color="primary"
+                variant="outlined"
+                onClick={handleExercisePosition}
+              />
+            </StyledTooltip>
           )}
         </TableCell>
       </TableRow>
@@ -173,14 +196,28 @@ const PositionRow: React.VFC<{
                     </TableCell>
                     <TableCell align="right" width="15%">
                       {!expired && (
-                        <Chip
-                          clickable
-                          size="small"
-                          label="Exercise"
-                          color="primary"
-                          variant="outlined"
-                          onClick={handleExercisePosition}
-                        />
+                        <StyledTooltip
+                          title={
+                            <Box p={2}>
+                              {`${
+                                optionType === 'put' ? 'Sell' : 'Purchase'
+                              } ${contractSize} ${
+                                row?.uAssetSymbol || 'underlying asset'
+                              } for ${strike} ${
+                                row?.qAssetSymbol || 'quote asset'
+                              }`}
+                            </Box>
+                          }
+                        >
+                          <Chip
+                            clickable
+                            size="small"
+                            label="Exercise"
+                            color="primary"
+                            variant="outlined"
+                            onClick={handleExercisePosition}
+                          />
+                        </StyledTooltip>
                       )}
                     </TableCell>
                   </TableRow>

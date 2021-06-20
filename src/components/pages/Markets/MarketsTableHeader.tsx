@@ -84,15 +84,11 @@ export const MarketsTableHeader: React.FC<{
             placement="top"
             title={
               <Box p={1}>
-                <Box pb={1}>Implied volatility of the bid price.</Box>
-                <Box>
-                  {`Implied volatility is the market's forecast of a likely
-                  movement in an underlying asset's price`}
-                </Box>
+                {`Implied volatility is the market's forecast of a likely movement in an underlying asset's price. This uses the highest bid as the price when calculating implied volatility`}
               </Box>
             }
           >
-            <Box display="inline">IV</Box>
+            <Box display="inline">IVB</Box>
           </StyledTooltip>
         </THeadCell>
         <THeadCell align="left" width={'90px'}>
@@ -124,15 +120,11 @@ export const MarketsTableHeader: React.FC<{
             placement="top"
             title={
               <Box p={1}>
-                <Box pb={1}>Implied volatility of the ask price</Box>
-                <Box>
-                  {`Implied volatility is the market's forecast of a likely
-                  movement in an underlying asset's price`}
-                </Box>
+                {`Implied volatility is the market's forecast of a likely movement in an underlying asset's price. This uses the lowest ask as the price when calculating implied volatility`}
               </Box>
             }
           >
-            <Box display="inline">IV</Box>
+            <Box display="inline">IVA</Box>
           </StyledTooltip>
         </THeadCell>
         <THeadCell align="left">
@@ -188,15 +180,11 @@ export const MarketsTableHeader: React.FC<{
             placement="top"
             title={
               <Box p={1}>
-                <Box pb={1}>Implied volatility of the bid price.</Box>
-                <Box>
-                  {`Implied volatility is the market's forecast of a likely
-                  movement in an underlying asset's price`}
-                </Box>
+                {`Implied volatility is the market's forecast of a likely movement in an underlying asset's price. This uses the highest bid as the price when calculating implied volatility`}
               </Box>
             }
           >
-            <Box display="inline">IV</Box>
+            <Box display="inline">IVB</Box>
           </StyledTooltip>
         </THeadCell>
         <THeadCell align="right" width={'90px'}>
@@ -228,15 +216,11 @@ export const MarketsTableHeader: React.FC<{
             placement="top"
             title={
               <Box p={1}>
-                <Box pb={1}>Implied volatility of the ask price.</Box>
-                <Box>
-                  {`Implied volatility is the market's forecast of a likely
-                  movement in an underlying asset's price`}
-                </Box>
+                {`Implied volatility is the market's forecast of a likely movement in an underlying asset's price. This uses the lowest ask as the price when calculating implied volatility`}
               </Box>
             }
           >
-            <Box display="inline">IV</Box>
+            <Box display="inline">IVA</Box>
           </StyledTooltip>
         </THeadCell>
         <THeadCell align="right">

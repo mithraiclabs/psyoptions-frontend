@@ -115,8 +115,8 @@ Resources:
           LogConfiguration:
             LogDriver: awslogs
             Options:
-              AwslogsRegion: !Ref 'AWS::Region'
-              AwslogsGroup:
+              awslogs-region: !Ref 'AWS::Region'
+              awslogs-group:
                 !Join [
                   '-',
                   [!Ref Stage, !Ref 'AWS::AccountId', 'ContainerLogs'],

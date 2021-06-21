@@ -114,6 +114,13 @@ Resources:
               HostPort: !Ref ContainerPort
           LogConfiguration:
             LogDriver: awslogs
+            Options:
+              AwslogsRegion: !Ref 'AWS::Region'
+              AwslogsGroup:
+                !Join [
+                  '-',
+                  [!Ref Stage, !Ref 'AWS::AccountId', 'ContainerLogs'],
+                ]
   # Creat a security group for load balancer and open port 80 in bound from internet
   LoadBalancerSecurityGroup:
     Type: AWS::EC2::SecurityGroup

@@ -26,6 +26,13 @@ Parameters:
   KmsArn:
     Description: The ARN of the Key in Key Manager that's used to decrypt secrets
     Type: String
+  HostedZoneId:
+    Description: The ID of the Hosted zone where the DNS record sets should be created
+    Type: String
+  DomainName:
+    Description: The fully qualified domain name the DNS record sets belong to
+    Type: String
+    Default: www.example.com
 Resources:
   # Create an ECR Repository to store docker images
   ECRRepository:
@@ -198,7 +205,9 @@ Resources:
                   {
                     "ImageURI" : { "Fn::GetParam" : ["build-output-artifacts", "imagedefinitions.json", "ImageURI"] },
                     "Stage":  "${Stage}",
-                    "ContainerPort": "${ContainerPort}"
+                    "ContainerPort": "${ContainerPort}",
+                    "HostedZoneId": "${HostedZoneId}",
+                    "DomainName": "${DomainName}"
                   }
                 RoleArn:
                   Fn::GetAtt: [CloudformationExecutionRole, Arn]

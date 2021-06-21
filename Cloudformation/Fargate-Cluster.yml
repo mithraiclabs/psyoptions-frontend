@@ -5,6 +5,12 @@ Parameters:
     Type: Number
   ImageURI:
     Type: String
+  HostedZoneId:
+    Type: String
+  DomainName:
+    Description: The fully qualified domain name the DNS record sets belong to
+    Type: String
+    Default: www.example.com
 
 Resources:
   # Create CloudWatch LogGroup for the task logs
@@ -208,9 +214,6 @@ Resources:
       TargetType: ip
       VpcId: !Ref VPC
       HealthCheckEnabled: true
-      # TODO remove this max health check time once done debugging
-      HealthCheckTimeoutSeconds: 120
-      HealthCheckIntervalSeconds: 300
 
   # Create a LoadBalancerListener and attach the TargetGroup and LoadBalancer
   LoadBalancerListener:
@@ -222,6 +225,18 @@ Resources:
       LoadBalancerArn: !Ref LoadBalancer
       Port: 80
       Protocol: HTTP
+
+  # Create a DNS record for the specified Hosted Zone and subdomain
+  Route53DnsRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      AliasTarget:
+        DNSName: !GetAtt LoadBalancer.DNSName
+        EvaluateTargetHealth: true
+        HostedZoneId: !GetAtt LoadBalancer.CanonicalHostedZoneID
+      HostedZoneId: !Ref HostedZoneId
+      Name: !Ref DomainName
+      Type: A
 
   # Create an ECS Service and add created Cluster, TaskDefintion, Subnets, TargetGroup and SecurityGroup
   ECSService:

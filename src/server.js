@@ -143,7 +143,7 @@ server.use((req, res) => {
 })
 
 const port = process.env.PORT || 3000
-
+console.log(`\nServer listening on port: ${port}\n`)
 server.listen(port, () => {
   if (process.env.NODE_ENV === 'development') {
     console.log(`\nServer listening at http://localhost:${port}/\n`)

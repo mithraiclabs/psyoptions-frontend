@@ -184,6 +184,7 @@ Resources:
       HealthCheckEnabled: true
       # TODO remove this max health check time once done debugging
       HealthCheckTimeoutSeconds: 120
+      HealthCheckIntervalSeconds: 300
 
   # Create a LoadBalancerListener and attach the TargetGroup and LoadBalancer
   LoadBalancerListener:

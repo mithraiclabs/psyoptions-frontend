@@ -116,8 +116,10 @@ Resources:
                   !Join ['/', ['amazonaws.com', !Ref 'ECRRepository']],
                 ],
               ]
-          - Name: DOCKER_SECRET_ARN
-            Value: !Ref DockerSecretArn
+          - Name: SecretsArn
+            Value: !Ref SecretsArn
+          - Name: KmsArn
+            Value: !Ref KmsArn
       Name: !Join ['-', [!Ref Stage, !Ref 'AWS::AccountId', 'BuildProject']]
       ServiceRole: !Ref CodeBuildExecutionRole
       Source:
@@ -197,8 +199,6 @@ Resources:
                     "ImageURI" : { "Fn::GetParam" : ["build-output-artifacts", "imagedefinitions.json", "ImageURI"] },
                     "Stage":  "${Stage}",
                     "ContainerPort": "${ContainerPort}",
-                    "SecretsArn": "${SecretsArn}",
-                    "KmsArn": "${KmsArn}"
                   }
                 RoleArn:
                   Fn::GetAtt: [CloudformationExecutionRole, Arn]

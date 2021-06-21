@@ -198,7 +198,7 @@ Resources:
                   {
                     "ImageURI" : { "Fn::GetParam" : ["build-output-artifacts", "imagedefinitions.json", "ImageURI"] },
                     "Stage":  "${Stage}",
-                    "ContainerPort": "${ContainerPort}",
+                    "ContainerPort": "${ContainerPort}"
                   }
                 RoleArn:
                   Fn::GetAtt: [CloudformationExecutionRole, Arn]

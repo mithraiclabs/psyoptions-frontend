@@ -28,6 +28,8 @@ try {
   manifest['main.js'] = bundleFilename
 }
 
+console.log('**** ENV variables', process.env)
+
 const server = express()
 
 server.use((req, res, next) => {

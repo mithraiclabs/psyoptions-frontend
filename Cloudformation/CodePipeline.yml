@@ -79,16 +79,12 @@ Resources:
                 Resource: '*'
               - Effect: Allow
                 Action:
-                  - 'elasticbeanstalk:*'
                   - 'ec2:*'
                   - 'elasticloadbalancing:*'
-                  - 'autoscaling:*'
                   - 'cloudwatch:*'
                   - 's3:*'
                   - 'sns:*'
                   - 'cloudformation:*'
-                  - 'rds:*'
-                  - 'sqs:*'
                   - 'ecs:*'
                 Resource: '*'
 

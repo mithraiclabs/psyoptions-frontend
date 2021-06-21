@@ -4,13 +4,13 @@ Description: The CloudFormation template for the CodePipeline.
 Parameters:
   Stage:
     Type: String
-    Default: dev
+    Default: staging
   GithubBranch:
     Type: String
     Default: <BRANCH>
   ContainerPort:
     Type: Number
-    Default: 3000
+    Default: 8080
   CodeStarGithubConnectionArn:
     Type: String
   FullRepositoryId:

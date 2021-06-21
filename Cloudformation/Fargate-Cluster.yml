@@ -11,6 +11,9 @@ Parameters:
     Description: The fully qualified domain name the DNS record sets belong to
     Type: String
     Default: www.example.com
+  DomainCertificateArn:
+    Description: The ARN of the SSL/TLS certificate to use for the secure load balancer listener
+    Type: String
 
 Resources:
   # Create CloudWatch LogGroup for the task logs
@@ -220,11 +223,31 @@ Resources:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
       DefaultActions:
-        - TargetGroupArn: !Ref TargetGroup
-          Type: forward
+        - RedirectConfig:
+            Host: '#{host}'
+            Path: '/#{path}'
+            Port: 443
+            Protocol: 'HTTPS'
+            Query: '#{query}'
+            StatusCode: HTTP_301
+          Type: redirect
       LoadBalancerArn: !Ref LoadBalancer
       Port: 80
       Protocol: HTTP
+
+  # Create a HTTPS LoadBalancerListener and attach the TargetGroup and LoadBalancer
+  HttpsLoadBalancerListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - TargetGroupArn: !Ref TargetGroup
+          Type: forward
+      LoadBalancerArn: !Ref LoadBalancer
+      Certificates:
+        - CertificateArn: !Ref DomainCertificateArn
+      Port: 443
+      Protocol: HTTPS
+      SslPolicy: ELBSecurityPolicy-2016-08
 
   # Create a DNS record for the specified Hosted Zone and subdomain
   Route53DnsRecord:
@@ -241,7 +264,9 @@ Resources:
   # Create an ECS Service and add created Cluster, TaskDefintion, Subnets, TargetGroup and SecurityGroup
   ECSService:
     Type: AWS::ECS::Service
-    DependsOn: LoadBalancerListener
+    DependsOn:
+      - LoadBalancerListener
+      - HttpsLoadBalancerListener
     Properties:
       ServiceName:
         !Join ['-', [!Ref Stage, !Ref 'AWS::AccountId', 'ECSService']]

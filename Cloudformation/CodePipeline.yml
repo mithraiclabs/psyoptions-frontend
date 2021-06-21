@@ -33,6 +33,9 @@ Parameters:
     Description: The fully qualified domain name the DNS record sets belong to
     Type: String
     Default: www.example.com
+  DomainCertificateArn:
+    Description: The ARN of the SSL/TLS certificate to use for the secure load balancer listener
+    Type: String
 Resources:
   # Create an ECR Repository to store docker images
   ECRRepository:
@@ -207,7 +210,8 @@ Resources:
                     "Stage":  "${Stage}",
                     "ContainerPort": "${ContainerPort}",
                     "HostedZoneId": "${HostedZoneId}",
-                    "DomainName": "${DomainName}"
+                    "DomainName": "${DomainName}",
+                    "DomainCertificateArn": "${DomainCertificateArn}"
                   }
                 RoleArn:
                   Fn::GetAtt: [CloudformationExecutionRole, Arn]

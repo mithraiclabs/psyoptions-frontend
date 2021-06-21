@@ -112,7 +112,8 @@ Resources:
           PortMappings:
             - ContainerPort: !Ref ContainerPort
               HostPort: !Ref ContainerPort
-
+          LogConfiguration:
+            LogDriver: awslogs
   # Creat a security group for load balancer and open port 80 in bound from internet
   LoadBalancerSecurityGroup:
     Type: AWS::EC2::SecurityGroup

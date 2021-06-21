@@ -21,7 +21,7 @@ phases:
       - echo Build started on `date`
       - echo Building the Docker image...
       - echo SENTRY_AUTH_TOKEN ${SENTRY_AUTH_TOKEN}
-      - docker build --cache-from $ECR_REPOSITORY_URI:latest -t $ECR_REPOSITORY_URI:latest --build-arg SHORT_SHA=${SHORT_SHA} --build-arg SENTRY_AUTH_TOKEN=${SENTRY_AUTH_TOKEN} .
+      - docker build --cache-from $ECR_REPOSITORY_URI:latest -t $ECR_REPOSITORY_URI:latest --build-arg SHORT_SHA=${COMMIT_HASH} --build-arg SENTRY_AUTH_TOKEN=${SENTRY_AUTH_TOKEN} .
       - docker tag $ECR_REPOSITORY_URI:latest $ECR_REPOSITORY_URI:$IMAGE_TAG
   post_build:
     commands:

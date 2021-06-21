@@ -1,4 +1,4 @@
-FROM 'node:14-alpine'
+FROM 167913859544.dkr.ecr.us-east-1.amazonaws.com/node:14-alpine
 
 ARG SENTRY_AUTH_TOKEN
 ARG SHORT_SHA

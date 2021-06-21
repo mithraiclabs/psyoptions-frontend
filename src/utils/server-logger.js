@@ -1,6 +1,5 @@
 import '../config'
 import winston, { format } from 'winston'
-import { LoggingWinston } from '@google-cloud/logging-winston'
 
 const isDev = process.env.NODE_ENV === 'development'
 
@@ -16,11 +15,7 @@ const devFormat = format.combine(
 
 const transports = []
 
-if (isDev) {
-  transports.push(new winston.transports.Console())
-} else {
-  transports.push(new LoggingWinston())
-}
+transports.push(new winston.transports.Console())
 
 const logger = winston.createLogger({
   level: isDev ? 'debug' : 'info',

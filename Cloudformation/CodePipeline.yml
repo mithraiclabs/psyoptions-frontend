@@ -32,7 +32,7 @@ Parameters:
   DomainName:
     Description: The fully qualified domain name the DNS record sets belong to
     Type: String
-    Default: www.example.com
+    Default: staging.psyoptions.io
   DomainCertificateArn:
     Description: The ARN of the SSL/TLS certificate to use for the secure load balancer listener
     Type: String

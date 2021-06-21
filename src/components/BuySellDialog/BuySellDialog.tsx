@@ -337,6 +337,13 @@ const BuySellDialog: React.VFC<{
     }
   }
 
+  let serumMarketQuoteAssetSymbol = qAssetSymbol
+  let serumMarketQuoteAssetBalance = qAssetBalance
+  if (type === 'put') {
+    serumMarketQuoteAssetSymbol = uAssetSymbol
+    serumMarketQuoteAssetBalance = uAssetBalance
+  }
+
   return (
     <Dialog open={open} onClose={onClose} maxWidth={'lg'}>
       <Box py={1} px={2} width="680px" maxWidth={['100%']}>
@@ -450,7 +457,7 @@ const BuySellDialog: React.VFC<{
                   : theme.palette.primary.main
               }
             >
-              Limit Price ({type === 'call' ? qAssetSymbol : uAssetSymbol}):
+              Limit Price ({serumMarketQuoteAssetSymbol}):
               <Box pt={1}>
                 <StyledFilledInput
                   type="number"
@@ -522,13 +529,13 @@ const BuySellDialog: React.VFC<{
                           <BuyButton
                             parsedLimitPrice={parsedLimitPrice}
                             numberOfAsks={orderbook?.asks?.length || 0}
-                            qAssetSymbol={qAssetSymbol}
+                            qAssetSymbol={serumMarketQuoteAssetSymbol}
                             orderType={orderType}
                             orderCost={parsedLimitPrice.multipliedBy(
                               parsedOrderSize,
                             )}
                             parsedOrderSize={parsedOrderSize}
-                            qAssetBalance={qAssetBalance}
+                            qAssetBalance={serumMarketQuoteAssetBalance}
                             onClick={handleBuyOrder}
                           />
                         </Box>

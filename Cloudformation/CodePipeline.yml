@@ -62,6 +62,35 @@ Resources:
             Action: 'sts:AssumeRole'
       ManagedPolicyArns:
         - 'arn:aws:iam::aws:policy/AdministratorAccess'
+      Policies:
+        - PolicyName:
+            !Join ['-', [!Ref Stage, !Ref 'AWS::AccountId', 'Pipeline-Role']]
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'codebuild:BatchGetBuilds'
+                  - 'codebuild:StartBuild'
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - 'iam:PassRole'
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - 'elasticbeanstalk:*'
+                  - 'ec2:*'
+                  - 'elasticloadbalancing:*'
+                  - 'autoscaling:*'
+                  - 'cloudwatch:*'
+                  - 's3:*'
+                  - 'sns:*'
+                  - 'cloudformation:*'
+                  - 'rds:*'
+                  - 'sqs:*'
+                  - 'ecs:*'
+                Resource: '*'
 
   # Create Access Role for CodeBuild
   CodeBuildExecutionRole:
@@ -73,9 +102,20 @@ Resources:
           Principal:
             Service: codebuild.amazonaws.com
           Action: sts:AssumeRole
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AdministratorAccess
       Policies:
+        - PolicyName: !Join ['-', [!Ref Stage, !Ref 'AWS::AccountId', 'CB-ECR']]
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'ecr:BatchCheckLayerAvailability'
+                  - 'ecr:CompleteLayerUpload'
+                  - 'ecr:GetAuthorizationToken'
+                  - 'ecr:InitiateLayerUpload'
+                  - 'ecr:PutImage'
+                  - 'ecr:UploadLayerPart'
+                Resource: !GetAtt ECRRepository.Arn
         - PolicyName:
             !Join ['-', [!Ref Stage, !Ref 'AWS::AccountId', 'CB-Secrets']]
           PolicyDocument:
@@ -99,8 +139,24 @@ Resources:
             Principal:
               Service: cloudformation.amazonaws.com
             Action: 'sts:AssumeRole'
-      ManagedPolicyArns:
-        - 'arn:aws:iam::aws:policy/AdministratorAccess'
+      Policies:
+        - PolicyName:
+            !Join [
+              '-',
+              [!Ref Stage, !Ref 'AWS::AccountId', 'FargateCloudFormation'],
+            ]
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'cloudformation:CreateStack'
+                  - 'cloudformation:DescribeStacks'
+                  - 'cloudformation:DeleteStack'
+                  - 'cloudformation:DescribeStackEvents'
+                  - 'cloudformation:UpdateStack'
+                  - 'iam:PassRole'
+                Resource: '*'
 
   # Create the BuildProject with required Build information
   BuildProject:

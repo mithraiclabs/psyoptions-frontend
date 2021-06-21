@@ -117,10 +117,8 @@ Resources:
             Options:
               awslogs-region: !Ref 'AWS::Region'
               awslogs-group:
-                !Join [
-                  '-',
-                  [!Ref Stage, !Ref 'AWS::AccountId', 'ContainerLogs'],
-                ]
+                !Join ['-', [!Ref Stage, !Ref 'AWS::AccountId', 'Container']]
+              awslogs-stream-prefix: 'logs'
   # Creat a security group for load balancer and open port 80 in bound from internet
   LoadBalancerSecurityGroup:
     Type: AWS::EC2::SecurityGroup

@@ -181,8 +181,9 @@ Resources:
       Protocol: HTTP
       TargetType: ip
       VpcId: !Ref VPC
-      # TODO re-enable the health check before real usage
-      HealthCheckEnabled: false
+      HealthCheckEnabled: true
+      # TODO remove this max health check time once done debugging
+      HealthCheckTimeoutSeconds: 120
 
   # Create a LoadBalancerListener and attach the TargetGroup and LoadBalancer
   LoadBalancerListener:

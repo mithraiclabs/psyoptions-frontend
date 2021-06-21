@@ -117,6 +117,9 @@ Resources:
       ContainerDefinitions:
         - Name: !Join ['-', [!Ref Stage, !Ref 'AWS::AccountId', 'Container']]
           Image: !Ref ImageURI
+          Cpu: 512
+          Memory: 1024
+          ReadonlyRootFilesystem: false
           PortMappings:
             - ContainerPort: !Ref ContainerPort
               HostPort: !Ref ContainerPort

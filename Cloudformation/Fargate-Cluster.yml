@@ -127,6 +127,10 @@ Resources:
               Value: true
             - Name: DEVNET_PROGRAM_ID
               Value: GDvqQy3FkDB2wyNwgZGp5YkmRMUmWbhNNWDMYKbLSZ5N
+            - Name: DEVNET_DEX_PROGRAM_ID
+              Value: DESVgJVGajEgKGXhb6XmqDHGz3VjdgP7rEVESBgxmroY
+            - Name: MAINNET_DEX_PROGRAM_ID
+              Value: EUqojwWA2rd19FZrzeBncJsm38Jm1hEhE3zsmX3bRc2o
             - Name: APP_PASSWORD
               Value: 89fe0dbb9a8e940c4e88f40ae9738db57dbe38a8
             - Name: APP_PASSWORD_PROTECTED

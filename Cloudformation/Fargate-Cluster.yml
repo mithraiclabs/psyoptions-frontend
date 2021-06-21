@@ -7,6 +7,14 @@ Parameters:
     Type: String
 
 Resources:
+  # Create CloudWatch LogGroup for the task logs
+  ContainerLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName:
+        !Join ['-', [!Ref Stage, !Ref 'AWS::AccountId', 'Container']]
+      RetentionInDays: 7
+
   # Create an ECS Cluster
   Cluster:
     Type: AWS::ECS::Cluster

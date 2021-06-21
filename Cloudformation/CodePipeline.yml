@@ -10,7 +10,7 @@ Parameters:
     Default: <BRANCH>
   ContainerPort:
     Type: Number
-    Default: 8080
+    Default: 3000
   CodeStarGithubConnectionArn:
     Type: String
   FullRepositoryId:
@@ -20,7 +20,12 @@ Parameters:
   AwsRegion:
     Type: String
     Default: us-east-1
-
+  SecretsArn:
+    Description: The ARN of the AWS Secrets Manager storing API keys or other sensitive information needed for the build
+    Type: String
+  KmsArn:
+    Description: The ARN of the Key in Key Manager that's used to decrypt secrets
+    Type: String
 Resources:
   # Create an ECR Repository to store docker images
   ECRRepository:
@@ -60,6 +65,19 @@ Resources:
           Action: sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AdministratorAccess
+      Policies:
+        - PolicyName:
+            !Join ['-', [!Ref Stage, !Ref 'AWS::AccountId', 'CB-Secrets']]
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'kms:Decrypt'
+                  - 'secretsmanager:GetSecretValue'
+                Resource:
+                  - !Ref SecretsArn
+                  - !Ref KmsArn
 
   # Create Access Role for Cloudformation
   CloudformationExecutionRole:
@@ -98,6 +116,8 @@ Resources:
                   !Join ['/', ['amazonaws.com', !Ref 'ECRRepository']],
                 ],
               ]
+          - Name: DOCKER_SECRET_ARN
+            Value: !Ref DockerSecretArn
       Name: !Join ['-', [!Ref Stage, !Ref 'AWS::AccountId', 'BuildProject']]
       ServiceRole: !Ref CodeBuildExecutionRole
       Source:
@@ -176,7 +196,9 @@ Resources:
                   {
                     "ImageURI" : { "Fn::GetParam" : ["build-output-artifacts", "imagedefinitions.json", "ImageURI"] },
                     "Stage":  "${Stage}",
-                    "ContainerPort": "${ContainerPort}"
+                    "ContainerPort": "${ContainerPort}",
+                    "SecretsArn": "${SecretsArn}",
+                    "KmsArn": "${KmsArn}"
                   }
                 RoleArn:
                   Fn::GetAtt: [CloudformationExecutionRole, Arn]

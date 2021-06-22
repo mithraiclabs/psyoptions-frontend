@@ -98,6 +98,8 @@ Resources:
           Principal:
             Service: codebuild.amazonaws.com
           Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/CloudWatchLogsFullAccess
       Policies:
         - PolicyName: !Join ['-', [!Ref Stage, !Ref 'AWS::AccountId', 'CB-ECR']]
           PolicyDocument:
@@ -111,9 +113,11 @@ Resources:
                   - 'ecr:InitiateLayerUpload'
                   - 'ecr:PutImage'
                   - 'ecr:UploadLayerPart'
-                Resource: !GetAtt ECRRepository.Arn
+                  - 'ecr:BatchGetImage'
+                  - 'ecr:GetDownloadUrlForLayer'
+                Resource: '*'
         - PolicyName:
-            !Join ['-', [!Ref Stage, !Ref 'AWS::AccountId', 'CB-Secrets']]
+            !Join ['-', [!Ref Stage, !Ref 'AWS::AccountId', 'CB-Resources']]
           PolicyDocument:
             Version: 2012-10-17
             Statement:
@@ -121,9 +125,11 @@ Resources:
                 Action:
                   - 'kms:Decrypt'
                   - 'secretsmanager:GetSecretValue'
+                  - 's3:*'
                 Resource:
                   - !Ref SecretsArn
                   - !Ref KmsArn
+                  - !Join ['', [!GetAtt S3Bucket.Arn, '/*']]
 
   # Create Access Role for Cloudformation
   CloudformationExecutionRole:
@@ -151,7 +157,20 @@ Resources:
                   - 'cloudformation:DeleteStack'
                   - 'cloudformation:DescribeStackEvents'
                   - 'cloudformation:UpdateStack'
+                  - 'ec2:*'
+                  - 'ecs:*'
+                  - 'elb:*'
+                  - 'elasticloadbalancing:*'
+                  - 'iam:AttachRolePolicy'
+                  - 'iam:DetachRolePolicy'
+                  - 'iam:GetRole'
+                  - 'iam:CreateRole'
+                  - 'iam:DeleteRole'
                   - 'iam:PassRole'
+                  - 'logs:CreateLogGroup'
+                  - 'logs:DeleteLogGroup'
+                  - 'logs:PutRetentionPolicy'
+                  - 'route53:*'
                 Resource: '*'
 
   # Create the BuildProject with required Build information

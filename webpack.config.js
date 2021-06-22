@@ -23,8 +23,6 @@ const dedupeBnJs = [
   'rm -rf node_modules/public-encrypt/node_modules/bn.js/',
 ]
 
-console.log('*** Webpack ENV vars', process.env)
-
 const serverPlugins = isDev
   ? [
       new (require('webpack-shell-plugin-next'))({

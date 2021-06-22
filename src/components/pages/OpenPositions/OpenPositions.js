@@ -7,10 +7,12 @@ import TableCell from '@material-ui/core/TableCell'
 import TableContainer from '@material-ui/core/TableContainer'
 import TableHead from '@material-ui/core/TableHead'
 import TableRow from '@material-ui/core/TableRow'
-import Tabs from '@material-ui/core/Tabs'
-import Tab from '@material-ui/core/Tab'
+import CreateIcon from '@material-ui/icons/Create'
+import BarChartIcon from '@material-ui/icons/BarChart'
 import { makeStyles } from '@material-ui/core/styles'
 import Page from '../Page'
+
+import TabCustom from '../../Tab'
 
 import PositionRow from './PositionRow'
 import useOpenPositions from '../../../hooks/useOpenPositions'
@@ -64,15 +66,45 @@ const OpenPositions = () => {
         pt={2}
         pb={4}
       >
-        <Tabs
-          value={selectedTab}
-          onChange={(_, tab) => setSelectedTab(tab)}
-          indicatorColor="primary"
-          textColor="primary"
+        <Box
+          display="flex"
+          flexDirection="row"
+          justifyContent="flex-start"
+          alignItems="flex-start"
         >
-          <Tab label={`Open Positions`} />
-          <Tab label={`Written Options`} />
-        </Tabs>
+          <TabCustom
+            selected={selectedTab === 0}
+            onClick={() => setSelectedTab(0)}
+          >
+            <Box display="flex" flexDirection="row" alignItems="center">
+              <Box px={1}>
+                <BarChartIcon size={24} />
+              </Box>
+              <Box px={1} textAlign="left" lineHeight={'22px'}>
+                <Box fontSize={'16px'} fontWeight={700}>
+                  Open Positions
+                </Box>
+                <Box fontSize={'13px'}>0 currently open</Box>
+              </Box>
+            </Box>
+          </TabCustom>
+          <TabCustom
+            selected={selectedTab === 1}
+            onClick={() => setSelectedTab(1)}
+          >
+            <Box display="flex" flexDirection="row" alignItems="center">
+              <Box px={1}>
+                <CreateIcon size={18} />
+              </Box>
+              <Box px={1} textAlign="left" lineHeight={'22px'}>
+                <Box fontSize={'16px'} fontWeight={700}>
+                  Written Options
+                </Box>
+                <Box fontSize={'13px'}>0 currently written</Box>
+              </Box>
+            </Box>
+          </TabCustom>
+        </Box>
         {selectedTab === 0 && (
           <Paper
             style={{

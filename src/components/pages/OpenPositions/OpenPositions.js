@@ -1,15 +1,8 @@
 import Box from '@material-ui/core/Box'
-import Paper from '@material-ui/core/Paper'
 import React, { useState } from 'react'
-import Table from '@material-ui/core/Table'
-import TableBody from '@material-ui/core/TableBody'
-import TableCell from '@material-ui/core/TableCell'
-import TableContainer from '@material-ui/core/TableContainer'
-import TableHead from '@material-ui/core/TableHead'
-import TableRow from '@material-ui/core/TableRow'
 import CreateIcon from '@material-ui/icons/Create'
 import BarChartIcon from '@material-ui/icons/BarChart'
-import { makeStyles } from '@material-ui/core/styles'
+import { useTheme } from '@material-ui/core/styles'
 import Page from '../Page'
 
 import TabCustom from '../../Tab'
@@ -19,18 +12,12 @@ import useOpenPositions from '../../../hooks/useOpenPositions'
 import useOptionsMarkets from '../../../hooks/useOptionsMarkets'
 import { Heading } from './Heading'
 import { WrittenOptionsTable } from './WrittenOptionsTable'
-
-const useStyles = makeStyles({
-  root: {
-    width: '100%',
-  },
-  container: {
-    maxHeight: 440,
-  },
-})
+import EmptySvg from './EmptySvg'
+import useWallet from '../../../hooks/useWallet'
 
 const OpenPositions = () => {
-  const classes = useStyles()
+  const { connected } = useWallet()
+  const theme = useTheme()
   const [page] = useState(0)
   const [rowsPerPage] = useState(10)
   const positions = useOpenPositions()
@@ -54,6 +41,8 @@ const OpenPositions = () => {
     amountPerContract: markets[key]?.amountPerContract,
     quoteAmountPerContract: markets[key]?.quoteAmountPerContract,
   }))
+
+  const hasOpenPositions = positionRows.length > 0
 
   return (
     <Page>
@@ -106,47 +95,82 @@ const OpenPositions = () => {
           </TabCustom>
         </Box>
         {selectedTab === 0 && (
-          <Paper
-            style={{
-              width: '100%',
-            }}
+          <Box
+            w="100%"
+            minHeight="514px"
+            bgcolor={theme.palette.background.medium}
+            display="flex"
+            flexDirection="column"
           >
             <Heading>Open Positions</Heading>
-            <TableContainer className={classes.container}>
-              <Table stickyHeader aria-label="sticky table">
-                <TableHead>
-                  <TableRow>
-                    <TableCell width="5%" />
-                    <TableCell width="10%">Asset Pair</TableCell>
-                    <TableCell width="10%">Type</TableCell>
-                    <TableCell width="10%">Strike</TableCell>
-                    <TableCell width="11%">Market Price</TableCell>
-                    <TableCell width="12%">Contract Size</TableCell>
-                    <TableCell width="12%">Position Size</TableCell>
-                    <TableCell width="15%">Expiration</TableCell>
-                    <TableCell align="right" width="15%">
-                      Action
-                    </TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {positionRows
-                    .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                    .map((row) => (
-                      <PositionRow
-                        key={row.market.optionMintKey.toString()}
-                        row={row}
-                      />
-                    ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Paper>
+            <Box
+              display="flex"
+              flexDirection="row"
+              alignItems="flex-start"
+              bgcolor={theme.palette.background.paper}
+              p={1}
+              fontSize={'14px'}
+            >
+              <Box p={1} pl={2} width="10%">
+                Asset
+              </Box>
+              <Box p={1} width="10%">
+                Type
+              </Box>
+              <Box p={1} width="10%">
+                Strike ($)
+              </Box>
+              <Box p={1} width="10%">
+                Price ($)
+              </Box>
+              <Box p={1} width="11%">
+                Contract Size
+              </Box>
+              <Box p={1} width="11%">
+                Position Size
+              </Box>
+              <Box p={1} width="14%">
+                Expiration
+              </Box>
+              <Box p={1} width="10%">
+                PNL
+              </Box>
+              <Box p={1} pr={2} align="right" width="13%" textAlign="left">
+                Action
+              </Box>
+            </Box>
+            {hasOpenPositions && connected ? (
+              positionRows
+                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                .map((row) => (
+                  <PositionRow
+                    key={row.market.optionMintKey.toString()}
+                    row={row}
+                  />
+                ))
+            ) : (
+              <Box
+                display="flex"
+                justifyContent="center"
+                alignItems="center"
+                flexDirection="column"
+                p={3}
+                flexGrow="1"
+              >
+                <EmptySvg />
+                <Box color={theme.palette.border.main}>
+                  {connected
+                    ? 'You have no open positions'
+                    : 'Wallet not connected'}
+                </Box>
+              </Box>
+            )}
+          </Box>
         )}
         {selectedTab === 1 && (
-          <Paper>
+          <Box bgcolor={theme.palette.background.medium}>
             <WrittenOptionsTable />
-          </Paper>
+          </Box>
         )}
       </Box>
     </Page>

@@ -62,7 +62,7 @@ const theme = createMuiTheme({
       marketsCallPutRow: 'rgba(34, 34, 42, 0.85)',
     },
     border: {
-      main: '#686775',
+      main: '#6E7689',
     },
     disabled: {
       main: '#373B40',

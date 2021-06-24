@@ -10,9 +10,11 @@ import useOpenPositions from '../../../../hooks/useOpenPositions'
 import useOptionsMarkets from '../../../../hooks/useOptionsMarkets'
 import { Heading } from '../Heading'
 import { WrittenOptionRow } from './WrittenOptionRow'
+// import { useTheme } from '@material-ui/core/styles'
 
 // TODO handle the case where the writer has multiple underlying asset accounts
 export const WrittenOptionsTable = React.memo(() => {
+  // const theme = useTheme()
   const positions = useOpenPositions()
   const writtenOptions = useWrittenOptions()
   const { markets } = useOptionsMarkets()

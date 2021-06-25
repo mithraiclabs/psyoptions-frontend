@@ -1,10 +1,6 @@
 import React, { useCallback, useState } from 'react'
 import Box from '@material-ui/core/Box'
 import Collapse from '@material-ui/core/Collapse'
-import Table from '@material-ui/core/Table'
-import TableBody from '@material-ui/core/TableBody'
-import TableCell from '@material-ui/core/TableCell'
-import TableRow from '@material-ui/core/TableRow'
 import Tooltip from '@material-ui/core/Tooltip'
 import Avatar from '@material-ui/core/Avatar'
 import Button from '@material-ui/core/Button'
@@ -16,10 +12,11 @@ import BigNumber from 'bignumber.js'
 import useExerciseOpenPosition from '../../../hooks/useExerciseOpenPosition'
 import useOwnedTokenAccounts from '../../../hooks/useOwnedTokenAccounts'
 import useNotifications from '../../../hooks/useNotifications'
-import { formatExpirationTimestamp } from '../../../utils/format'
-import { OptionMarket, TokenAccount } from '../../../types'
+import useAssetList from '../../../hooks/useAssetList'
 import { useSerumMarket, useSerumOrderbook } from '../../../hooks/Serum'
+import { formatExpirationTimestamp } from '../../../utils/format'
 import { getPriceFromSerumOrderbook } from '../../../utils/orderbook'
+import { OptionMarket, TokenAccount } from '../../../types'
 
 const useStyles = makeStyles({
   dropdownOpen: {
@@ -43,20 +40,21 @@ const PositionRow: React.VFC<{
   row: {
     accounts: TokenAccount[]
     assetPair: string
-    uAssetSymbol: string
     expiration: number
     market: OptionMarket
     size: number
     strikePrice: string
-    uAssetMintAddress: string
     qAssetSymbol: string
     qAssetMintAddress: string
+    uAssetSymbol: string
+    uAssetMintAddress: string
     amountPerContract: BigNumber
     quoteAmountPerContract: BigNumber
   }
 }> = ({ row }) => {
   const classes = useStyles()
   const [visible, setVisible] = useState(false)
+  const { supportedAssets } = useAssetList()
   const { ownedTokenAccounts } = useOwnedTokenAccounts()
   const { pushNotification } = useNotifications()
   const serumMarketKey = `${row.market.optionMintKey}-${row?.qAssetMintAddress}`
@@ -119,6 +117,12 @@ const PositionRow: React.VFC<{
   const uAssetSymbol =
     optionType === 'put' ? row?.qAssetSymbol : row?.uAssetSymbol
 
+  const uAssetImage = supportedAssets.find(
+    (asset) =>
+      asset?.mintAddress ===
+      (optionType === 'put' ? row?.qAssetMintAddress : row?.uAssetMintAddress),
+  )?.icon
+
   const exerciseTooltipLabel = `${
     optionType === 'put' ? 'Sell' : 'Purchase'
   } ${contractSize} ${
@@ -149,7 +153,9 @@ const PositionRow: React.VFC<{
           flexDirection="row"
           alignItems="center"
         >
-          <Avatar style={{ width: 32, height: 32 }} />
+          <Avatar style={{ width: 24, height: 24 }} src={uAssetImage}>
+            {uAssetSymbol}
+          </Avatar>
           <Box pl={1}>{uAssetSymbol}</Box>
         </Box>
         <Box p={1} width="8%">

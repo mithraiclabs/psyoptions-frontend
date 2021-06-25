@@ -43,19 +43,27 @@ const useSendTransaction = () => {
     }): Promise<string> => {
       const rawTransaction = signedTransaction.serialize()
       const startTime = getUnixTs()
-      pushNotification({
-        severity: NotificationSeverity.INFO,
-        message: sendingMessage,
-      })
-
+      
       const txid: TransactionSignature = await connection.sendRawTransaction(
         rawTransaction,
         {
           skipPreflight: true,
         },
       )
-
+        
       const explorerUrl = buildSolanaExplorerUrl(txid)
+      
+      pushNotification({
+        severity: NotificationSeverity.INFO,
+        message: sendingMessage,
+        link: (
+          <Link href={explorerUrl} target="_new">
+            View on Solana Explorer
+          </Link>
+        ),
+        txid,
+      })
+
 
       let done = false
       ;(async () => {
@@ -117,6 +125,7 @@ const useSendTransaction = () => {
             View on Solana Explorer
           </Link>
         ),
+        txid,
       })
 
       console.log('Latency', txid, getUnixTs() - startTime)
@@ -124,6 +133,7 @@ const useSendTransaction = () => {
     },
     [pushNotification],
   )
+  
   const sendTransaction = useCallback(
     async ({
       transaction,

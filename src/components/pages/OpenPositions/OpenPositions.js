@@ -97,74 +97,82 @@ const OpenPositions = () => {
         {selectedTab === 0 && (
           <Box
             w="100%"
-            minHeight="514px"
             bgcolor={theme.palette.background.medium}
-            display="flex"
-            flexDirection="column"
+            style={{
+              overflowX: 'auto',
+            }}
           >
-            <Heading>Open Positions</Heading>
             <Box
+              minWidth="850px"
+              minHeight="514px"
               display="flex"
-              flexDirection="row"
-              alignItems="flex-start"
-              bgcolor={theme.palette.background.paper}
-              p={1}
-              fontSize={'14px'}
+              flexDirection="column"
             >
-              <Box p={1} pl={2} width="10%">
-                Asset
-              </Box>
-              <Box p={1} width="10%">
-                Type
-              </Box>
-              <Box p={1} width="10%">
-                Strike ($)
-              </Box>
-              <Box p={1} width="10%">
-                Price ($)
-              </Box>
-              <Box p={1} width="11%">
-                Contract Size
-              </Box>
-              <Box p={1} width="11%">
-                Position Size
-              </Box>
-              <Box p={1} width="14%">
-                Expiration
-              </Box>
-              <Box p={1} width="10%">
-                PNL
-              </Box>
-              <Box p={1} pr={2} align="right" width="13%" textAlign="left">
-                Action
-              </Box>
-            </Box>
-            {hasOpenPositions && connected ? (
-              positionRows
-                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                .map((row) => (
-                  <PositionRow
-                    key={row.market.optionMintKey.toString()}
-                    row={row}
-                  />
-                ))
-            ) : (
+              <Heading>Open Positions</Heading>
               <Box
                 display="flex"
-                justifyContent="center"
-                alignItems="center"
-                flexDirection="column"
-                p={3}
-                flexGrow="1"
+                flexDirection="row"
+                alignItems="flex-start"
+                bgcolor={theme.palette.background.paper}
+                p={1}
+                fontSize={'14px'}
               >
-                <EmptySvg />
-                <Box color={theme.palette.border.main}>
-                  {connected
-                    ? 'You have no open positions'
-                    : 'Wallet not connected'}
+                <Box p={1} pl={2} width="12%">
+                  Asset
                 </Box>
+                <Box p={1} width="8%">
+                  Type
+                </Box>
+                <Box p={1} width="10%">
+                  Strike ($)
+                </Box>
+                <Box p={1} width="10%">
+                  Price ($)
+                </Box>
+                <Box p={1} width="10%">
+                  Contract Size
+                </Box>
+                <Box p={1} width="10%">
+                  Position Size
+                </Box>
+                <Box p={1} width="16%">
+                  Expiration
+                </Box>
+                <Box p={1} width="9%">
+                  PNL
+                </Box>
+                <Box p={1} align="right" width="10%" textAlign="left">
+                  Action
+                </Box>
+                <Box width="5%" p={1} pr={2} />
               </Box>
-            )}
+              {hasOpenPositions && connected ? (
+                positionRows
+                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                  .map((row) => (
+                    <PositionRow
+                      key={row.market.optionMintKey.toString()}
+                      row={row}
+                    />
+                  ))
+              ) : (
+                <Box
+                  display="flex"
+                  justifyContent="center"
+                  alignItems="center"
+                  flexDirection="column"
+                  p={3}
+                  flexGrow="1"
+                >
+                  <EmptySvg />
+                  <Box color={theme.palette.border.main}>
+                    {connected
+                      ? 'You have no open positions'
+                      : 'Wallet not connected'}
+                  </Box>
+                </Box>
+              )}
+            </Box>
           </Box>
         )}
         {selectedTab === 1 && (

@@ -65,8 +65,12 @@ const NotificationsProvider = ({ children }) => {
 
   // useCallback() and useMemo() to prevent whole page re-renders
   const pushNotification = useCallback(
-    (content) =>
-      setNotifications((_notifications) => [content, ..._notifications]),
+    (content) => 
+      setNotifications((_notifications) => {
+        // remove processing tx's with same txids, i.e. after success
+        const notifs = _notifications.filter(notif => notif.txid !== content.txid)
+        return [content, ...notifs]
+      }),
     [],
   )
 

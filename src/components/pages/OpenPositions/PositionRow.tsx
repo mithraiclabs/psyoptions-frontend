@@ -5,7 +5,7 @@ import Tooltip from '@material-ui/core/Tooltip'
 import Avatar from '@material-ui/core/Avatar'
 import Button from '@material-ui/core/Button'
 import KeyboardArrowDown from '@material-ui/icons/KeyboardArrowDown'
-import { makeStyles, withStyles } from '@material-ui/core/styles'
+import { makeStyles, withStyles, useTheme } from '@material-ui/core/styles'
 import * as Sentry from '@sentry/react'
 import BigNumber from 'bignumber.js'
 
@@ -13,9 +13,8 @@ import useExerciseOpenPosition from '../../../hooks/useExerciseOpenPosition'
 import useOwnedTokenAccounts from '../../../hooks/useOwnedTokenAccounts'
 import useNotifications from '../../../hooks/useNotifications'
 import useAssetList from '../../../hooks/useAssetList'
-import { useSerumMarket, useSerumOrderbook } from '../../../hooks/Serum'
+import { useSerumMarket } from '../../../hooks/Serum'
 import { formatExpirationTimestamp } from '../../../utils/format'
-import { getPriceFromSerumOrderbook } from '../../../utils/orderbook'
 import { OptionMarket, TokenAccount } from '../../../types'
 
 const useStyles = makeStyles({
@@ -61,6 +60,8 @@ const PositionRow: React.VFC<{
   useSerumMarket(serumMarketKey)
   const nowInSeconds = Date.now() / 1000
   const expired = row.expiration <= nowInSeconds
+
+  const theme = useTheme()
 
   // const { orderbook } = useSerumOrderbook(serumMarketKey)
   // const price = getPriceFromSerumOrderbook(orderbook)
@@ -154,7 +155,7 @@ const PositionRow: React.VFC<{
           alignItems="center"
         >
           <Avatar style={{ width: 24, height: 24 }} src={uAssetImage}>
-            {uAssetSymbol}
+            {uAssetSymbol.slice(0, 1)}
           </Avatar>
           <Box pl={1}>{uAssetSymbol}</Box>
         </Box>
@@ -176,8 +177,9 @@ const PositionRow: React.VFC<{
         <Box p={1} width="16%">
           {formatExpirationTimestamp(row.expiration)}
         </Box>
-        <Box p={1} width="9%">{`+0.0%`}</Box>
+        <Box p={1} width="9%">{`+$0.00`}</Box>
         <Box p={1} width="10%">
+          {expired && <Box color={theme.palette.error.main}>Expired</Box>}
           {!expired && (
             <StyledTooltip title={<Box p={2}>{exerciseTooltipLabel}</Box>}>
               <Button
@@ -222,8 +224,11 @@ const PositionRow: React.VFC<{
                   {account.amount}
                 </Box>
                 <Box p={1} width="16%" />
-                <Box p={1} width="9%">{`+0.0%`}</Box>
+                <Box p={1} width="9%">{`+$0.00`}</Box>
                 <Box p={1} width="10%">
+                  {expired && (
+                    <Box color={theme.palette.error.main}>Expired</Box>
+                  )}
                   {!expired && (
                     <StyledTooltip
                       title={<Box p={2}>{exerciseTooltipLabel}</Box>}

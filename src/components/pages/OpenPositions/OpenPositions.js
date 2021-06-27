@@ -1,5 +1,5 @@
 import Box from '@material-ui/core/Box'
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import CreateIcon from '@material-ui/icons/Create'
 import BarChartIcon from '@material-ui/icons/BarChart'
 import { useTheme } from '@material-ui/core/styles'
@@ -24,23 +24,31 @@ const OpenPositions = () => {
   const { markets } = useOptionsMarkets()
   const [selectedTab, setSelectedTab] = useState(0)
 
-  const positionRows = Object.keys(positions).map((key) => ({
-    accounts: positions[key],
-    assetPair: `${markets[key]?.uAssetSymbol}-${markets[key]?.qAssetSymbol}`,
-    expiration: markets[key]?.expiration,
-    size: positions[key]?.reduce(
-      (acc, tokenAccount) => acc + tokenAccount.amount,
-      0,
-    ),
-    strikePrice: markets[key]?.strikePrice,
-    market: markets[key],
-    qAssetMintAddress: markets[key]?.qAssetMint,
-    uAssetMintAddress: markets[key]?.uAssetMint,
-    qAssetSymbol: markets[key]?.qAssetSymbol,
-    uAssetSymbol: markets[key]?.uAssetSymbol,
-    amountPerContract: markets[key]?.amountPerContract,
-    quoteAmountPerContract: markets[key]?.quoteAmountPerContract,
-  }))
+  const positionRows = useMemo(
+    () =>
+      Object.keys(positions)
+        .map((key) => ({
+          accounts: positions[key],
+          assetPair: `${markets[key]?.uAssetSymbol}-${markets[key]?.qAssetSymbol}`,
+          expiration: markets[key]?.expiration,
+          size: positions[key]?.reduce(
+            (acc, tokenAccount) => acc + tokenAccount.amount,
+            0,
+          ),
+          strikePrice: markets[key]?.strikePrice,
+          market: markets[key],
+          qAssetMintAddress: markets[key]?.qAssetMint,
+          uAssetMintAddress: markets[key]?.uAssetMint,
+          qAssetSymbol: markets[key]?.qAssetSymbol,
+          uAssetSymbol: markets[key]?.uAssetSymbol,
+          amountPerContract: markets[key]?.amountPerContract,
+          quoteAmountPerContract: markets[key]?.quoteAmountPerContract,
+        }))
+        .sort((rowA, rowB) => {
+          return rowB?.expiration - rowA?.expiration
+        }),
+    [positions, markets],
+  )
 
   const hasOpenPositions = positionRows.length > 0
 

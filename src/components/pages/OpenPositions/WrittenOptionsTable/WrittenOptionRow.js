@@ -2,12 +2,11 @@
 import React, { useEffect, useState } from 'react'
 import { PublicKey } from '@solana/web3.js'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import Chip from '@material-ui/core/Chip'
-import TableCell from '@material-ui/core/TableCell'
-import TableRow from '@material-ui/core/TableRow'
+import Avatar from '@material-ui/core/Avatar'
+import Button from '@material-ui/core/Button'
 import Tooltip from '@material-ui/core/Tooltip'
 import Box from '@material-ui/core/Box'
-import { withStyles } from '@material-ui/core/styles'
+import { withStyles, useTheme } from '@material-ui/core/styles'
 import PropTypes from 'prop-types'
 
 import { formatExpirationTimestamp } from '../../../../utils/format'
@@ -18,6 +17,7 @@ import useOwnedTokenAccounts from '../../../../hooks/useOwnedTokenAccounts'
 import useConnection from '../../../../hooks/useConnection'
 import { useExchangeWriterTokenForQuote } from '../../../../hooks/useExchangeWriterTokenForQuote'
 import useNotifications from '../../../../hooks/useNotifications'
+import useAssetList from '../../../../hooks/useAssetList'
 
 const StyledTooltip = withStyles((theme) => ({
   tooltip: {
@@ -35,6 +35,8 @@ const StyledTooltip = withStyles((theme) => ({
  */
 export const WrittenOptionRow = React.memo(
   ({ expired, marketKey, writerTokenAccounts, heldContracts }) => {
+    const theme = useTheme()
+    const { supportedAssets } = useAssetList()
     const { pushNotification } = useNotifications()
     const { connection } = useConnection()
     const { ownedTokenAccounts } = useOwnedTokenAccounts()
@@ -81,6 +83,15 @@ export const WrittenOptionRow = React.memo(
             .toString()
         : market?.strikePrice
 
+    const uAssetSymbol =
+      optionType === 'call' ? market?.uAssetSymbol : market?.qAssetSymbol
+
+    const uAssetImage = supportedAssets.find(
+      (asset) =>
+        asset?.tokenSymbol ===
+        (optionType === 'put' ? market?.qAssetSymbol : market?.uAssetSymbol),
+    )?.icon
+
     useEffect(() => {
       ;(async () => {
         try {
@@ -110,10 +121,12 @@ export const WrittenOptionRow = React.memo(
       pushNotification,
     ])
 
+    const canClose = (ownedOptionTokenAccounts?.[0]?.amount || 0) > 0
+
     let ActionFragment = null
     if (expired) {
       ActionFragment = (
-        <Box display="flex" flexDirection="row" justifyContent="flex-end">
+        <Box>
           <StyledTooltip
             title={
               <Box
@@ -121,33 +134,32 @@ export const WrittenOptionRow = React.memo(
               >{`The written option has expired, closing will return the locked underlying asset`}</Box>
             }
           >
-            <Box>
+            <Box
+              display="flex"
+              flexDirection={['column', 'column', 'row']}
+              flexWrap="wrap"
+              alignItems="flex-start"
+              justifyContent="flex-start"
+            >
               <Box p={1}>
-                <Chip
-                  size={'small'}
-                  clickable
-                  label="Close One"
+                <Button
                   color="primary"
                   variant="outlined"
-                  onClick={closeOptionPostExpiration}
-                />
+                  onClick={() => closeOptionPostExpiration(1)}
+                >
+                  Close One
+                </Button>
               </Box>
               <Box p={1}>
-                <Chip
-                  size={'small'}
-                  clickable
-                  label="Close All"
+                <Button
                   color="primary"
                   variant="outlined"
                   onClick={() => {
-                    closeOptionPostExpiration(
-                      Math.min(
-                        ownedOptionTokenAccounts?.[0]?.amount,
-                        initialWriterTokenAccount.amount,
-                      ),
-                    )
+                    closeOptionPostExpiration(initialWriterTokenAccount.amount)
                   }}
-                />
+                >
+                  Close All
+                </Button>
               </Box>
             </Box>
           </StyledTooltip>
@@ -155,47 +167,55 @@ export const WrittenOptionRow = React.memo(
       )
     } else {
       ActionFragment = (
-        <Box display="flex" flexDirection="row" justifyContent="flex-end">
+        <Box>
           {holdsContracts && (
-            <div>
-              <StyledTooltip
-                title={
-                  <Box
-                    p={1}
-                  >{`Unlock the underlying asset used to write the contract by burning the option and writer tokens`}</Box>
-                }
+            <StyledTooltip
+              title={
+                <Box
+                  p={1}
+                >{`Unlock the underlying asset used to write the contract by burning the option and writer tokens`}</Box>
+              }
+            >
+              <Box
+                display="flex"
+                flexDirection={['column', 'column', 'row']}
+                flexWrap="wrap"
+                alignItems="flex-start"
+                justifyContent="flex-start"
               >
-                <Box>
-                  <Box p={1}>
-                    <Chip
-                      clickable
-                      size={'small'}
-                      label="Close One"
-                      color="primary"
-                      variant="outlined"
-                      onClick={closePosition}
-                    />
-                  </Box>
-                  <Box p={1}>
-                    <Chip
-                      clickable
-                      size={'small'}
-                      label="Close All"
-                      color="primary"
-                      variant="outlined"
-                      onClick={() => {
-                        closePosition(
-                          Math.min(
-                            ownedOptionTokenAccounts?.[0]?.amount,
-                            initialWriterTokenAccount.amount,
-                          ),
-                        )
-                      }}
-                    />
-                  </Box>
+                <Box p={1}>
+                  <Button
+                    color="primary"
+                    variant="outlined"
+                    minWidth="100px"
+                    flexShrink={0}
+                    onClick={closePosition}
+                    disabled={!canClose}
+                  >
+                    Close One
+                  </Button>
                 </Box>
-              </StyledTooltip>
-            </div>
+                <Box p={1}>
+                  <Button
+                    color="primary"
+                    variant="outlined"
+                    minWidth="100px"
+                    flexShrink={0}
+                    onClick={() => {
+                      closePosition(
+                        Math.min(
+                          ownedOptionTokenAccounts?.[0]?.amount,
+                          initialWriterTokenAccount.amount,
+                        ),
+                      )
+                    }}
+                    disabled={!canClose}
+                  >
+                    Close All
+                  </Button>
+                </Box>
+              </Box>
+            </StyledTooltip>
           )}
           {quotePoolNotEmpty && (
             <StyledTooltip
@@ -207,15 +227,14 @@ export const WrittenOptionRow = React.memo(
                 </Box>
               }
             >
-              <Chip
-                clickable
-                size={'small'}
-                label="Claim Quote"
+              <Button
                 color="primary"
                 variant="outlined"
                 onClick={exchangeWriterTokenForQuote}
                 style={{ marginLeft: holdsContracts ? 8 : 0 }}
-              />
+              >
+                Claim Quote
+              </Button>
             </StyledTooltip>
           )}
         </Box>
@@ -223,38 +242,57 @@ export const WrittenOptionRow = React.memo(
     }
 
     return (
-      <TableRow hover key={marketKey}>
-        <TableCell width="5%" />
-        {/* <TableCell width="12%">Asset Pair</TableCell>
-            <TableCell width="10%">Type</TableCell>
-            <TableCell width="12%">Strike</TableCell>
-            <TableCell width="12%">Locked Assets</TableCell>
-            <TableCell width="5%">Contract Size</TableCell>
-            <TableCell width="7%">Written</TableCell>
-            <TableCell width="7%">Available</TableCell>
-            <TableCell width="15%">Expiration</TableCell> */}
-        <TableCell width="10%">{`${market.uAssetSymbol}-${market.qAssetSymbol}`}</TableCell>
-        <TableCell width="9%">{optionType}</TableCell>
-        <TableCell width="10%">{strike}</TableCell>
-        <TableCell width="13%">
+      <Box
+        key={marketKey}
+        display="flex"
+        flexDirection="row"
+        alignItems="center"
+        p={1}
+      >
+        <Box
+          p={1}
+          pl={2}
+          width="12%"
+          display="flex"
+          flexDirection="row"
+          alignItems="center"
+        >
+          <Avatar style={{ width: 24, height: 24 }} src={uAssetImage}>
+            {uAssetSymbol.slice(0, 1)}
+          </Avatar>
+          <Box pl={1}>{uAssetSymbol}</Box>
+        </Box>
+        <Box p={1} width="8%">
+          {optionType}
+        </Box>
+        <Box p={1} width="10%">
+          {strike}
+        </Box>
+        <Box p={1} width="10%">
           {initialWriterTokenAccount.amount * market.size} {market.uAssetSymbol}
-        </TableCell>
-        <TableCell width="10%">
+        </Box>
+        <Box p={1} width="10%">
           {optionType === 'call'
             ? market.amountPerContract.toString()
             : market.quoteAmountPerContract.toString()}
-        </TableCell>
-        <TableCell width="7%">{initialWriterTokenAccount.amount}</TableCell>
-        <TableCell width="8%">
+        </Box>
+        <Box p={1} width="10%">
+          {initialWriterTokenAccount.amount}
+        </Box>
+        <Box p={1} width="10%">
           {ownedOptionTokenAccounts?.[0]?.amount}
-        </TableCell>
-        <TableCell width="16%">
-          {formatExpirationTimestamp(market.expiration)}
-        </TableCell>
-        <TableCell align="right" width="15%">
+        </Box>
+        <Box p={1} width="15%">
+          {expired ? (
+            <Box color={theme.palette.error.main}>Expired</Box>
+          ) : (
+            formatExpirationTimestamp(market.expiration)
+          )}
+        </Box>
+        <Box align="right" width="15%">
           {ActionFragment}
-        </TableCell>
-      </TableRow>
+        </Box>
+      </Box>
     )
   },
 )

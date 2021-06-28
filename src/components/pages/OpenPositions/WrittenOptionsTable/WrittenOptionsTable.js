@@ -1,46 +1,106 @@
-import React from 'react'
-import Table from '@material-ui/core/Table'
-import TableBody from '@material-ui/core/TableBody'
-import TableCell from '@material-ui/core/TableCell'
-import TableContainer from '@material-ui/core/TableContainer'
-import TableHead from '@material-ui/core/TableHead'
-import TableRow from '@material-ui/core/TableRow'
+import React, { useMemo } from 'react'
+import Box from '@material-ui/core/Box'
+import { useTheme } from '@material-ui/core/styles'
+
+import useWallet from '../../../../hooks/useWallet'
 import { useWrittenOptions } from '../../../../hooks/useWrittenOptions'
 import useOpenPositions from '../../../../hooks/useOpenPositions'
 import useOptionsMarkets from '../../../../hooks/useOptionsMarkets'
 import { Heading } from '../Heading'
 import { WrittenOptionRow } from './WrittenOptionRow'
+import EmptySvg from '../EmptySvg'
 
 // TODO handle the case where the writer has multiple underlying asset accounts
 export const WrittenOptionsTable = React.memo(() => {
+  const { connected } = useWallet()
+  const theme = useTheme()
   const positions = useOpenPositions()
   const writtenOptions = useWrittenOptions()
   const { markets } = useOptionsMarkets()
   const nowInSeconds = Date.now() / 1000
 
+  // TODO - Add user-configurable sort order
+  // For now just sort by expiration to make sure the expired options are below the active ones
+  const writtenOptionKeys = useMemo(
+    () =>
+      Object.keys(writtenOptions).sort((keyA, keyB) => {
+        const marketA = markets[keyA]
+        const marketB = markets[keyB]
+        return marketB?.expiration - marketA?.expiration
+      }),
+    [writtenOptions, markets],
+  )
+
   return (
-    <>
-      <Heading>Written Options</Heading>
-      <TableContainer>
-        <Table stickyHeader>
-          <TableHead>
-            <TableRow>
-              <TableCell width="5%" />
-              <TableCell width="10%">Asset Pair</TableCell>
-              <TableCell width="9%">Type</TableCell>
-              <TableCell width="10%">Strike</TableCell>
-              <TableCell width="13%">Locked Assets</TableCell>
-              <TableCell width="10%">Contract Size</TableCell>
-              <TableCell width="7%">Written</TableCell>
-              <TableCell width="8%">Available</TableCell>
-              <TableCell width="16%">Expiration</TableCell>
-              <TableCell align="right" width="15%">
-                Action
-              </TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {Object.keys(writtenOptions).map((marketKey) => {
+    <Box
+      w="100%"
+      bgcolor={theme.palette.background.medium}
+      style={{
+        overflowX: 'auto',
+      }}
+    >
+      <Box
+        minWidth="850px"
+        minHeight="514px"
+        display="flex"
+        flexDirection="column"
+      >
+        <Heading>Written Options</Heading>
+        <Box
+          display="flex"
+          flexDirection="row"
+          alignItems="flex-start"
+          bgcolor={theme.palette.background.paper}
+          p={1}
+          fontSize={'14px'}
+        >
+          <Box p={1} pl={2} width="12%">
+            Asset
+          </Box>
+          <Box p={1} width="8%">
+            Type
+          </Box>
+          <Box p={1} width="10%">
+            Strike ($)
+          </Box>
+          <Box p={1} width="10%">
+            Locked Assets
+          </Box>
+          <Box p={1} width="10%">
+            Contract Size
+          </Box>
+          <Box p={1} width="10%">
+            Written
+          </Box>
+          <Box p={1} width="10%">
+            Available
+          </Box>
+          <Box p={1} width="15%">
+            Expiration
+          </Box>
+          <Box p={1} width="15%">
+            Action
+          </Box>
+        </Box>
+        {writtenOptionKeys.length === 0 ? (
+          <Box
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            flexDirection="column"
+            p={3}
+            flexGrow="1"
+          >
+            <EmptySvg />
+            <Box color={theme.palette.border.main}>
+              {connected
+                ? 'You have no written options'
+                : 'Wallet not connected'}
+            </Box>
+          </Box>
+        ) : (
+          <Box>
+            {writtenOptionKeys.map((marketKey) => {
               const market = markets[marketKey]
               const heldContracts = positions[marketKey]
                 ? positions[marketKey].filter((position) => position.amount > 0)
@@ -55,9 +115,9 @@ export const WrittenOptionsTable = React.memo(() => {
                 />
               )
             })}
-          </TableBody>
-        </Table>
-      </TableContainer>
-    </>
+          </Box>
+        )}
+      </Box>
+    </Box>
   )
 })

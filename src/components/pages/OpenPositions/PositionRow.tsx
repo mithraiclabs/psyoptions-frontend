@@ -1,24 +1,21 @@
-import Chip from '@material-ui/core/Chip'
 import React, { useCallback, useState } from 'react'
 import Box from '@material-ui/core/Box'
 import Collapse from '@material-ui/core/Collapse'
-import Table from '@material-ui/core/Table'
-import TableBody from '@material-ui/core/TableBody'
-import TableCell from '@material-ui/core/TableCell'
-import TableRow from '@material-ui/core/TableRow'
 import Tooltip from '@material-ui/core/Tooltip'
+import Avatar from '@material-ui/core/Avatar'
+import Button from '@material-ui/core/Button'
 import KeyboardArrowDown from '@material-ui/icons/KeyboardArrowDown'
-import { makeStyles, withStyles } from '@material-ui/core/styles'
+import { makeStyles, withStyles, useTheme } from '@material-ui/core/styles'
 import * as Sentry from '@sentry/react'
 import BigNumber from 'bignumber.js'
 
 import useExerciseOpenPosition from '../../../hooks/useExerciseOpenPosition'
 import useOwnedTokenAccounts from '../../../hooks/useOwnedTokenAccounts'
 import useNotifications from '../../../hooks/useNotifications'
+import useAssetList from '../../../hooks/useAssetList'
+import { useSerumMarket } from '../../../hooks/Serum'
 import { formatExpirationTimestamp } from '../../../utils/format'
 import { OptionMarket, TokenAccount } from '../../../types'
-import { useSerumMarket, useSerumOrderbook } from '../../../hooks/Serum'
-import { getPriceFromSerumOrderbook } from '../../../utils/orderbook'
 
 const useStyles = makeStyles({
   dropdownOpen: {
@@ -42,26 +39,29 @@ const PositionRow: React.VFC<{
   row: {
     accounts: TokenAccount[]
     assetPair: string
-    uAssetSymbol: string
     expiration: number
     market: OptionMarket
     size: number
     strikePrice: string
-    uAssetMintAddress: string
     qAssetSymbol: string
     qAssetMintAddress: string
+    uAssetSymbol: string
+    uAssetMintAddress: string
     amountPerContract: BigNumber
     quoteAmountPerContract: BigNumber
   }
 }> = ({ row }) => {
   const classes = useStyles()
   const [visible, setVisible] = useState(false)
+  const { supportedAssets } = useAssetList()
   const { ownedTokenAccounts } = useOwnedTokenAccounts()
   const { pushNotification } = useNotifications()
   const serumMarketKey = `${row.market.optionMintKey}-${row?.qAssetMintAddress}`
   useSerumMarket(serumMarketKey)
   const nowInSeconds = Date.now() / 1000
   const expired = row.expiration <= nowInSeconds
+
+  const theme = useTheme()
 
   // const { orderbook } = useSerumOrderbook(serumMarketKey)
   // const price = getPriceFromSerumOrderbook(orderbook)
@@ -115,16 +115,84 @@ const PositionRow: React.VFC<{
     }
   }, [exercise, pushNotification])
 
+  const uAssetSymbol =
+    optionType === 'put' ? row?.qAssetSymbol : row?.uAssetSymbol
+
+  const uAssetImage = supportedAssets.find(
+    (asset) =>
+      asset?.mintAddress ===
+      (optionType === 'put' ? row?.qAssetMintAddress : row?.uAssetMintAddress),
+  )?.icon
+
+  const exerciseTooltipLabel = `${
+    optionType === 'put' ? 'Sell' : 'Purchase'
+  } ${contractSize} ${
+    (optionType === 'put' ? row?.qAssetSymbol : row?.uAssetSymbol) ||
+    'underlying asset'
+  } for ${strike} ${
+    (optionType === 'put' ? row?.uAssetSymbol : row?.qAssetSymbol) ||
+    'quote asset'
+  }`
+
   return (
     <>
-      <TableRow
-        hover
+      <Box
         onClick={onRowClick}
         role="checkbox"
         tabIndex={-1}
         key={row.market.optionMintKey.toString()}
+        display="flex"
+        flexDirection="row"
+        alignItems="center"
+        p={1}
       >
-        <TableCell width="5%">
+        <Box
+          p={1}
+          pl={2}
+          width="12%"
+          display="flex"
+          flexDirection="row"
+          alignItems="center"
+        >
+          <Avatar style={{ width: 24, height: 24 }} src={uAssetImage}>
+            {uAssetSymbol.slice(0, 1)}
+          </Avatar>
+          <Box pl={1}>{uAssetSymbol}</Box>
+        </Box>
+        <Box p={1} width="8%">
+          {optionType}
+        </Box>
+        <Box p={1} width="10%">
+          {strike}
+        </Box>
+        <Box p={1} width="10%">
+          {price ? `$${price.toFixed(2)}` : '-'}
+        </Box>
+        <Box p={1} width="10%">
+          {contractSize}
+        </Box>
+        <Box p={1} width="10%">
+          {row.size}
+        </Box>
+        <Box p={1} width="16%">
+          {formatExpirationTimestamp(row.expiration)}
+        </Box>
+        <Box p={1} width="9%">{`+$0.00`}</Box>
+        <Box p={1} width="10%">
+          {expired && <Box color={theme.palette.error.main}>Expired</Box>}
+          {!expired && (
+            <StyledTooltip title={<Box p={2}>{exerciseTooltipLabel}</Box>}>
+              <Button
+                color="primary"
+                variant="outlined"
+                onClick={handleExercisePosition}
+              >
+                Exercise
+              </Button>
+            </StyledTooltip>
+          )}
+        </Box>
+        <Box width="5%" p={1} pr={2}>
           {row.accounts.length > 1 && (
             <KeyboardArrowDown
               className={
@@ -132,101 +200,55 @@ const PositionRow: React.VFC<{
               }
             />
           )}
-        </TableCell>
-        <TableCell width="10%">{row.assetPair}</TableCell>
-        <TableCell width="10%">{optionType}</TableCell>
-        <TableCell width="10%">{strike}</TableCell>
-        <TableCell width="11%">
-          {price ? `$${price.toFixed(2)}` : '-'}
-        </TableCell>
-        <TableCell width="12%">{contractSize}</TableCell>
-        <TableCell width="12%">{row.size}</TableCell>
-        <TableCell width="15%">
-          {formatExpirationTimestamp(row.expiration)}
-        </TableCell>
-        <TableCell align="right" width="15%">
-          {!expired && (
-            <StyledTooltip
-              title={
-                <Box p={2}>
-                  {`${
-                    optionType === 'put' ? 'Sell' : 'Purchase'
-                  } ${contractSize} ${
-                    row?.uAssetSymbol || 'underlying asset'
-                  } for ${strike} ${row?.qAssetSymbol || 'quote asset'}`}
+        </Box>
+      </Box>
+      <Box key={`${row.market.optionMintKey}Collapsible`}>
+        <Collapse in={visible} timeout="auto" unmountOnExit>
+          <Box>
+            {row.accounts.map((account) => (
+              <Box
+                key={`${account?.pubKey}`}
+                display="flex"
+                flexDirection="row"
+                alignItems="center"
+                p={1}
+              >
+                <Box p={1} pl={2} width="12%" />
+                <Box p={1} width="8%" />
+                <Box p={1} width="10%" />
+                <Box p={1} width="10%" />
+                <Box p={1} width="10%">
+                  {contractSize}
                 </Box>
-              }
-            >
-              <Chip
-                clickable
-                size="small"
-                label="Exercise"
-                color="primary"
-                variant="outlined"
-                onClick={handleExercisePosition}
-              />
-            </StyledTooltip>
-          )}
-        </TableCell>
-      </TableRow>
-      <TableRow key={`${row.market.optionMintKey}Collapsible`}>
-        <TableCell
-          style={{ borderWidth: 0, padding: 0, margin: 0 }}
-          colSpan={7}
-        >
-          <Collapse in={visible} timeout="auto" unmountOnExit>
-            <Table>
-              <TableBody>
-                {row.accounts.map((account) => (
-                  <TableRow
-                    key={account.pubKey.toString()}
-                    hover
-                    role="checkbox"
-                    tabIndex={-1}
-                  >
-                    <TableCell width="5%" />
-                    <TableCell width="10%" />
-                    <TableCell width="10%" />
-                    <TableCell width="10%">{strike}</TableCell>
-                    <TableCell width="11%" />
-                    <TableCell width="12%" />
-                    <TableCell width="12%">{account.amount}</TableCell>
-                    <TableCell width="15%">
-                      {formatExpirationTimestamp(row.expiration)}
-                    </TableCell>
-                    <TableCell align="right" width="15%">
-                      {!expired && (
-                        <StyledTooltip
-                          title={
-                            <Box p={2}>
-                              {`${
-                                optionType === 'put' ? 'Sell' : 'Purchase'
-                              } ${contractSize} ${
-                                row?.uAssetSymbol || 'underlying asset'
-                              } for ${strike} ${
-                                row?.qAssetSymbol || 'quote asset'
-                              }`}
-                            </Box>
-                          }
-                        >
-                          <Chip
-                            clickable
-                            size="small"
-                            label="Exercise"
-                            color="primary"
-                            variant="outlined"
-                            onClick={handleExercisePosition}
-                          />
-                        </StyledTooltip>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </Collapse>
-        </TableCell>
-      </TableRow>
+                <Box p={1} width="10%">
+                  {account.amount}
+                </Box>
+                <Box p={1} width="16%" />
+                <Box p={1} width="9%">{`+$0.00`}</Box>
+                <Box p={1} width="10%">
+                  {expired && (
+                    <Box color={theme.palette.error.main}>Expired</Box>
+                  )}
+                  {!expired && (
+                    <StyledTooltip
+                      title={<Box p={2}>{exerciseTooltipLabel}</Box>}
+                    >
+                      <Button
+                        color="primary"
+                        variant="outlined"
+                        onClick={handleExercisePosition}
+                      >
+                        Exercise
+                      </Button>
+                    </StyledTooltip>
+                  )}
+                </Box>
+                <Box width="5%" p={1} pr={2} />
+              </Box>
+            ))}
+          </Box>
+        </Collapse>
+      </Box>
     </>
   )
 }

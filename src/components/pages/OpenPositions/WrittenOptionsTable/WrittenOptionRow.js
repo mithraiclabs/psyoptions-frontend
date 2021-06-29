@@ -227,14 +227,21 @@ export const WrittenOptionRow = React.memo(
                 </Box>
               }
             >
-              <Button
-                color="primary"
-                variant="outlined"
-                onClick={exchangeWriterTokenForQuote}
-                style={{ marginLeft: holdsContracts ? 8 : 0 }}
+              <Box
+                display="flex"
+                alignItems="center"
+                justifyContent="flex-start"
+                p={1}
               >
-                Claim Quote
-              </Button>
+                <Button
+                  color="primary"
+                  variant="outlined"
+                  onClick={exchangeWriterTokenForQuote}
+                  style={{ marginLeft: holdsContracts ? 8 : 0 }}
+                >
+                  Claim Quote
+                </Button>
+              </Box>
             </StyledTooltip>
           )}
         </Box>

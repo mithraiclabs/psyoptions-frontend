@@ -111,7 +111,7 @@ const OpenPositions = () => {
             }}
           >
             <Box
-              minWidth="850px"
+              minWidth="880px"
               minHeight="514px"
               display="flex"
               flexDirection="column"

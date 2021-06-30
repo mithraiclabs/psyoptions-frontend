@@ -145,20 +145,11 @@ export const WrittenOptionRow = React.memo(
                 <Button
                   color="primary"
                   variant="outlined"
-                  onClick={() => closeOptionPostExpiration(1)}
-                >
-                  Close One
-                </Button>
-              </Box>
-              <Box p={1}>
-                <Button
-                  color="primary"
-                  variant="outlined"
                   onClick={() => {
                     closeOptionPostExpiration(initialWriterTokenAccount.amount)
                   }}
                 >
-                  Close All
+                  Close
                 </Button>
               </Box>
             </Box>

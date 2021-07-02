@@ -13,7 +13,7 @@ import { useSolanaMeta } from '../context/SolanaMetaContext'
 import useConnection from './useConnection'
 import useWallet from './useWallet'
 import { createMissingAccountsAndMint } from '../utils/instructions/index'
-import { useCreateAdHocOpenOrdersSubscription } from './Serum'
+import { useCreateAdHocOpenOrdersSubscription, useSettleFunds } from './Serum'
 
 // Solana has a maximum packet size when sending a transaction.
 // As of writing 25 mints is a good round number that won't
@@ -30,6 +30,7 @@ type PlaceSellOrderArgs = {
   uAssetTokenAccount: TokenAccount
   mintedOptionDestinationKey?: PublicKey
   writerTokenDestinationKey?: PublicKey
+  settleFunds?: boolean
 }
 
 const usePlaceSellOrder = (
@@ -43,6 +44,7 @@ const usePlaceSellOrder = (
   const { sendSignedTransaction } = useSendTransaction()
   const createAdHocOpenOrdersSub =
     useCreateAdHocOpenOrdersSubscription(serumKey)
+  const { makeSettleFundsTx } = useSettleFunds(serumKey)
 
   return useCallback(
     async ({
@@ -54,6 +56,7 @@ const usePlaceSellOrder = (
       uAssetTokenAccount,
       mintedOptionDestinationKey,
       writerTokenDestinationKey,
+      settleFunds,
     }: PlaceSellOrderArgs) => {
       try {
         const mintTXs = []
@@ -189,10 +192,15 @@ const usePlaceSellOrder = (
           placeOrderTx.partialSign(...placeOrderSigners)
         }
 
-        const signed = await wallet.signAllTransactions([
-          ...mintTXs,
-          placeOrderTx,
-        ])
+        const settleFundsTx = settleFunds ? await makeSettleFundsTx() : null
+
+        const signed = await wallet.signAllTransactions(
+          settleFunds
+            ? [...mintTXs, placeOrderTx, settleFundsTx]
+            : [...mintTXs, placeOrderTx],
+        )
+
+        const signedSettleFundsTx = settleFunds ? signed.pop() : null
 
         /* If the user did not have an OptionToken or WriterToken account then we need to pull the 
         first TX out of the iteration so we can guarantee the accounts are created and initialized 
@@ -242,6 +250,15 @@ const usePlaceSellOrder = (
             numberOfContractsToMint > 1 ? 's' : ''
           }`,
         })
+
+        if (settleFunds) {
+          await sendSignedTransaction({
+            signedTransaction: signedSettleFundsTx,
+            connection,
+            sendingMessage: `Processing: Settle funds`,
+            successMessage: `Confirmed: Settle funds`,
+          })
+        }
       } catch (err) {
         pushErrorNotification(err)
       }
@@ -256,6 +273,7 @@ const usePlaceSellOrder = (
       splTokenAccountRentBalance,
       subscribeToTokenAccount,
       wallet,
+      makeSettleFundsTx,
     ],
   )
 }

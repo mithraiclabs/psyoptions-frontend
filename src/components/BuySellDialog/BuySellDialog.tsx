@@ -238,6 +238,7 @@ const BuySellDialog: React.VFC<{
       await placeSellOrder({
         numberOfContractsToMint: numberOfContracts,
         serumMarket: serum,
+        settleFunds: true,
         orderArgs: {
           owner: pubKey,
           // For Serum, the payer is really the account of the asset being sold
@@ -302,6 +303,7 @@ const BuySellDialog: React.VFC<{
         optionMarket,
         serumMarket: serum,
         optionDestinationKey: optionTokenKey,
+        settleFunds: true,
         orderArgs: {
           owner: pubKey,
           // For Serum, the payer is really the account of the asset being sold
@@ -581,7 +583,9 @@ const BuySellDialog: React.VFC<{
                   <UnsettledFunds
                     qAssetSymbol={type === 'call' ? qAssetSymbol : uAssetSymbol}
                     serumKey={serumKey}
-                    qAssetDecimals={type === 'call' ? qAssetDecimals : uAssetDecimals}
+                    qAssetDecimals={
+                      type === 'call' ? qAssetDecimals : uAssetDecimals
+                    }
                   />
                 </>
               ) : !connected ? (

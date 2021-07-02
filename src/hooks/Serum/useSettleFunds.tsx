@@ -1,4 +1,4 @@
-import { Market } from '@mithraic-labs/serum'
+import { Market, OpenOrders } from '@mithraic-labs/serum'
 import { PublicKey, Transaction } from '@solana/web3.js'
 import { useCallback } from 'react'
 import { createAssociatedTokenAccountInstruction } from '../../utils/instructions'
@@ -18,7 +18,9 @@ import useAssetList from '../useAssetList'
 export const useSettleFunds = (
   key: string,
 ): {
-  makeSettleFundsTx: () => Promise<Transaction>
+  makeSettleFundsTx: (
+    openOrdersAccountFallback?: OpenOrders,
+  ) => Promise<Transaction>
   settleFunds: () => Promise<void>
 } => {
   const { pushErrorNotification } = useNotifications()
@@ -37,80 +39,86 @@ export const useSettleFunds = (
   const { pubKey: baseTokenAccountKey } = getHighestAccount(baseTokenAccounts)
   const { pubKey: quoteTokenAccountKey } = getHighestAccount(quoteTokenAccounts)
 
-  const makeSettleFundsTx = useCallback(async (): Promise<
-    Transaction | undefined
-  > => {
-    const market = serumMarket?.market as Market | undefined
-    if (openOrders.length && market) {
-      const transaction = new Transaction()
-      let signers = []
-      let _baseTokenAccountKey = baseTokenAccountKey
-      let _quoteTokenAccountKey = quoteTokenAccountKey
+  const makeSettleFundsTx = useCallback(
+    async (
+      /**
+       * A specific open orders account fallback can be passed in, it will only be used if one doesn't exist on-chain already
+       */
+      openOrdersAccountFallback?: OpenOrders,
+    ): Promise<Transaction | undefined> => {
+      const market = serumMarket?.market as Market | undefined
+      if (market) {
+        const transaction = new Transaction()
+        let signers = []
+        let _baseTokenAccountKey = baseTokenAccountKey
+        let _quoteTokenAccountKey = quoteTokenAccountKey
 
-      if (!_baseTokenAccountKey) {
-        // Create a SPL Token account for this base account if the wallet doesn't have one
-        const [createOptAccountTx, newTokenAccountKey] =
-          await createAssociatedTokenAccountInstruction({
-            payer: pubKey,
-            owner: pubKey,
-            mintPublicKey: new PublicKey(baseMintAddress),
-          })
+        if (!_baseTokenAccountKey) {
+          // Create a SPL Token account for this base account if the wallet doesn't have one
+          const [createOptAccountTx, newTokenAccountKey] =
+            await createAssociatedTokenAccountInstruction({
+              payer: pubKey,
+              owner: pubKey,
+              mintPublicKey: new PublicKey(baseMintAddress),
+            })
 
-        transaction.add(createOptAccountTx)
-        _baseTokenAccountKey = newTokenAccountKey
-        subscribeToTokenAccount(newTokenAccountKey)
+          transaction.add(createOptAccountTx)
+          _baseTokenAccountKey = newTokenAccountKey
+          subscribeToTokenAccount(newTokenAccountKey)
+        }
+
+        if (!quoteTokenAccountKey) {
+          // Create a SPL Token account for this quote account if the wallet doesn't have one
+          const [createOptAccountTx, newTokenAccountKey] =
+            await createAssociatedTokenAccountInstruction({
+              payer: pubKey,
+              owner: pubKey,
+              mintPublicKey: new PublicKey(quoteMintAddress),
+            })
+
+          transaction.add(createOptAccountTx)
+          _quoteTokenAccountKey = newTokenAccountKey
+          subscribeToTokenAccount(newTokenAccountKey)
+        }
+
+        const { transaction: settleTx, signers: settleSigners } =
+          await market.makeSettleFundsTransaction(
+            connection,
+            openOrders[0] || openOrdersAccountFallback,
+            _baseTokenAccountKey,
+            _quoteTokenAccountKey,
+            market.quoteMintAddress.equals(USDCPublicKey) &&
+              process.env.USDC_SERUM_REFERRER_ADDRESS
+              ? new PublicKey(process.env.USDC_SERUM_REFERRER_ADDRESS)
+              : undefined,
+          )
+        transaction.add(settleTx)
+        signers = [...signers, ...settleSigners]
+
+        transaction.feePayer = pubKey
+        const { blockhash } = await connection.getRecentBlockhash()
+        transaction.recentBlockhash = blockhash
+
+        if (signers.length) {
+          transaction.partialSign(...signers)
+        }
+        return transaction
       }
-
-      if (!quoteTokenAccountKey) {
-        // Create a SPL Token account for this quote account if the wallet doesn't have one
-        const [createOptAccountTx, newTokenAccountKey] =
-          await createAssociatedTokenAccountInstruction({
-            payer: pubKey,
-            owner: pubKey,
-            mintPublicKey: new PublicKey(quoteMintAddress),
-          })
-
-        transaction.add(createOptAccountTx)
-        _quoteTokenAccountKey = newTokenAccountKey
-        subscribeToTokenAccount(newTokenAccountKey)
-      }
-
-      const { transaction: settleTx, signers: settleSigners } =
-        await market.makeSettleFundsTransaction(
-          connection,
-          openOrders[0],
-          _baseTokenAccountKey,
-          _quoteTokenAccountKey,
-          market.quoteMintAddress.equals(USDCPublicKey) &&
-            process.env.USDC_SERUM_REFERRER_ADDRESS
-            ? new PublicKey(process.env.USDC_SERUM_REFERRER_ADDRESS)
-            : undefined,
-        )
-      transaction.add(settleTx)
-      signers = [...signers, ...settleSigners]
-
-      transaction.feePayer = pubKey
-      const { blockhash } = await connection.getRecentBlockhash()
-      transaction.recentBlockhash = blockhash
-
-      if (signers.length) {
-        transaction.partialSign(...signers)
-      }
-      return transaction
-    }
-    return undefined
-  }, [
-    serumMarket?.market,
-    openOrders,
-    baseTokenAccountKey,
-    quoteTokenAccountKey,
-    connection,
-    USDCPublicKey,
-    pubKey,
-    baseMintAddress,
-    subscribeToTokenAccount,
-    quoteMintAddress,
-  ])
+      return undefined
+    },
+    [
+      serumMarket?.market,
+      openOrders,
+      baseTokenAccountKey,
+      quoteTokenAccountKey,
+      connection,
+      USDCPublicKey,
+      pubKey,
+      baseMintAddress,
+      subscribeToTokenAccount,
+      quoteMintAddress,
+    ],
+  )
 
   const settleFunds = useCallback(async () => {
     try {

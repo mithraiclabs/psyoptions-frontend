@@ -147,5 +147,7 @@ const port = process.env.PORT || 3000
 server.listen(port, () => {
   if (process.env.NODE_ENV === 'development') {
     console.log(`\nServer listening at http://localhost:${port}/\n`)
+  } else {
+    console.log(`\nServer listening on port: ${port}\n`)
   }
 })

@@ -1,0 +1,295 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: The CloudFormation template for the CodePipeline.
+
+Parameters:
+  Stage:
+    Type: String
+    Default: staging
+  GithubBranch:
+    Type: String
+    Default: <BRANCH>
+  ContainerPort:
+    Type: Number
+    Default: 8080
+  CodeStarGithubConnectionArn:
+    Type: String
+  FullRepositoryId:
+    Description: GitHub organization / repository name
+    Type: String
+    Default: mithraiclabs/psyoptions-frontend
+  AwsRegion:
+    Type: String
+    Default: us-east-1
+  SecretsArn:
+    Description: The ARN of the AWS Secrets Manager storing API keys or other sensitive information needed for the build
+    Type: String
+  KmsArn:
+    Description: The ARN of the Key in Key Manager that's used to decrypt secrets
+    Type: String
+  HostedZoneId:
+    Description: The ID of the Hosted zone where the DNS record sets should be created
+    Type: String
+  DomainName:
+    Description: The fully qualified domain name the DNS record sets belong to
+    Type: String
+    Default: staging.psyoptions.io
+  DomainCertificateArn:
+    Description: The ARN of the SSL/TLS certificate to use for the secure load balancer listener
+    Type: String
+Resources:
+  # Create an ECR Repository to store docker images
+  ECRRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName:
+        !Join ['-', [!Ref Stage, !Ref 'AWS::AccountId', 'ecr-repository']]
+
+  # Create an S3 Bucket to store build artifacts
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Join ['-', [!Ref Stage, !Ref 'AWS::AccountId', 's3bucket']]
+
+  # Create Access Role for CodePipeLine
+  CodePipeLineExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: codepipeline.amazonaws.com
+            Action: 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/AdministratorAccess'
+      Policies:
+        - PolicyName:
+            !Join ['-', [!Ref Stage, !Ref 'AWS::AccountId', 'Pipeline-Role']]
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'codebuild:BatchGetBuilds'
+                  - 'codebuild:StartBuild'
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - 'iam:PassRole'
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - 'ec2:*'
+                  - 'elasticloadbalancing:*'
+                  - 'cloudwatch:*'
+                  - 's3:*'
+                  - 'sns:*'
+                  - 'cloudformation:*'
+                  - 'ecs:*'
+                Resource: '*'
+
+  # Create Access Role for CodeBuild
+  CodeBuildExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          Effect: Allow
+          Principal:
+            Service: codebuild.amazonaws.com
+          Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/CloudWatchLogsFullAccess
+      Policies:
+        - PolicyName: !Join ['-', [!Ref Stage, !Ref 'AWS::AccountId', 'CB-ECR']]
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'ecr:BatchCheckLayerAvailability'
+                  - 'ecr:CompleteLayerUpload'
+                  - 'ecr:GetAuthorizationToken'
+                  - 'ecr:InitiateLayerUpload'
+                  - 'ecr:PutImage'
+                  - 'ecr:UploadLayerPart'
+                  - 'ecr:BatchGetImage'
+                  - 'ecr:GetDownloadUrlForLayer'
+                Resource: '*'
+        - PolicyName:
+            !Join ['-', [!Ref Stage, !Ref 'AWS::AccountId', 'CB-Resources']]
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'kms:Decrypt'
+                  - 'secretsmanager:GetSecretValue'
+                  - 's3:*'
+                Resource:
+                  - !Ref SecretsArn
+                  - !Ref KmsArn
+                  - !Join ['', [!GetAtt S3Bucket.Arn, '/*']]
+
+  # Create Access Role for Cloudformation
+  CloudformationExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: cloudformation.amazonaws.com
+            Action: 'sts:AssumeRole'
+      Policies:
+        - PolicyName:
+            !Join [
+              '-',
+              [!Ref Stage, !Ref 'AWS::AccountId', 'FargateCloudFormation'],
+            ]
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'cloudformation:CreateStack'
+                  - 'cloudformation:DescribeStacks'
+                  - 'cloudformation:DeleteStack'
+                  - 'cloudformation:DescribeStackEvents'
+                  - 'cloudformation:UpdateStack'
+                  - 'ec2:*'
+                  - 'ecs:*'
+                  - 'elb:*'
+                  - 'elasticloadbalancing:*'
+                  - 'iam:AttachRolePolicy'
+                  - 'iam:DetachRolePolicy'
+                  - 'iam:GetRole'
+                  - 'iam:CreateRole'
+                  - 'iam:DeleteRole'
+                  - 'iam:PassRole'
+                  - 'logs:CreateLogGroup'
+                  - 'logs:DeleteLogGroup'
+                  - 'logs:PutRetentionPolicy'
+                  - 'route53:*'
+                Resource: '*'
+
+  # Create the BuildProject with required Build information
+  BuildProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/standard:4.0
+        ImagePullCredentialsType: CODEBUILD
+        PrivilegedMode: True
+        Type: LINUX_CONTAINER
+        EnvironmentVariables:
+          - Name: ECR_REPOSITORY_URI
+            Value:
+              !Join [
+                '.',
+                [
+                  !Ref 'AWS::AccountId',
+                  'dkr.ecr',
+                  !Ref 'AWS::Region',
+                  !Join ['/', ['amazonaws.com', !Ref 'ECRRepository']],
+                ],
+              ]
+          - Name: SecretsArn
+            Value: !Ref SecretsArn
+          - Name: KmsArn
+            Value: !Ref KmsArn
+      Name: !Join ['-', [!Ref Stage, !Ref 'AWS::AccountId', 'BuildProject']]
+      ServiceRole: !Ref CodeBuildExecutionRole
+      Source:
+        Type: CODEPIPELINE
+        # This file (buildspec.yml In Source code) contains commands to Create and Push a docker image to the ECR_REPOSITORY_URI
+        BuildSpec: buildspec.yml
+
+  # Create CodePipeline with 3 stages (Source, Build and Deploy)
+  CodePipeLine:
+    Type: AWS::CodePipeline::Pipeline
+    DependsOn: S3Bucket
+    Properties:
+      ArtifactStore:
+        Location: !Join ['-', [!Ref Stage, !Ref 'AWS::AccountId', 's3bucket']]
+        Type: S3
+      Name: !Join ['-', [!Ref Stage, !Ref 'AWS::AccountId', 'CodePipeLine']]
+      RestartExecutionOnUpdate: False
+      RoleArn:
+        Fn::GetAtt: [CodePipeLineExecutionRole, Arn]
+
+      Stages:
+        # Download source code from Github Repo to source-output-artifacts path in S3 Bucket
+        - Name: Source
+          Actions:
+            - Name: SourceAction
+              ActionTypeId:
+                Category: Source
+                Owner: AWS
+                Version: 1
+                Provider: CodeStarSourceConnection
+              OutputArtifacts:
+                - Name: source-output-artifacts
+              Configuration:
+                ConnectionArn: !Ref CodeStarGithubConnectionArn
+                FullRepositoryId: !Ref FullRepositoryId
+                BranchName: !Ref GithubBranch
+                DetectChanges: true
+                OutputArtifactFormat: 'CODE_ZIP'
+              Region: !Ref AwsRegion
+              RunOrder: 1
+
+        # Build the project using the BuildProject and Output build artifacts to build-output-artifacts path in S3 Bucket
+        - Name: Build
+          Actions:
+            - Name: Build
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Version: 1
+                Provider: CodeBuild
+              OutputArtifacts:
+                - Name: build-output-artifacts
+              InputArtifacts:
+                - Name: source-output-artifacts
+              Configuration:
+                ProjectName: !Ref BuildProject
+              RunOrder: 1
+
+        # Deploy the project by executing Fargate-Cluster.yml file in the Source code with Cloudformation.
+        - Name: Deploy
+          Actions:
+            - Name: Deploy
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Version: 1
+                Provider: CloudFormation
+              InputArtifacts:
+                - Name: source-output-artifacts
+                - Name: build-output-artifacts
+              Configuration:
+                ActionMode: CREATE_UPDATE
+                Capabilities: CAPABILITY_NAMED_IAM
+                # Pass parameter values to Fargate-Cluster.yml for deployment
+                ParameterOverrides: !Sub |
+                  {
+                    "ImageURI" : { "Fn::GetParam" : ["build-output-artifacts", "imagedefinitions.json", "ImageURI"] },
+                    "Stage":  "${Stage}",
+                    "ContainerPort": "${ContainerPort}",
+                    "HostedZoneId": "${HostedZoneId}",
+                    "DomainName": "${DomainName}",
+                    "DomainCertificateArn": "${DomainCertificateArn}"
+                  }
+                RoleArn:
+                  Fn::GetAtt: [CloudformationExecutionRole, Arn]
+                StackName:
+                  !Join [
+                    '-',
+                    [!Ref Stage, !Ref 'AWS::AccountId', 'FargateECSCluster'],
+                  ]
+                TemplatePath: source-output-artifacts::Cloudformation/Fargate-Cluster.yml
+              RunOrder: 1

@@ -1,4 +1,4 @@
-import { PublicKey, Transaction, Keypair } from '@solana/web3.js'
+import { PublicKey, Transaction, Account } from '@solana/web3.js'
 import { useCallback } from 'react'
 import { OrderParams, OpenOrders } from '@mithraic-labs/serum/lib/market'
 import { OptionMarket } from '../types'
@@ -50,22 +50,30 @@ const usePlaceBuyOrder = (
         // Manually create open orders account tx if one doesn't exist for this serum market
         let newOpenOrdersAccount
         let newOpenOrdersAccountKeypair
-        let newOpenOrdersAccountTx
+        let newOpenOrdersAccountIx
         if (!openOrders[0]) {
-          newOpenOrdersAccountKeypair = new Keypair()
+          console.log('making open orders account tx')
+          newOpenOrdersAccountKeypair = new Account()
           newOpenOrdersAccount = new OpenOrders(
             newOpenOrdersAccountKeypair.publicKey,
-            null,
+            {
+              accountFlags: {},
+              market: serumMarket.marketAddress,
+              owner: pubKey,
+            },
             dexProgramId,
           )
-          newOpenOrdersAccountTx = OpenOrders.makeCreateAccountTransaction(
-            connection,
-            serumMarket.marketAddress,
-            pubKey,
-            newOpenOrdersAccount, // create this
-            dexProgramId,
-          )
-          txes.push(newOpenOrdersAccountTx)
+          newOpenOrdersAccountIx =
+            await OpenOrders.makeCreateAccountTransaction(
+              connection,
+              serumMarket.marketAddress,
+              pubKey,
+              newOpenOrdersAccount, // create this
+              dexProgramId,
+            )
+          console.log('done')
+        } else {
+          console.log('open orders account exists')
         }
 
         const placeBuyOrderTx = new Transaction()
@@ -84,21 +92,46 @@ const usePlaceBuyOrder = (
           placeBuyOrderTx.add(createOptAccountIx)
           subscribeToTokenAccount(newPublicKey)
         }
+
+        const fullOrderArgs = { ...orderArgs }
+
+        if (newOpenOrdersAccountIx) {
+          // Add the open orders account specifically
+          placeBuyOrderTx.add(newOpenOrdersAccountIx)
+          fullOrderArgs.openOrdersAddressKey =
+            newOpenOrdersAccountKeypair.publicKey
+        }
+
         // place the buy order
         const {
           createdOpenOrdersKey,
           transaction: placeOrderTx,
           signers: placeOrderSigners,
-        } = await serumMarket.market.makePlaceOrderTransaction(connection, {
-          ...orderArgs,
-          openOrdersAddressKey: newOpenOrdersAccountKeypair?.publicKey,
-        })
+        } = await serumMarket.market.makePlaceOrderTransaction(
+          connection,
+          fullOrderArgs,
+        )
 
         placeBuyOrderTx.add(placeOrderTx)
         signers = [...signers, ...placeOrderSigners]
 
+        // if (newOpenOrdersAccountIx) {
+        //   signers.push(newOpenOrdersAccountKeypair)
+        // }
+
         if (createdOpenOrdersKey) {
           createAdHocOpenOrdersSub(createdOpenOrdersKey)
+        } else if (newOpenOrdersAccountKeypair?.publicKey) {
+          createAdHocOpenOrdersSub(newOpenOrdersAccountKeypair?.publicKey)
+        }
+
+        const { blockhash } = await connection.getRecentBlockhash()
+        placeBuyOrderTx.recentBlockhash = blockhash
+        placeBuyOrderTx.feePayer = pubKey
+        console.log(signers)
+
+        if (signers && signers.length > 0) {
+          placeBuyOrderTx.partialSign(...signers)
         }
 
         txes.push(placeBuyOrderTx)
@@ -109,6 +142,8 @@ const usePlaceBuyOrder = (
             : await makeSettleFundsTx(newOpenOrdersAccount)
           txes.push(settleFundsTx)
         }
+
+        console.log(txes)
 
         const signed = await wallet.signAllTransactions(txes)
         console.log('signed')

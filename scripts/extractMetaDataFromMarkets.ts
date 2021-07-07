@@ -5,6 +5,9 @@ import { Market as SerumMarket } from '@mithraic-labs/serum'
 
 const fs = require('fs')
 
+const wait = (delayMS: number) =>
+  new Promise((resolve) => setTimeout(resolve, delayMS))
+
 const OPTION_PROGRAM_ID = new PublicKey(
   'GDvqQy3FkDB2wyNwgZGp5YkmRMUmWbhNNWDMYKbLSZ5N',
 )
@@ -14,7 +17,7 @@ const DEX_PROGRAM_ID = new PublicKey(
 )
 
 ;(async () => {
-  const connection = new Connection('https://devnet.solana.com')
+  const connection = new Connection('https://api.devnet.solana.com')
 
   const solanaConfig = getSolanaConfig()
   const keyBuffer = fs.readFileSync(solanaConfig.keypair_path)
@@ -34,52 +37,55 @@ const DEX_PROGRAM_ID = new PublicKey(
   )
 
   const marketMetaData = []
-  await Promise.all(
-    res.map(async (market) => {
-      try {
-        const underlyingAssetMint =
-          market.marketData.underlyingAssetMintKey.toString()
-        const quoteAssetMint = market.marketData.quoteAssetMintKey.toString()
-        let quoteAssetSymbol, underlyingAssetSymbol
-        if (quoteAssetMint === devnetBTCKey.toString()) {
-          quoteAssetSymbol = 'BTC'
-        } else if (quoteAssetMint === devnetUSDCKey.toString()) {
-          quoteAssetSymbol = 'USDC'
-        }
-        if (underlyingAssetMint === devnetBTCKey.toString()) {
-          underlyingAssetSymbol = 'BTC'
-        } else if (underlyingAssetMint === devnetUSDCKey.toString()) {
-          underlyingAssetSymbol = 'USDC'
-        }
-
-        const serumMarketMeta = await SerumMarket.findAccountsByMints(
-          connection,
-          market.marketData.optionMintKey,
-          devnetUSDCKey,
-          DEX_PROGRAM_ID,
-        )
-
-        marketMetaData.push({
-          expiration: market.marketData.expiration,
-          optionMarketAddress: market.marketData.optionMarketKey.toString(),
-          optionContractMintAddress: market.marketData.optionMintKey.toString(),
-          optionWriterTokenMintAddress:
-            market.marketData.writerTokenMintKey.toString(),
-          quoteAssetMint,
-          quoteAssetSymbol,
-          underlyingAssetMint,
-          underlyingAssetSymbol,
-          underlyingAssetPerContract:
-            market.marketData.amountPerContract.toString(),
-          quoteAssetPerContract:
-            market.marketData.quoteAmountPerContract.toString(),
-          serumMarketAddress: serumMarketMeta[0].publicKey.toString(),
-        })
-      } catch (error) {
-        console.log(`ERROR: for market ${market.pubkey.toString()}\n`, error)
+  const starterPromise = Promise.resolve(null)
+  await res.reduce(async (accumulator, market) => {
+    await accumulator
+    // Avoid RPC node limits
+    await wait(1000)
+    try {
+      const underlyingAssetMint =
+        market.marketData.underlyingAssetMintKey.toString()
+      const quoteAssetMint = market.marketData.quoteAssetMintKey.toString()
+      let quoteAssetSymbol, underlyingAssetSymbol
+      if (quoteAssetMint === devnetBTCKey.toString()) {
+        quoteAssetSymbol = 'BTC'
+      } else if (quoteAssetMint === devnetUSDCKey.toString()) {
+        quoteAssetSymbol = 'USDC'
       }
-    }),
-  )
+      if (underlyingAssetMint === devnetBTCKey.toString()) {
+        underlyingAssetSymbol = 'BTC'
+      } else if (underlyingAssetMint === devnetUSDCKey.toString()) {
+        underlyingAssetSymbol = 'USDC'
+      }
+
+      const serumMarketMeta = await SerumMarket.findAccountsByMints(
+        connection,
+        market.marketData.optionMintKey,
+        devnetUSDCKey,
+        DEX_PROGRAM_ID,
+      )
+
+      marketMetaData.push({
+        expiration: market.marketData.expiration,
+        optionMarketAddress: market.marketData.optionMarketKey.toString(),
+        optionContractMintAddress: market.marketData.optionMintKey.toString(),
+        optionWriterTokenMintAddress:
+          market.marketData.writerTokenMintKey.toString(),
+        quoteAssetMint,
+        quoteAssetSymbol,
+        underlyingAssetMint,
+        underlyingAssetSymbol,
+        underlyingAssetPerContract:
+          market.marketData.amountPerContract.toString(),
+        quoteAssetPerContract:
+          market.marketData.quoteAmountPerContract.toString(),
+        serumMarketAddress: serumMarketMeta[0].publicKey.toString(),
+      })
+    } catch (error) {
+      console.log(`ERROR: for market ${market.pubkey.toString()}\n`, error)
+    }
+    return null
+  }, starterPromise)
 
   const outputFile = 'marketMeta.json'
   fs.writeFile(outputFile, JSON.stringify(marketMetaData), (err) => {

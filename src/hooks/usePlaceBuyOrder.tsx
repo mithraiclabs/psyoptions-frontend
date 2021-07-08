@@ -1,6 +1,7 @@
 import { PublicKey, Transaction, Account } from '@solana/web3.js'
 import { useCallback } from 'react'
-import { OrderParams, OpenOrders } from '@mithraic-labs/serum/lib/market'
+import BN from 'bn.js'
+import { OpenOrders, OrderParams } from '@mithraic-labs/serum/lib/market'
 import { OptionMarket } from '../types'
 import { createAssociatedTokenAccountInstruction } from '../utils/instructions/token'
 import useWallet from './useWallet'
@@ -46,39 +47,22 @@ const usePlaceBuyOrder = (
     }: PlaceBuyOrderArgs) => {
       try {
         const txes = []
-
-        // Manually create open orders account tx if one doesn't exist for this serum market
+        const fullOrderArgs = { ...orderArgs }
+        const placeBuyOrderTx = new Transaction()
+        const _optionDestinationKey = optionDestinationKey
+        let signers = []
         let newOpenOrdersAccount
-        let newOpenOrdersAccountKeypair
-        let newOpenOrdersAccountIx
+
+        // Manually create open orders account if one doesn't exist for this market/wallet combo
         if (!openOrders[0]) {
-          console.log('making open orders account tx')
-          newOpenOrdersAccountKeypair = new Account()
-          newOpenOrdersAccount = new OpenOrders(
-            newOpenOrdersAccountKeypair.publicKey,
-            {
-              accountFlags: {},
-              market: serumMarket.marketAddress,
-              owner: pubKey,
-            },
-            dexProgramId,
+          newOpenOrdersAccount = new Account()
+          fullOrderArgs.openOrdersAccount = newOpenOrdersAccount
+          console.log(
+            `making open orders account: ${newOpenOrdersAccount.publicKey}`,
           )
-          newOpenOrdersAccountIx =
-            await OpenOrders.makeCreateAccountTransaction(
-              connection,
-              serumMarket.marketAddress,
-              pubKey,
-              newOpenOrdersAccount, // create this
-              dexProgramId,
-            )
-          console.log('done')
         } else {
           console.log('open orders account exists')
         }
-
-        const placeBuyOrderTx = new Transaction()
-        let signers = []
-        const _optionDestinationKey = optionDestinationKey
 
         if (!_optionDestinationKey) {
           // Create a SPL Token account for this option market if the wallet doesn't have one
@@ -88,18 +72,8 @@ const usePlaceBuyOrder = (
               owner: pubKey,
               mintPublicKey: optionMarket.optionMintKey,
             })
-
           placeBuyOrderTx.add(createOptAccountIx)
           subscribeToTokenAccount(newPublicKey)
-        }
-
-        const fullOrderArgs = { ...orderArgs }
-
-        if (newOpenOrdersAccountIx) {
-          // Add the open orders account specifically
-          placeBuyOrderTx.add(newOpenOrdersAccountIx)
-          fullOrderArgs.openOrdersAddressKey =
-            newOpenOrdersAccountKeypair.publicKey
         }
 
         // place the buy order
@@ -115,20 +89,13 @@ const usePlaceBuyOrder = (
         placeBuyOrderTx.add(placeOrderTx)
         signers = [...signers, ...placeOrderSigners]
 
-        // if (newOpenOrdersAccountIx) {
-        //   signers.push(newOpenOrdersAccountKeypair)
-        // }
-
         if (createdOpenOrdersKey) {
           createAdHocOpenOrdersSub(createdOpenOrdersKey)
-        } else if (newOpenOrdersAccountKeypair?.publicKey) {
-          createAdHocOpenOrdersSub(newOpenOrdersAccountKeypair?.publicKey)
         }
 
         const { blockhash } = await connection.getRecentBlockhash()
         placeBuyOrderTx.recentBlockhash = blockhash
         placeBuyOrderTx.feePayer = pubKey
-        console.log(signers)
 
         if (signers && signers.length > 0) {
           placeBuyOrderTx.partialSign(...signers)
@@ -137,18 +104,25 @@ const usePlaceBuyOrder = (
         txes.push(placeBuyOrderTx)
 
         if (settleFunds) {
-          const settleFundsTx = openOrders[0]
-            ? await makeSettleFundsTx()
-            : await makeSettleFundsTx(newOpenOrdersAccount)
+          let settleFundsTx
+          if (newOpenOrdersAccount) {
+            const openOrdersInstance = new OpenOrders(
+              newOpenOrdersAccount.publicKey,
+              {
+                owner: pubKey,
+                address: newOpenOrdersAccount.publicKey,
+                market: serumMarket.marketAddress,
+              },
+              dexProgramId,
+            )
+            settleFundsTx = await makeSettleFundsTx(openOrdersInstance)
+          } else {
+            settleFundsTx = await makeSettleFundsTx()
+          }
           txes.push(settleFundsTx)
         }
 
-        console.log(txes)
-
         const signed = await wallet.signAllTransactions(txes)
-        console.log('signed')
-
-        return
 
         await sendSignedTransaction({
           signedTransaction: signed[0],

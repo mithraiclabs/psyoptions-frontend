@@ -18,9 +18,7 @@ import useAssetList from '../useAssetList'
 export const useSettleFunds = (
   key: string,
 ): {
-  makeSettleFundsTx: (
-    openOrdersAccountFallback?: OpenOrders,
-  ) => Promise<Transaction>
+  makeSettleFundsTx: (openOrdersAccount?: OpenOrders) => Promise<Transaction>
   settleFunds: () => Promise<void>
 } => {
   const { pushErrorNotification } = useNotifications()
@@ -42,9 +40,9 @@ export const useSettleFunds = (
   const makeSettleFundsTx = useCallback(
     async (
       /**
-       * A specific open orders account fallback can be passed in, it will only be used if one doesn't exist on-chain already
+       * A specific open orders account can be passed in
        */
-      openOrdersAccountFallback?: OpenOrders,
+      openOrdersAccount?: OpenOrders,
     ): Promise<Transaction | undefined> => {
       const market = serumMarket?.market as Market | undefined
       if (market) {
@@ -84,7 +82,7 @@ export const useSettleFunds = (
         const { transaction: settleTx, signers: settleSigners } =
           await market.makeSettleFundsTransaction(
             connection,
-            openOrders[0] || openOrdersAccountFallback,
+            openOrdersAccount || openOrders[0],
             _baseTokenAccountKey,
             _quoteTokenAccountKey,
             market.quoteMintAddress.equals(USDCPublicKey) &&

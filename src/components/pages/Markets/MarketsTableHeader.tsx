@@ -109,7 +109,7 @@ export const MarketsTableHeader: React.FC<{
             title={
               <Box
                 p={1}
-              >{`The lowest price to sell the call option on the order book book`}</Box>
+              >{`The lowest price to sell the call option on the order book`}</Box>
             }
           >
             <Box display="inline">Ask</Box>

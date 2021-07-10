@@ -5,6 +5,7 @@ import BigNumber from 'bignumber.js'
 import {
   initializeAccountsForMarket,
   initializeMarketInstruction,
+  Market,
 } from '@mithraic-labs/psyoptions'
 import useConnection from './useConnection'
 import useNotifications from './useNotifications'
@@ -48,6 +49,7 @@ export const useInitializeMarkets = (): ((
       qAssetDecimals,
     }: InitMarketParams) => {
       try {
+        const programId = new PublicKey(endpoint.programId)
         const results = await Promise.all(
           quoteAmountsPerContract.map(async (qAmount) => {
             // Create and send transaction for creating/initializing accounts needed
@@ -55,7 +57,6 @@ export const useInitializeMarkets = (): ((
             const {
               transaction: createAccountsTx,
               signers,
-              optionMarketKey,
               optionMintKey,
               writerTokenMintKey,
               quoteAssetPoolKey,
@@ -63,7 +64,7 @@ export const useInitializeMarkets = (): ((
             } = await initializeAccountsForMarket({
               connection,
               payerKey: pubKey,
-              programId: endpoint.programId,
+              programId,
             })
             await sendTransaction({
               transaction: createAccountsTx,
@@ -86,15 +87,21 @@ export const useInitializeMarkets = (): ((
             const underlyingAssetMintKey = new PublicKey(uAssetMint)
             const quoteAssetMintKey = new PublicKey(qAssetMint)
 
+            console.log(
+              'UI log',
+              amountPerContract.toString(),
+              amountPerContractU64,
+              uAssetDecimals,
+            )
+
             // create and send transaction for initializing the option market
             const initializeMarketIx = await initializeMarketInstruction({
-              programId: new PublicKey(endpoint.programId),
+              programId,
               fundingAccountKey: pubKey,
               underlyingAssetMintKey,
               quoteAssetMintKey,
               optionMintKey,
               writerTokenMintKey,
-              optionMarketKey,
               underlyingAssetPoolKey,
               quoteAssetPoolKey,
               underlyingAmountPerContract: amountPerContractU64,
@@ -111,6 +118,15 @@ export const useInitializeMarkets = (): ((
               connection,
               sendingMessage: 'Processing: Initialize Market',
               successMessage: 'Confirmed: Initialize Market',
+            })
+
+            const [optionMarketKey] = await Market.getDerivedAddressFromParams({
+              programId,
+              underlyingAssetMintKey,
+              quoteAssetMintKey,
+              underlyingAmountPerContract: amountPerContractU64,
+              quoteAmountPerContract: quoteAmountPerContractU64,
+              expirationUnixTimestamp: expiration,
             })
 
             const marketData: OptionMarket = {

@@ -135,32 +135,32 @@ const trustWalletERC20Icon = (address) =>
   // Generate sample assets from local net data and random logos
   const localSPLData = [
     {
+      decimals: 8,
       mintAddress: splMint4.publicKey.toString(),
       tokenSymbol: 'BTC',
       tokenName: 'Bitcoin',
-      icon:
-        'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/bitcoin/info/logo.png',
+      icon: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/bitcoin/info/logo.png',
     },
     {
+      decimals: 8,
       mintAddress: splMint1.publicKey.toString(),
       tokenSymbol: 'LSRM',
       tokenName: 'Serum',
-      icon:
-        'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0x476c5E26a75bd202a9683ffD34359C0CC15be0fF/logo.png',
+      icon: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0x476c5E26a75bd202a9683ffD34359C0CC15be0fF/logo.png',
     },
     {
+      decimals: 8,
       mintAddress: splMint3.publicKey.toString(),
       tokenSymbol: 'ETH',
       tokenName: 'Ethereum',
-      icon:
-        'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2/logo.png',
+      icon: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2/logo.png',
     },
     {
+      decimals: 8,
       mintAddress: splMint2.publicKey.toString(),
       tokenSymbol: 'USDC',
       tokenName: 'USDC',
-      icon:
-        'https://raw.githubusercontent.com/trustwallet/assets/f3ffd0b9ae2165336279ce2f8db1981a55ce30f8/blockchains/ethereum/assets/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48/logo.png',
+      icon: 'https://raw.githubusercontent.com/trustwallet/assets/f3ffd0b9ae2165336279ce2f8db1981a55ce30f8/blockchains/ethereum/assets/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48/logo.png',
     },
   ]
   fs.writeFileSync(

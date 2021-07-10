@@ -1,6 +1,7 @@
 import { mintCoveredCallInstruction } from '@mithraic-labs/psyoptions'
 import { PublicKey, Transaction } from '@solana/web3.js'
 import BigNumber from 'bignumber.js'
+import { BN } from 'bn.js'
 import {
   Asset,
   CreateMissingMintAccountsRes,
@@ -112,14 +113,12 @@ export const createMissingMintAccounts = async ({
 
   if (!_mintedOptionDestinationKey) {
     // Create token account for minted option if the user doesn't have one yet
-    const [
-      instruction,
-      newTokenAccountKey,
-    ] = await createAssociatedTokenAccountInstruction({
-      payer: owner,
-      owner,
-      mintPublicKey: market.optionMintKey,
-    })
+    const [instruction, newTokenAccountKey] =
+      await createAssociatedTokenAccountInstruction({
+        payer: owner,
+        owner,
+        mintPublicKey: market.optionMintKey,
+      })
 
     tx.add(instruction)
     _mintedOptionDestinationKey = newTokenAccountKey
@@ -127,14 +126,12 @@ export const createMissingMintAccounts = async ({
 
   if (!_writerTokenDestinationKey) {
     // Create token account for minted Writer Token if the user doesn't have one yet
-    const [
-      instruction,
-      newTokenAccountKey,
-    ] = await createAssociatedTokenAccountInstruction({
-      payer: owner,
-      owner,
-      mintPublicKey: market.writerTokenMintKey,
-    })
+    const [instruction, newTokenAccountKey] =
+      await createAssociatedTokenAccountInstruction({
+        payer: owner,
+        owner,
+        mintPublicKey: market.writerTokenMintKey,
+      })
     tx.add(instruction)
     _writerTokenDestinationKey = newTokenAccountKey
   }
@@ -170,27 +167,22 @@ export const mintInstructions = async ({
   underlyingAssetSrcKey: PublicKey
 }): Promise<InstructionResponse> => {
   const transaction = new Transaction()
-  await Promise.all(
-    Array(numberOfContractsToMint)
-      .fill('')
-      .map(async () => {
-        const mintInstruction = await mintCoveredCallInstruction({
-          authorityPubkey,
-          programId,
-          optionMarketKey: market.optionMarketKey,
-          optionMintKey: market.optionMintKey,
-          mintedOptionDestKey,
-          writerTokenDestKey,
-          writerTokenMintKey: market.writerTokenMintKey,
-          underlyingAssetPoolKey: market.underlyingAssetPoolKey,
-          underlyingAssetSrcKey,
-          underlyingMintKey: market.underlyingAssetMintKey,
-          fundingAccountKey: authorityPubkey,
-        })
+  const mintInstruction = await mintCoveredCallInstruction({
+    authorityPubkey,
+    programId,
+    optionMarketKey: market.optionMarketKey,
+    optionMintKey: market.optionMintKey,
+    mintedOptionDestKey,
+    writerTokenDestKey,
+    writerTokenMintKey: market.writerTokenMintKey,
+    underlyingAssetPoolKey: market.underlyingAssetPoolKey,
+    underlyingAssetSrcKey,
+    underlyingMintKey: market.underlyingAssetMintKey,
+    fundingAccountKey: authorityPubkey,
+    size: new BN(numberOfContractsToMint),
+  })
 
-        transaction.add(mintInstruction)
-      }),
-  )
+  transaction.add(mintInstruction)
   // Not sure if we should add the authoirtyPubkey to signers or if it's safe to
   //  make the assumption that the authority is the wallet.
   const signers = []

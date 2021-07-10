@@ -55,7 +55,7 @@ const usePlaceBuyOrder = (
         }
         // place the buy order
         const {
-          createdOpenOrdersKey,
+          openOrdersAddress,
           transaction: placeOrderTx,
           signers: placeOrderSigners,
         } = await serumMarket.market.makePlaceOrderTransaction(connection, {
@@ -64,8 +64,8 @@ const usePlaceBuyOrder = (
         transaction.add(placeOrderTx)
         signers = [...signers, ...placeOrderSigners]
 
-        if (createdOpenOrdersKey) {
-          createAdHocOpenOrdersSub(createdOpenOrdersKey)
+        if (openOrdersAddress) {
+          createAdHocOpenOrdersSub(openOrdersAddress)
         }
 
         await sendTransaction({

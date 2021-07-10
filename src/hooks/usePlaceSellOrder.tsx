@@ -15,12 +15,6 @@ import useWallet from './useWallet'
 import { createMissingAccountsAndMint } from '../utils/instructions/index'
 import { useCreateAdHocOpenOrdersSubscription } from './Serum'
 
-// Solana has a maximum packet size when sending a transaction.
-// As of writing 25 mints is a good round number that won't
-// breach that limit when OptionToken and WriterToken accounts
-// are included in TX.
-const MAX_MINTS_PER_TX = 25
-
 type PlaceSellOrderArgs = {
   numberOfContractsToMint: number
   serumMarket: SerumMarket
@@ -56,112 +50,69 @@ const usePlaceSellOrder = (
       writerTokenDestinationKey,
     }: PlaceSellOrderArgs) => {
       try {
-        const mintTXs = []
-        const mintSigners = []
+        const mintTX = new Transaction()
+        let mintSigners = []
         let _uAssetTokenAccount = uAssetTokenAccount
         let _optionTokenSrcKey = mintedOptionDestinationKey
         let _writerTokenDestinationKey = writerTokenDestinationKey
-        let numberOfContractsDistribution
 
         // Mint and place order
         if (numberOfContractsToMint > 0) {
-          /* Transactions are limited to certain packet size, so we must chunk the transactions
-           * if the user wants to mint many contracts at once. */
-          const numberOfMintTxs = Math.ceil(
-            numberOfContractsToMint / MAX_MINTS_PER_TX,
-          )
-
-          numberOfContractsDistribution = new Array(numberOfMintTxs - 1).fill(
-            MAX_MINTS_PER_TX,
-          )
-          /* Push the remaining contracts. If the mod is 0 then we know the total number of 
-          is a multiple of MAX_MINTS_PER_TX so we push that */
-          numberOfContractsDistribution.push(
-            numberOfContractsToMint % MAX_MINTS_PER_TX || MAX_MINTS_PER_TX,
-          )
-          /**
-           * Create a mintTX
-           * @param {number} contractsToMint
-           * @returns
-           */
-          const handleMintIteration = async (contractsToMint) => {
-            const tx = new Transaction()
-            // Mint missing contracs before placing order
-            const { error, response } = await createMissingAccountsAndMint({
-              optionsProgramId: new PublicKey(endpoint.programId),
-              authorityPubkey: pubKey,
-              owner: pubKey,
-              market: optionMarket,
-              uAsset,
-              uAssetTokenAccount: _uAssetTokenAccount,
-              splTokenAccountRentBalance,
-              numberOfContractsToMint: contractsToMint,
-              mintedOptionDestinationKey: _optionTokenSrcKey,
-              writerTokenDestinationKey: _writerTokenDestinationKey,
-            })
-            if (error) {
-              // eslint-disable-next-line no-console
-              console.error(error)
-              pushErrorNotification(error)
-              return
-            }
-            const {
-              transaction: createAndMintTx,
-              signers: createAndMintSigners,
-              mintedOptionDestinationKey: _mintedOptionDestinationKey,
-              writerTokenDestinationKey: __writerTokenDestinationKey,
-              uAssetTokenAccount: __uAssetTokenAccount,
-            } = response
-            _uAssetTokenAccount = __uAssetTokenAccount
-            subscribeToTokenAccount(__writerTokenDestinationKey)
-            subscribeToTokenAccount(_mintedOptionDestinationKey)
-
-            // Add the create accounts and mint instructions to the TX
-            tx.add(createAndMintTx)
-
-            // must overwrite the original payer (aka option src) in case the
-            // option(s) were minted to a new Account
-            _optionTokenSrcKey = _mintedOptionDestinationKey
-            _writerTokenDestinationKey = __writerTokenDestinationKey
-
-            // Close out the wrapped SOL account so it feels native
-            if (optionMarket.uAssetMint === WRAPPED_SOL_ADDRESS) {
-              tx.add(
-                Token.createCloseAccountInstruction(
-                  TOKEN_PROGRAM_ID,
-                  _uAssetTokenAccount.pubKey,
-                  pubKey, // Send any remaining SOL to the owner
-                  pubKey,
-                  [],
-                ),
-              )
-            }
-            mintTXs.push(tx)
-            mintSigners.push(createAndMintSigners)
+          // Mint missing contracs before placing order
+          const { error, response } = await createMissingAccountsAndMint({
+            optionsProgramId: new PublicKey(endpoint.programId),
+            authorityPubkey: pubKey,
+            owner: pubKey,
+            market: optionMarket,
+            uAsset,
+            uAssetTokenAccount: _uAssetTokenAccount,
+            splTokenAccountRentBalance,
+            numberOfContractsToMint,
+            mintedOptionDestinationKey: _optionTokenSrcKey,
+            writerTokenDestinationKey: _writerTokenDestinationKey,
+          })
+          if (error) {
+            // eslint-disable-next-line no-console
+            console.error(error)
+            pushErrorNotification(error)
+            return
           }
-          /* If the user does not have an OptionToken or WriterToken account we need to pull one 
-          TX out of the iteration so those account addresses are set and all of the contracts 
-          and writer tokens end up in the same account. */
-          if (!mintedOptionDestinationKey || !writerTokenDestinationKey) {
-            await handleMintIteration(numberOfContractsDistribution[0])
-          }
+          const {
+            transaction: createAndMintTx,
+            signers: createAndMintSigners,
+            mintedOptionDestinationKey: _mintedOptionDestinationKey,
+            writerTokenDestinationKey: __writerTokenDestinationKey,
+            uAssetTokenAccount: __uAssetTokenAccount,
+          } = response
+          _uAssetTokenAccount = __uAssetTokenAccount
+          subscribeToTokenAccount(__writerTokenDestinationKey)
+          subscribeToTokenAccount(_mintedOptionDestinationKey)
 
-          await Promise.all(
-            numberOfContractsDistribution.map(
-              async (contractsToMint, index) => {
-                /* if there's already a mintTX then the user must have been missing an OptionToken 
-              account or WriterToken account. So we should skip the first iteration */
-                if (index === 0 && mintTXs.length) {
-                  return null
-                }
-                return handleMintIteration(contractsToMint)
-              },
-            ),
-          )
+          // Add the create accounts and mint instructions to the TX
+          mintTX.add(createAndMintTx)
+          mintSigners = createAndMintSigners
+
+          // must overwrite the original payer (aka option src) in case the
+          // option(s) were minted to a new Account
+          _optionTokenSrcKey = _mintedOptionDestinationKey
+          _writerTokenDestinationKey = __writerTokenDestinationKey
+
+          // Close out the wrapped SOL account so it feels native
+          if (optionMarket.uAssetMint === WRAPPED_SOL_ADDRESS) {
+            mintTX.add(
+              Token.createCloseAccountInstruction(
+                TOKEN_PROGRAM_ID,
+                _uAssetTokenAccount.pubKey,
+                pubKey, // Send any remaining SOL to the owner
+                pubKey,
+                [],
+              ),
+            )
+          }
         }
 
         const {
-          createdOpenOrdersKey,
+          openOrdersAddress,
           transaction: placeOrderTx,
           signers: placeOrderSigners,
         } = await serumMarket.market.makePlaceOrderTransaction(connection, {
@@ -169,19 +120,17 @@ const usePlaceSellOrder = (
           payer: _optionTokenSrcKey,
         })
 
-        if (createdOpenOrdersKey) {
-          createAdHocOpenOrdersSub(createdOpenOrdersKey)
+        if (openOrdersAddress) {
+          createAdHocOpenOrdersSub(openOrdersAddress)
         }
 
         const { blockhash } = await connection.getRecentBlockhash()
 
-        mintTXs.forEach((_mintTx, index) => {
-          mintTXs[index].feePayer = pubKey
-          mintTXs[index].recentBlockhash = blockhash
-          if (mintSigners[index].length) {
-            mintTXs[index].partialSign(...mintSigners[index])
-          }
-        })
+        mintTX.feePayer = pubKey
+        mintTX.recentBlockhash = blockhash
+        if (mintSigners.length) {
+          mintTX.partialSign(...mintSigners)
+        }
         placeOrderTx.feePayer = pubKey
         placeOrderTx.recentBlockhash = blockhash
 
@@ -189,49 +138,21 @@ const usePlaceSellOrder = (
           placeOrderTx.partialSign(...placeOrderSigners)
         }
 
-        const signed = await wallet.signAllTransactions([
-          ...mintTXs,
-          placeOrderTx,
-        ])
+        const signed = await wallet.signAllTransactions([mintTX, placeOrderTx])
 
-        /* If the user did not have an OptionToken or WriterToken account then we need to pull the 
-        first TX out of the iteration so we can guarantee the accounts are created and initialized 
-        before the other TXs execute */
-        if (
-          !mintedOptionDestinationKey ||
-          (!writerTokenDestinationKey && numberOfContractsDistribution?.length)
-        ) {
-          const contractsMinted = numberOfContractsDistribution.shift()
-          mintTXs.shift()
-          const tx = signed.shift()
+        // send the PsyOptions Mint transaction
+        await sendSignedTransaction({
+          signedTransaction: signed[0],
+          connection,
+          sendingMessage: `Processing: Write ${numberOfContractsToMint} contract${
+            numberOfContractsToMint > 1 ? 's' : ''
+          }`,
+          successMessage: `Confirmed: Write ${numberOfContractsToMint} contract${
+            numberOfContractsToMint > 1 ? 's' : ''
+          }`,
+        })
 
-          await sendSignedTransaction({
-            signedTransaction: tx,
-            connection,
-            sendingMessage: `Processing: Write ${contractsMinted} contract${
-              numberOfContractsToMint > 1 ? 's' : ''
-            }`,
-            successMessage: `Confirmed: Write ${contractsMinted} contract${
-              numberOfContractsToMint > 1 ? 's' : ''
-            }`,
-          })
-        }
-
-        await Promise.all(
-          mintTXs.map(async (_mintTx, index) =>
-            sendSignedTransaction({
-              signedTransaction: signed[index],
-              connection,
-              sendingMessage: `Processing: Write ${
-                numberOfContractsDistribution[index]
-              } contract${numberOfContractsToMint > 1 ? 's' : ''}`,
-              successMessage: `Confirmed: Write ${
-                numberOfContractsDistribution[index]
-              } contract${numberOfContractsToMint > 1 ? 's' : ''}`,
-            }),
-          ),
-        )
-
+        // send the Serum place order transaction
         await sendSignedTransaction({
           signedTransaction: signed[signed.length - 1],
           connection,

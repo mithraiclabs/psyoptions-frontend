@@ -9,6 +9,7 @@ import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import {
   initializeAccountsForMarket,
   initializeMarketInstruction,
+  Market,
 } from '@mithraic-labs/psyoptions'
 import BigNumber from 'bignumber.js'
 import { getSolanaConfig } from './helpers'
@@ -64,7 +65,6 @@ const OPTION_PROGRAM_ID = new PublicKey(
       const {
         transaction: createAccountsTx,
         signers,
-        optionMarketKey,
         optionMintKey,
         writerTokenMintKey,
         quoteAssetPoolKey,
@@ -85,6 +85,13 @@ const OPTION_PROGRAM_ID = new PublicKey(
         },
       )
 
+      const underlyingAmountPerContract = new BigNumber(
+        marketMeta.underlyingAssetPerContract,
+      ).toNumber()
+      const quoteAmountPerContract = new BigNumber(
+        marketMeta.quoteAssetPerContract,
+      ).toNumber()
+
       // create and send transaction for initializing the option market
       const initializeMarketIx = await initializeMarketInstruction({
         programId: OPTION_PROGRAM_ID,
@@ -93,15 +100,10 @@ const OPTION_PROGRAM_ID = new PublicKey(
         quoteAssetMintKey,
         optionMintKey,
         writerTokenMintKey,
-        optionMarketKey,
         underlyingAssetPoolKey,
         quoteAssetPoolKey,
-        underlyingAmountPerContract: new BigNumber(
-          marketMeta.underlyingAssetPerContract,
-        ).toNumber(),
-        quoteAmountPerContract: new BigNumber(
-          marketMeta.quoteAssetPerContract,
-        ).toNumber(),
+        underlyingAmountPerContract,
+        quoteAmountPerContract,
         expirationUnixTimestamp: marketMeta.expiration,
       })
       const transaction = new Transaction()
@@ -118,6 +120,14 @@ const OPTION_PROGRAM_ID = new PublicKey(
         },
       )
       console.log(`* confirmed mint TX id: ${txId}`)
+      const [optionMarketKey] = await Market.getDerivedAddressFromParams({
+        programId: OPTION_PROGRAM_ID,
+        underlyingAssetMintKey,
+        quoteAssetMintKey,
+        underlyingAmountPerContract,
+        quoteAmountPerContract,
+        expirationUnixTimestamp: marketMeta.expiration,
+      })
       newOptionMarketAddresses.push(optionMarketKey.toString())
     })()
   }, starterPromise)

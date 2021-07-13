@@ -130,11 +130,6 @@ const useOptionsMarkets = () => {
 
   const packagedMarkets = useCallback(async () => {
     try {
-      if (marketsLoading) return
-      if (!(connection instanceof Connection)) return
-      if (!endpoint.programId) return
-      if (!supportedAssets || supportedAssets.length === 0) return
-
       setMarketsLoading(true)
       const supportedMarkets = getSupportedMarketsByNetwork(endpoint.name)
       // Transform the market data to our expectations
@@ -186,6 +181,7 @@ const useOptionsMarkets = () => {
           underlyingAssetMintKey: new PublicKey(market.underlyingAssetMint),
           quoteAssetPoolKey: new PublicKey(market.quoteAssetPoolAddress),
           quoteAssetMintKey: new PublicKey(market.quoteAssetMint),
+          serumMarketKey: new PublicKey(market.serumMarketAddress),
         }
 
         const key = `${newMarket.expiration}-${newMarket.uAssetSymbol}-${

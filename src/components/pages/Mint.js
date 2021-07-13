@@ -32,7 +32,7 @@ const expirations = getLastFridayOfMonths(10)
 const Mint = () => {
   const { pushNotification } = useNotifications()
   const { connected } = useWallet()
-  const { getStrikePrices, getSizes, createAccountsAndMint, fetchMarketData } =
+  const { getStrikePrices, getSizes, createAccountsAndMint } =
     useOptionsMarkets()
   const { ownedTokenAccounts } = useOwnedTokenAccounts()
 
@@ -74,10 +74,6 @@ const Mint = () => {
       (marketData && ownedTokenAccounts[marketData.writerTokenMintKey]) || [],
     [marketData, ownedTokenAccounts],
   )
-
-  useEffect(() => {
-    fetchMarketData()
-  }, [fetchMarketData])
 
   useEffect(() => {
     setUAssetAccount(ownedUAssetAccounts[0]?.pubKey)

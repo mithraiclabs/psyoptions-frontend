@@ -41,6 +41,7 @@ export type OptionMarket = {
   underlyingAssetMintKey: PublicKey
   quoteAssetPoolKey: PublicKey
   quoteAssetMintKey: PublicKey
+  serumMarketKey?: PublicKey
 }
 
 export type OptionMarketMeta = {

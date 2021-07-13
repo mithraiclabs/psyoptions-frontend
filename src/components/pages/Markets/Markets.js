@@ -204,10 +204,18 @@ const Markets = () => {
     // Only if they don't already exist for the matching call/put
     rowsToDisplay.forEach(({ call, put }) => {
       if (call?.serumKey && !serumMarkets[call.serumKey]) {
-        fetchSerumMarket(...call.serumKey.split('-'))
+        fetchSerumMarket(
+          call.serumMarketKey,
+          call.serumKey.split('-')[0],
+          call.serumKey.split('-')[1],
+        )
       }
       if (put?.serumKey && !serumMarkets[put.serumKey]) {
-        fetchSerumMarket(...put.serumKey.split('-'))
+        fetchSerumMarket(
+          put.serumMarketKey,
+          put.serumKey.split('-')[0],
+          put.serumKey.split('-')[1],
+        )
       }
     })
   }, [rowsToDisplay, fetchSerumMarket, serumMarkets])

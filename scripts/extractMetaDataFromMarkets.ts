@@ -1,6 +1,5 @@
-import { Account, Connection, PublicKey } from '@solana/web3.js'
+import { Connection, PublicKey } from '@solana/web3.js'
 import { Market } from '@mithraic-labs/psyoptions'
-import { getSolanaConfig } from './helpers'
 import { Market as SerumMarket } from '@mithraic-labs/serum'
 
 const fs = require('fs')
@@ -18,10 +17,6 @@ const DEX_PROGRAM_ID = new PublicKey(
 
 ;(async () => {
   const connection = new Connection('https://api.devnet.solana.com')
-
-  const solanaConfig = getSolanaConfig()
-  const keyBuffer = fs.readFileSync(solanaConfig.keypair_path)
-  const payer = new Account(JSON.parse(keyBuffer))
 
   const devnetBTCKey = new PublicKey(
     'C6kYXcaRUMqeBF5fhg165RWU7AnpT9z92fvKNoMqjmz6',

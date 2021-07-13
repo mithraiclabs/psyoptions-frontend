@@ -1,6 +1,8 @@
 import { clusterApiUrl, PublicKey } from '@solana/web3.js'
 import { TOKENS } from '@project-serum/tokens'
 import { MARKETS } from '@mithraic-labs/serum'
+/* eslint-disable */
+import { MarketMeta } from '@mithraic-labs/market-meta'
 
 // Note these network values are used for determining the asset list.
 // Be sure to update that when modifying the order of this list.
@@ -78,46 +80,15 @@ const getSerumMarketsByNetwork = (name) => {
 const getAssetsByNetwork = (name) => {
   switch (name) {
     case networks[0].name:
-      return TOKENS.mainnet
+      return MarketMeta.mainnet.tokens
     case networks[1].name:
       // Devnet tokens and faucets can be found [here](https://github.com/blockworks-foundation/mango-client-ts/blob/main/src/ids.json#L10)
-      return [
-        {
-          tokenSymbol: 'SOL',
-          mintAddress: 'So11111111111111111111111111111111111111112',
-          tokenName: 'Solana',
-          icon:
-            'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/solana/info/logo.png',
-          decimals: 9,
-        },
-        {
-          tokenSymbol: 'BTC',
-          mintAddress: 'C6kYXcaRUMqeBF5fhg165RWU7AnpT9z92fvKNoMqjmz6',
-          tokenName: 'Bitcoin',
-          icon:
-            'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/bitcoin/info/logo.png',
-          decimals: 9,
-        },
-        {
-          tokenSymbol: 'PSY',
-          mintAddress: 'BzwRWwr1kCLJVUUM14fQthP6FJKrGpXjw3ZHTZ6PQsYa',
-          tokenName: 'PSY Test',
-          icon: 'https://docs.psyoptions.io/img/PsyOps.svg',
-          decimals: 9,
-        },
-        {
-          tokenSymbol: 'USDC',
-          mintAddress: 'E6Z6zLzk8MWY3TY8E87mr88FhGowEPJTeMWzkqtL6qkF',
-          tokenName: 'USDC',
-          icon:
-            'https://raw.githubusercontent.com/trustwallet/assets/f3ffd0b9ae2165336279ce2f8db1981a55ce30f8/blockchains/ethereum/assets/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48/logo.png',
-          decimals: 2,
-        },
-      ]
+      return MarketMeta.devnet.tokens
     case networks[2].name:
-      return TOKENS.testnet
+      return MarketMeta.testnet.tokens
     case networks[3].name:
       try {
+        /* eslint-disable */
         const localnetData = require('../hooks/localnetData.json')
         return [TOKENS.mainnet[0], ...localnetData]
       } catch (err) {

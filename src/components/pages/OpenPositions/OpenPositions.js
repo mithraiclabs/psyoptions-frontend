@@ -4,7 +4,6 @@ import CreateIcon from '@material-ui/icons/Create'
 import BarChartIcon from '@material-ui/icons/BarChart'
 import { useTheme } from '@material-ui/core/styles'
 import Page from '../Page'
-
 import TabCustom from '../../Tab'
 
 import PositionRow from './PositionRow'
@@ -14,6 +13,7 @@ import { Heading } from './Heading'
 import { WrittenOptionsTable } from './WrittenOptionsTable'
 import EmptySvg from './EmptySvg'
 import useWallet from '../../../hooks/useWallet'
+import { useWrittenOptions } from '../../../hooks/useWrittenOptions'
 
 const OpenPositions = () => {
   const { connected } = useWallet()
@@ -23,6 +23,7 @@ const OpenPositions = () => {
   const positions = useOpenPositions()
   const { markets } = useOptionsMarkets()
   const [selectedTab, setSelectedTab] = useState(0)
+  const writtenOptions = useWrittenOptions()
 
   const positionRows = useMemo(
     () =>
@@ -51,6 +52,11 @@ const OpenPositions = () => {
   )
 
   const hasOpenPositions = positionRows.length > 0
+
+  const writtenOptionKeys = useMemo(
+    () => Object.keys(writtenOptions),
+    [writtenOptions]
+  )
 
   return (
     <Page>
@@ -81,7 +87,9 @@ const OpenPositions = () => {
                 <Box fontSize={'16px'} fontWeight={700}>
                   Open Positions
                 </Box>
-                <Box fontSize={'13px'}>0 currently open</Box>
+                <Box fontSize={'13px'}>
+                  {positionRows.length} currently open
+                </Box>
               </Box>
             </Box>
           </TabCustom>
@@ -97,7 +105,9 @@ const OpenPositions = () => {
                 <Box fontSize={'16px'} fontWeight={700}>
                   Written Options
                 </Box>
-                <Box fontSize={'13px'}>0 currently written</Box>
+                <Box fontSize={'13px'}>
+                  {writtenOptionKeys.length} currently written
+                </Box>
               </Box>
             </Box>
           </TabCustom>

@@ -2,6 +2,13 @@ import { Account, PublicKey, Transaction } from '@solana/web3.js'
 import BigNumber from 'bignumber.js'
 import { SerumMarket } from './utils/serum'
 
+export enum ClusterName {
+  devnet = 'Devnet',
+  mainnet = 'Mainnet',
+  testnet = 'Testnet',
+  localhost = 'localhost',
+}
+
 export type Asset = {
   tokenSymbol: string
   mintAddress: string

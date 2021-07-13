@@ -3,34 +3,41 @@ import { TOKENS } from '@project-serum/tokens'
 import { MARKETS } from '@mithraic-labs/serum'
 /* eslint-disable */
 import { MarketMeta } from '@mithraic-labs/market-meta'
+import { ClusterName } from '../types'
+
+type Network = {
+  name: ClusterName
+  url: string
+  programId: string
+}
 
 // Note these network values are used for determining the asset list.
 // Be sure to update that when modifying the order of this list.
-const networks = [
+const networks: Network[] = [
   {
-    name: 'Mainnet',
+    name: ClusterName.mainnet,
     url: clusterApiUrl('mainnet-beta'),
     programId: process.env.MAINNET_PROGRAM_ID,
   },
   {
-    name: 'Devnet',
+    name: ClusterName.devnet,
     url: clusterApiUrl('devnet'),
     // url: 'https://devnet.psyoptions.io',
     programId: process.env.DEVNET_PROGRAM_ID,
   },
   {
-    name: 'Testnet',
+    name: ClusterName.testnet,
     url: clusterApiUrl('testnet'),
     programId: process.env.TESTNET_PROGRAM_ID,
   },
   {
-    name: 'localhost',
+    name: ClusterName.localhost,
     url: 'http://127.0.0.1:8899',
     programId: process.env.LOCAL_PROGRAM_ID,
   },
 ]
 
-const getDexProgramKeyByNetwork = (name) => {
+const getDexProgramKeyByNetwork = (name: ClusterName) => {
   switch (name) {
     case 'Mainnet':
       return MARKETS.find(({ deprecated }) => !deprecated).programId
@@ -51,7 +58,7 @@ const getDexProgramKeyByNetwork = (name) => {
   }
 }
 
-const getSerumMarketsByNetwork = (name) => {
+const getSerumMarketsByNetwork = (name: ClusterName) => {
   switch (name) {
     case networks[0].name:
       return TOKENS.mainnet
@@ -77,16 +84,32 @@ const getSerumMarketsByNetwork = (name) => {
   }
 }
 
-const getAssetsByNetwork = (name) => {
+const getSupportedMarketsByNetwork = (name: ClusterName) => {
   switch (name) {
-    case networks[0].name:
+    case ClusterName.mainnet:
+      return MarketMeta.mainnet.optionMarkets
+    case ClusterName.devnet:
+      return MarketMeta.devnet.optionMarkets
+    case ClusterName.testnet:
+      return MarketMeta.testnet.optionMarkets
+    case ClusterName.localhost:
+      // TODO figure out how to best handle this locally
+      throw new Error('must set local supported markets')
+    default:
+      return []
+  }
+}
+
+const getAssetsByNetwork = (name: ClusterName) => {
+  switch (name) {
+    case ClusterName.mainnet:
       return MarketMeta.mainnet.tokens
-    case networks[1].name:
+    case ClusterName.devnet:
       // Devnet tokens and faucets can be found [here](https://github.com/blockworks-foundation/mango-client-ts/blob/main/src/ids.json#L10)
       return MarketMeta.devnet.tokens
-    case networks[2].name:
+    case ClusterName.testnet:
       return MarketMeta.testnet.tokens
-    case networks[3].name:
+    case ClusterName.localhost:
       try {
         /* eslint-disable */
         const localnetData = require('../hooks/localnetData.json')
@@ -103,6 +126,7 @@ const getAssetsByNetwork = (name) => {
 export {
   getAssetsByNetwork,
   getDexProgramKeyByNetwork,
+  getSupportedMarketsByNetwork,
   getSerumMarketsByNetwork,
   networks,
 }

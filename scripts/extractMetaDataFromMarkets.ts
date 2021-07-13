@@ -67,8 +67,11 @@ const DEX_PROGRAM_ID = new PublicKey(
         optionWriterTokenMintAddress:
           market.marketData.writerTokenMintKey.toString(),
         quoteAssetMint,
+        quoteAssetPoolAddress: market.marketData.quoteAssetPoolKey.toString(),
         quoteAssetSymbol,
         underlyingAssetMint,
+        underlyingAssetPoolAddress:
+          market.marketData.underlyingAssetPoolKey.toString(),
         underlyingAssetSymbol,
         underlyingAssetPerContract:
           market.marketData.amountPerContract.toString(),

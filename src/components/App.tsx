@@ -4,22 +4,12 @@ import useOptionsMarkets from '../hooks/useOptionsMarkets'
 import { GraphQLProvider } from './GraphQLProvider'
 import Router from './Router'
 
-const WrappedApp = (props) => {
-  return (
-    <GraphQLProvider>
-      <Store>
-        <App {...props} />
-      </Store>
-    </GraphQLProvider>
-  )
-}
-
 const App = ({ location, routerContext, ssrPassword }) => {
-  const { fetchMarketData } = useOptionsMarkets()
+  const { packagedMarkets } = useOptionsMarkets()
 
   useEffect(() => {
-    fetchMarketData()
-  }, [fetchMarketData])
+    packagedMarkets()
+  }, [packagedMarkets])
 
   return (
     <Router
@@ -33,6 +23,16 @@ const App = ({ location, routerContext, ssrPassword }) => {
 App.defaultProps = {
   location: { pathname: '/' },
   routerContext: {},
+}
+
+const WrappedApp = (props) => {
+  return (
+    <GraphQLProvider>
+      <Store>
+        <App {...props} />
+      </Store>
+    </GraphQLProvider>
+  )
 }
 
 export default WrappedApp

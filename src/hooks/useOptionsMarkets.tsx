@@ -20,6 +20,7 @@ import {
 } from '../utils/instructions/index'
 
 import type { OptionMarket } from '../types'
+import { getSupportedMarketsByNetwork } from '../utils/networkInfo'
 
 const useOptionsMarkets = () => {
   const { pushErrorNotification, pushNotification } = useNotifications()
@@ -121,6 +122,83 @@ const useOptionsMarkets = () => {
       setMarkets(newMarkets)
       setMarketsLoading(false)
       return newMarkets //eslint-disable-line
+    } catch (err) {
+      console.error(err)
+      setMarketsLoading(false)
+    }
+  }, [connection, supportedAssets, endpoint]) // eslint-disable-line
+
+  const packagedMarkets = useCallback(async () => {
+    try {
+      if (marketsLoading) return
+      if (!(connection instanceof Connection)) return
+      if (!endpoint.programId) return
+      if (!supportedAssets || supportedAssets.length === 0) return
+
+      setMarketsLoading(true)
+      const supportedMarkets = getSupportedMarketsByNetwork(endpoint.name)
+      // Transform the market data to our expectations
+      const newMarkets = {}
+      supportedMarkets.forEach((market) => {
+        const uAsset = supportedAssets.filter(
+          (asset) => asset.mintAddress === market.underlyingAssetMint,
+        )[0]
+
+        const qAsset = supportedAssets.filter(
+          (asset) => asset.mintAddress === market.quoteAssetMint,
+        )[0]
+
+        // BN.js doesn't handle decimals while bignumber.js can handle decimals of arbitrary sizes
+        // So convert all BN types to BigNumber
+        const amountPerContract = new BigNumber(
+          market.underlyingAssetPerContract,
+        ).div(10 ** uAsset.decimals)
+
+        const quoteAmountPerContract = new BigNumber(
+          market.quoteAssetPerContract,
+        ).div(10 ** qAsset.decimals)
+
+        const strike = quoteAmountPerContract.div(
+          amountPerContract.toString(10),
+        )
+
+        const newMarket: OptionMarket = {
+          key: `${market.expiration}-${uAsset.tokenSymbol}-${
+            qAsset.tokenSymbol
+          }-${amountPerContract.toString()}-${amountPerContract.toString()}/${quoteAmountPerContract.toString()}`,
+          amountPerContract,
+          quoteAmountPerContract,
+          size: `${amountPerContract.toString(10)}`,
+          uAssetSymbol: uAsset.tokenSymbol,
+          qAssetSymbol: qAsset.tokenSymbol,
+          uAssetMint: uAsset.mintAddress,
+          qAssetMint: qAsset.mintAddress,
+          strikePrice: `${strike.toString(10)}`,
+          optionMarketKey: new PublicKey(market.optionMarketAddress),
+          expiration: market.expiration,
+          optionMintKey: new PublicKey(market.optionContractMintAddress),
+          writerTokenMintKey: new PublicKey(
+            market.optionWriterTokenMintAddress,
+          ),
+          underlyingAssetPoolKey: new PublicKey(
+            market.underlyingAssetPoolAddress,
+          ),
+          underlyingAssetMintKey: new PublicKey(market.underlyingAssetMint),
+          quoteAssetPoolKey: new PublicKey(market.quoteAssetPoolAddress),
+          quoteAssetMintKey: new PublicKey(market.quoteAssetMint),
+        }
+
+        const key = `${newMarket.expiration}-${newMarket.uAssetSymbol}-${
+          newMarket.qAssetSymbol
+        }-${newMarket.size}-${amountPerContract.toString(
+          10,
+        )}/${quoteAmountPerContract.toString(10)}`
+
+        newMarkets[key] = newMarket
+      })
+      // Not sure if we should replace the existing markets or merge them
+      setMarkets(newMarkets)
+      setMarketsLoading(false)
     } catch (err) {
       console.error(err)
       setMarketsLoading(false)
@@ -271,6 +349,7 @@ const useOptionsMarkets = () => {
     mint,
     createAccountsAndMint,
     fetchMarketData,
+    packagedMarkets,
   }
 }
 

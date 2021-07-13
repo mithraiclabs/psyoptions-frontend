@@ -142,8 +142,8 @@ const Faucets = () => {
     await createAccountsAndAirdrop(
       USDC,
       usdcAccount,
-      10000,
-      'Claim 100,000 USDC',
+      100_000,
+      'Claim 100,0000 USDC',
     )
     setLoadingUSDC(false)
   }
@@ -232,7 +232,7 @@ const Faucets = () => {
                     variant="outlined"
                     onClick={handleClaimUSDC}
                   >
-                    Claim 10,000 USDC
+                    Claim 100,000 USDC
                   </Button>
                 )}
               </Box>

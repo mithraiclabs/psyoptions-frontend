@@ -2,7 +2,7 @@ import React from 'react'
 import Box from '@material-ui/core/Box'
 import TableHead from '@material-ui/core/TableHead'
 import TableRow from '@material-ui/core/TableRow'
-
+import { ColumnDisplaySelector } from './ColumnDisplaySelector'
 import { THeadCell, TCellStrike, StyledTooltip } from './styles'
 
 export const MarketsTableHeader: React.FC<{
@@ -42,7 +42,12 @@ export const MarketsTableHeader: React.FC<{
             </StyledTooltip>
           </h3>
         </THeadCell>
-        <TCellStrike colSpan={1} />
+        <TCellStrike 
+          colSpan={1}
+          align='center'
+        >
+          <ColumnDisplaySelector />
+        </TCellStrike>
         <THeadCell
           colSpan={8}
           style={{ borderTop: 'none', padding: '16px 20px' }}

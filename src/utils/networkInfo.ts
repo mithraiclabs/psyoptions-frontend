@@ -93,8 +93,7 @@ const getSupportedMarketsByNetwork = (name: ClusterName) => {
     case ClusterName.testnet:
       return MarketMeta.testnet.optionMarkets
     case ClusterName.localhost:
-      // TODO figure out how to best handle this locally
-      throw new Error('must set local supported markets')
+      return []
     default:
       return []
   }

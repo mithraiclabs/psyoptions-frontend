@@ -19,7 +19,7 @@ import {
   mintInstructions,
 } from '../utils/instructions/index'
 
-import type { OptionMarket } from '../types'
+import { ClusterName, OptionMarket } from '../types'
 import { getSupportedMarketsByNetwork } from '../utils/networkInfo'
 
 const useOptionsMarkets = () => {
@@ -121,7 +121,7 @@ const useOptionsMarkets = () => {
       // Not sure if we should replace the existing markets or merge them
       setMarkets(newMarkets)
       setMarketsLoading(false)
-      return newMarkets //eslint-disable-line
+      return
     } catch (err) {
       console.error(err)
       setMarketsLoading(false)
@@ -129,6 +129,9 @@ const useOptionsMarkets = () => {
   }, [connection, supportedAssets, endpoint]) // eslint-disable-line
 
   const packagedMarkets = useCallback(async () => {
+    if (endpoint.name === ClusterName.localhost) {
+      return fetchMarketData()
+    }
     try {
       setMarketsLoading(true)
       const supportedMarkets = getSupportedMarketsByNetwork(endpoint.name)
@@ -195,11 +198,13 @@ const useOptionsMarkets = () => {
       // Not sure if we should replace the existing markets or merge them
       setMarkets(newMarkets)
       setMarketsLoading(false)
+      return newMarkets
     } catch (err) {
       console.error(err)
       setMarketsLoading(false)
     }
-  }, [connection, supportedAssets, endpoint]) // eslint-disable-line
+    return {}
+  }, [connection, fetchMarketData, supportedAssets, endpoint]) // eslint-disable-line
 
   const getSizes = ({ uAssetSymbol, qAssetSymbol, date }) => {
     const keyPart = `${date}-${uAssetSymbol}-${qAssetSymbol}-`

@@ -2,6 +2,13 @@ import { Account, PublicKey, Transaction } from '@solana/web3.js'
 import BigNumber from 'bignumber.js'
 import { SerumMarket } from './utils/serum'
 
+export enum ClusterName {
+  devnet = 'Devnet',
+  mainnet = 'Mainnet',
+  testnet = 'Testnet',
+  localhost = 'localhost',
+}
+
 export type Asset = {
   tokenSymbol: string
   mintAddress: string
@@ -34,6 +41,26 @@ export type OptionMarket = {
   underlyingAssetMintKey: PublicKey
   quoteAssetPoolKey: PublicKey
   quoteAssetMintKey: PublicKey
+  serumMarketKey?: PublicKey
+}
+
+export type OptionRow = OptionMarket & {
+  key: string
+  ask: string
+  bid: string
+  change: string
+  volume: string
+  openInterest: string
+  serumKey: string
+  serumMarketKey?: PublicKey
+  initialized: boolean
+  fraction: string
+  reciprocalFraction: string
+}
+
+export type CallOrPut = OptionRow & {
+  type: 'call' | 'put'
+  strike: BigNumber
 }
 
 export type OptionMarketMeta = {

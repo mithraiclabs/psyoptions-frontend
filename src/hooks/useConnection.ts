@@ -1,9 +1,10 @@
 import { Connection, PublicKey } from '@solana/web3.js'
 import React, { useContext } from 'react'
+import { ClusterName } from '../types'
 import { ConnectionContext } from '../context/ConnectionContext'
 
 type Network = {
-  name: string
+  name: ClusterName
   url: string
   programId: string
 }
@@ -15,13 +16,8 @@ type ConnectionContext = {
   dexProgramId: PublicKey
 }
 const useConnection = (): ConnectionContext => {
-  const {
-    networks,
-    connection,
-    endpoint,
-    setEndpoint,
-    dexProgramId,
-  } = useContext(ConnectionContext) as ConnectionContext
+  const { networks, connection, endpoint, setEndpoint, dexProgramId } =
+    useContext(ConnectionContext) as ConnectionContext
 
   return {
     networks,

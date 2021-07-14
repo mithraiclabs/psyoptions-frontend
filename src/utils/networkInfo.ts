@@ -1,34 +1,43 @@
 import { clusterApiUrl, PublicKey } from '@solana/web3.js'
 import { TOKENS } from '@project-serum/tokens'
 import { MARKETS } from '@mithraic-labs/serum'
+/* eslint-disable */
+import { MarketMeta } from '@mithraic-labs/market-meta'
+import { ClusterName } from '../types'
+
+type Network = {
+  name: ClusterName
+  url: string
+  programId: string
+}
 
 // Note these network values are used for determining the asset list.
 // Be sure to update that when modifying the order of this list.
-const networks = [
+const networks: Network[] = [
   {
-    name: 'Mainnet',
+    name: ClusterName.mainnet,
     url: clusterApiUrl('mainnet-beta'),
     programId: process.env.MAINNET_PROGRAM_ID,
   },
   {
-    name: 'Devnet',
+    name: ClusterName.devnet,
     url: clusterApiUrl('devnet'),
     // url: 'https://devnet.psyoptions.io',
     programId: process.env.DEVNET_PROGRAM_ID,
   },
   {
-    name: 'Testnet',
+    name: ClusterName.testnet,
     url: clusterApiUrl('testnet'),
     programId: process.env.TESTNET_PROGRAM_ID,
   },
   {
-    name: 'localhost',
+    name: ClusterName.localhost,
     url: 'http://127.0.0.1:8899',
     programId: process.env.LOCAL_PROGRAM_ID,
   },
 ]
 
-const getDexProgramKeyByNetwork = (name) => {
+const getDexProgramKeyByNetwork = (name: ClusterName) => {
   switch (name) {
     case 'Mainnet':
       return MARKETS.find(({ deprecated }) => !deprecated).programId
@@ -49,7 +58,7 @@ const getDexProgramKeyByNetwork = (name) => {
   }
 }
 
-const getSerumMarketsByNetwork = (name) => {
+const getSerumMarketsByNetwork = (name: ClusterName) => {
   switch (name) {
     case networks[0].name:
       return TOKENS.mainnet
@@ -75,49 +84,33 @@ const getSerumMarketsByNetwork = (name) => {
   }
 }
 
-const getAssetsByNetwork = (name) => {
+const getSupportedMarketsByNetwork = (name: ClusterName) => {
   switch (name) {
-    case networks[0].name:
-      return TOKENS.mainnet
-    case networks[1].name:
+    case ClusterName.mainnet:
+      return MarketMeta.mainnet.optionMarkets
+    case ClusterName.devnet:
+      return MarketMeta.devnet.optionMarkets
+    case ClusterName.testnet:
+      return MarketMeta.testnet.optionMarkets
+    case ClusterName.localhost:
+      return []
+    default:
+      return []
+  }
+}
+
+const getAssetsByNetwork = (name: ClusterName) => {
+  switch (name) {
+    case ClusterName.mainnet:
+      return MarketMeta.mainnet.tokens
+    case ClusterName.devnet:
       // Devnet tokens and faucets can be found [here](https://github.com/blockworks-foundation/mango-client-ts/blob/main/src/ids.json#L10)
-      return [
-        {
-          tokenSymbol: 'SOL',
-          mintAddress: 'So11111111111111111111111111111111111111112',
-          tokenName: 'Solana',
-          icon:
-            'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/solana/info/logo.png',
-          decimals: 9,
-        },
-        {
-          tokenSymbol: 'BTC',
-          mintAddress: 'C6kYXcaRUMqeBF5fhg165RWU7AnpT9z92fvKNoMqjmz6',
-          tokenName: 'Bitcoin',
-          icon:
-            'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/bitcoin/info/logo.png',
-          decimals: 9,
-        },
-        {
-          tokenSymbol: 'PSY',
-          mintAddress: 'BzwRWwr1kCLJVUUM14fQthP6FJKrGpXjw3ZHTZ6PQsYa',
-          tokenName: 'PSY Test',
-          icon: 'https://docs.psyoptions.io/img/PsyOps.svg',
-          decimals: 9,
-        },
-        {
-          tokenSymbol: 'USDC',
-          mintAddress: 'E6Z6zLzk8MWY3TY8E87mr88FhGowEPJTeMWzkqtL6qkF',
-          tokenName: 'USDC',
-          icon:
-            'https://raw.githubusercontent.com/trustwallet/assets/f3ffd0b9ae2165336279ce2f8db1981a55ce30f8/blockchains/ethereum/assets/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48/logo.png',
-          decimals: 2,
-        },
-      ]
-    case networks[2].name:
-      return TOKENS.testnet
-    case networks[3].name:
+      return MarketMeta.devnet.tokens
+    case ClusterName.testnet:
+      return MarketMeta.testnet.tokens
+    case ClusterName.localhost:
       try {
+        /* eslint-disable */
         const localnetData = require('../hooks/localnetData.json')
         return [TOKENS.mainnet[0], ...localnetData]
       } catch (err) {
@@ -132,6 +125,7 @@ const getAssetsByNetwork = (name) => {
 export {
   getAssetsByNetwork,
   getDexProgramKeyByNetwork,
+  getSupportedMarketsByNetwork,
   getSerumMarketsByNetwork,
   networks,
 }

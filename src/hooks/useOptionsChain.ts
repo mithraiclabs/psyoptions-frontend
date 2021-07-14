@@ -1,26 +1,11 @@
 import { useCallback, useContext } from 'react'
 import BigNumber from 'bignumber.js'
-import { PublicKey } from '@solana/web3.js'
 
 import useOptionsMarkets from './useOptionsMarkets'
 import { OptionsChainContext } from '../context/OptionsChainContext'
 import useAssetList from './useAssetList'
 import useNotifications from './useNotifications'
-import { OptionMarket } from '../types'
-
-type OptionRow = OptionMarket & {
-  key: string
-  ask: string
-  bid: string
-  change: string
-  volume: string
-  openInterest: string
-  serumKey: string
-  serumMarketKey?: PublicKey
-  initialized: boolean
-  fraction: string
-  reciprocalFraction: string
-}
+import { OptionMarket, OptionRow } from '../types'
 
 export type ChainRow = {
   strike: BigNumber
@@ -41,10 +26,7 @@ const callOrPutTemplate = {
   serumKey: '',
   initialized: false,
 }
-const useOptionsChain = (): {
-  chain: ChainRow[]
-  buildOptionsChain: (timestamp: number) => void
-} => {
+const useOptionsChain = () => {
   const { pushNotification } = useNotifications()
   const { markets: _markets, marketsLoading } = useOptionsMarkets()
   const { uAsset, qAsset } = useAssetList()

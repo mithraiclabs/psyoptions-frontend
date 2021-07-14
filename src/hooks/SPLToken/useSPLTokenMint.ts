@@ -28,6 +28,7 @@ export const useSPLTokenMintInfo = (
             [mint.toString()]: mintInfo,
           }))
         } catch (err) {
+          console.error(err)
           Sentry.captureException(err)
         }
       })()

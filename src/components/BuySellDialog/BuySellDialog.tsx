@@ -64,7 +64,7 @@ const BuySellDialog: React.VFC<{
   serumKey: string
   date: Moment
   markPrice: number
-  setLimitPrice: (price: string) => string
+  setLimitPrice: React.Dispatch<React.SetStateAction<string>>
   limitPrice: string
 }> = ({
   open,
@@ -218,7 +218,11 @@ const BuySellDialog: React.VFC<{
       // Load the market instance into serum context state
       // There may be a more efficient way to do this part since we have the keypair here
       // Open to suggestions / refactoring
-      await fetchSerumMarket(...serumKey.split('-'))
+      await fetchSerumMarket(
+        undefined,
+        serumKey.split('-')[0],
+        serumKey.split('-')[1],
+      )
     } catch (error) {
       pushErrorNotification(error)
     } finally {
@@ -581,7 +585,9 @@ const BuySellDialog: React.VFC<{
                   <UnsettledFunds
                     qAssetSymbol={type === 'call' ? qAssetSymbol : uAssetSymbol}
                     serumKey={serumKey}
-                    qAssetDecimals={type === 'call' ? qAssetDecimals : uAssetDecimals}
+                    qAssetDecimals={
+                      type === 'call' ? qAssetDecimals : uAssetDecimals
+                    }
                   />
                 </>
               ) : !connected ? (

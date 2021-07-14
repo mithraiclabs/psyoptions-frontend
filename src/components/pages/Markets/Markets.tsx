@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import Box from '@material-ui/core/Box'
 import FormControlLabel from '@material-ui/core/FormControlLabel'
@@ -9,6 +10,7 @@ import TableRow from '@material-ui/core/TableRow'
 import ChevronLeft from '@material-ui/icons/ChevronLeft'
 import ChevronRight from '@material-ui/icons/ChevronRight'
 import moment from 'moment'
+import BigNumber from 'bignumber.js'
 
 import theme from '../../../utils/theme'
 import { getStrikePrices, intervals } from '../../../utils/getStrikePrices'
@@ -39,6 +41,7 @@ import { ContractSizeSelector } from '../../ContractSizeSelector'
 import { TCellLoading, THeadCell, TCellStrike, PageButton } from './styles'
 import Balances from './MarketsBalances'
 import { MarketsTableHeader } from './MarketsTableHeader'
+import { CallOrPut } from '../../../types'
 
 const dblsp = `${'\u00A0'}${'\u00A0'}`
 
@@ -83,7 +86,7 @@ const Markets = () => {
   const { serumMarkets, fetchSerumMarket } = useSerum()
   const [round, setRound] = useState(true)
   const [buySellDialogOpen, setBuySellDialogOpen] = useState(false)
-  const [callPutData, setCallPutData] = useState({ type: 'call' })
+  const [callPutData, setCallPutData] = useState({ type: 'call' } as CallOrPut)
   const [showAllStrikes] = useState(true) // TODO: let user configure this
   const [page, setPage] = useState(0)
   const [limitPrice, setLimitPrice] = useState('0')
@@ -124,7 +127,7 @@ const Markets = () => {
   let precision
   if (round && chain[0]?.strike) {
     const n = chain[0].strike
-    if (n >= 1) {
+    if (n >= new BigNumber(1)) {
       precision = 2
     } else {
       const s = n.toString(10).replace('.', '')
@@ -323,6 +326,7 @@ const Markets = () => {
                 fontSize="12px"
                 display="flex"
                 alignItems="center"
+                // @ts-ignore: annoying MUI theme stuff
                 border={`1px solid ${theme.palette.background.lighter}`}
                 borderRadius={'20px'}
                 width={'fit-content'}
@@ -330,6 +334,7 @@ const Markets = () => {
                 <Box pr={1}>
                   <Box>
                     <SelectAsset
+                      disabled="false"
                       selectedAsset={uAsset}
                       onSelectAsset={(asset) => {
                         setUAsset(asset)
@@ -358,6 +363,7 @@ const Markets = () => {
                         <TCellLoading
                           colSpan={8}
                           style={{
+                            // @ts-ignore: annoying MUI theme stuff
                             backgroundColor: theme.palette.background.medium,
                           }}
                         >
@@ -367,6 +373,7 @@ const Markets = () => {
                         <TCellLoading
                           colSpan={8}
                           style={{
+                            // @ts-ignore: annoying MUI theme stuff
                             backgroundColor: theme.palette.background.medium,
                           }}
                         >
@@ -398,6 +405,7 @@ const Markets = () => {
                         justifyContent="space-between"
                         alignItems="center"
                       >
+                        {/* @ts-ignore: annoying MUI stuff */}
                         <Box width="33%" align="left">
                           {!!uAsset?.tokenSymbol && !!markPrice && (
                             <>
@@ -408,6 +416,7 @@ const Markets = () => {
                         </Box>
                         <Box
                           width="33%"
+                          /* @ts-ignore: annoying MUI stuff */
                           align="center"
                           display="flex"
                           justifyContent="center"
@@ -433,6 +442,7 @@ const Markets = () => {
                             </>
                           )}
                         </Box>
+                        {/* @ts-ignore: annoying MUI stuff */}
                         <Box width="33%" align="right">
                           <FormControlLabel
                             labelPlacement="start"

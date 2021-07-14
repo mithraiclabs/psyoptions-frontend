@@ -44,6 +44,25 @@ export type OptionMarket = {
   serumMarketKey?: PublicKey
 }
 
+export type OptionRow = OptionMarket & {
+  key: string
+  ask: string
+  bid: string
+  change: string
+  volume: string
+  openInterest: string
+  serumKey: string
+  serumMarketKey?: PublicKey
+  initialized: boolean
+  fraction: string
+  reciprocalFraction: string
+}
+
+export type CallOrPut = OptionRow & {
+  type: 'call' | 'put'
+  strike: BigNumber
+}
+
 export type OptionMarketMeta = {
   expiration: number
   optionMarketAddress: string

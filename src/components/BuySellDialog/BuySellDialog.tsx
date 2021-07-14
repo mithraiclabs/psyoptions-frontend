@@ -64,7 +64,7 @@ const BuySellDialog: React.VFC<{
   serumKey: string
   date: Moment
   markPrice: number
-  setLimitPrice: (price: string) => string
+  setLimitPrice: React.Dispatch<React.SetStateAction<string>>
   limitPrice: string
 }> = ({
   open,

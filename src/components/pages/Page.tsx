@@ -9,7 +9,8 @@ const Page: React.FC<{
   children: React.ReactNode
   background?: string
   hideNavbar?: boolean
-}> = ({ children, background, hideNavbar }) => (
+  center?: boolean
+}> = ({ children, background, hideNavbar, center = true }) => (
   <>
     <Notifications />
     <Box
@@ -25,7 +26,7 @@ const Page: React.FC<{
         display="flex"
         flexDirection="column"
         flexGrow={1}
-        justifyContent="center"
+        justifyContent={center ? 'center' : 'flex-start'}
       >
         <Box minHeight="100%">{children}</Box>
       </Box>

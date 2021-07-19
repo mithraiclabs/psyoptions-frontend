@@ -1,5 +1,5 @@
 import { MintInfo, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { Account, PublicKey } from '@solana/web3.js'
+import { Account, PublicKey } from '@mithraic-labs/solana-web3.js'
 import { useEffect } from 'react'
 import * as Sentry from '@sentry/react'
 import { useSPLTokenMints } from '../../context/SPLTokenMintsContext'

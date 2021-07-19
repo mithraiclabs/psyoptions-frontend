@@ -1,5 +1,5 @@
 import { OpenOrders } from '@mithraic-labs/serum'
-import { PublicKey } from '@solana/web3.js'
+import { PublicKey } from '@mithraic-labs/solana-web3.js'
 import { useCallback, useEffect, useRef } from 'react'
 import { useSerumOpenOrders } from '../../context/SerumOpenOrdersContext'
 import useConnection from '../useConnection'

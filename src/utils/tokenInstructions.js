@@ -3,10 +3,10 @@ import {
   PublicKey,
   SYSVAR_RENT_PUBKEY,
   TransactionInstruction,
-} from '@solana/web3.js'
+} from '@mithraic-labs/solana-web3.js'
 
 export const TOKEN_PROGRAM_ID = new PublicKey(
-  'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'
+  'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
 )
 
 const LAYOUT = BufferLayout.union(BufferLayout.u8('instruction'))
@@ -18,24 +18,24 @@ LAYOUT.addVariant(
     BufferLayout.u8('freezeAuthorityOption'),
     BufferLayout.blob(32, 'freezeAuthority'),
   ]),
-  'initializeMint'
+  'initializeMint',
 )
 LAYOUT.addVariant(1, BufferLayout.struct([]), 'initializeAccount')
 LAYOUT.addVariant(
   3,
   BufferLayout.struct([BufferLayout.nu64('amount')]),
-  'transfer'
+  'transfer',
 )
 LAYOUT.addVariant(
   7,
   BufferLayout.struct([BufferLayout.nu64('amount')]),
-  'mintTo'
+  'mintTo',
 )
 LAYOUT.addVariant(8, BufferLayout.struct([BufferLayout.nu64('amount')]), 'burn')
 LAYOUT.addVariant(9, BufferLayout.struct([]), 'closeAccount')
 
 const instructionMaxSpan = Math.max(
-  ...Object.values(LAYOUT.registry).map((r) => r.span)
+  ...Object.values(LAYOUT.registry).map((r) => r.span),
 )
 
 function encodeTokenInstructionData(instruction) {

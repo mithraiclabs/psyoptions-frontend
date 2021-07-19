@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { PublicKey } from '@solana/web3.js'
+import { PublicKey } from '@mithraic-labs/solana-web3.js'
 import { exerciseCoveredCall } from '@mithraic-labs/psyoptions'
 import useConnection from './useConnection'
 import useWallet from './useWallet'

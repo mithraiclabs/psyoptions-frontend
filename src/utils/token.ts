@@ -4,7 +4,7 @@ import {
   Account,
   Connection,
   PublicKey,
-} from '@solana/web3.js'
+} from '@mithraic-labs/solana-web3.js'
 import { AccountLayout, Token } from '@solana/spl-token'
 import { TOKEN_PROGRAM_ID } from './tokenInstructions'
 

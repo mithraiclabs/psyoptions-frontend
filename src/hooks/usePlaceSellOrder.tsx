@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { PublicKey, Transaction } from '@solana/web3.js'
+import { PublicKey, Transaction } from '@mithraic-labs/solana-web3.js'
 
 import { Market, OrderParams } from '@mithraic-labs/serum/lib/market'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import { useCallback, useContext } from 'react'
-import { PublicKey, Transaction } from '@solana/web3.js'
+import { PublicKey, Transaction } from '@mithraic-labs/solana-web3.js'
 import BigNumber from 'bignumber.js'
 import {
   initializeAccountsForMarket,

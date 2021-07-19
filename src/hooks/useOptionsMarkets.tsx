@@ -1,7 +1,7 @@
 import { useContext, useCallback } from 'react'
 import BigNumber from 'bignumber.js'
 import { Market } from '@mithraic-labs/psyoptions'
-import { Connection, PublicKey } from '@solana/web3.js'
+import { Connection, PublicKey } from '@mithraic-labs/solana-web3.js'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 
 import useNotifications from './useNotifications'

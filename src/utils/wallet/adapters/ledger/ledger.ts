@@ -1,4 +1,4 @@
-import type { Transaction, PublicKey } from '@solana/web3.js'
+import type { Transaction, PublicKey } from '@mithraic-labs/solana-web3.js'
 import type Transport from '@ledgerhq/hw-transport'
 import TransportWebUSB from '@ledgerhq/hw-transport-webusb'
 import EventEmitter from 'eventemitter3'

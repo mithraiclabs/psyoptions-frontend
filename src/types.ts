@@ -1,5 +1,5 @@
 import { Market } from '@mithraic-labs/serum'
-import { Account, PublicKey, Transaction } from '@solana/web3.js'
+import { Account, PublicKey, Transaction } from '@mithraic-labs/solana-web3.js'
 import BigNumber from 'bignumber.js'
 import { SerumMarket } from './utils/serum'
 

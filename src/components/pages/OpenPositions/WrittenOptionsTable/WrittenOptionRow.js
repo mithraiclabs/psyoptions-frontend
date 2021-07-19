@@ -1,6 +1,6 @@
 /* eslint-disable react/forbid-prop-types */
 import React, { useEffect, useState } from 'react'
-import { PublicKey } from '@solana/web3.js'
+import { PublicKey } from '@mithraic-labs/solana-web3.js'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import Avatar from '@material-ui/core/Avatar'
 import Button from '@material-ui/core/Button'

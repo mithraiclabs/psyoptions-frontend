@@ -1,4 +1,4 @@
-import { Connection, PublicKey } from '@solana/web3.js'
+import { Connection, PublicKey } from '@mithraic-labs/solana-web3.js'
 import React, { useContext } from 'react'
 import { ClusterName } from '../types'
 import { ConnectionContext } from '../context/ConnectionContext'

@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { PublicKey, Transaction } from '@solana/web3.js'
+import { PublicKey, Transaction } from '@mithraic-labs/solana-web3.js'
 import { closePostExpirationCoveredCallInstruction } from '@mithraic-labs/psyoptions'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import useConnection from './useConnection'

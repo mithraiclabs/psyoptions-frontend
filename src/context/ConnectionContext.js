@@ -1,5 +1,5 @@
 import React, { createContext, useState } from 'react'
-import { Connection } from '@solana/web3.js'
+import { Connection } from '@mithraic-labs/solana-web3.js'
 
 import { getDexProgramKeyByNetwork, networks } from '../utils/networkInfo'
 

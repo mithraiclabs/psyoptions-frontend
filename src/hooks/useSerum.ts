@@ -1,5 +1,6 @@
 import { useContext, useCallback } from 'react'
 import { PublicKey } from '@solana/web3.js'
+import { Market } from '@mithraic-labs/serum'
 
 import { SerumContext } from '../context/SerumContext'
 import { SerumMarket } from '../utils/serum'
@@ -10,6 +11,34 @@ const useSerum = () => {
   const { pushNotification } = useNotifications()
   const { connection, dexProgramId } = useConnection()
   const { serumMarkets, setSerumMarkets } = useContext(SerumContext)
+
+  const fetchMultipleSerumMarkets = useCallback(
+    async (serumMarketKeys: PublicKey[]) => {
+      try {
+        const markets = await Market.loadMultiple(
+          connection,
+          serumMarketKeys,
+          {},
+          dexProgramId,
+        )
+        setSerumMarkets((_markets) => {
+          const newMarkets = {}
+          markets.forEach((market) => {
+            newMarkets[
+              `${market.baseMintAddress.toString()}-${market.quoteMintAddress.toString()}`
+            ] = {
+              loading: false,
+              serumMarket: market,
+            }
+          })
+          return { ..._markets, ...newMarkets }
+        })
+      } catch (error) {
+        console.error(error)
+      }
+    },
+    [setSerumMarkets, connection, dexProgramId],
+  )
 
   /**
    * Loads a serum market into the serumMarkets state
@@ -79,6 +108,7 @@ const useSerum = () => {
     serumMarkets,
     setSerumMarkets,
     fetchSerumMarket,
+    fetchMultipleSerumMarkets,
   }
 }
 

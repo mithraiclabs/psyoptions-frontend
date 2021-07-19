@@ -83,7 +83,7 @@ const Markets = () => {
   const [contractSize, setContractSize] = useState(100)
   const { chain, buildOptionsChain } = useOptionsChain()
   const { marketsLoading } = useOptionsMarkets()
-  const { serumMarkets, fetchSerumMarket } = useSerum()
+  const { serumMarkets, fetchMultipleSerumMarkets } = useSerum()
   const [round, setRound] = useState(true)
   const [buySellDialogOpen, setBuySellDialogOpen] = useState(false)
   const [callPutData, setCallPutData] = useState({ type: 'call' } as CallOrPut)
@@ -138,24 +138,10 @@ const Markets = () => {
 
   const filteredChain = useMemo(
     () =>
-      chain
-        .filter((row) => {
-          return supportedStrikePrices.includes(row.strike.toNumber())
-        })
-        .map((row) => ({
-          ...row,
-          put: {
-            ...row.put,
-            serumMarketKey:
-              serumMarkets[row.put.serumKey]?.serumMarket?.marketAddress,
-          },
-          call: {
-            ...row.call,
-            serumMarketKey:
-              serumMarkets[row.call.serumKey]?.serumMarket?.marketAddress,
-          },
-        })),
-    [chain, serumMarkets, supportedStrikePrices],
+      chain.filter((row) => {
+        return supportedStrikePrices.includes(row.strike.toNumber())
+      }),
+    [chain, supportedStrikePrices],
   )
 
   const numberOfPages = Math.ceil(filteredChain.length / rowsPerPage)
@@ -205,23 +191,23 @@ const Markets = () => {
   useEffect(() => {
     // Load serum markets when the options chain changes
     // Only if they don't already exist for the matching call/put
+    const serumKeys = []
     rowsToDisplay.forEach(({ call, put }) => {
       if (call?.serumKey && !serumMarkets[call.serumKey]) {
-        fetchSerumMarket(
-          call.serumMarketKey,
-          call.serumKey.split('-')[0],
-          call.serumKey.split('-')[1],
-        )
+        serumKeys.push(call.serumMarketKey)
       }
       if (put?.serumKey && !serumMarkets[put.serumKey]) {
-        fetchSerumMarket(
-          put.serumMarketKey,
-          put.serumKey.split('-')[0],
-          put.serumKey.split('-')[1],
-        )
+        serumKeys.push(put.serumMarketKey)
       }
     })
-  }, [rowsToDisplay, fetchSerumMarket, serumMarkets])
+    console.log(
+      '*** serumKeys = ',
+      serumKeys.map((x) => x.toString()),
+    )
+    if (serumKeys.length) {
+      fetchMultipleSerumMarkets(serumKeys)
+    }
+  }, [chain, rowsToDisplay, fetchMultipleSerumMarkets, serumMarkets])
 
   // Open buy/sell/mint modal
   const handleBuySellClick = useCallback((callOrPut) => {

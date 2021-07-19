@@ -1,8 +1,7 @@
 import { useCallback } from 'react'
 import { PublicKey, Transaction } from '@solana/web3.js'
 
-import { SerumMarket } from 'src/utils/serum'
-import { OrderParams } from '@mithraic-labs/serum/lib/market'
+import { Market, OrderParams } from '@mithraic-labs/serum/lib/market'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { Asset, OptionMarket, TokenAccount } from '../types'
 import { WRAPPED_SOL_ADDRESS } from '../utils/token'
@@ -17,7 +16,7 @@ import { useCreateAdHocOpenOrdersSubscription } from './Serum'
 
 type PlaceSellOrderArgs = {
   numberOfContractsToMint: number
-  serumMarket: SerumMarket
+  serumMarket: Market
   orderArgs: OrderParams
   optionMarket: OptionMarket
   uAsset: Asset
@@ -115,7 +114,7 @@ const usePlaceSellOrder = (
           openOrdersAddress,
           transaction: placeOrderTx,
           signers: placeOrderSigners,
-        } = await serumMarket.market.makePlaceOrderTransaction(connection, {
+        } = await serumMarket.makePlaceOrderTransaction(connection, {
           ...orderArgs,
           payer: _optionTokenSrcKey,
         })

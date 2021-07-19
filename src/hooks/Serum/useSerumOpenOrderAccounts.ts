@@ -19,10 +19,9 @@ export const useSerumOpenOrderAccounts = (
   const serumMarket = serumMarkets[key]?.serumMarket
 
   useEffect(() => {
-    const market = serumMarket?.market as Market | undefined
-    if (market && !skipFetch) {
+    if (serumMarket && !skipFetch) {
       ;(async () => {
-        const openOrders = await market.findOpenOrdersAccountsForOwner(
+        const openOrders = await serumMarket.findOpenOrdersAccountsForOwner(
           connection,
           pubKey,
         )
@@ -36,14 +35,7 @@ export const useSerumOpenOrderAccounts = (
         }))
       })()
     }
-  }, [
-    connection,
-    key,
-    pubKey,
-    serumMarket?.market,
-    setSerumOpenOrders,
-    skipFetch,
-  ])
+  }, [connection, key, pubKey, serumMarket, setSerumOpenOrders, skipFetch])
 
   return serumOpenOrders[key]?.orders
 }

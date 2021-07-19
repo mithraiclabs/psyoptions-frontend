@@ -19,15 +19,14 @@ export const useSubscribeSerumOrderbook = (key: string): void => {
   const serumMarket = serumMarkets[key]?.serumMarket
 
   useEffect(() => {
-    const market = serumMarket?.market as Market | undefined
     let asksSubscription
     let bidsSubscription
-    if (market) {
+    if (serumMarket) {
       // subscribe to bid/ask on chain updates
       bidsSubscription = connection.onAccountChange(
-        market.bidsAddress,
+        serumMarket.bidsAddress,
         (bidsAccount) => {
-          const book = Orderbook.decode(market, bidsAccount.data)
+          const book = Orderbook.decode(serumMarket, bidsAccount.data)
           const _bids = book
             .getL2(DEFAULT_DEPTH)
             .map(([price, size]) => ({ price, size }))
@@ -43,9 +42,9 @@ export const useSubscribeSerumOrderbook = (key: string): void => {
         },
       )
       asksSubscription = connection.onAccountChange(
-        market.asksAddress,
+        serumMarket.asksAddress,
         (asksAccount) => {
-          const book = Orderbook.decode(market, asksAccount.data)
+          const book = Orderbook.decode(serumMarket, asksAccount.data)
           const _asks = book
             .getL2(DEFAULT_DEPTH)
             .map(([price, size]) => ({ price, size }))

@@ -1,9 +1,13 @@
 import { useContext, useCallback } from 'react'
 import { PublicKey } from '@solana/web3.js'
-import { Market } from '@mithraic-labs/serum'
 
+import { Market } from '@mithraic-labs/serum'
 import { SerumContext } from '../context/SerumContext'
-import { SerumMarket } from '../utils/serum'
+import {
+  SerumMarket,
+  batchSerumMarkets,
+  findMarketByAssets,
+} from '../utils/serum'
 import useConnection from './useConnection'
 import useNotifications from './useNotifications'
 
@@ -15,7 +19,7 @@ const useSerum = () => {
   const fetchMultipleSerumMarkets = useCallback(
     async (serumMarketKeys: PublicKey[]) => {
       try {
-        const markets = await Market.loadMultiple(
+        const { serumMarketsInfo } = await batchSerumMarkets(
           connection,
           serumMarketKeys,
           {},
@@ -23,7 +27,7 @@ const useSerum = () => {
         )
         setSerumMarkets((_markets) => {
           const newMarkets = {}
-          markets.forEach((market) => {
+          serumMarketsInfo.forEach(({ market }) => {
             newMarkets[
               `${market.baseMintAddress.toString()}-${market.quoteMintAddress.toString()}`
             ] = {
@@ -62,18 +66,18 @@ const useSerum = () => {
         [key]: { loading: true },
       }))
 
-      let serumMarket: SerumMarket
-      let error = false
+      let serumMarket: Market
+      let error
       try {
         if (serumMarketKey) {
-          serumMarket = new SerumMarket(
+          serumMarket = await Market.load(
             connection,
             serumMarketKey,
+            {},
             dexProgramId,
           )
-          await serumMarket.initMarket()
         } else {
-          serumMarket = await SerumMarket.findByAssets(
+          serumMarket = await findMarketByAssets(
             connection,
             new PublicKey(mintA),
             new PublicKey(mintB),

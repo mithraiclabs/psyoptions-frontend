@@ -1,5 +1,6 @@
 import { Market } from '@mithraic-labs/serum'
 import { useEffect, useState } from 'react'
+import { getOrderbook } from '../../utils/serum'
 import {
   OrderbookData,
   useSerumOrderbooks,
@@ -25,8 +26,7 @@ export const useSerumOrderbook = (
   const serumMarket = serumMarkets[key]?.serumMarket
 
   useEffect(() => {
-    const market = serumMarket?.market as Market | undefined
-    if (market) {
+    if (serumMarket) {
       // initial load of the orderbook
       ;(async () => {
         setLoading(true)
@@ -36,7 +36,7 @@ export const useSerumOrderbook = (
             bids: _bids,
             bidOrderbook,
             askOrderbook,
-          } = await serumMarket.getOrderbook()
+          } = await getOrderbook(connection, serumMarket)
           setOrderbooks((prevOrderbooks) => ({
             ...prevOrderbooks,
             [key]: {

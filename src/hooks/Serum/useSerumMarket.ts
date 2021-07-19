@@ -1,7 +1,7 @@
 import { PublicKey } from '@solana/web3.js'
 import { useEffect } from 'react'
 import * as Sentry from '@sentry/react'
-import { SerumMarket } from '../../utils/serum'
+import { findMarketByAssets } from '../../utils/serum'
 import useConnection from '../useConnection'
 import { LocalSerumMarket } from '../../types'
 import { useSerumContext } from '../../context/SerumContext'
@@ -32,7 +32,7 @@ export const useSerumMarket = (key: string): LocalSerumMarket | undefined => {
 
     ;(async () => {
       try {
-        const market = await SerumMarket.findByAssets(
+        const market = await findMarketByAssets(
           connection,
           new PublicKey(mintA),
           new PublicKey(mintB),

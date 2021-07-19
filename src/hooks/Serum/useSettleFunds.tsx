@@ -1,4 +1,3 @@
-import { Market } from '@mithraic-labs/serum'
 import { PublicKey, Transaction } from '@solana/web3.js'
 import { useCallback } from 'react'
 import { createAssociatedTokenAccountInstruction } from '../../utils/instructions'
@@ -40,8 +39,7 @@ export const useSettleFunds = (
   const makeSettleFundsTx = useCallback(async (): Promise<
     Transaction | undefined
   > => {
-    const market = serumMarket?.market as Market | undefined
-    if (openOrders.length && market) {
+    if (openOrders.length && serumMarket) {
       const transaction = new Transaction()
       let signers = []
       let _baseTokenAccountKey = baseTokenAccountKey
@@ -76,12 +74,12 @@ export const useSettleFunds = (
       }
 
       const { transaction: settleTx, signers: settleSigners } =
-        await market.makeSettleFundsTransaction(
+        await serumMarket.makeSettleFundsTransaction(
           connection,
           openOrders[0],
           _baseTokenAccountKey,
           _quoteTokenAccountKey,
-          market.quoteMintAddress.equals(USDCPublicKey) &&
+          serumMarket.quoteMintAddress.equals(USDCPublicKey) &&
             process.env.USDC_SERUM_REFERRER_ADDRESS
             ? new PublicKey(process.env.USDC_SERUM_REFERRER_ADDRESS)
             : undefined,
@@ -100,7 +98,7 @@ export const useSettleFunds = (
     }
     return undefined
   }, [
-    serumMarket?.market,
+    serumMarket,
     openOrders,
     baseTokenAccountKey,
     quoteTokenAccountKey,

@@ -47,11 +47,7 @@ const OpenOrdersForMarket: React.FC<{
 
   useSubscribeOpenOrders(serumKey)
 
-  if (
-    !serumMarket?.market ||
-    !openOrders[serumKey]?.orders ||
-    !orderbooks[serumKey]
-  ) {
+  if (!serumMarket || !openOrders[serumKey]?.orders || !orderbooks[serumKey]) {
     return null
   }
 

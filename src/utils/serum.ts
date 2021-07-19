@@ -1,11 +1,152 @@
-import { Keypair, PublicKey, Transaction, SystemProgram } from '@solana/web3.js'
+import {
+  Keypair,
+  PublicKey,
+  Transaction,
+  SystemProgram,
+  Connection,
+} from '@solana/web3.js'
 
 import { DexInstructions, Market } from '@mithraic-labs/serum'
 import BN from 'bn.js'
-import { Token } from '@solana/spl-token'
+import { MintLayout, Token } from '@solana/spl-token'
 import { Buffer } from 'buffer'
 
+import { MarketOptions, Orderbook } from '@mithraic-labs/serum/lib/market'
 import { TOKEN_PROGRAM_ID } from './tokenInstructions'
+
+/**
+ * Loads multiple Serum markets with minimal RPC requests
+ */
+export const batchSerumMarkets = async (
+  connection: Connection,
+  addresses: PublicKey[],
+  options: MarketOptions = {},
+  programId: PublicKey,
+) => {
+  // Load all of the MarketState data
+  const marketInfos = await connection.getMultipleAccountsInfo(addresses)
+  if (!marketInfos || !marketInfos.length) {
+    throw new Error('Markets not found')
+  }
+  // decode all of the markets
+  const decoded: any[] = []
+  marketInfos.forEach((accountInfo) => {
+    decoded.push(Market.getLayout(programId).decode(accountInfo.data))
+  })
+
+  // Load all of the SPL Token Mint data and orderbook data for the markets
+  const mintKeys: PublicKey[] = []
+  const orderbookKeys: PublicKey[] = []
+  const serumMarketsInfo: {
+    market: Market
+    asks: Orderbook
+    bids: Orderbook
+  }[] = []
+  decoded.forEach((d) => {
+    mintKeys.push(d.baseMint)
+    mintKeys.push(d.quoteMint)
+    orderbookKeys.push(d.bids)
+    orderbookKeys.push(d.asks)
+  })
+  const [mintInfos, orderBookInfos] = await Promise.all([
+    connection.getMultipleAccountsInfo(mintKeys),
+    connection.getMultipleAccountsInfo(orderbookKeys),
+  ])
+  const mints = mintInfos?.map((mintInfo) => MintLayout.decode(mintInfo.data))
+
+  // instantiate the many markets
+  decoded.forEach((d, index) => {
+    const { decimals: baseMintDecimals } = mints?.[index * 2]
+    const { decimals: quoteMintDecimals } = mints?.[index * 2 + 1]
+    const bidsAccountInfo = orderBookInfos[index * 2]
+    const asksAccountInfo = orderBookInfos[index * 2 + 1]
+    const market = new Market(
+      d,
+      baseMintDecimals,
+      quoteMintDecimals,
+      options,
+      programId,
+    )
+    const bids = Orderbook.decode(market, bidsAccountInfo.data)
+    const asks = Orderbook.decode(market, asksAccountInfo.data)
+    serumMarketsInfo.push({
+      market,
+      bids,
+      asks,
+    })
+  })
+
+  return { serumMarketsInfo, orderbookKeys }
+}
+
+/**
+ * Returns the first available SerumMarket for specified assets
+ *
+ * @param {Connect} connection
+ * @param {PublicKey} baseMintAddress
+ * @param {PublicKey} quoteMintAddress
+ * @param {PublicKey} dexProgramKey
+ */
+export const findMarketByAssets = async (
+  connection,
+  baseMintAddress,
+  quoteMintAddress,
+  dexProgramKey,
+) => {
+  const availableMarkets = await Market.findAccountsByMints(
+    connection,
+    baseMintAddress,
+    quoteMintAddress,
+    dexProgramKey,
+  )
+  if (availableMarkets.length) {
+    return Market.load(
+      connection,
+      availableMarkets[0].publicKey,
+      {},
+      dexProgramKey,
+    )
+  }
+  return null
+}
+
+/**
+ * Returns full orderbook up to specified depth
+ * @param {number} depth
+ * @param {number} roundTo -- TODO: merge orderbook rows by rounding the prices to a number of decimals
+ * @returns {{ bids[[ price, size ]], asks[[ price, size ]]}}
+ */
+export const getOrderbook = async (
+  connection: Connection,
+  market: Market,
+  depth = 20,
+) => {
+  try {
+    const [bidOrderbook, askOrderbook] = await Promise.all([
+      market.loadBids(connection),
+      market.loadAsks(connection),
+    ])
+
+    return {
+      bidOrderbook,
+      askOrderbook,
+      bids: !bidOrderbook
+        ? []
+        : bidOrderbook.getL2(depth).map(([price, size]) => ({ price, size })),
+      asks: !askOrderbook
+        ? []
+        : askOrderbook.getL2(depth).map(([price, size]) => ({ price, size })),
+    }
+  } catch (err) {
+    console.error(err)
+    return {
+      bidOrderbook: null,
+      askOrderbook: null,
+      bids: [],
+      asks: [],
+    }
+  }
+}
 
 /**
  * Generate the TX to initialize a new market.
@@ -39,7 +180,7 @@ export const createInitializeMarketTx = async ({
   const feeRateBps = 0
   const quoteDustThreshold = new BN(100)
 
-  async function getVaultOwnerAndNonce() {
+  async function getVaultOwnerAndNonce(): Promise<[PublicKey, BN]> {
     const nonce = new BN(0)
     // eslint-disable-next-line no-constant-condition
     while (true) {
@@ -170,16 +311,24 @@ export const createInitializeMarketTx = async ({
 }
 
 export class SerumMarket {
-  /**
-   *
-   * @param {Connection} connection
-   * @param {PublicKey} marketAddress
-   * @param {PublicKey} dexProgramKey
-   */
-  constructor(connection, marketAddress, dexProgramKey) {
+  connection: Connection
+
+  marketAddress: PublicKey
+
+  dexProgramKey: PublicKey
+
+  market?: Market
+
+  constructor(
+    connection: Connection,
+    marketAddress: PublicKey,
+    dexProgramKey: PublicKey,
+    market?: Market,
+  ) {
     this.connection = connection
     this.marketAddress = marketAddress
     this.dexProgramKey = dexProgramKey
+    this.market = market
   }
 
   async initMarket() {
@@ -207,13 +356,18 @@ export class SerumMarket {
       dexProgramKey,
     )
     if (availableMarkets.length) {
-      const market = new SerumMarket(
+      const market = await Market.load(
+        connection,
+        availableMarkets[0].publicKey,
+        {},
+        dexProgramKey,
+      )
+      return new SerumMarket(
         connection,
         availableMarkets[0].publicKey,
         dexProgramKey,
+        market,
       )
-      await market.initMarket()
-      return market
     }
     return null
   }
@@ -295,103 +449,5 @@ export class SerumMarket {
     const highestbid = bidOrderbook.getL2(1)[0]
     const lowestAsk = askOrderbook.getL2(1)[0]
     return { bid: highestbid[0], ask: lowestAsk[0] }
-  }
-
-  /**
-   * Returns full orderbook up to specified depth
-   * @param {number} depth
-   * @param {number} roundTo -- TODO: merge orderbook rows by rounding the prices to a number of decimals
-   * @returns {{ bids[[ price, size ]], asks[[ price, size ]]}}
-   */
-  async getOrderbook(depth = 20) {
-    try {
-      const [bidOrderbook, askOrderbook] = await Promise.all([
-        this.market.loadBids(this.connection),
-        this.market.loadAsks(this.connection),
-      ])
-
-      return {
-        bidOrderbook,
-        askOrderbook,
-        bids: !bidOrderbook
-          ? []
-          : bidOrderbook.getL2(depth).map(([price, size]) => ({ price, size })),
-        asks: !askOrderbook
-          ? []
-          : askOrderbook.getL2(depth).map(([price, size]) => ({ price, size })),
-      }
-    } catch (err) {
-      console.error(err)
-      return {
-        bidOrderbook: null,
-        askOrderbook: null,
-        bids: [],
-        asks: [],
-      }
-    }
-  }
-
-  async getPrice() {
-    const { bid, ask } = await this.getBidAskSpread()
-    return (ask - bid) / 2 + bid
-  }
-
-  /**
-   * @typedef PlaceOrderOptions
-   * @property {BN} clientId - (not 100% sure) The ID to collect commissions from serum
-   * @property {PublicKey | undefined} openOrdersAddressKey - This account stores the following:
-   *   How much of the base and quote currency that user has locked in open orders or settleableA
-   *   list of open orders for that user on that market.
-   *   This is an option because the Market#makePlaceOrderTransaction function will look up
-   *   OpenOrder accounts by owner.
-   * @property {Account | undefined} openOrdersAccount - See above as well
-   * @property {PublicKey | undefined} feeDiscountPubkey -
-   */
-
-  /**
-   *
-   * @param {PublicKey} owner - the wallet's PublicKey
-   * @param {PublicKey} payer - The account that will be putting up the asset. If the order side
-   * is 'sell', this must be an account holding the Base currency. If the order side is 'buy',
-   * this must be an account holding the Quote currency.
-   * @param {'buy'|'sell'} side - buying or selling the asset
-   * @param {number} price - price of asset relative to quote asset
-   * @param {number} size - amount of asset
-   * @param {'limit' | 'ioc' | 'postOnly' | undefined} orderType - type of order
-   * @param {PlaceOrderOptions} opts
-   * @return {{
-   *  transaction: placeOrderTx,
-   *  signers: placeOrderSigners
-   * }}
-   */
-  async createPlaceOrderTx({
-    connection,
-    owner,
-    payer,
-    side,
-    price,
-    size,
-    orderType,
-    opts = {},
-  }) {
-    const {
-      clientId,
-      openOrdersAddressKey,
-      openOrdersAccount,
-      feeDiscountPubkey,
-    } = opts
-
-    return this.market.makePlaceOrderTransaction(connection, {
-      owner,
-      payer,
-      side,
-      price,
-      size,
-      orderType,
-      clientId,
-      openOrdersAddressKey,
-      openOrdersAccount,
-      feeDiscountPubkey,
-    })
   }
 }

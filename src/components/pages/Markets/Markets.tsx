@@ -200,10 +200,6 @@ const Markets = () => {
         serumKeys.push(put.serumMarketKey)
       }
     })
-    console.log(
-      '*** serumKeys = ',
-      serumKeys.map((x) => x.toString()),
-    )
     if (serumKeys.length) {
       fetchMultipleSerumMarkets(serumKeys)
     }

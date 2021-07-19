@@ -20,7 +20,6 @@ const query = `query chainMarkets($serumMarketIds: [String!]) {
   }
 }`
 
-// TODO refactor serumMarket.marketAddress to public key
 export const useChainMarketData = (
   chain: ChainRow[] | undefined,
 ): Record<string, TrackerMarketData> => {
@@ -30,11 +29,11 @@ export const useChainMarketData = (
       chain?.reduce((acc, chainRow) => {
         const callMarketMeta = serumMarkets[chainRow?.call?.serumKey]
         const putMarketMeta = serumMarkets[chainRow?.put?.serumKey]
-        if (callMarketMeta?.serumMarket?.marketAddress) {
-          acc.push(callMarketMeta.serumMarket.marketAddress.toString())
+        if (callMarketMeta?.serumMarket?.address) {
+          acc.push(callMarketMeta.serumMarket.address.toString())
         }
-        if (putMarketMeta?.serumMarket?.marketAddress) {
-          acc.push(putMarketMeta.serumMarket.marketAddress.toString())
+        if (putMarketMeta?.serumMarket?.address) {
+          acc.push(putMarketMeta.serumMarket.address.toString())
         }
         return acc
       }, []) ?? '[]',

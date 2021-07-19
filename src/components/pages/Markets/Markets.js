@@ -26,6 +26,7 @@ import {
 import useExpirationDate from '../../../hooks/useExpirationDate'
 
 import { MarketDataProvider } from '../../../context/MarketDataContext'
+import { ColumnSettingsProvider } from '../../../reducers/showColumnReducer'
 
 import Page from '../Page'
 import Select from '../../Select'
@@ -243,130 +244,131 @@ const Markets = () => {
 
   return (
     <MarketDataProvider chain={chain}>
-      <Page>
-        <BuySellDialog
-          {...callPutData}
-          markPrice={markPrice}
-          heading={buySellDialogHeading}
-          open={buySellDialogOpen}
-          onClose={() => setBuySellDialogOpen(false)}
-          round={round}
-          precision={precision}
-          date={date}
-          uAssetDecimals={
-            callPutData?.type === 'call' ? uAsset?.decimals : qAsset?.decimals
-          }
-          qAssetDecimals={
-            callPutData?.type === 'call' ? qAsset?.decimals : uAsset?.decimals
-          }
-          setLimitPrice={setLimitPrice}
-          limitPrice={limitPrice}
-        />
-        <Box
-          display="flex"
-          justifyContent="center"
-          flexDirection="column"
-          minHeight="100%"
-        >
+      <ColumnSettingsProvider>
+        <Page>
+          <BuySellDialog
+            {...callPutData}
+            markPrice={markPrice}
+            heading={buySellDialogHeading}
+            open={buySellDialogOpen}
+            onClose={() => setBuySellDialogOpen(false)}
+            round={round}
+            precision={precision}
+            date={date}
+            uAssetDecimals={
+              callPutData?.type === 'call' ? uAsset?.decimals : qAsset?.decimals
+            }
+            qAssetDecimals={
+              callPutData?.type === 'call' ? qAsset?.decimals : uAsset?.decimals
+            }
+            setLimitPrice={setLimitPrice}
+            limitPrice={limitPrice}
+            />
           <Box
-            py={[0, 0, 2]}
             display="flex"
-            flexDirection={['column', 'column', 'row']}
-            alignItems="center"
-            justifyContent="space-between"
-          >
+            justifyContent="center"
+            flexDirection="column"
+            minHeight="100%"
+            >
             <Box
-              width={['100%', '100%', 'auto']}
+              py={[0, 0, 2]}
               display="flex"
               flexDirection={['column', 'column', 'row']}
-              alignItems={['left', 'left', 'center']}
+              alignItems="center"
               justifyContent="space-between"
-            >
-              <Box px={0} py={0} width={['100%', '100%', '300px']}>
-                <Select
-                  variant="filled"
-                  label="Expiration Date"
-                  value={date.toISOString()}
-                  onChange={(e) => setSelectedDate(moment.utc(e.target.value))}
-                  options={dates.map((d) => ({
-                    value: d.toISOString(),
-                    text: `${d.format('ll')} | 23:59:59 UTC`,
-                  }))}
-                  style={{
-                    minWidth: '100%',
-                  }}
-                />
-              </Box>
-              <Box px={[0, 0, 2]} py={0} width={['100%', '100%', '200px']}>
-                <ContractSizeSelector
-                  onChange={updateContractSize}
-                  value={contractSize}
-                />
-              </Box>
-              <Box py={[2, 2, 0]}>
-                <Balances />
-              </Box>
-            </Box>
-            <Box px={[1, 1, 0]} py={[2, 2, 1]} width={['100%', '100%', 'auto']}>
-              <Box pb={'6px'} pl="10px" fontSize={'14px'}>
-                Asset Pair:
-              </Box>
-              <Box
-                fontSize="12px"
-                display="flex"
-                alignItems="center"
-                border={`1px solid ${theme.palette.background.lighter}`}
-                borderRadius={'20px'}
-                width={'fit-content'}
               >
-                <Box pr={1}>
-                  <Box>
-                    <SelectAsset
-                      selectedAsset={uAsset}
-                      onSelectAsset={(asset) => {
-                        setUAsset(asset)
-                      }}
+              <Box
+                width={['100%', '100%', 'auto']}
+                display="flex"
+                flexDirection={['column', 'column', 'row']}
+                alignItems={['left', 'left', 'center']}
+                justifyContent="space-between"
+                >
+                <Box px={0} py={0} width={['100%', '100%', '300px']}>
+                  <Select
+                    variant="filled"
+                    label="Expiration Date"
+                    value={date.toISOString()}
+                    onChange={(e) => setSelectedDate(moment.utc(e.target.value))}
+                    options={dates.map((d) => ({
+                      value: d.toISOString(),
+                      text: `${d.format('ll')} | 23:59:59 UTC`,
+                    }))}
+                    style={{
+                      minWidth: '100%',
+                    }}
                     />
+                </Box>
+                <Box px={[0, 0, 2]} py={0} width={['100%', '100%', '200px']}>
+                  <ContractSizeSelector
+                    onChange={updateContractSize}
+                    value={contractSize}
+                    />
+                </Box>
+                <Box py={[2, 2, 0]}>
+                  <Balances />
+                </Box>
+              </Box>
+              <Box px={[1, 1, 0]} py={[2, 2, 1]} width={['100%', '100%', 'auto']}>
+                <Box pb={'6px'} pl="10px" fontSize={'14px'}>
+                  Asset Pair:
+                </Box>
+                <Box
+                  fontSize="12px"
+                  display="flex"
+                  alignItems="center"
+                  border={`1px solid ${theme.palette.background.lighter}`}
+                  borderRadius={'20px'}
+                  width={'fit-content'}
+                  >
+                  <Box pr={1}>
+                    <Box>
+                      <SelectAsset
+                        selectedAsset={uAsset}
+                        onSelectAsset={(asset) => {
+                          setUAsset(asset)
+                        }}
+                        />
+                    </Box>
+                  </Box>
+                  <h3 style={{ margin: 0 }}>/</h3>
+                  <Box pl={'4px'}>
+                    <SelectAsset disabled selectedAsset={qAsset} />
                   </Box>
                 </Box>
-                <h3 style={{ margin: 0 }}>/</h3>
-                <Box pl={'4px'}>
-                  <SelectAsset disabled selectedAsset={qAsset} />
-                </Box>
               </Box>
             </Box>
-          </Box>
-          <Box position="relative">
-            <TableContainer>
-              <Table stickyHeader aria-label="sticky table">
-                <MarketsTableHeader
-                  uAssetSymbol={uAsset?.tokenSymbol || ''}
-                  qAssetSymbol={qAsset?.tokenSymbol}
-                />
-                <TableBody>
-                  {rows.map((row) => {
-                    return fullPageLoading ? (
-                      <tr key={`${row.key}`}>
-                        <TCellLoading
-                          colSpan={8}
-                          style={{
-                            backgroundColor: theme.palette.background.medium,
-                          }}
-                        >
-                          <Loading />
-                        </TCellLoading>
-                        <TCellStrike />
-                        <TCellLoading
-                          colSpan={8}
-                          style={{
-                            backgroundColor: theme.palette.background.medium,
-                          }}
-                        >
-                          <Loading />
-                        </TCellLoading>
-                      </tr>
-                    ) : (
-                      <CallPutRow
+            <Box position="relative">
+              <TableContainer>
+                <Table stickyHeader aria-label="sticky table">
+                  <MarketsTableHeader
+                    uAssetSymbol={uAsset?.tokenSymbol || ''}
+                    qAssetSymbol={qAsset?.tokenSymbol}
+                    />
+                  <TableBody>
+                    {rows.map((row) => {
+                      return fullPageLoading ? (
+                        <tr key={`${row.key}`}>
+                          <TCellLoading
+                            colSpan={8}
+                            style={{
+                              backgroundColor: theme.palette.background.medium,
+                            }}
+                            >
+                            <Loading />
+                          </TCellLoading>
+                          <TCellStrike />
+                          <TCellLoading
+                            colSpan={8}
+                            style={{
+                              backgroundColor: theme.palette.background.medium,
+                            }}
+                            >
+                            <Loading />
+                          </TCellLoading>
+                        </tr>
+                      ) : (
+                        <CallPutRow
                         key={`${row.key}`}
                         row={row}
                         uAsset={uAsset}
@@ -378,85 +380,86 @@ const Markets = () => {
                         onClickBuySellPut={handleBuySellClick}
                         markPrice={markPrice}
                         setLimitPrice={setLimitPrice}
-                      />
-                    )
-                  })}
-                  <TableRow>
-                    <THeadCell colSpan={17} style={{ borderBottom: 'none' }}>
-                      <Box
-                        py={1}
-                        px={[1, 1, 0]}
-                        display="flex"
-                        justifyContent="space-between"
-                        alignItems="center"
-                      >
-                        <Box width="33%" align="left">
-                          {!!uAsset?.tokenSymbol && !!markPrice && (
-                            <>
-                              {uAsset?.tokenSymbol} Market Price: $
-                              {markPrice && markPrice.toFixed(precision)}
-                            </>
-                          )}
-                        </Box>
+                        />
+                        )
+                      })}
+                    <TableRow>
+                      <THeadCell colSpan={17} style={{ borderBottom: 'none' }}>
                         <Box
-                          width="33%"
-                          align="center"
+                          py={1}
+                          px={[1, 1, 0]}
                           display="flex"
-                          justifyContent="center"
+                          justifyContent="space-between"
                           alignItems="center"
-                        >
-                          {numberOfPages > 1 && (
-                            <>
-                              <PageButton
-                                disabled={page === 0}
-                                onClick={() => setPage(Math.max(page - 1, 0))}
-                              >
-                                <ChevronLeft />
-                              </PageButton>
-                              <Box width="80px">{currentPageLabel}</Box>
-                              <PageButton
-                                disabled={page === numberOfPages - 1}
-                                onClick={() =>
-                                  setPage(Math.min(page + 1, numberOfPages))
-                                }
-                              >
-                                <ChevronRight />
-                              </PageButton>
-                            </>
-                          )}
-                        </Box>
-                        <Box width="33%" align="right">
-                          <FormControlLabel
-                            labelPlacement="start"
-                            control={
-                              <Switch
+                          >
+                          <Box width="33%" align="left">
+                            {!!uAsset?.tokenSymbol && !!markPrice && (
+                              <>
+                                {uAsset?.tokenSymbol} Market Price: $
+                                {markPrice && markPrice.toFixed(precision)}
+                              </>
+                            )}
+                          </Box>
+                          <Box
+                            width="33%"
+                            align="center"
+                            display="flex"
+                            justifyContent="center"
+                            alignItems="center"
+                            >
+                            {numberOfPages > 1 && (
+                              <>
+                                <PageButton
+                                  disabled={page === 0}
+                                  onClick={() => setPage(Math.max(page - 1, 0))}
+                                  >
+                                  <ChevronLeft />
+                                </PageButton>
+                                <Box width="80px">{currentPageLabel}</Box>
+                                <PageButton
+                                  disabled={page === numberOfPages - 1}
+                                  onClick={() =>
+                                    setPage(Math.min(page + 1, numberOfPages))
+                                  }
+                                  >
+                                  <ChevronRight />
+                                </PageButton>
+                              </>
+                            )}
+                          </Box>
+                          <Box width="33%" align="right">
+                            <FormControlLabel
+                              labelPlacement="start"
+                              control={
+                                <Switch
                                 checked={round}
                                 onChange={() => setRound(!round)}
                                 name="round-strike-prices"
                                 color="primary"
                                 size="small"
+                                />
+                              }
+                              label={
+                                <span style={{ fontSize: '14px' }}>
+                                  Round Strike Prices
+                                </span>
+                              }
+                              style={{ margin: '0' }}
                               />
-                            }
-                            label={
-                              <span style={{ fontSize: '14px' }}>
-                                Round Strike Prices
-                              </span>
-                            }
-                            style={{ margin: '0' }}
-                          />
+                          </Box>
                         </Box>
-                      </Box>
-                    </THeadCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </TableContainer>
-            <Box>
-              <OpenOrders optionMarkets={marketsFlat} />
+                      </THeadCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </TableContainer>
+              <Box>
+                <OpenOrders optionMarkets={marketsFlat} />
+              </Box>
             </Box>
           </Box>
-        </Box>
-      </Page>
+        </Page>
+      </ColumnSettingsProvider>
     </MarketDataProvider>
   )
 }

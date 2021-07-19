@@ -26,6 +26,7 @@ export const ColumnDisplaySelector: React.FC = React.memo(() =>  {
     showOI,
   }, dispatch] = useReducer(showColumnReducer, initialColumnState)
 
+  console.log('selector status', showIV)
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
   };

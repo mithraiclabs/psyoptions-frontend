@@ -1,14 +1,24 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import Box from '@material-ui/core/Box'
 import TableHead from '@material-ui/core/TableHead'
 import TableRow from '@material-ui/core/TableRow'
 import { ColumnDisplaySelector } from './ColumnDisplaySelector'
 import { THeadCell, TCellStrike, StyledTooltip } from './styles'
+import { ColumnSettingsContext } from '../../../reducers/showColumnReducer'
 
 export const MarketsTableHeader: React.FC<{
   uAssetSymbol: string
   qAssetSymbol: string
 }> = React.memo(({ uAssetSymbol, qAssetSymbol }) => {
+  const { state } = useContext(ColumnSettingsContext)
+
+  const {
+    showIV,
+    showPriceChange,
+    showVolume,
+    showOI
+  } = state
+  console.log('showIV in table header', showIV)
   return (
     <TableHead>
       <TableRow>
@@ -83,19 +93,22 @@ export const MarketsTableHeader: React.FC<{
         <THeadCell align="left" style={{ paddingLeft: '16px' }}>
           Action
         </THeadCell>
-
-        <THeadCell align="left" width={'70px'}>
-          <StyledTooltip
-            placement="top"
-            title={
-              <Box p={1}>
-                {`Implied volatility is the market's forecast of a likely movement in an underlying asset's price. This uses the highest bid as the price when calculating implied volatility`}
-              </Box>
-            }
-          >
-            <Box display="inline">IVB</Box>
-          </StyledTooltip>
-        </THeadCell>
+        {
+          showIV && (
+            <THeadCell align="left" width={'70px'}>
+              <StyledTooltip
+                placement="top"
+                title={
+                  <Box p={1}>
+                    {`Implied volatility is the market's forecast of a likely movement in an underlying asset's price. This uses the highest bid as the price when calculating implied volatility`}
+                  </Box>
+                }
+              >
+                <Box display="inline">IVB</Box>
+              </StyledTooltip>
+            </THeadCell>
+          )
+        }
         <THeadCell align="left" width={'90px'}>
           <StyledTooltip
             placement="top"
@@ -120,52 +133,68 @@ export const MarketsTableHeader: React.FC<{
             <Box display="inline">Ask</Box>
           </StyledTooltip>
         </THeadCell>
-        <THeadCell align="left" width={'70px'}>
-          <StyledTooltip
-            placement="top"
-            title={
-              <Box p={1}>
-                {`Implied volatility is the market's forecast of a likely movement in an underlying asset's price. This uses the lowest ask as the price when calculating implied volatility`}
-              </Box>
-            }
-          >
-            <Box display="inline">IVA</Box>
-          </StyledTooltip>
-        </THeadCell>
-        <THeadCell align="left">
-          <StyledTooltip
-            placement="top"
-            title={
-              <Box
-                p={1}
-              >{`Percentage of price change of the call option over the last 24 hours`}</Box>
-            }
-          >
-            <Box display="inline">Change</Box>
-          </StyledTooltip>
-        </THeadCell>
-        <THeadCell align="left">
-          <StyledTooltip
-            placement="top"
-            title={
-              <Box
-                p={1}
-              >{`Number of option contracts traded in the last 24 hours on the call option`}</Box>
-            }
-          >
-            <Box display="inline">Volume</Box>
-          </StyledTooltip>
-        </THeadCell>
-        <THeadCell align="left">
-          <StyledTooltip
-            placement="top"
-            title={
-              <Box p={1}>{`Number of circulating call option contracts`}</Box>
-            }
-          >
-            <Box display="inline">Open</Box>
-          </StyledTooltip>
-        </THeadCell>
+        {
+          showIV && (
+            <THeadCell align="left" width={'70px'}>
+              <StyledTooltip
+                placement="top"
+                title={
+                  <Box p={1}>
+                    {`Implied volatility is the market's forecast of a likely movement in an underlying asset's price. This uses the lowest ask as the price when calculating implied volatility`}
+                  </Box>
+                }
+              >
+                <Box display="inline">IVA</Box>
+              </StyledTooltip>
+            </THeadCell>
+          )
+        }
+        {
+          showPriceChange && (
+            <THeadCell align="left">
+              <StyledTooltip
+                placement="top"
+                title={
+                  <Box
+                    p={1}
+                  >{`Percentage of price change of the call option over the last 24 hours`}</Box>
+                }
+              >
+                <Box display="inline">Change</Box>
+              </StyledTooltip>
+            </THeadCell> 
+          )
+        }
+        {
+          showVolume && (
+            <THeadCell align="left">
+              <StyledTooltip
+                placement="top"
+                title={
+                  <Box
+                    p={1}
+                  >{`Number of option contracts traded in the last 24 hours on the call option`}</Box>
+                }
+              >
+                <Box display="inline">Volume</Box>
+              </StyledTooltip>
+            </THeadCell>
+          )
+        }
+        {
+          showOI && (
+            <THeadCell align="left">
+              <StyledTooltip
+                placement="top"
+                title={
+                  <Box p={1}>{`Number of circulating call option contracts`}</Box>
+                }
+              >
+                <Box display="inline">Open</Box>
+              </StyledTooltip>
+            </THeadCell>
+          )
+        }
 
         <TCellStrike align="center">
           <StyledTooltip
@@ -180,18 +209,22 @@ export const MarketsTableHeader: React.FC<{
           </StyledTooltip>
         </TCellStrike>
 
-        <THeadCell align="right" width={'70px'}>
-          <StyledTooltip
-            placement="top"
-            title={
-              <Box p={1}>
-                {`Implied volatility is the market's forecast of a likely movement in an underlying asset's price. This uses the highest bid as the price when calculating implied volatility`}
-              </Box>
-            }
-          >
-            <Box display="inline">IVB</Box>
-          </StyledTooltip>
-        </THeadCell>
+        {
+          showIV && (
+            <THeadCell align="right" width={'70px'}>
+              <StyledTooltip
+                placement="top"
+                title={
+                  <Box p={1}>
+                    {`Implied volatility is the market's forecast of a likely movement in an underlying asset's price. This uses the highest bid as the price when calculating implied volatility`}
+                  </Box>
+                }
+              >
+                <Box display="inline">IVB</Box>
+              </StyledTooltip>
+            </THeadCell>
+          )
+        }
         <THeadCell align="right" width={'90px'}>
           <StyledTooltip
             placement="top"
@@ -216,52 +249,68 @@ export const MarketsTableHeader: React.FC<{
             <Box display="inline">Ask</Box>
           </StyledTooltip>
         </THeadCell>
-        <THeadCell align="right" width={'70px'}>
-          <StyledTooltip
-            placement="top"
-            title={
-              <Box p={1}>
-                {`Implied volatility is the market's forecast of a likely movement in an underlying asset's price. This uses the lowest ask as the price when calculating implied volatility`}
-              </Box>
-            }
-          >
-            <Box display="inline">IVA</Box>
-          </StyledTooltip>
-        </THeadCell>
-        <THeadCell align="right">
-          <StyledTooltip
-            placement="top"
-            title={
-              <Box
-                p={1}
-              >{`Percentage of price change of the put option over the last 24 hours`}</Box>
-            }
-          >
-            <Box display="inline">Change</Box>
-          </StyledTooltip>
-        </THeadCell>
-        <THeadCell align="right">
-          <StyledTooltip
-            placement="top"
-            title={
-              <Box
-                p={1}
-              >{`Number of option contracts traded in the last 24 hours on the put option`}</Box>
-            }
-          >
-            <Box display="inline">Volume</Box>
-          </StyledTooltip>
-        </THeadCell>
-        <THeadCell align="right">
-          <StyledTooltip
-            placement="top"
-            title={
-              <Box p={1}>{`Number of circulating put option contracts`}</Box>
-            }
-          >
-            <Box display="inline">Open</Box>
-          </StyledTooltip>
-        </THeadCell>
+        {
+          showIV && (
+            <THeadCell align="right" width={'70px'}>
+              <StyledTooltip
+                placement="top"
+                title={
+                  <Box p={1}>
+                    {`Implied volatility is the market's forecast of a likely movement in an underlying asset's price. This uses the lowest ask as the price when calculating implied volatility`}
+                  </Box>
+                }
+              >
+                <Box display="inline">IVA</Box>
+              </StyledTooltip>
+            </THeadCell>
+          )
+        }
+        {
+          showPriceChange && (
+            <THeadCell align="right">
+              <StyledTooltip
+                placement="top"
+                title={
+                  <Box
+                    p={1}
+                  >{`Percentage of price change of the put option over the last 24 hours`}</Box>
+                }
+              >
+                <Box display="inline">Change</Box>
+              </StyledTooltip>
+            </THeadCell>
+          )
+        }
+        {
+          showVolume && (
+            <THeadCell align="right">
+              <StyledTooltip
+                placement="top"
+                title={
+                  <Box
+                    p={1}
+                  >{`Number of option contracts traded in the last 24 hours on the put option`}</Box>
+                }
+              >
+                <Box display="inline">Volume</Box>
+              </StyledTooltip>
+            </THeadCell>
+          )
+        }
+        {
+          showOI && (
+            <THeadCell align="right">
+              <StyledTooltip
+                placement="top"
+                title={
+                  <Box p={1}>{`Number of circulating put option contracts`}</Box>
+                }
+              >
+                <Box display="inline">Open</Box>
+              </StyledTooltip>
+            </THeadCell>
+          )
+        }
         <THeadCell align="right" style={{ paddingRight: '16px' }}>
           Action
         </THeadCell>

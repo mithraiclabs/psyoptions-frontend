@@ -13,6 +13,11 @@ import { Buffer } from 'buffer'
 
 import { MarketOptions, Orderbook } from '@mithraic-labs/serum/lib/market'
 import { TOKEN_PROGRAM_ID } from './tokenInstructions'
+import { OrderbookData } from '../context/SerumOrderbookContext'
+
+export const getKeyForMarket = (market: Market) => {
+  return `${market.baseMintAddress.toString()}-${market.quoteMintAddress.toString()}`
+}
 
 /**
  * Loads multiple Serum markets with minimal RPC requests
@@ -22,6 +27,7 @@ export const batchSerumMarkets = async (
   addresses: PublicKey[],
   options: MarketOptions = {},
   programId: PublicKey,
+  depth = 10,
 ) => {
   // Load all of the MarketState data
   const marketInfos = await connection.getMultipleAccountsInfo(addresses)
@@ -39,8 +45,7 @@ export const batchSerumMarkets = async (
   const orderbookKeys: PublicKey[] = []
   const serumMarketsInfo: {
     market: Market
-    asks: Orderbook
-    bids: Orderbook
+    orderbookData: OrderbookData
   }[] = []
   decoded.forEach((d) => {
     mintKeys.push(d.baseMint)
@@ -67,12 +72,20 @@ export const batchSerumMarkets = async (
       options,
       programId,
     )
-    const bids = Orderbook.decode(market, bidsAccountInfo.data)
-    const asks = Orderbook.decode(market, asksAccountInfo.data)
+    const bidOrderbook = Orderbook.decode(market, bidsAccountInfo.data)
+    const askOrderbook = Orderbook.decode(market, asksAccountInfo.data)
     serumMarketsInfo.push({
       market,
-      bids,
-      asks,
+      orderbookData: {
+        asks: askOrderbook
+          .getL2(depth)
+          .map(([price, size]) => ({ price, size })),
+        bids: bidOrderbook
+          .getL2(depth)
+          .map(([price, size]) => ({ price, size })),
+        bidOrderbook,
+        askOrderbook,
+      },
     })
   })
 
@@ -333,43 +346,6 @@ export class SerumMarket {
 
   async initMarket() {
     this.market = await this.getMarket()
-  }
-
-  /**
-   * Returns the first available SerumMarket for specified assets
-   *
-   * @param {Connect} connection
-   * @param {PublicKey} baseMintAddress
-   * @param {PublicKey} quoteMintAddress
-   * @param {PublicKey} dexProgramKey
-   */
-  static async findByAssets(
-    connection,
-    baseMintAddress,
-    quoteMintAddress,
-    dexProgramKey,
-  ) {
-    const availableMarkets = await SerumMarket.getMarketByAssetKeys(
-      connection,
-      baseMintAddress,
-      quoteMintAddress,
-      dexProgramKey,
-    )
-    if (availableMarkets.length) {
-      const market = await Market.load(
-        connection,
-        availableMarkets[0].publicKey,
-        {},
-        dexProgramKey,
-      )
-      return new SerumMarket(
-        connection,
-        availableMarkets[0].publicKey,
-        dexProgramKey,
-        market,
-      )
-    }
-    return null
   }
 
   /**

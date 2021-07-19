@@ -13,7 +13,7 @@ export type OrderbookData = {
   askOrderbook: Orderbook
 }
 
-type SerumOrderbooks = Record<string, OrderbookData>
+export type SerumOrderbooks = Record<string, OrderbookData>
 
 type SerumOrderbookContext = [
   SerumOrderbooks,

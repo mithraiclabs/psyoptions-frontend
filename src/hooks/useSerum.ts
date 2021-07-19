@@ -4,17 +4,22 @@ import { PublicKey } from '@solana/web3.js'
 import { Market } from '@mithraic-labs/serum'
 import { SerumContext } from '../context/SerumContext'
 import {
-  SerumMarket,
   batchSerumMarkets,
   findMarketByAssets,
+  getKeyForMarket,
 } from '../utils/serum'
 import useConnection from './useConnection'
 import useNotifications from './useNotifications'
+import {
+  SerumOrderbooks,
+  useSerumOrderbooks,
+} from '../context/SerumOrderbookContext'
 
 const useSerum = () => {
   const { pushNotification } = useNotifications()
   const { connection, dexProgramId } = useConnection()
   const { serumMarkets, setSerumMarkets } = useContext(SerumContext)
+  const [_, setOrderbooks] = useSerumOrderbooks()
 
   const fetchMultipleSerumMarkets = useCallback(
     async (serumMarketKeys: PublicKey[]) => {
@@ -25,23 +30,23 @@ const useSerum = () => {
           {},
           dexProgramId,
         )
-        setSerumMarkets((_markets) => {
-          const newMarkets = {}
-          serumMarketsInfo.forEach(({ market }) => {
-            newMarkets[
-              `${market.baseMintAddress.toString()}-${market.quoteMintAddress.toString()}`
-            ] = {
-              loading: false,
-              serumMarket: market,
-            }
-          })
-          return { ..._markets, ...newMarkets }
+        const newMarkets = {}
+        const newOrderbooks: SerumOrderbooks = {}
+        serumMarketsInfo.forEach(({ market, orderbookData }) => {
+          const key = getKeyForMarket(market)
+          newMarkets[key] = {
+            loading: false,
+            serumMarket: market,
+          }
+          newOrderbooks[getKeyForMarket(market)] = orderbookData
         })
+        setSerumMarkets((_markets) => ({ ..._markets, ...newMarkets }))
+        setOrderbooks((_orderbooks) => ({ ..._orderbooks, ...newOrderbooks }))
       } catch (error) {
         console.error(error)
       }
     },
-    [setSerumMarkets, connection, dexProgramId],
+    [connection, dexProgramId, setOrderbooks, setSerumMarkets],
   )
 
   /**

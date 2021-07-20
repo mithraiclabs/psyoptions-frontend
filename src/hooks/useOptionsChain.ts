@@ -41,7 +41,6 @@ const useOptionsChain = () => {
   const buildOptionsChain = useCallback(
     (dateTimestamp: number, contractSize?: number) => {
       const markets = _markets as OptionMarket // for TS since useOptionsMarkets is not in TS
-      console.log('**** buildOptionsChain', _markets)
       try {
         if (marketsLoading) return
 
@@ -77,7 +76,6 @@ const useOptionsChain = () => {
         const calls = Object.keys(markets)
           .filter((k) => k.match(callKeyPart))
           .map(callPutMap)
-        console.log('*** calls', calls)
         const puts = Object.keys(markets)
           .filter((k) => k.match(putKeyPart))
           .map(callPutMap)

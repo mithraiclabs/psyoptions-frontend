@@ -5,7 +5,7 @@ import {
   SimulatedTransactionResponse,
   Transaction,
   TransactionSignature,
-} from '@solana/web3.js'
+} from '@mithraic-labs/solana-web3.js'
 import Wallet from '@project-serum/sol-wallet-adapter'
 import Link from '@material-ui/core/Link'
 import {
@@ -43,16 +43,16 @@ const useSendTransaction = () => {
     }): Promise<string> => {
       const rawTransaction = signedTransaction.serialize()
       const startTime = getUnixTs()
-      
+
       const txid: TransactionSignature = await connection.sendRawTransaction(
         rawTransaction,
         {
           skipPreflight: true,
         },
       )
-        
+
       const explorerUrl = buildSolanaExplorerUrl(txid)
-      
+
       pushNotification({
         severity: NotificationSeverity.INFO,
         message: sendingMessage,
@@ -63,7 +63,6 @@ const useSendTransaction = () => {
         ),
         txid,
       })
-
 
       let done = false
       ;(async () => {
@@ -133,7 +132,7 @@ const useSendTransaction = () => {
     },
     [pushNotification],
   )
-  
+
   const sendTransaction = useCallback(
     async ({
       transaction,

@@ -12,15 +12,13 @@ import useNotifications from '../../../hooks/useNotifications'
 import { useImpliedVol } from '../../../hooks/useImpliedVol'
 
 import Loading from '../../Loading'
-import {
-  useSerumOrderbook,
-  useSubscribeSerumOrderbook,
-} from '../../../hooks/Serum'
+import { useSubscribeSerumOrderbook } from '../../../hooks/Serum'
 import {
   useSPLTokenMintInfo,
   useSubscribeSPLTokenMint,
 } from '../../../hooks/SPLToken'
 import { useOptionMarket } from '../../../hooks/useOptionMarket'
+import { useSerumOrderbooks } from '../../../context/SerumOrderbookContext'
 
 import ConnectButton from '../../ConnectButton'
 import { useInitializeMarkets } from '../../../hooks/useInitializeMarkets'
@@ -56,9 +54,10 @@ const CallPutRow = ({
   const { pushNotification } = useNotifications()
   const { serumMarkets } = useSerum()
   const initializeMarkets = useInitializeMarkets()
-  const { orderbook: callOrderbook } = useSerumOrderbook(row.call?.serumKey)
+  const [orderbooks] = useSerumOrderbooks()
+  const callOrderbook = orderbooks[row.call?.serumKey]
+  const putOrderbook = orderbooks[row.put?.serumKey]
   useSubscribeSerumOrderbook(row.call?.serumKey)
-  const { orderbook: putOrderbook } = useSerumOrderbook(row.put?.serumKey)
   useSubscribeSerumOrderbook(row.put?.serumKey)
 
   const callHighestBid = callOrderbook?.bids[0]?.price

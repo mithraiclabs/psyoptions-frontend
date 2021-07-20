@@ -1,5 +1,5 @@
 import React, { createContext, useEffect, useMemo, useState } from 'react'
-import { PublicKey } from '@solana/web3.js'
+import { PublicKey } from '@mithraic-labs/solana-web3.js'
 import useConnection from '../hooks/useConnection'
 import { getAssetsByNetwork } from '../utils/networkInfo'
 

@@ -44,12 +44,11 @@ const OpenOrders: React.FC<{
 
       const fetchOpenOrders = async (key) => {
         const { serumMarket } = serumMarkets[key]
-        if (serumMarket?.market) {
-          const orders =
-            await serumMarket.market.findOpenOrdersAccountsForOwner(
-              connection,
-              pubKey,
-            )
+        if (serumMarket) {
+          const orders = await serumMarket.findOpenOrdersAccountsForOwner(
+            connection,
+            pubKey,
+          )
           setOpenOrders((prevOpenOrders) => ({
             ...prevOpenOrders,
             [key]: {

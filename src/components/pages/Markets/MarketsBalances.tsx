@@ -1,7 +1,7 @@
 import React from 'react'
 import Box from '@material-ui/core/Box'
 import Avatar from '@material-ui/core/Avatar'
-import { LAMPORTS_PER_SOL } from '@solana/web3.js'
+import { LAMPORTS_PER_SOL } from '@mithraic-labs/solana-web3.js'
 
 import useWallet from '../../../hooks/useWallet'
 import useAssetList from '../../../hooks/useAssetList'

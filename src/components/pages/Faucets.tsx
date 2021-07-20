@@ -1,6 +1,10 @@
 import React, { useState } from 'react'
 import BN from 'bn.js'
-import { PublicKey, Transaction, LAMPORTS_PER_SOL } from '@solana/web3.js'
+import {
+  PublicKey,
+  Transaction,
+  LAMPORTS_PER_SOL,
+} from '@mithraic-labs/solana-web3.js'
 import CircularProgress from '@material-ui/core/CircularProgress'
 import Box from '@material-ui/core/Box'
 import Paper from '@material-ui/core/Paper'

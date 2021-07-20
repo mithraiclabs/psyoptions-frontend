@@ -1,5 +1,4 @@
-import React, { useCallback } from 'react'
-import Link from '@material-ui/core/Link'
+import { useCallback } from 'react'
 
 import useSerum from '../useSerum'
 import useWallet from '../useWallet'
@@ -7,8 +6,6 @@ import useConnection from '../useConnection'
 import { useSettleFunds } from './useSettleFunds'
 import useNotifications from '../useNotifications'
 import useSendTransaction from '../useSendTransaction'
-
-import { buildSolanaExplorerUrl } from '../../utils/solanaExplorer'
 
 export const useCancelOrder = (serumKey: string) => {
   const { connection } = useConnection()
@@ -21,11 +18,11 @@ export const useCancelOrder = (serumKey: string) => {
 
   return useCallback(
     async (order) => {
-      if (serumMarket?.market) {
+      if (serumMarket) {
         try {
           const settleTx = await makeSettleFundsTx()
 
-          const cancelTx = await serumMarket.market.makeCancelOrderTransaction(
+          const cancelTx = await serumMarket.makeCancelOrderTransaction(
             connection,
             pubKey,
             order,

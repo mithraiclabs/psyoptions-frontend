@@ -1,5 +1,5 @@
 import { MintLayout, u64 } from '@solana/spl-token'
-import { PublicKey } from '@solana/web3.js'
+import { PublicKey } from '@mithraic-labs/solana-web3.js'
 import { useEffect } from 'react'
 import { useSPLTokenMints } from '../../context/SPLTokenMintsContext'
 import useConnection from '../useConnection'

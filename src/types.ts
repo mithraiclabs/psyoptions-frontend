@@ -1,4 +1,5 @@
-import { Account, PublicKey, Transaction } from '@solana/web3.js'
+import { Market } from '@mithraic-labs/serum'
+import { Account, PublicKey, Transaction } from '@mithraic-labs/solana-web3.js'
 import BigNumber from 'bignumber.js'
 import { SerumMarket } from './utils/serum'
 
@@ -109,7 +110,7 @@ export interface CreateMissingMintAccountsRes extends InstructionResponse {
 }
 
 export type LocalSerumMarket = {
-  loading: boolean
-  error: Error | string | undefined
-  serumMarket: SerumMarket
+  loading?: boolean
+  error?: Error | string
+  serumMarket?: Market
 }

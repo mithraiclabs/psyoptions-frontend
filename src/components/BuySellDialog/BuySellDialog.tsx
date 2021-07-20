@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import React, { useState, memo } from 'react'
 import Close from '@material-ui/icons/Close'
 import Box from '@material-ui/core/Box'
@@ -7,7 +8,7 @@ import Button from '@material-ui/core/Button'
 import CircularProgress from '@material-ui/core/CircularProgress'
 import Done from '@material-ui/icons/Done'
 import * as Sentry from '@sentry/react'
-import { LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js'
+import { LAMPORTS_PER_SOL, PublicKey } from '@mithraic-labs/solana-web3.js'
 import BigNumber from 'bignumber.js'
 import BN from 'bn.js'
 import type { Moment } from 'moment'
@@ -297,7 +298,8 @@ const BuySellDialog: React.VFC<{
     setPlaceOrderLoading(true)
     try {
       const serumQuoteTokenAccounts =
-        ownedTokenAccounts[serum.market._decoded.quoteMint.toString()] || []
+        // @ts-ignore: serum market._decoded
+        ownedTokenAccounts[serum._decoded.quoteMint.toString()] || []
       const serumQuoteTokenKey = getHighestAccount(
         serumQuoteTokenAccounts,
       )?.pubKey
@@ -498,9 +500,7 @@ const BuySellDialog: React.VFC<{
             <Box
               display="flex"
               flexDirection="column"
-              justifyContent={
-                serum && serumError === false ? 'flex-start' : 'center'
-              }
+              justifyContent={serum && !serumError ? 'flex-start' : 'center'}
               alignItems="center"
               width="100%"
               height="100%"
@@ -508,7 +508,7 @@ const BuySellDialog: React.VFC<{
             >
               {serumMarketData?.loading ? (
                 <CircularProgress />
-              ) : serum && serumError === false ? (
+              ) : serum && !serumError ? (
                 <>
                   <OrderBook
                     setOrderSize={setOrderSize}

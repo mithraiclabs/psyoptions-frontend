@@ -1,6 +1,6 @@
-import { PublicKey, Transaction } from '@solana/web3.js'
+import { PublicKey, Transaction } from '@mithraic-labs/solana-web3.js'
 import { useCallback } from 'react'
-import { OrderParams } from '@mithraic-labs/serum/lib/market'
+import { Market, OrderParams } from '@mithraic-labs/serum/lib/market'
 import { OptionMarket } from '../types'
 import { createAssociatedTokenAccountInstruction } from '../utils/instructions/token'
 import useWallet from './useWallet'
@@ -8,12 +8,11 @@ import useNotifications from './useNotifications'
 import useConnection from './useConnection'
 import useSendTransaction from './useSendTransaction'
 import useOwnedTokenAccounts from './useOwnedTokenAccounts'
-import { SerumMarket } from '../utils/serum'
 import { useCreateAdHocOpenOrdersSubscription } from './Serum'
 
 type PlaceBuyOrderArgs = {
   optionMarket: OptionMarket
-  serumMarket: SerumMarket
+  serumMarket: Market
   orderArgs: OrderParams
   optionDestinationKey?: PublicKey
 }
@@ -58,7 +57,7 @@ const usePlaceBuyOrder = (
           openOrdersAddress,
           transaction: placeOrderTx,
           signers: placeOrderSigners,
-        } = await serumMarket.market.makePlaceOrderTransaction(connection, {
+        } = await serumMarket.makePlaceOrderTransaction(connection, {
           ...orderArgs,
         })
         transaction.add(placeOrderTx)

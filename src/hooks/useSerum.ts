@@ -1,15 +1,53 @@
 import { useContext, useCallback } from 'react'
-import { PublicKey } from '@solana/web3.js'
+import { PublicKey } from '@mithraic-labs/solana-web3.js'
 
+import { Market } from '@mithraic-labs/serum'
 import { SerumContext } from '../context/SerumContext'
-import { SerumMarket } from '../utils/serum'
+import {
+  batchSerumMarkets,
+  findMarketByAssets,
+  getKeyForMarket,
+} from '../utils/serum'
 import useConnection from './useConnection'
 import useNotifications from './useNotifications'
+import {
+  SerumOrderbooks,
+  useSerumOrderbooks,
+} from '../context/SerumOrderbookContext'
 
 const useSerum = () => {
   const { pushNotification } = useNotifications()
   const { connection, dexProgramId } = useConnection()
   const { serumMarkets, setSerumMarkets } = useContext(SerumContext)
+  const [_, setOrderbooks] = useSerumOrderbooks()
+
+  const fetchMultipleSerumMarkets = useCallback(
+    async (serumMarketKeys: PublicKey[]) => {
+      try {
+        const { serumMarketsInfo } = await batchSerumMarkets(
+          connection,
+          serumMarketKeys,
+          {},
+          dexProgramId,
+        )
+        const newMarkets = {}
+        const newOrderbooks: SerumOrderbooks = {}
+        serumMarketsInfo.forEach(({ market, orderbookData }) => {
+          const key = getKeyForMarket(market)
+          newMarkets[key] = {
+            loading: false,
+            serumMarket: market,
+          }
+          newOrderbooks[getKeyForMarket(market)] = orderbookData
+        })
+        setSerumMarkets((_markets) => ({ ..._markets, ...newMarkets }))
+        setOrderbooks((_orderbooks) => ({ ..._orderbooks, ...newOrderbooks }))
+      } catch (error) {
+        console.error(error)
+      }
+    },
+    [connection, dexProgramId, setOrderbooks, setSerumMarkets],
+  )
 
   /**
    * Loads a serum market into the serumMarkets state
@@ -33,18 +71,18 @@ const useSerum = () => {
         [key]: { loading: true },
       }))
 
-      let serumMarket: SerumMarket
-      let error = false
+      let serumMarket: Market
+      let error
       try {
         if (serumMarketKey) {
-          serumMarket = new SerumMarket(
+          serumMarket = await Market.load(
             connection,
             serumMarketKey,
+            {},
             dexProgramId,
           )
-          await serumMarket.initMarket()
         } else {
-          serumMarket = await SerumMarket.findByAssets(
+          serumMarket = await findMarketByAssets(
             connection,
             new PublicKey(mintA),
             new PublicKey(mintB),
@@ -79,6 +117,7 @@ const useSerum = () => {
     serumMarkets,
     setSerumMarkets,
     fetchSerumMarket,
+    fetchMultipleSerumMarkets,
   }
 }
 

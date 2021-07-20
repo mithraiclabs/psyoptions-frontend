@@ -12,8 +12,8 @@ import { MintLayout, Token } from '@solana/spl-token'
 import { Buffer } from 'buffer'
 
 import { MarketOptions, Orderbook } from '@mithraic-labs/serum/lib/market'
+import * as Sentry from '@sentry/react'
 import { TOKEN_PROGRAM_ID } from './tokenInstructions'
-import { OrderbookData } from '../context/SerumOrderbookContext'
 
 export const getKeyForMarket = (market: Market) => {
   return `${market.baseMintAddress.toString()}-${market.quoteMintAddress.toString()}`
@@ -147,12 +147,13 @@ export const getOrderbook = async (
     }
   } catch (err) {
     console.error(err)
-    return {
-      bidOrderbook: null,
-      askOrderbook: null,
-      bids: [],
-      asks: [],
-    }
+    Sentry.captureException(err)
+  }
+  return {
+    bidOrderbook: null,
+    askOrderbook: null,
+    bids: [],
+    asks: [],
   }
 }
 

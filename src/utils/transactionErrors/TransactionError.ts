@@ -1,4 +1,4 @@
-import { Transaction } from '@mithraic-labs/solana-web3.js'
+import { Transaction } from '@solana/web3.js'
 
 export type InstructionError = [
   number,

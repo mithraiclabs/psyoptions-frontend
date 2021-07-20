@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 import { exchangeWriterTokenForQuoteInstruction } from '@mithraic-labs/psyoptions'
-import { PublicKey, Transaction } from '@mithraic-labs/solana-web3.js'
+import { PublicKey, Transaction } from '@solana/web3.js'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import useNotifications from './useNotifications'
 import useConnection from './useConnection'

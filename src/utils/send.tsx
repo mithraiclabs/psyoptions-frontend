@@ -7,7 +7,7 @@ import {
   SimulatedTransactionResponse,
   Transaction,
   TransactionSignature,
-} from '@mithraic-labs/solana-web3.js'
+} from '@solana/web3.js'
 import Wallet from '@project-serum/sol-wallet-adapter'
 import { TimeoutError } from './transactionErrors/TimeoutError'
 

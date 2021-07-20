@@ -1,5 +1,5 @@
 import { mintCoveredCallInstruction } from '@mithraic-labs/psyoptions'
-import { PublicKey, Transaction } from '@mithraic-labs/solana-web3.js'
+import { PublicKey, Transaction } from '@solana/web3.js'
 import BigNumber from 'bignumber.js'
 import { BN } from 'bn.js'
 import {

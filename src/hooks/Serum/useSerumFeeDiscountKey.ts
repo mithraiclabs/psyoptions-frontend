@@ -1,5 +1,5 @@
 import { getFeeRates, getFeeTier } from '@mithraic-labs/serum'
-import { PublicKey } from '@mithraic-labs/solana-web3.js'
+import { PublicKey } from '@solana/web3.js'
 import { useMemo } from 'react'
 import { getHighestAccount } from '../../utils/token'
 import useAssetList from '../useAssetList'

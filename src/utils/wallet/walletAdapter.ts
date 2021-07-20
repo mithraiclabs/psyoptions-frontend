@@ -1,8 +1,4 @@
-import {
-  PublicKey,
-  SignaturePubkeyPair,
-  Transaction,
-} from '@mithraic-labs/solana-web3.js'
+import { PublicKey, SignaturePubkeyPair, Transaction } from '@solana/web3.js'
 
 interface WalletEventCallback {
   (key: PublicKey | undefined): void

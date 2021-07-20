@@ -9,7 +9,7 @@ import TableContainer from '@material-ui/core/TableContainer'
 import TableRow from '@material-ui/core/TableRow'
 import ChevronLeft from '@material-ui/icons/ChevronLeft'
 import ChevronRight from '@material-ui/icons/ChevronRight'
-import { PublicKey } from '@mithraic-labs/solana-web3.js'
+import { PublicKey } from '@solana/web3.js'
 import moment from 'moment'
 import BigNumber from 'bignumber.js'
 

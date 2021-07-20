@@ -1,4 +1,4 @@
-import { clusterApiUrl, PublicKey } from '@mithraic-labs/solana-web3.js'
+import { clusterApiUrl, PublicKey } from '@solana/web3.js'
 import { TOKENS } from '@project-serum/tokens'
 import { MARKETS } from '@mithraic-labs/serum'
 /* eslint-disable */

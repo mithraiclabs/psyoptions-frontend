@@ -2,7 +2,7 @@ import React from 'react'
 import TableRow from '@material-ui/core/TableRow'
 import Button from '@material-ui/core/Button'
 import moment from 'moment'
-import { PublicKey } from '@mithraic-labs/solana-web3.js'
+import { PublicKey } from '@solana/web3.js'
 
 import useSerum from '../../hooks/useSerum'
 import { useSerumOpenOrders } from '../../context/SerumOpenOrdersContext'

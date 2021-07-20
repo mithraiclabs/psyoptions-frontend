@@ -108,10 +108,10 @@ const BuySellDialog: React.VFC<{
   const { ownedTokenAccounts, loadingOwnedTokenAccounts } =
     useOwnedTokenAccounts()
   const optionMarket = useOptionMarket({
-    date: `${date.unix()}`,
+    date: date.unix(),
     uAssetSymbol,
     qAssetSymbol,
-    size: amountPerContract.toNumber(),
+    size: amountPerContract.toString(),
     amountPerContract,
     quoteAmountPerContract,
   })

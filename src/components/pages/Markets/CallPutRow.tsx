@@ -1,9 +1,10 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import React, { useState, useCallback, useMemo } from 'react'
-import PropTypes from 'prop-types'
 
 import CircularProgress from '@material-ui/core/CircularProgress'
 import Button from '@material-ui/core/Button'
-import moment from 'moment'
+import moment, { Moment } from 'moment'
+import BigNumber from 'bignumber.js'
 
 import theme from '../../../utils/theme'
 import useSerum from '../../../hooks/useSerum'
@@ -25,6 +26,7 @@ import { useInitializeMarkets } from '../../../hooks/useInitializeMarkets'
 
 import { TCell, TCellLoading, TCellStrike, TRow } from './styles'
 import { useMarketData } from '../../../context/MarketDataContext'
+import { Asset, CallOrPut } from '../../../types'
 
 const Empty = ({ children }) => (
   <span style={{ opacity: '0.3' }}>{children}</span>
@@ -38,18 +40,37 @@ const Ask = ({ children }) => (
   <span style={{ color: theme.palette.error.light }}>{children}</span>
 )
 
+type CallPutRowProps = {
+  row: {
+    strike: BigNumber
+    call: CallOrPut
+    put: CallOrPut
+  }
+  uAsset: Asset
+  qAsset: Asset
+  date: Moment
+  // Precision for strike price rounding with .toFixed
+  precision: number
+  round: boolean
+  // Current market price of the underlying asset on serum
+  markPrice: number
+  onClickBuySellCall: (callOrPut: any) => void
+  onClickBuySellPut: (callOrPut: any) => void
+  setLimitPrice: (callOrPut: any) => void
+}
+
 const CallPutRow = ({
   row,
-  round,
-  precision,
+  round = false,
+  precision = 2,
   uAsset,
   qAsset,
   date,
+  markPrice,
   onClickBuySellCall,
   onClickBuySellPut,
-  markPrice,
   setLimitPrice,
-}) => {
+}: CallPutRowProps) => {
   const { connected } = useWallet()
   const { pushNotification } = useNotifications()
   const { serumMarkets } = useSerum()
@@ -176,13 +197,17 @@ const CallPutRow = ({
   )
 
   const callCellStyle = row.strike?.lte(markPrice)
-    ? { backgroundColor: theme.palette.background.tableHighlight }
-    : { backgroundColor: theme.palette.background.marketsCallPutRow }
+    ? // @ts-ignore: annoying MUI theme stuff
+      { backgroundColor: theme.palette.background.tableHighlight }
+    : // @ts-ignore: annoying MUI theme stuff
+      { backgroundColor: theme.palette.background.marketsCallPutRow }
   const putCellStyle = row.strike?.gte(markPrice)
-    ? { backgroundColor: theme.palette.background.tableHighlight }
-    : { backgroundColor: theme.palette.background.marketsCallPutRow }
+    ? // @ts-ignore: annoying MUI theme stuff
+      { backgroundColor: theme.palette.background.tableHighlight }
+    : // @ts-ignore: annoying MUI theme stuff
+      { backgroundColor: theme.palette.background.marketsCallPutRow }
 
-  const openBuySellModal = (callOrPut, price = 0) => {
+  const openBuySellModal = (callOrPut, price = '0') => {
     // only allow full row clicking open for initialized markets
     if (callOrPut === 'call' && row.call?.initialized) {
       onClickBuySellCall({
@@ -215,7 +240,7 @@ const CallPutRow = ({
           <Button
             variant="outlined"
             color="primary"
-            p="8px"
+            // p="8px"
             onClick={() => openBuySellModal('call')}
           >
             Buy/Sell
@@ -224,7 +249,7 @@ const CallPutRow = ({
           <Button
             variant="outlined"
             color="primary"
-            p="8px"
+            // p="8px"
             onClick={() =>
               handleInitialize({
                 type: 'call',
@@ -316,7 +341,7 @@ const CallPutRow = ({
 
       <TCellStrike align="center">
         <h4 style={{ margin: 0, fontWeight: 400 }}>
-          {formatStrike(row.strike, precision)}
+          {formatStrike(row.strike)}
         </h4>
       </TCellStrike>
 
@@ -408,7 +433,7 @@ const CallPutRow = ({
           <Button
             variant="outlined"
             color="primary"
-            p="8px"
+            // p="8px"
             onClick={() => openBuySellModal('put')}
           >
             Buy/Sell
@@ -417,7 +442,7 @@ const CallPutRow = ({
           <Button
             variant="outlined"
             color="primary"
-            p="8px"
+            // p="8px"
             onClick={() =>
               handleInitialize({
                 type: 'put',
@@ -430,53 +455,6 @@ const CallPutRow = ({
       </TCell>
     </TRow>
   )
-}
-
-const CallOrPut = PropTypes.shape({
-  emptyRow: PropTypes.bool,
-  initialized: PropTypes.bool,
-  bid: PropTypes.string,
-  ask: PropTypes.string,
-  change: PropTypes.string,
-  volume: PropTypes.string,
-  openInterest: PropTypes.string,
-  size: PropTypes.string.isRequired,
-  serumKey: PropTypes.string,
-
-  // BigNumber.js objects:
-  amountPerContract: PropTypes.object, // eslint-disable-line
-  quoteAmountPerContract: PropTypes.object, // eslint-disable-line
-})
-const Asset = PropTypes.shape({
-  tokenSymbol: PropTypes.string,
-  mintAddress: PropTypes.string,
-})
-
-CallPutRow.propTypes = {
-  // eslint-disable-next-line react/require-default-props
-  row: PropTypes.shape({
-    strike: PropTypes.object, // eslint-disable-line
-    call: CallOrPut,
-    put: CallOrPut,
-  }),
-  // eslint-disable-next-line react/require-default-props
-  uAsset: Asset,
-  // eslint-disable-next-line react/require-default-props
-  qAsset: Asset,
-  // eslint-disable-next-line react/require-default-props
-  date: PropTypes.shape({
-    unix: PropTypes.func,
-  }),
-  // Precision for strike price rounding with .toFixed
-  precision: PropTypes.number,
-  round: PropTypes.bool,
-  // Current market price of the underlying asset on serum
-  markPrice: PropTypes.number,
-}
-
-CallPutRow.defaultProps = {
-  round: false,
-  precision: 2,
 }
 
 export default CallPutRow

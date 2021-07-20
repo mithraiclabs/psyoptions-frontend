@@ -46,6 +46,7 @@ export type OptionMarket = {
 }
 
 export type OptionRow = OptionMarket & {
+  emptyRow?: boolean
   key: string
   ask: string
   bid: string

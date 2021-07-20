@@ -35,18 +35,13 @@ export const batchSerumMarkets = async (
     throw new Error('Markets not found')
   }
   // decode all of the markets
-  const decoded: any[] = []
-  marketInfos.forEach((accountInfo) => {
-    decoded.push(Market.getLayout(programId).decode(accountInfo.data))
-  })
+  const decoded = marketInfos.map((accountInfo) =>
+    Market.getLayout(programId).decode(accountInfo.data),
+  )
 
   // Load all of the SPL Token Mint data and orderbook data for the markets
   const mintKeys: PublicKey[] = []
   const orderbookKeys: PublicKey[] = []
-  const serumMarketsInfo: {
-    market: Market
-    orderbookData: OrderbookData
-  }[] = []
   decoded.forEach((d) => {
     mintKeys.push(d.baseMint)
     mintKeys.push(d.quoteMint)
@@ -60,7 +55,7 @@ export const batchSerumMarkets = async (
   const mints = mintInfos?.map((mintInfo) => MintLayout.decode(mintInfo.data))
 
   // instantiate the many markets
-  decoded.forEach((d, index) => {
+  const serumMarketsInfo = decoded.map((d, index) => {
     const { decimals: baseMintDecimals } = mints?.[index * 2]
     const { decimals: quoteMintDecimals } = mints?.[index * 2 + 1]
     const bidsAccountInfo = orderBookInfos[index * 2]
@@ -74,7 +69,7 @@ export const batchSerumMarkets = async (
     )
     const bidOrderbook = Orderbook.decode(market, bidsAccountInfo.data)
     const askOrderbook = Orderbook.decode(market, asksAccountInfo.data)
-    serumMarketsInfo.push({
+    return {
       market,
       orderbookData: {
         asks: askOrderbook
@@ -86,7 +81,7 @@ export const batchSerumMarkets = async (
         bidOrderbook,
         askOrderbook,
       },
-    })
+    }
   })
 
   return { serumMarketsInfo, orderbookKeys }

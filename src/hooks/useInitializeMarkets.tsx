@@ -128,13 +128,15 @@ export const useInitializeMarkets = (): ((
               quoteAmountPerContract: quoteAmountPerContractU64,
               expirationUnixTimestamp: expiration,
             })
+            const strike = qAmount.div(amountPerContract)
 
             const marketData: OptionMarket = {
               key: `${expiration}-${uAssetSymbol}-${qAssetSymbol}-${amountPerContract.toString()}-${amountPerContract.toString()}/${qAmount.toString()}`,
               amountPerContract,
               quoteAmountPerContract: qAmount,
               size: `${amountPerContract.toNumber()}`,
-              strikePrice: `${qAmount.div(amountPerContract).toNumber()}`,
+              strike,
+              strikePrice: strike.toString(),
               uAssetSymbol,
               qAssetSymbol,
               uAssetMint,

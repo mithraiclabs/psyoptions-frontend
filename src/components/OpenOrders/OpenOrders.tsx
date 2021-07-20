@@ -20,7 +20,6 @@ import { CallOrPut } from '../../types'
 const OpenOrders: React.FC<{
   optionMarkets: CallOrPut[]
 }> = ({ optionMarkets }) => {
-  console.log('*** OpenOrders input', optionMarkets)
   const { connection } = useConnection()
   const { wallet, pubKey, connected } = useWallet()
   const { serumMarkets } = useSerum()

@@ -10,6 +10,11 @@ export enum ClusterName {
   localhost = 'localhost',
 }
 
+export enum OptionType {
+  CALL = 'call',
+  PUT = 'put',
+}
+
 export type Asset = {
   tokenSymbol: string
   mintAddress: string
@@ -28,13 +33,14 @@ export type OptionMarket = {
   // Leave these in tact as BigNumbers to use later for creating the reciprocal put/call
   amountPerContract: BigNumber
   quoteAmountPerContract: BigNumber
+  strike: BigNumber
+  strikePrice?: string
   size: string
   expiration: number
   uAssetSymbol: string
   qAssetSymbol: string
   uAssetMint: string
   qAssetMint: string
-  strikePrice: string
   optionMintKey: PublicKey
   optionMarketKey: PublicKey
   writerTokenMintKey: PublicKey
@@ -69,7 +75,7 @@ export type OptionRow = OptionMarket & {
 }
 
 export type CallOrPut = OptionRow & {
-  type: 'call' | 'put'
+  type: OptionType
   strike: BigNumber
 }
 

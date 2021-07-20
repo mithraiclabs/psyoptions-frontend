@@ -39,10 +39,7 @@ const bgLighterColor = (theme.palette.background as any).lighter
 
 const orderTypes = ['limit', 'market']
 
-const defaultProps = {
-  amountPerContract: new BigNumber(0),
-  strike: new BigNumber(0),
-}
+const zero = new BigNumber(0)
 
 const BuySellDialog: React.VFC<{
   open: boolean
@@ -71,8 +68,8 @@ const BuySellDialog: React.VFC<{
   open,
   onClose,
   heading,
-  amountPerContract,
-  quoteAmountPerContract,
+  amountPerContract = zero,
+  quoteAmountPerContract = zero,
   uAssetSymbol,
   qAssetSymbol,
   qAssetMint,
@@ -622,7 +619,5 @@ const BuySellDialog: React.VFC<{
     </Dialog>
   )
 }
-
-BuySellDialog.defaultProps = defaultProps
 
 export default memo(BuySellDialog)

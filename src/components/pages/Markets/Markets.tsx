@@ -42,7 +42,7 @@ import { ContractSizeSelector } from '../../ContractSizeSelector'
 import { TCellLoading, THeadCell, TCellStrike, PageButton } from './styles'
 import Balances from './MarketsBalances'
 import { MarketsTableHeader } from './MarketsTableHeader'
-import { CallOrPut } from '../../../types'
+import { CallOrPut, OptionType } from '../../../types'
 import { useBatchLoadMints } from '../../../hooks/SPLToken'
 
 const dblsp = `${'\u00A0'}${'\u00A0'}`
@@ -196,14 +196,14 @@ const Markets = () => {
     .map((row) => [
       {
         ...row.call,
-        type: 'call',
+        type: OptionType.CALL,
         strikePrice: round
           ? row.strike.toFixed(precision)
           : row.strike.toString(10),
       },
       {
         ...row.put,
-        type: 'put',
+        type: OptionType.PUT,
         strikePrice: round
           ? row.strike.toFixed(precision)
           : row.strike.toString(10),
@@ -480,7 +480,6 @@ const Markets = () => {
               </Table>
             </TableContainer>
             <Box>
-              {/* @ts-ignore: Need to fix this :( */}
               <OpenOrders optionMarkets={marketsFlat} />
             </Box>
           </Box>

@@ -103,7 +103,7 @@ const NavOptions = React.memo(() => {
   )
 })
 
-const StatusBar = React.memo(() => {
+const StatusBar = ({ transparent }) => {
   const [drawerOpen, setDrawerOpen] = useState(false)
 
   return (
@@ -126,9 +126,9 @@ const StatusBar = React.memo(() => {
         display="flex"
         justifyContent="space-between"
         flexDirection="row"
-        style={{
-          background: theme.gradients?.secondaryPrimary,
-        }}
+        bgcolor={
+          transparent ? 'transparent' : theme.gradients?.secondaryPrimary
+        }
       >
         <Box display="flex">
           <Hidden smDown>
@@ -155,6 +155,6 @@ const StatusBar = React.memo(() => {
       </Box>
     </>
   )
-})
+}
 
-export default StatusBar
+export default React.memo(StatusBar)

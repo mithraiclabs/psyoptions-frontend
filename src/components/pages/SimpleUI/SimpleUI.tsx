@@ -1,25 +1,14 @@
 import React, { useEffect } from 'react'
 import { Switch, Route, useHistory, useLocation } from 'react-router-dom'
 import Box from '@material-ui/core/Box'
-// import Button from '@material-ui/core/Button'
 import { useTheme } from '@material-ui/core/styles'
 
 import StatusBar from '../../StatusBar'
 import Notifications from '../../Notifications'
-
-// const Page = ({ children, background, center = true }) => (
-
-//         <Box minHeight="100%">{children}</Box>
-
-// )
-
-// Temp, move these to own components later
-const ChooseAsset = () => {
-  return <Box p={2} />
-}
+import ChooseAnAsset from './routes/ChooseAnAsset'
 
 const UpOrDown = () => {
-  return <h3>Choose Asset</h3>
+  return <Box p={2}>up or down</Box>
 }
 
 const StepIndicator = ({ on = false }) => {
@@ -36,12 +25,6 @@ const StepIndicator = ({ on = false }) => {
   )
 }
 
-// import logo from '../../../../assets/psyoptions-logo-light.png'
-// import theme from '../../../utils/theme'
-// import useOptionsMarkets from '../../../hooks/useOptionsMarkets'
-// import useOpenPositions from '../../../hooks/useOpenPositions'
-// import WalletStatus from '../../WalletStatus'
-
 const pageBg =
   'linear-gradient(360deg, #42203B 14.41%, rgba(27, 26, 45, 0.81) 55.79%, #101017 93.84%), #101017'
 
@@ -49,11 +32,6 @@ export const SimpleUI: React.FC = () => {
   // const theme = useTheme()
   const history = useHistory()
   const location = useLocation()
-
-  // const { markets } = useOptionsMarkets()
-  // const positions = useOpenPositions()
-  // const { logoH1 } = useStyles()
-  // const { landingCard } = useStyles()
 
   useEffect(() => {
     // Go to choose asset screen by default
@@ -80,10 +58,10 @@ export const SimpleUI: React.FC = () => {
         flexDirection="column"
         style={{ background: pageBg }}
       >
-        <StatusBar />
+        <StatusBar transparent />
         <Box
           p={2}
-          pt={[3, 3, 4]}
+          pt={[3, 3, 5]}
           display="flex"
           justifyContent="space-between"
           flexDirection="row"
@@ -102,12 +80,14 @@ export const SimpleUI: React.FC = () => {
           <h3 style={{ margin: 0 }}>{pageTitle}</h3>
         </Box>
         <Box
-          px={[0, 0, 4]}
           minHeight="100%"
           display="flex"
           flexDirection="column"
           flexGrow={1}
           justifyContent={'center'}
+          width="100%"
+          maxWidth="400px"
+          mx="auto"
         >
           <Box
             display="flex"
@@ -117,11 +97,12 @@ export const SimpleUI: React.FC = () => {
             minHeight="100%"
             pb={4}
             maxWidth={'400px'}
+            width="100%"
             mx={'auto'}
           >
             <Switch>
-              <Route component={ChooseAsset} path="/simple/choose-asset" />
-              <Route component={UpOrDown} path="/simple/up-or-down" />
+              <Route component={ChooseAnAsset} path="/simple/choose-asset" />
+              <Route component={UpOrDown} path="/simple/:asset/up-or-down" />
             </Switch>
           </Box>
         </Box>

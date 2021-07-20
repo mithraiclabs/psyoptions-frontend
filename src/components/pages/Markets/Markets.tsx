@@ -91,6 +91,7 @@ const Markets = () => {
   const [callPutData, setCallPutData] = useState({ type: 'call' } as CallOrPut)
   const [showAllStrikes] = useState(true) // TODO: let user configure this
   const [page, setPage] = useState(0)
+  const [initialMarkPrice, setInitialMarkPrice] = useState(null)
   const [limitPrice, setLimitPrice] = useState('0')
   const rowsPerPage = 7
 
@@ -117,12 +118,21 @@ const Markets = () => {
     ? bonfidaMarkPrice
     : getPriceFromSerumOrderbook(underlyingOrderbook)
 
+  // We have to use this `initialMarkPrice` to filter the chains, otherwise many components will
+  // re-render every time a new price is received from a websocket. This triggers unnecessary batch
+  // requests to the chain.
+  useEffect(() => {
+    if (!initialMarkPrice) {
+      setInitialMarkPrice(markPrice)
+    }
+  }, [initialMarkPrice, markPrice, setInitialMarkPrice])
+
   const supportedStrikePrices = useMemo(() => {
-    if (markPrice && showAllStrikes === false) {
-      return getStrikePrices(markPrice).map((price) => price.toNumber())
+    if (initialMarkPrice && showAllStrikes === false) {
+      return getStrikePrices(initialMarkPrice).map((price) => price.toNumber())
     }
     return intervals.map((price) => price.toNumber())
-  }, [markPrice, showAllStrikes])
+  }, [initialMarkPrice, showAllStrikes])
 
   const fullPageLoading = assetListLoading || marketsLoading
 

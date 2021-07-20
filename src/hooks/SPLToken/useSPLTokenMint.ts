@@ -1,5 +1,5 @@
 import { MintInfo, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { Account, PublicKey } from '@mithraic-labs/solana-web3.js'
+import { Keypair, PublicKey } from '@mithraic-labs/solana-web3.js'
 import { useEffect } from 'react'
 import * as Sentry from '@sentry/react'
 import { useSPLTokenMints } from '../../context/SPLTokenMintsContext'
@@ -19,7 +19,7 @@ export const useSPLTokenMintInfo = (
 
   useEffect(() => {
     if (mint) {
-      const token = new Token(connection, mint, TOKEN_PROGRAM_ID, new Account())
+      const token = new Token(connection, mint, TOKEN_PROGRAM_ID, new Keypair())
       ;(async () => {
         try {
           const mintInfo = await token.getMintInfo()

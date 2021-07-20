@@ -1,6 +1,6 @@
 import React, { createContext, useContext } from 'react'
 import { TrackerMarketData, useChainMarketData } from '../hooks/PsyOptionsAPI'
-import { ChainRow } from '../hooks/useOptionsChain'
+import { ChainRow } from '../types'
 
 /**
  * Fetch and provide computed data from historical trades (i.e. data from psyoptions market tracker)

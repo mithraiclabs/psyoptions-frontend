@@ -45,6 +45,14 @@ export type OptionMarket = {
   serumMarketKey?: PublicKey
 }
 
+export type ChainRow = {
+  strike: BigNumber
+  size: string
+  key: string
+  call: OptionRow
+  put: OptionRow
+}
+
 export type OptionRow = OptionMarket & {
   emptyRow?: boolean
   key: string

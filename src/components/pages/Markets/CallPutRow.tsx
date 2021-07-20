@@ -6,6 +6,7 @@ import Button from '@material-ui/core/Button'
 import moment, { Moment } from 'moment'
 import BigNumber from 'bignumber.js'
 
+import { MintInfo } from '@solana/spl-token'
 import theme from '../../../utils/theme'
 import useSerum from '../../../hooks/useSerum'
 import useWallet from '../../../hooks/useWallet'
@@ -54,6 +55,8 @@ type CallPutRowProps = {
   round: boolean
   // Current market price of the underlying asset on serum
   markPrice: number
+  callOptionMintInfo?: MintInfo
+  putOptionMintInfo?: MintInfo
   onClickBuySellCall: (callOrPut: any) => void
   onClickBuySellPut: (callOrPut: any) => void
   setLimitPrice: (callOrPut: any) => void
@@ -67,6 +70,8 @@ const CallPutRow = ({
   qAsset,
   date,
   markPrice,
+  callOptionMintInfo,
+  putOptionMintInfo,
   onClickBuySellCall,
   onClickBuySellPut,
   setLimitPrice,
@@ -101,8 +106,6 @@ const CallPutRow = ({
     amountPerContract: row.put?.amountPerContract,
     quoteAmountPerContract: row.put?.quoteAmountPerContract,
   })
-  const callOptionMintInfo = useSPLTokenMintInfo(callMarket?.optionMintKey)
-  const putOptionMintInfo = useSPLTokenMintInfo(putMarket?.optionMintKey)
   useSubscribeSPLTokenMint(callMarket?.optionMintKey)
   useSubscribeSPLTokenMint(putMarket?.optionMintKey)
   const marketTrackerData = useMarketData()

@@ -9,6 +9,7 @@ import TableContainer from '@material-ui/core/TableContainer'
 import TableRow from '@material-ui/core/TableRow'
 import ChevronLeft from '@material-ui/icons/ChevronLeft'
 import ChevronRight from '@material-ui/icons/ChevronRight'
+import { PublicKey } from '@mithraic-labs/solana-web3.js'
 import moment from 'moment'
 import BigNumber from 'bignumber.js'
 
@@ -42,6 +43,8 @@ import { TCellLoading, THeadCell, TCellStrike, PageButton } from './styles'
 import Balances from './MarketsBalances'
 import { MarketsTableHeader } from './MarketsTableHeader'
 import { CallOrPut } from '../../../types'
+import { useBatchLoadMints } from '../../../hooks/SPLToken'
+import { useSPLTokenMints } from '../../../context/SPLTokenMintsContext'
 
 const dblsp = `${'\u00A0'}${'\u00A0'}`
 
@@ -81,7 +84,7 @@ const Markets = () => {
   const { uAsset, qAsset, setUAsset, assetListLoading } = useAssetList()
   const { selectedDate: date, setSelectedDate, dates } = useExpirationDate()
   const [contractSize, setContractSize] = useState(100)
-  const { chain, buildOptionsChain } = useOptionsChain()
+  const { chains, buildOptionsChain } = useOptionsChain()
   const { marketsLoading } = useOptionsMarkets()
   const { serumMarkets, fetchMultipleSerumMarkets } = useSerum()
   const [round, setRound] = useState(true)
@@ -90,6 +93,7 @@ const Markets = () => {
   const [showAllStrikes] = useState(true) // TODO: let user configure this
   const [page, setPage] = useState(0)
   const [limitPrice, setLimitPrice] = useState('0')
+  const [splTokenMints, _] = useSPLTokenMints()
   const rowsPerPage = 7
 
   // Unfortunately we need to set contract size in a useEffect because uAsset is asynchronously loaded
@@ -125,8 +129,8 @@ const Markets = () => {
   const fullPageLoading = assetListLoading || marketsLoading
 
   let precision
-  if (round && chain[0]?.strike) {
-    const n = chain[0].strike
+  if (round && chains[0]?.strike) {
+    const n = chains[0].strike
     if (n >= new BigNumber(1)) {
       precision = 2
     } else {
@@ -138,10 +142,10 @@ const Markets = () => {
 
   const filteredChain = useMemo(
     () =>
-      chain.filter((row) => {
+      chains.filter((row) => {
         return supportedStrikePrices.includes(row.strike.toNumber())
       }),
-    [chain, supportedStrikePrices],
+    [chains, supportedStrikePrices],
   )
 
   const numberOfPages = Math.ceil(filteredChain.length / rowsPerPage)
@@ -150,6 +154,7 @@ const Markets = () => {
     return filteredChain.slice(rowsPerPage * page, rowsPerPage * (page + 1))
   }, [filteredChain, page])
 
+  // handle pagination and add
   const rows = useMemo(
     () => [
       ...rowsToDisplay,
@@ -162,6 +167,21 @@ const Markets = () => {
     ],
     [rowsToDisplay],
   )
+
+  // batch request the option mint information for each row
+  const optionMints = useMemo(() => {
+    const tmp: PublicKey[] = []
+    rows.forEach((row) => {
+      if (row?.call?.optionMintKey) {
+        tmp.push(row?.call?.optionMintKey)
+      }
+      if (row?.put?.optionMintKey) {
+        tmp.push(row?.put?.optionMintKey)
+      }
+    })
+    return tmp
+  }, [rows])
+  useBatchLoadMints(optionMints)
 
   // Flat markets object for open orders component
   const marketsFlat = filteredChain
@@ -203,7 +223,7 @@ const Markets = () => {
     if (serumKeys.length) {
       fetchMultipleSerumMarkets(serumKeys)
     }
-  }, [chain, rowsToDisplay, fetchMultipleSerumMarkets, serumMarkets])
+  }, [chains, rowsToDisplay, fetchMultipleSerumMarkets, serumMarkets])
 
   // Open buy/sell/mint modal
   const handleBuySellClick = useCallback((callOrPut) => {
@@ -235,7 +255,7 @@ const Markets = () => {
       : `${currentPageStart} of ${filteredChain.length}`
 
   return (
-    <MarketDataProvider chain={chain}>
+    <MarketDataProvider chain={chains}>
       <Page>
         <BuySellDialog
           {...callPutData}
@@ -375,6 +395,12 @@ const Markets = () => {
                         onClickBuySellPut={handleBuySellClick}
                         markPrice={markPrice}
                         setLimitPrice={setLimitPrice}
+                        callOptionMintInfo={
+                          splTokenMints[row?.call?.optionMintKey?.toString()]
+                        }
+                        putOptionMintInfo={
+                          splTokenMints[row?.put?.optionMintKey?.toString()]
+                        }
                       />
                     )
                   })}
@@ -452,6 +478,7 @@ const Markets = () => {
               </Table>
             </TableContainer>
             <Box>
+              {/* @ts-ignore: Need to fix this :( */}
               <OpenOrders optionMarkets={marketsFlat} />
             </Box>
           </Box>

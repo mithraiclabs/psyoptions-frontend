@@ -5,15 +5,7 @@ import useOptionsMarkets from './useOptionsMarkets'
 import { OptionsChainContext } from '../context/OptionsChainContext'
 import useAssetList from './useAssetList'
 import useNotifications from './useNotifications'
-import { OptionMarket, OptionRow } from '../types'
-
-export type ChainRow = {
-  strike: BigNumber
-  size: string
-  key: string
-  call: OptionRow
-  put: OptionRow
-}
+import { ChainRow, OptionMarket, OptionRow } from '../types'
 
 const callOrPutTemplate = {
   key: '',
@@ -30,7 +22,7 @@ const useOptionsChain = () => {
   const { pushNotification } = useNotifications()
   const { markets: _markets, marketsLoading } = useOptionsMarkets()
   const { uAsset, qAsset } = useAssetList()
-  const { chain, setChain } = useContext(OptionsChainContext)
+  const { chains, setChains } = useContext(OptionsChainContext)
 
   /**
    * Builds an options chain and set it in the OptionsChainContext
@@ -51,7 +43,7 @@ const useOptionsChain = () => {
           !markets ||
           Object.keys(markets).length < 1
         ) {
-          setChain([])
+          setChains([])
           return
         }
 
@@ -145,13 +137,13 @@ const useOptionsChain = () => {
         })
 
         rows.sort((a, b) => a.strike.minus(b.strike).toNumber())
-        setChain(rows)
+        setChains(rows)
       } catch (err) {
         pushNotification({
           severity: 'error',
           message: `${err}`,
         })
-        setChain([])
+        setChains([])
       }
     },
     [
@@ -159,13 +151,13 @@ const useOptionsChain = () => {
       marketsLoading,
       uAsset?.tokenSymbol,
       qAsset?.tokenSymbol,
-      setChain,
+      setChains,
       pushNotification,
     ],
   )
 
   return {
-    chain,
+    chains,
     buildOptionsChain,
   }
 }

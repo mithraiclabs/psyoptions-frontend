@@ -12,6 +12,7 @@ import { useSubscribeOpenOrders, useCancelOrder } from '../../hooks/Serum'
 import theme from '../../utils/theme'
 
 import { TCell } from './OpenOrderStyles'
+import { CallOrPut } from '../../types'
 
 type SerumBidOrAsk = {
   side: string
@@ -21,15 +22,7 @@ type SerumBidOrAsk = {
 }
 
 // Render all open orders for a given market as table rows
-const OpenOrdersForMarket: React.FC<{
-  expiration: number
-  size: number
-  type: string
-  qAssetSymbol: string
-  uAssetSymbol: string
-  serumKey: string
-  strikePrice: string
-}> = ({
+const OpenOrdersForMarket: React.FC<CallOrPut> = ({
   expiration,
   size: contractSize,
   type,

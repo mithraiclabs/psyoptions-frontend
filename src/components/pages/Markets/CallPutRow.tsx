@@ -15,10 +15,7 @@ import { useImpliedVol } from '../../../hooks/useImpliedVol'
 
 import Loading from '../../Loading'
 import { useSubscribeSerumOrderbook } from '../../../hooks/Serum'
-import {
-  useSPLTokenMintInfo,
-  useSubscribeSPLTokenMint,
-} from '../../../hooks/SPLToken'
+import { useSubscribeSPLTokenMint } from '../../../hooks/SPLToken'
 import { useOptionMarket } from '../../../hooks/useOptionMarket'
 import { useSerumOrderbooks } from '../../../context/SerumOrderbookContext'
 
@@ -28,6 +25,7 @@ import { useInitializeMarkets } from '../../../hooks/useInitializeMarkets'
 import { TCell, TCellLoading, TCellStrike, TRow } from './styles'
 import { useMarketData } from '../../../context/MarketDataContext'
 import { Asset, CallOrPut } from '../../../types'
+import { useSPLTokenMints } from '../../../context/SPLTokenMintsContext'
 
 const Empty = ({ children }) => (
   <span style={{ opacity: '0.3' }}>{children}</span>
@@ -55,8 +53,6 @@ type CallPutRowProps = {
   round: boolean
   // Current market price of the underlying asset on serum
   markPrice: number
-  callOptionMintInfo?: MintInfo
-  putOptionMintInfo?: MintInfo
   onClickBuySellCall: (callOrPut: any) => void
   onClickBuySellPut: (callOrPut: any) => void
   setLimitPrice: (callOrPut: any) => void
@@ -70,8 +66,6 @@ const CallPutRow = ({
   qAsset,
   date,
   markPrice,
-  callOptionMintInfo,
-  putOptionMintInfo,
   onClickBuySellCall,
   onClickBuySellPut,
   setLimitPrice,
@@ -106,6 +100,9 @@ const CallPutRow = ({
     amountPerContract: row.put?.amountPerContract,
     quoteAmountPerContract: row.put?.quoteAmountPerContract,
   })
+  const [splTokenMints, _] = useSPLTokenMints()
+  const callOptionMintInfo = splTokenMints[callMarket?.optionMintKey.toString()]
+  const putOptionMintInfo = splTokenMints[putMarket?.optionMintKey.toString()]
   useSubscribeSPLTokenMint(callMarket?.optionMintKey)
   useSubscribeSPLTokenMint(putMarket?.optionMintKey)
   const marketTrackerData = useMarketData()

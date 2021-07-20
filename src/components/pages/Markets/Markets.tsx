@@ -44,7 +44,6 @@ import Balances from './MarketsBalances'
 import { MarketsTableHeader } from './MarketsTableHeader'
 import { CallOrPut } from '../../../types'
 import { useBatchLoadMints } from '../../../hooks/SPLToken'
-import { useSPLTokenMints } from '../../../context/SPLTokenMintsContext'
 
 const dblsp = `${'\u00A0'}${'\u00A0'}`
 
@@ -93,7 +92,6 @@ const Markets = () => {
   const [showAllStrikes] = useState(true) // TODO: let user configure this
   const [page, setPage] = useState(0)
   const [limitPrice, setLimitPrice] = useState('0')
-  const [splTokenMints, _] = useSPLTokenMints()
   const rowsPerPage = 7
 
   // Unfortunately we need to set contract size in a useEffect because uAsset is asynchronously loaded
@@ -395,12 +393,6 @@ const Markets = () => {
                         onClickBuySellPut={handleBuySellClick}
                         markPrice={markPrice}
                         setLimitPrice={setLimitPrice}
-                        callOptionMintInfo={
-                          splTokenMints[row?.call?.optionMintKey?.toString()]
-                        }
-                        putOptionMintInfo={
-                          splTokenMints[row?.put?.optionMintKey?.toString()]
-                        }
                       />
                     )
                   })}

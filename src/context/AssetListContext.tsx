@@ -2,18 +2,11 @@ import React, { createContext, useEffect, useMemo, useState } from 'react'
 import { PublicKey } from '@solana/web3.js'
 import useConnection from '../hooks/useConnection'
 import { getAssetsByNetwork } from '../utils/networkInfo'
+import { Asset } from '../types'
 
 type TickerPair = {
   uAssetSymbol?: string
   qAssetSymbol?: string
-}
-
-type Asset = {
-  decimals: number
-  icon: string
-  mintAddress: string
-  tokenName: string
-  tokenSymbol: string
 }
 
 type AssetListContext = {

@@ -343,7 +343,7 @@ const Markets = () => {
                 <Box pr={1}>
                   <Box>
                     <SelectAsset
-                      disabled="false"
+                      disabled={false}
                       selectedAsset={uAsset}
                       onSelectAsset={(asset) => {
                         setUAsset(asset)

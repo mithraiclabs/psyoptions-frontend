@@ -12,6 +12,7 @@ import KeyboardArrowDown from '@material-ui/icons/KeyboardArrowDown'
 import { debounce } from 'throttle-debounce'
 
 import useAssetList from '../hooks/useAssetList'
+import { Asset } from '../types'
 
 const CustomChip = withStyles({
   disabled: {
@@ -20,7 +21,17 @@ const CustomChip = withStyles({
   },
 })(Chip)
 
-const SelectAsset = ({ label, selectedAsset, onSelectAsset, disabled }) => {
+const SelectAsset: React.FC<{
+  label?: string
+  selectedAsset: Asset
+  onSelectAsset?: (asset: Asset) => void
+  disabled?: boolean
+}> = ({
+  label = 'Select Asset',
+  selectedAsset,
+  onSelectAsset,
+  disabled = false,
+}) => {
   const theme = useTheme()
   const { supportedAssets, assetListLoading } = useAssetList()
 
@@ -121,11 +132,6 @@ const SelectAsset = ({ label, selectedAsset, onSelectAsset, disabled }) => {
       />
     </>
   )
-}
-
-SelectAsset.defaultProps = {
-  label: 'Select Asset',
-  onSelectAsset: () => {},
 }
 
 export default SelectAsset

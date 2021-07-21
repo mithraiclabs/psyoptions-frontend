@@ -19,6 +19,8 @@ export type Asset = {
   tokenSymbol: string
   mintAddress: string
   decimals: number
+  icon?: string
+  tokenName?: string
 }
 
 export type TokenAccount = {

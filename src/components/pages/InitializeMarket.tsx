@@ -25,6 +25,7 @@ import { useOptionMarket } from '../../hooks/useOptionMarket'
 import ConnectButton from '../ConnectButton'
 import { ContractSizeSelector } from '../ContractSizeSelector'
 import { useInitializeMarkets } from '../../hooks/useInitializeMarkets'
+import { convertStrikeToAmountsPer } from '../../utils/strikeConversions'
 
 const darkBorder = `1px solid ${theme.palette.background.main}`
 
@@ -33,10 +34,10 @@ const InitializeMarket = () => {
   const { connected } = useWallet()
   const initializeMarkets = useInitializeMarkets()
   const [multiple, setMultiple] = useState(false)
-  const [basePrice, setBasePrice] = useState(0)
+  const [basePrice, setBasePrice] = useState('0')
   const { selectedDate, setSelectedDate, dates } = useExpirationDate()
   const { uAsset, qAsset, setUAsset } = useAssetList()
-  const [size, setSize] = useState(1)
+  const [size, setSize] = useState('1')
   const { marketPrice } = useSerumMarketInfo({
     uAssetMint: uAsset?.mintAddress,
     qAssetMint: qAsset?.mintAddress,
@@ -52,12 +53,29 @@ const InitializeMarket = () => {
   } else if (parsedBasePrice || marketPrice) {
     strikePrices = getStrikePrices(parsedBasePrice || marketPrice, 1, 0)
   }
+
+  const underlyingDecimalFactor = new BigNumber(10).pow(
+    new BigNumber(uAsset?.decimals),
+  )
+  const amountPerContract = new BigNumber(size).multipliedBy(
+    underlyingDecimalFactor,
+  )
+  let quoteAmountPerContract
+  if (strikePrices[0]) {
+    quoteAmountPerContract = convertStrikeToAmountsPer(
+      strikePrices[0],
+      amountPerContract,
+      uAsset,
+      qAsset,
+    )
+  }
   const market = useOptionMarket({
     date: selectedDate.unix(),
     uAssetSymbol: uAsset?.tokenSymbol,
     qAssetSymbol: qAsset?.tokenSymbol,
     size,
-    price: strikePrices[0] && strikePrices[0].toNumber(),
+    amountPerContract,
+    quoteAmountPerContract,
   })
   const canInitialize = !market
 
@@ -173,7 +191,7 @@ const InitializeMarket = () => {
             <Box width="50%" p={2} borderRight={darkBorder}>
               <ContractSizeSelector
                 onChange={(e) => setSize(e.target.value)}
-                value={`${size}`}
+                value={size}
               />
             </Box>
             <Box width="50%" p={2}>

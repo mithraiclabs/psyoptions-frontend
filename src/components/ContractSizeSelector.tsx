@@ -27,10 +27,10 @@ export const ContractSizeSelector: React.VFC<{
   onChange: (
     e: React.ChangeEvent<{
       name?: string
-      value: unknown
+      value: string
     }>,
   ) => void
-  value: number
+  value: number | string
 }> = ({ onChange, value }) => {
   return (
     <Select

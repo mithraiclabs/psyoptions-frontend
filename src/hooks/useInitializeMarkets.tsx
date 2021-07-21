@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
 import { useCallback, useContext } from 'react'
 import { PublicKey, Transaction } from '@solana/web3.js'
 import BigNumber from 'bignumber.js'
@@ -69,7 +68,6 @@ export const useInitializeMarkets = (): ((
             await sendTransaction({
               transaction: createAccountsTx,
               wallet,
-              // @ts-ignore: need to transition psyoptions-ts to use Keypair instead of account for this to go away
               signers,
               connection,
               sendingMessage: 'Processing: Create Market Accounts',

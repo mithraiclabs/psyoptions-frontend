@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
 import React, { useState, useCallback, useMemo } from 'react'
 
 import CircularProgress from '@material-ui/core/CircularProgress'
@@ -6,7 +5,6 @@ import Button from '@material-ui/core/Button'
 import moment, { Moment } from 'moment'
 import BigNumber from 'bignumber.js'
 
-import { MintInfo } from '@solana/spl-token'
 import theme from '../../../utils/theme'
 import useSerum from '../../../hooks/useSerum'
 import useWallet from '../../../hooks/useWallet'
@@ -197,15 +195,11 @@ const CallPutRow = ({
   )
 
   const callCellStyle = row.strike?.lte(markPrice)
-    ? // @ts-ignore: annoying MUI theme stuff
-      { backgroundColor: theme.palette.background.tableHighlight }
-    : // @ts-ignore: annoying MUI theme stuff
-      { backgroundColor: theme.palette.background.marketsCallPutRow }
+    ? { backgroundColor: theme.palette.background.tableHighlight }
+    : { backgroundColor: theme.palette.background.marketsCallPutRow }
   const putCellStyle = row.strike?.gte(markPrice)
-    ? // @ts-ignore: annoying MUI theme stuff
-      { backgroundColor: theme.palette.background.tableHighlight }
-    : // @ts-ignore: annoying MUI theme stuff
-      { backgroundColor: theme.palette.background.marketsCallPutRow }
+    ? { backgroundColor: theme.palette.background.tableHighlight }
+    : { backgroundColor: theme.palette.background.marketsCallPutRow }
 
   const openBuySellModal = (callOrPut, price = '0') => {
     // only allow full row clicking open for initialized markets

@@ -336,7 +336,6 @@ const Markets = () => {
                 fontSize="12px"
                 display="flex"
                 alignItems="center"
-                // @ts-ignore: annoying MUI theme stuff
                 border={`1px solid ${theme.palette.background.lighter}`}
                 borderRadius={'20px'}
                 width={'fit-content'}
@@ -373,7 +372,6 @@ const Markets = () => {
                         <TCellLoading
                           colSpan={8}
                           style={{
-                            // @ts-ignore: annoying MUI theme stuff
                             backgroundColor: theme.palette.background.medium,
                           }}
                         >
@@ -383,7 +381,6 @@ const Markets = () => {
                         <TCellLoading
                           colSpan={8}
                           style={{
-                            // @ts-ignore: annoying MUI theme stuff
                             backgroundColor: theme.palette.background.medium,
                           }}
                         >

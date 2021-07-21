@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
 import { withStyles } from '@material-ui/core/styles'
 import Button, { ButtonProps } from '@material-ui/core/Button'
 import FilledInput from '@material-ui/core/FilledInput'
@@ -73,7 +72,6 @@ export const StyledBuyButton = withStyles({
           '&:hover': {
             backgroundColor: theme.palette.success.light,
           },
-          // @ts-ignore: annoying MUI theme stuff
           color: theme.palette.background.main,
         },
 })(Button)

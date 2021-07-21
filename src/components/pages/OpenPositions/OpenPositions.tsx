@@ -55,7 +55,7 @@ const OpenPositions = () => {
 
   const writtenOptionKeys = useMemo(
     () => Object.keys(writtenOptions),
-    [writtenOptions]
+    [writtenOptions],
   )
 
   return (
@@ -81,7 +81,7 @@ const OpenPositions = () => {
           >
             <Box display="flex" flexDirection="row" alignItems="center">
               <Box px={1}>
-                <BarChartIcon size={24} />
+                <BarChartIcon />
               </Box>
               <Box px={1} textAlign="left" lineHeight={'22px'}>
                 <Box fontSize={'16px'} fontWeight={700}>
@@ -99,7 +99,7 @@ const OpenPositions = () => {
           >
             <Box display="flex" flexDirection="row" alignItems="center">
               <Box px={1}>
-                <CreateIcon size={18} />
+                <CreateIcon fontSize="small" />
               </Box>
               <Box px={1} textAlign="left" lineHeight={'22px'}>
                 <Box fontSize={'16px'} fontWeight={700}>
@@ -114,7 +114,7 @@ const OpenPositions = () => {
         </Box>
         {selectedTab === 0 && (
           <Box
-            w="100%"
+            width="100%"
             bgcolor={theme.palette.background.medium}
             style={{
               overflowX: 'auto',
@@ -159,7 +159,7 @@ const OpenPositions = () => {
                 <Box p={1} width="9%">
                   PNL
                 </Box>
-                <Box p={1} align="right" width="10%" textAlign="left">
+                <Box p={1} width="10%" textAlign="left">
                   Action
                 </Box>
                 <Box width="5%" p={1} pr={2} />

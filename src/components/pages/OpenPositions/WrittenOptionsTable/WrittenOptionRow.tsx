@@ -1,4 +1,3 @@
-/* eslint-disable react/forbid-prop-types */
 import React, { useEffect, useState } from 'react'
 import { PublicKey } from '@solana/web3.js'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
@@ -7,7 +6,6 @@ import Button from '@material-ui/core/Button'
 import Tooltip from '@material-ui/core/Tooltip'
 import Box from '@material-ui/core/Box'
 import { withStyles, useTheme } from '@material-ui/core/styles'
-import PropTypes from 'prop-types'
 
 import { TokenAccount } from 'src/types'
 import { formatExpirationTimestamp } from '../../../../utils/format'

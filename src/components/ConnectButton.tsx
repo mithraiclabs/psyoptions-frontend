@@ -20,7 +20,6 @@ const ConnectButton = (props) => {
         open={isSelectOpen}
         onClose={() => setIsSelectOpen(false)}
         handleConnect={handleConnect}
-        connected={connected}
       />
       <Button
         color="primary"

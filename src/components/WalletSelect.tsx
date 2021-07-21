@@ -1,11 +1,12 @@
 import React from 'react'
-import Dialog from '@material-ui/core/Dialog'
+import Dialog, { DialogProps } from '@material-ui/core/Dialog'
 import Box from '@material-ui/core/Box'
 import Button from '@material-ui/core/Button'
 import { makeStyles } from '@material-ui/core/styles'
 
 import wallets from '../utils/wallet/wallets'
 import useWallet from '../hooks/useWallet'
+import WalletAdapter from '../utils/wallet/walletAdapter'
 
 const useStyles = makeStyles({
   icon: {
@@ -14,7 +15,11 @@ const useStyles = makeStyles({
   },
 })
 
-const WalletSelect = ({ open, onClose, handleConnect }) => {
+const WalletSelect: React.FC<{
+  open: boolean
+  onClose?: DialogProps['onClose']
+  handleConnect: (adapter: WalletAdapter) => void
+}> = ({ open, onClose, handleConnect }) => {
   const classes = useStyles()
   const { pubKey, connected, disconnect } = useWallet()
 

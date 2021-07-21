@@ -1,5 +1,5 @@
 import { useContext, useCallback } from 'react'
-import { PublicKey } from '@mithraic-labs/solana-web3.js'
+import { PublicKey } from '@solana/web3.js'
 
 import { Market } from '@mithraic-labs/serum'
 import { SerumContext } from '../context/SerumContext'

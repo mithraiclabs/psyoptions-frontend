@@ -1,5 +1,5 @@
 import EventEmitter from 'eventemitter3'
-import { PublicKey, Transaction } from '@mithraic-labs/solana-web3.js'
+import { PublicKey, Transaction } from '@solana/web3.js'
 import type WalletAdapter from '../walletAdapter'
 import { MathOrPhantomAdapter } from '../../../..'
 

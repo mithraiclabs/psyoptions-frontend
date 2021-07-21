@@ -14,8 +14,8 @@ export const useOptionMarket = ({
 }: {
   uAssetSymbol: string
   qAssetSymbol: string
-  date: string
-  size: number
+  date: number
+  size: string
   amountPerContract: BigNumber
   quoteAmountPerContract: BigNumber
 }): OptionMarket | undefined => {

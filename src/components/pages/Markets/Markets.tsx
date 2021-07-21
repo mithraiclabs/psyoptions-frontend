@@ -9,6 +9,7 @@ import TableContainer from '@material-ui/core/TableContainer'
 import TableRow from '@material-ui/core/TableRow'
 import ChevronLeft from '@material-ui/icons/ChevronLeft'
 import ChevronRight from '@material-ui/icons/ChevronRight'
+import { PublicKey } from '@solana/web3.js'
 import moment from 'moment'
 import BigNumber from 'bignumber.js'
 
@@ -41,7 +42,8 @@ import { ContractSizeSelector } from '../../ContractSizeSelector'
 import { TCellLoading, THeadCell, TCellStrike, PageButton } from './styles'
 import Balances from './MarketsBalances'
 import { MarketsTableHeader } from './MarketsTableHeader'
-import { CallOrPut } from '../../../types'
+import { CallOrPut, OptionType } from '../../../types'
+import { useBatchLoadMints } from '../../../hooks/SPLToken'
 
 const dblsp = `${'\u00A0'}${'\u00A0'}`
 
@@ -81,7 +83,7 @@ const Markets = () => {
   const { uAsset, qAsset, setUAsset, assetListLoading } = useAssetList()
   const { selectedDate: date, setSelectedDate, dates } = useExpirationDate()
   const [contractSize, setContractSize] = useState(100)
-  const { chain, buildOptionsChain } = useOptionsChain()
+  const { chains, buildOptionsChain } = useOptionsChain()
   const { marketsLoading } = useOptionsMarkets()
   const { serumMarkets, fetchMultipleSerumMarkets } = useSerum()
   const [round, setRound] = useState(true)
@@ -89,6 +91,7 @@ const Markets = () => {
   const [callPutData, setCallPutData] = useState({ type: 'call' } as CallOrPut)
   const [showAllStrikes] = useState(true) // TODO: let user configure this
   const [page, setPage] = useState(0)
+  const [initialMarkPrice, setInitialMarkPrice] = useState(null)
   const [limitPrice, setLimitPrice] = useState('0')
   const rowsPerPage = 7
 
@@ -115,18 +118,27 @@ const Markets = () => {
     ? bonfidaMarkPrice
     : getPriceFromSerumOrderbook(underlyingOrderbook)
 
+  // We have to use this `initialMarkPrice` to filter the chains, otherwise many components will
+  // re-render every time a new price is received from a websocket. This triggers unnecessary batch
+  // requests to the chain.
+  useEffect(() => {
+    if (!initialMarkPrice) {
+      setInitialMarkPrice(markPrice)
+    }
+  }, [initialMarkPrice, markPrice, setInitialMarkPrice])
+
   const supportedStrikePrices = useMemo(() => {
-    if (markPrice && showAllStrikes === false) {
-      return getStrikePrices(markPrice).map((price) => price.toNumber())
+    if (initialMarkPrice && showAllStrikes === false) {
+      return getStrikePrices(initialMarkPrice).map((price) => price.toNumber())
     }
     return intervals.map((price) => price.toNumber())
-  }, [markPrice, showAllStrikes])
+  }, [initialMarkPrice, showAllStrikes])
 
   const fullPageLoading = assetListLoading || marketsLoading
 
   let precision
-  if (round && chain[0]?.strike) {
-    const n = chain[0].strike
+  if (round && chains[0]?.strike) {
+    const n = chains[0].strike
     if (n >= new BigNumber(1)) {
       precision = 2
     } else {
@@ -138,10 +150,10 @@ const Markets = () => {
 
   const filteredChain = useMemo(
     () =>
-      chain.filter((row) => {
+      chains.filter((row) => {
         return supportedStrikePrices.includes(row.strike.toNumber())
       }),
-    [chain, supportedStrikePrices],
+    [chains, supportedStrikePrices],
   )
 
   const numberOfPages = Math.ceil(filteredChain.length / rowsPerPage)
@@ -150,6 +162,7 @@ const Markets = () => {
     return filteredChain.slice(rowsPerPage * page, rowsPerPage * (page + 1))
   }, [filteredChain, page])
 
+  // handle pagination and add
   const rows = useMemo(
     () => [
       ...rowsToDisplay,
@@ -163,19 +176,34 @@ const Markets = () => {
     [rowsToDisplay],
   )
 
+  // batch request the option mint information for each row
+  const optionMints = useMemo(() => {
+    const tmp: PublicKey[] = []
+    rows.forEach((row) => {
+      if (row?.call?.optionMintKey) {
+        tmp.push(row?.call?.optionMintKey)
+      }
+      if (row?.put?.optionMintKey) {
+        tmp.push(row?.put?.optionMintKey)
+      }
+    })
+    return tmp
+  }, [rows])
+  useBatchLoadMints(optionMints)
+
   // Flat markets object for open orders component
   const marketsFlat = filteredChain
     .map((row) => [
       {
         ...row.call,
-        type: 'call',
+        type: OptionType.CALL,
         strikePrice: round
           ? row.strike.toFixed(precision)
           : row.strike.toString(10),
       },
       {
         ...row.put,
-        type: 'put',
+        type: OptionType.PUT,
         strikePrice: round
           ? row.strike.toFixed(precision)
           : row.strike.toString(10),
@@ -203,7 +231,7 @@ const Markets = () => {
     if (serumKeys.length) {
       fetchMultipleSerumMarkets(serumKeys)
     }
-  }, [chain, rowsToDisplay, fetchMultipleSerumMarkets, serumMarkets])
+  }, [chains, rowsToDisplay, fetchMultipleSerumMarkets, serumMarkets])
 
   // Open buy/sell/mint modal
   const handleBuySellClick = useCallback((callOrPut) => {
@@ -235,7 +263,7 @@ const Markets = () => {
       : `${currentPageStart} of ${filteredChain.length}`
 
   return (
-    <MarketDataProvider chain={chain}>
+    <MarketDataProvider chain={chains}>
       <Page>
         <BuySellDialog
           {...callPutData}

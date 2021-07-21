@@ -1,7 +1,7 @@
 import { useContext, useCallback } from 'react'
 import BigNumber from 'bignumber.js'
 import { Market } from '@mithraic-labs/psyoptions'
-import { Connection, PublicKey } from '@mithraic-labs/solana-web3.js'
+import { Connection, PublicKey } from '@solana/web3.js'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 
 import useNotifications from './useNotifications'
@@ -99,7 +99,7 @@ const useOptionsMarkets = () => {
           qAssetSymbol: qAsset.tokenSymbol,
           uAssetMint: uAsset.mintAddress,
           qAssetMint: qAsset.mintAddress,
-          strikePrice: `${strike.toString(10)}`,
+          strike,
           optionMarketKey,
           expiration,
           optionMintKey,
@@ -171,7 +171,7 @@ const useOptionsMarkets = () => {
           qAssetSymbol: qAsset.tokenSymbol,
           uAssetMint: uAsset.mintAddress,
           qAssetMint: qAsset.mintAddress,
-          strikePrice: `${strike.toString(10)}`,
+          strike,
           optionMarketKey: new PublicKey(market.optionMarketAddress),
           expiration: market.expiration,
           optionMintKey: new PublicKey(market.optionContractMintAddress),

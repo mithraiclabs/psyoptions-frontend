@@ -8,7 +8,7 @@ import Button from '@material-ui/core/Button'
 import CircularProgress from '@material-ui/core/CircularProgress'
 import Done from '@material-ui/icons/Done'
 import * as Sentry from '@sentry/react'
-import { LAMPORTS_PER_SOL, PublicKey } from '@mithraic-labs/solana-web3.js'
+import { LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js'
 import BigNumber from 'bignumber.js'
 import BN from 'bn.js'
 import type { Moment } from 'moment'
@@ -39,10 +39,7 @@ const bgLighterColor = (theme.palette.background as any).lighter
 
 const orderTypes = ['limit', 'market']
 
-const defaultProps = {
-  amountPerContract: new BigNumber(0),
-  strike: new BigNumber(0),
-}
+const zero = new BigNumber(0)
 
 const BuySellDialog: React.VFC<{
   open: boolean
@@ -71,8 +68,8 @@ const BuySellDialog: React.VFC<{
   open,
   onClose,
   heading,
-  amountPerContract,
-  quoteAmountPerContract,
+  amountPerContract = zero,
+  quoteAmountPerContract = zero,
   uAssetSymbol,
   qAssetSymbol,
   qAssetMint,
@@ -108,10 +105,10 @@ const BuySellDialog: React.VFC<{
   const { ownedTokenAccounts, loadingOwnedTokenAccounts } =
     useOwnedTokenAccounts()
   const optionMarket = useOptionMarket({
-    date: `${date.unix()}`,
+    date: date.unix(),
     uAssetSymbol,
     qAssetSymbol,
-    size: amountPerContract.toNumber(),
+    size: amountPerContract.toString(),
     amountPerContract,
     quoteAmountPerContract,
   })
@@ -622,7 +619,5 @@ const BuySellDialog: React.VFC<{
     </Dialog>
   )
 }
-
-BuySellDialog.defaultProps = defaultProps
 
 export default memo(BuySellDialog)

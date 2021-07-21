@@ -1,4 +1,4 @@
-import { PublicKey } from '@mithraic-labs/solana-web3.js'
+import { PublicKey } from '@solana/web3.js'
 import { useState, useEffect } from 'react'
 import { SerumMarket } from '../utils/serum'
 import useConnection from './useConnection'

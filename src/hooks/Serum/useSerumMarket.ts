@@ -1,4 +1,4 @@
-import { PublicKey } from '@mithraic-labs/solana-web3.js'
+import { PublicKey } from '@solana/web3.js'
 import { useEffect } from 'react'
 import * as Sentry from '@sentry/react'
 import { findMarketByAssets } from '../../utils/serum'

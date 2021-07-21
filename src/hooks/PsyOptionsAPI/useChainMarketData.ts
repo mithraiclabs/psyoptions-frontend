@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useQuery } from 'urql'
 import { useSerumContext } from '../../context/SerumContext'
-import { ChainRow } from '../useOptionsChain'
+import { ChainRow } from '../../types'
 
 export type TrackerMarketData = {
   change: number | null

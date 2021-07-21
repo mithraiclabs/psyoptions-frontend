@@ -1,5 +1,5 @@
 import { Market } from '@mithraic-labs/serum'
-import { Account, PublicKey, Transaction } from '@mithraic-labs/solana-web3.js'
+import { Account, PublicKey, Transaction } from '@solana/web3.js'
 import BigNumber from 'bignumber.js'
 import { SerumMarket } from './utils/serum'
 
@@ -8,6 +8,11 @@ export enum ClusterName {
   mainnet = 'Mainnet',
   testnet = 'Testnet',
   localhost = 'localhost',
+}
+
+export enum OptionType {
+  CALL = 'call',
+  PUT = 'put',
 }
 
 export type Asset = {
@@ -28,13 +33,14 @@ export type OptionMarket = {
   // Leave these in tact as BigNumbers to use later for creating the reciprocal put/call
   amountPerContract: BigNumber
   quoteAmountPerContract: BigNumber
+  strike: BigNumber
+  strikePrice?: string
   size: string
   expiration: number
   uAssetSymbol: string
   qAssetSymbol: string
   uAssetMint: string
   qAssetMint: string
-  strikePrice: string
   optionMintKey: PublicKey
   optionMarketKey: PublicKey
   writerTokenMintKey: PublicKey
@@ -45,7 +51,16 @@ export type OptionMarket = {
   serumMarketKey?: PublicKey
 }
 
+export type ChainRow = {
+  strike: BigNumber
+  size: string
+  key: string
+  call: OptionRow
+  put: OptionRow
+}
+
 export type OptionRow = OptionMarket & {
+  emptyRow?: boolean
   key: string
   ask: string
   bid: string
@@ -60,7 +75,7 @@ export type OptionRow = OptionMarket & {
 }
 
 export type CallOrPut = OptionRow & {
-  type: 'call' | 'put'
+  type: OptionType
   strike: BigNumber
 }
 

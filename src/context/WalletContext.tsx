@@ -1,4 +1,4 @@
-import { PublicKey } from '@mithraic-labs/solana-web3.js'
+import { PublicKey } from '@solana/web3.js'
 import * as Sentry from '@sentry/react'
 import React, { createContext, useEffect, useState } from 'react'
 import useConnection from '../hooks/useConnection'

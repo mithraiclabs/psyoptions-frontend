@@ -1,4 +1,4 @@
-import { PublicKey, Transaction } from '@mithraic-labs/solana-web3.js'
+import { PublicKey, Transaction } from '@solana/web3.js'
 import { useCallback } from 'react'
 import { createAssociatedTokenAccountInstruction } from '../../utils/instructions'
 import { getHighestAccount } from '../../utils/token'

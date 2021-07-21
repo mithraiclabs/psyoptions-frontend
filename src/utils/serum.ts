@@ -4,7 +4,7 @@ import {
   Transaction,
   SystemProgram,
   Connection,
-} from '@mithraic-labs/solana-web3.js'
+} from '@solana/web3.js'
 
 import { DexInstructions, Market } from '@mithraic-labs/serum'
 import BN from 'bn.js'

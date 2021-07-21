@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react'
 import Box from '@material-ui/core/Box'
 import Table from '@material-ui/core/Table'
-import TableCell from '@material-ui/core/TableCell'
 import TableHead from '@material-ui/core/TableHead'
 import TableRow from '@material-ui/core/TableRow'
 import TableBody from '@material-ui/core/TableBody'
@@ -15,16 +14,7 @@ import { useSerumOpenOrders } from '../../context/SerumOpenOrdersContext'
 import ConnectButton from '../ConnectButton'
 import OpenOrdersForMarket from './OpenOrdersForMarket'
 import { TCell, THeadCell } from './OpenOrderStyles'
-
-type CallOrPut = {
-  expiration: number
-  serumKey: string
-  size: number
-  strikePrice: string
-  type: string
-  qAssetSymbol: string
-  uAssetSymbol: string
-}
+import { CallOrPut } from '../../types'
 
 // Render all open orders for all optionMarkets specified in props
 const OpenOrders: React.FC<{

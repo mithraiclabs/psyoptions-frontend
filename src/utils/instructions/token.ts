@@ -12,7 +12,7 @@ import {
   SYSVAR_RENT_PUBKEY,
   Transaction,
   TransactionInstruction,
-} from '@mithraic-labs/solana-web3.js'
+} from '@solana/web3.js'
 import { CreateNewTokenAccountResponse } from 'src/types'
 import { TOKEN_PROGRAM_ID } from '../tokenInstructions'
 

@@ -6,7 +6,7 @@ import React, {
   useState,
 } from 'react'
 import { AccountLayout, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { PublicKey } from '@mithraic-labs/solana-web3.js'
+import { PublicKey } from '@solana/web3.js'
 import bs58 from 'bs58'
 import useConnection from '../hooks/useConnection'
 import useWallet from '../hooks/useWallet'

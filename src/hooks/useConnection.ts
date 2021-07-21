@@ -1,23 +1,9 @@
-import { Connection, PublicKey } from '@solana/web3.js'
-import React, { useContext } from 'react'
-import { ClusterName } from '../types'
+import { useContext } from 'react'
 import { ConnectionContext } from '../context/ConnectionContext'
 
-type Network = {
-  name: ClusterName
-  url: string
-  programId: string
-}
-type ConnectionContext = {
-  networks: Network[]
-  connection: Connection
-  endpoint: Network
-  setEndpoint: React.SetStateAction<Network>
-  dexProgramId: PublicKey
-}
-const useConnection = (): ConnectionContext => {
+const useConnection = () => {
   const { networks, connection, endpoint, setEndpoint, dexProgramId } =
-    useContext(ConnectionContext) as ConnectionContext
+    useContext(ConnectionContext)
 
   return {
     networks,

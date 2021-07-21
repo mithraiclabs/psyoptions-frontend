@@ -5,7 +5,7 @@ import { MARKETS } from '@mithraic-labs/serum'
 import { MarketMeta } from '@mithraic-labs/market-meta'
 import { ClusterName } from '../types'
 
-type Network = {
+export type Network = {
   name: ClusterName
   url: string
   programId: string
@@ -54,7 +54,7 @@ const getDexProgramKeyByNetwork = (name: ClusterName) => {
       // const dexProgramId = dexProgramAccount.publicKey;
       return new PublicKey(process.env.LOCAL_DEX_PROGRAM_ID)
     default:
-      return []
+      return undefined
   }
 }
 

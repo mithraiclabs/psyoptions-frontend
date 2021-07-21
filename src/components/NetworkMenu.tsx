@@ -12,15 +12,12 @@ import useAssetList from '../hooks/useAssetList'
 import useOptionsMarkets from '../hooks/useOptionsMarkets'
 import useSerum from '../hooks/useSerum'
 import theme from '../utils/theme'
+import { Network } from '../utils/networkInfo'
 
 const NetworkMenu = () => {
   const { networks, endpoint, setEndpoint } = useConnection()
-  const {
-    setUAsset,
-    setQAsset,
-    setSupportedAssets,
-    assetListLoading,
-  } = useAssetList()
+  const { setUAsset, setQAsset, setSupportedAssets, assetListLoading } =
+    useAssetList()
   const { setMarkets, marketsLoading } = useOptionsMarkets()
   const { setSerumMarkets } = useSerum()
 
@@ -45,14 +42,14 @@ const NetworkMenu = () => {
   // Do not allow switching network while still loading on-chain data
   const loading = marketsLoading || assetListLoading
 
-  const handleSelectNetwork = (ep) => {
+  const handleSelectNetwork = (network: Network) => {
     if (loading) return
-    setEndpoint(ep)
+    setEndpoint(network)
     // Reset assets, markets, and chain when changing endpoint
     // This allows us to refresh everything when changing the endpoint
     setSupportedAssets([])
-    setUAsset({})
-    setQAsset({})
+    setUAsset(null)
+    setQAsset(null)
     setMarkets({})
     setSerumMarkets({})
   }

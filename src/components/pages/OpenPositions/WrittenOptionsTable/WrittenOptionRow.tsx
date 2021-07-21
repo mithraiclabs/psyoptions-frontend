@@ -189,8 +189,6 @@ export const WrittenOptionRow = React.memo(
                   <Button
                     color="primary"
                     variant="outlined"
-                    // minWidth="100px"
-                    // flexShrink={0}
                     onClick={closePosition}
                     disabled={!canClose}
                   >
@@ -201,8 +199,6 @@ export const WrittenOptionRow = React.memo(
                   <Button
                     color="primary"
                     variant="outlined"
-                    // minWidth="100px"
-                    // flexShrink={0}
                     onClick={() => {
                       closePosition(
                         Math.min(

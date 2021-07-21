@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import React from 'react'
 import { useHistory } from 'react-router-dom'
 import Box from '@material-ui/core/Box'
@@ -5,7 +6,7 @@ import Button from '@material-ui/core/Button'
 import { makeStyles } from '@material-ui/core/styles'
 
 import Page from './Page'
-
+// @ts-ignore
 import logo from '../../../assets/psyoptions-logo-light.png'
 import theme from '../../utils/theme'
 import useOptionsMarkets from '../../hooks/useOptionsMarkets'
@@ -31,7 +32,16 @@ const useStyles = makeStyles({
 const pageBg =
   'linear-gradient(0deg, rgba(66, 32, 59, 1) 0%, rgba(27, 26, 45, 1) 35%, rgba(16, 16, 23, 1) 70%)'
 
-const LandingCard = ({ title = '', text = '', button = '' } = {}) => {
+type LandingCardProps = {
+  title: string
+  text: string
+  button: JSX.Element
+}
+const LandingCard = ({
+  title = '',
+  text = '',
+  button = null,
+}: LandingCardProps) => {
   const { landingCard } = useStyles()
 
   return (

@@ -9,6 +9,7 @@ import Box from '@material-ui/core/Box'
 import { withStyles, useTheme } from '@material-ui/core/styles'
 import PropTypes from 'prop-types'
 
+import { TokenAccount } from 'src/types'
 import { formatExpirationTimestamp } from '../../../../utils/format'
 import useOptionsMarkets from '../../../../hooks/useOptionsMarkets'
 import { useCloseWrittenOptionPostExpiration } from '../../../../hooks/useCloseWrittenOptionPostExpiration'
@@ -28,13 +29,25 @@ const StyledTooltip = withStyles((theme) => ({
   },
 }))(Tooltip)
 
+type WrittenOptionRowProps = {
+  expired: boolean
+  marketKey: string
+  writerTokenAccounts: TokenAccount[]
+  heldContracts: TokenAccount[]
+}
+
 /**
  * Row to display the wallet's minted options
  *
  * Only closes a single expired option at a time right now.
  */
 export const WrittenOptionRow = React.memo(
-  ({ expired, marketKey, writerTokenAccounts, heldContracts }) => {
+  ({
+    expired,
+    marketKey,
+    writerTokenAccounts,
+    heldContracts,
+  }: WrittenOptionRowProps) => {
     const theme = useTheme()
     const { supportedAssets } = useAssetList()
     const { pushNotification } = useNotifications()
@@ -178,8 +191,8 @@ export const WrittenOptionRow = React.memo(
                   <Button
                     color="primary"
                     variant="outlined"
-                    minWidth="100px"
-                    flexShrink={0}
+                    // minWidth="100px"
+                    // flexShrink={0}
                     onClick={closePosition}
                     disabled={!canClose}
                   >
@@ -190,8 +203,8 @@ export const WrittenOptionRow = React.memo(
                   <Button
                     color="primary"
                     variant="outlined"
-                    minWidth="100px"
-                    flexShrink={0}
+                    // minWidth="100px"
+                    // flexShrink={0}
                     onClick={() => {
                       closePosition(
                         Math.min(
@@ -287,28 +300,8 @@ export const WrittenOptionRow = React.memo(
             formatExpirationTimestamp(market.expiration)
           )}
         </Box>
-        <Box align="right" width="15%">
-          {ActionFragment}
-        </Box>
+        <Box width="15%">{ActionFragment}</Box>
       </Box>
     )
   },
 )
-
-const TokenAccounts = PropTypes.arrayOf(
-  PropTypes.shape({
-    // really instance of PublicKey, but instanceOf is throwing
-    // Invalid prop `optionsWritten[0].contractTokenAcctAddress` of type `PublicKey`
-    // supplied to `WrittenOptionRow`, expected instance of `PublicKey`
-    amount: PropTypes.number.isRequired,
-    mint: PropTypes.object.isRequired,
-    pubKey: PropTypes.object.isRequired,
-  }).isRequired,
-).isRequired
-
-WrittenOptionRow.propTypes = {
-  expired: PropTypes.bool.isRequired,
-  marketKey: PropTypes.string.isRequired,
-  writerTokenAccounts: TokenAccounts,
-  heldContracts: TokenAccounts,
-}

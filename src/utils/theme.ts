@@ -20,6 +20,14 @@ declare module '@material-ui/core/styles/createMuiTheme' {
   }
 }
 declare module '@material-ui/core/styles/createPalette' {
+  interface Palette {
+    border: {
+      main: string
+    }
+    disabled: {
+      main: string
+    }
+  }
   interface PaletteOptions {
     border: {
       main: string

@@ -33,7 +33,7 @@ export const WrittenOptionsTable = React.memo(() => {
 
   return (
     <Box
-      w="100%"
+      width="100%"
       bgcolor={theme.palette.background.medium}
       style={{
         overflowX: 'auto',

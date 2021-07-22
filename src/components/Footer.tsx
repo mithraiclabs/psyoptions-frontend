@@ -37,6 +37,17 @@ const Footer = () => (
           docs
         </Link>
       </Box>
+      {' | '}
+      <Box px={1}>
+        <Link
+          color="primary"
+          href="https://jobs.solana.com/companies/psyoptions"
+          target="_blank"
+          rel="noopener"
+        >
+          careers
+        </Link>
+      </Box>
     </Box>
     <Box
       py={1}

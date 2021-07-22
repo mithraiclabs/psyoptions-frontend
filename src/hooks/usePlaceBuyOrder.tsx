@@ -13,7 +13,7 @@ import { useCreateAdHocOpenOrdersSubscription } from './Serum'
 type PlaceBuyOrderArgs = {
   optionMarket: OptionMarket
   serumMarket: Market
-  orderArgs: OrderParams
+  orderArgs: OrderParams<PublicKey>
   optionDestinationKey?: PublicKey
 }
 

@@ -1,12 +1,27 @@
 import { useMemo } from 'react'
 import { blackScholes } from 'black-scholes'
+import { OptionType } from '../types'
 
 const lerp = (v0, v1, t) => {
   return (1 - t) * v0 + t * v1
 }
 
 const IVSearch = (
-  { optionPrice, strikePrice, marketPrice, timeToExpiry, riskFree, type },
+  {
+    optionPrice,
+    strikePrice,
+    marketPrice,
+    timeToExpiry,
+    riskFree,
+    type,
+  }: {
+    optionPrice: number
+    strikePrice: number
+    marketPrice: number
+    timeToExpiry: number
+    riskFree: number
+    type: OptionType
+  },
   depth = 16,
 ) => {
   let i = 0
@@ -20,7 +35,7 @@ const IVSearch = (
       timeToExpiry,
       vol,
       riskFree,
-      type === 'call' ? 'put' : 'call', // This has to be reversed from the buyer perspective
+      type === OptionType.CALL ? OptionType.PUT : OptionType.CALL, // This has to be reversed from the buyer perspective
     )
     if (testPrice > optionPrice) {
       high = vol
@@ -43,6 +58,12 @@ export const useImpliedVol = ({
   marketPrice,
   timeToExpiry,
   type,
+}: {
+  optionPrice: number
+  strikePrice: number
+  marketPrice: number
+  timeToExpiry: number
+  type: OptionType
 }) => {
   return useMemo(() => {
     if (optionPrice && strikePrice && marketPrice && timeToExpiry) {

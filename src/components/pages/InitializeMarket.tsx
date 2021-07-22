@@ -16,7 +16,6 @@ import theme from '../../utils/theme'
 
 import useNotifications from '../../hooks/useNotifications'
 import useWallet from '../../hooks/useWallet'
-import useSerumMarketInfo from '../../hooks/useSerumMarketInfo'
 import { getStrikePrices } from '../../utils/getStrikePrices'
 import useExpirationDate from '../../hooks/useExpirationDate'
 import useAssetList from '../../hooks/useAssetList'
@@ -38,20 +37,16 @@ const InitializeMarket = () => {
   const { selectedDate, setSelectedDate, dates } = useExpirationDate()
   const { uAsset, qAsset, setUAsset } = useAssetList()
   const [size, setSize] = useState('1')
-  const { marketPrice } = useSerumMarketInfo({
-    uAssetMint: uAsset?.mintAddress,
-    qAssetMint: qAsset?.mintAddress,
-  })
   const [loading, setLoading] = useState(false)
 
   const parsedBasePrice = parseFloat(
     basePrice && basePrice.replace(/^\./, '0.'),
   )
   let strikePrices = []
-  if (multiple && (parsedBasePrice || marketPrice)) {
-    strikePrices = getStrikePrices(parsedBasePrice || marketPrice)
-  } else if (parsedBasePrice || marketPrice) {
-    strikePrices = getStrikePrices(parsedBasePrice || marketPrice, 1, 0)
+  if (multiple && parsedBasePrice) {
+    strikePrices = getStrikePrices(parsedBasePrice)
+  } else if (parsedBasePrice) {
+    strikePrices = getStrikePrices(parsedBasePrice, 1, 0)
   }
 
   const underlyingDecimalFactor = new BigNumber(10).pow(
@@ -232,12 +227,6 @@ const InitializeMarket = () => {
 
           {parametersValid ? (
             <Box p={1}>
-              {marketPrice ? (
-                <Box p={1}>
-                  Current Market Price: <br />
-                  {marketPrice} {qAsset?.tokenSymbol}/{uAsset?.tokenSymbol}
-                </Box>
-              ) : null}
               <Box p={1}>
                 Strike Prices to Initialize: <br />
                 {strikePrices.map((n, i) => (i === 0 ? `${n}` : `, ${n}`))}

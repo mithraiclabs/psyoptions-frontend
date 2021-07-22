@@ -22,7 +22,7 @@ import { useInitializeMarkets } from '../../../hooks/useInitializeMarkets'
 
 import { TCell, TCellLoading, TCellStrike, TRow } from './styles'
 import { useMarketData } from '../../../context/MarketDataContext'
-import { Asset, CallOrPut } from '../../../types'
+import { Asset, CallOrPut, OptionType } from '../../../types'
 import { useSPLTokenMints } from '../../../context/SPLTokenMintsContext'
 
 const Empty = ({ children }) => (
@@ -117,7 +117,7 @@ const CallPutRow = ({
     strikePrice: strikeAsNumber,
     marketPrice: markPrice,
     timeToExpiry,
-    type: 'call',
+    type: OptionType.CALL,
   })
 
   const callAskIV = useImpliedVol({
@@ -125,7 +125,7 @@ const CallPutRow = ({
     strikePrice: strikeAsNumber,
     marketPrice: markPrice,
     timeToExpiry,
-    type: 'call',
+    type: OptionType.CALL,
   })
 
   const putBidIV = useImpliedVol({
@@ -133,7 +133,7 @@ const CallPutRow = ({
     strikePrice: strikeAsNumber,
     marketPrice: markPrice,
     timeToExpiry,
-    type: 'put',
+    type: OptionType.PUT,
   })
 
   const putAskIV = useImpliedVol({
@@ -141,7 +141,7 @@ const CallPutRow = ({
     strikePrice: strikeAsNumber,
     marketPrice: markPrice,
     timeToExpiry,
-    type: 'put',
+    type: OptionType.PUT,
   })
 
   const [loading, setLoading] = useState({ call: false, put: false })

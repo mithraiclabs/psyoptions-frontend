@@ -17,7 +17,7 @@ import { useCreateAdHocOpenOrdersSubscription } from './Serum'
 type PlaceSellOrderArgs = {
   numberOfContractsToMint: number
   serumMarket: Market
-  orderArgs: OrderParams
+  orderArgs: OrderParams<PublicKey>
   optionMarket: OptionMarket
   uAsset: Asset
   uAssetTokenAccount: TokenAccount

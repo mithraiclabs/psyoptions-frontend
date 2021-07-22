@@ -2,7 +2,13 @@ import axios from 'axios'
 import { useEffect, useState } from 'react'
 import useNotifications from './useNotifications'
 
-export const useBonfidaMarkPrice = ({ uAssetSymbol, qAssetSymbol }) => {
+export const useBonfidaMarkPrice = ({
+  uAssetSymbol,
+  qAssetSymbol,
+}: {
+  uAssetSymbol: string
+  qAssetSymbol: string
+}) => {
   const [markPrice, setMarkPrice] = useState(0)
   const { pushNotification } = useNotifications()
 

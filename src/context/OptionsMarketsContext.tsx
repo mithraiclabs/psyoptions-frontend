@@ -1,5 +1,4 @@
 import React, { useState, createContext } from 'react'
-import PropTypes from 'prop-types'
 
 import { OptionMarket } from '../types'
 
@@ -10,7 +9,7 @@ const OptionsMarketsContext = createContext({
   setMarketsLoading: null,
 })
 
-const OptionsMarketsProvider = ({ children }) => {
+const OptionsMarketsProvider: React.FC = ({ children }) => {
   const [markets, setMarkets] = useState<Record<string, OptionMarket>>({})
   const [marketsLoading, setMarketsLoading] = useState(false)
 
@@ -26,14 +25,6 @@ const OptionsMarketsProvider = ({ children }) => {
       {children}
     </OptionsMarketsContext.Provider>
   )
-}
-
-OptionsMarketsProvider.propTypes = {
-  children: PropTypes.node,
-}
-
-OptionsMarketsProvider.defaultProps = {
-  children: null,
 }
 
 export { OptionsMarketsContext, OptionsMarketsProvider }

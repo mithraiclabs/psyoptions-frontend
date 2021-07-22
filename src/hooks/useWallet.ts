@@ -1,4 +1,5 @@
 import { useContext } from 'react'
+import WalletAdapter from 'src/utils/wallet/walletAdapter'
 import { WalletContext } from '../context/WalletContext'
 
 const useWallet = () => {
@@ -6,7 +7,6 @@ const useWallet = () => {
     balance,
     loading,
     setLoading,
-    url,
     wallet,
     setWallet,
     connected,
@@ -15,8 +15,8 @@ const useWallet = () => {
     setPubKey,
   } = useContext(WalletContext)
 
-  const connect = async (walletAdapter, args) => {
-    // Reset state in case user is changing wallets
+  // Reset state in case user is changing wallets
+  const connect = async (walletAdapter: WalletAdapter, args: any) => {
     setPubKey(null)
     setConnected(false)
     setLoading(true)
@@ -25,19 +25,16 @@ const useWallet = () => {
 
     walletAdapter.on('disconnect', () => {
       setConnected(false)
-      setPubKey('')
+      setPubKey(null)
       console.log('Disconnected')
     })
 
-    // await new Promise((resolve) => {
     walletAdapter.on('connect', (key) => {
       setLoading(false)
       setConnected(true)
       setPubKey(key)
       console.log('connected')
-      // resolve()
     })
-    // })
 
     await walletAdapter.connect(args)
   }
@@ -50,7 +47,6 @@ const useWallet = () => {
 
   return {
     balance,
-    url,
     wallet,
     connect,
     disconnect,

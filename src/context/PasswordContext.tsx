@@ -3,7 +3,7 @@ import { useCookieState } from 'use-cookie-state'
 
 const PasswordContext = createContext([])
 
-const PasswordProvider = ({ children }) => {
+const PasswordProvider: React.FC = ({ children }) => {
   return (
     <PasswordContext.Provider value={useCookieState('password', '')}>
       {children}

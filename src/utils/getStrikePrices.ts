@@ -41,9 +41,10 @@ const intervals = [
 ]
 
 /**
+ * Get an array of acceptable strike prices
  * @returns BigNumber[]
  */
-const getStrikePrices = (markPrice, rangeAbove = 4, rangeBelow = 4) => {
+const getStrikePrices = (markPrice: number, rangeAbove = 4, rangeBelow = 4) => {
   let midpointRoundedUp = new BigNumber(0)
   let i = 0
   while (midpointRoundedUp.isLessThan(markPrice) && i < intervals.length) {

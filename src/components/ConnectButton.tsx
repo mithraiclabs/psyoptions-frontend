@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import Button from '@material-ui/core/Button'
 
+import WalletAdapter from '../utils/wallet/walletAdapter'
 import useWallet from '../hooks/useWallet'
 import WalletSelect from './WalletSelect'
 
@@ -9,8 +10,8 @@ const ConnectButton = (props) => {
   const { connect, connected } = useWallet()
   const { children } = props
 
-  const handleConnect = async (adapter) => {
-    await connect(adapter)
+  const handleConnect = async (adapter: WalletAdapter) => {
+    await connect(adapter, {})
     setIsSelectOpen(false)
   }
 

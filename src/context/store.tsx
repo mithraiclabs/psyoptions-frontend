@@ -1,6 +1,5 @@
 import React, { cloneElement } from 'react'
 import { ThemeProvider } from '@material-ui/core/styles'
-import PropTypes from 'prop-types'
 
 import { ConnectionProvider } from './ConnectionContext'
 import { OwnedTokenAccountsProvider } from './OwnedTokenAccounts'
@@ -45,12 +44,8 @@ const ProviderComposer = ({ providers, children }) =>
     children,
   )
 
-const Store = ({ children }) => (
+const Store: React.FC = ({ children }) => (
   <ProviderComposer providers={_providers}>{children}</ProviderComposer>
 )
-
-Store.propTypes = {
-  children: PropTypes.node.isRequired,
-}
 
 export default Store

@@ -5,8 +5,7 @@ import {
   Connection,
   PublicKey,
 } from '@solana/web3.js'
-import { AccountLayout, Token } from '@solana/spl-token'
-import { TOKEN_PROGRAM_ID } from './tokenInstructions'
+import { AccountLayout, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 
 export const WRAPPED_SOL_ADDRESS = 'So11111111111111111111111111111111111111112'
 

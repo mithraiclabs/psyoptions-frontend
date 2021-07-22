@@ -14,6 +14,7 @@ import {
   SerumOrderbooks,
   useSerumOrderbooks,
 } from '../context/SerumOrderbookContext'
+import { LocalSerumMarket } from '../types'
 
 const useSerum = () => {
   const { pushNotification } = useNotifications()
@@ -22,8 +23,17 @@ const useSerum = () => {
   const [_, setOrderbooks] = useSerumOrderbooks()
 
   const fetchMultipleSerumMarkets = useCallback(
-    async (serumMarketKeys: PublicKey[]) => {
+    async (serumMarketKeys: PublicKey[], localLookUpKeys?: string[]) => {
       try {
+        // set that the serum markets are loading
+        if (localLookUpKeys) {
+          const loading: Record<string, LocalSerumMarket> = {}
+          localLookUpKeys.forEach((key) => {
+            loading[key] = { loading: true }
+          })
+          setSerumMarkets((_markets) => ({ ..._markets, ...loading }))
+        }
+        // batch load the serum Market data
         const { serumMarketsInfo } = await batchSerumMarkets(
           connection,
           serumMarketKeys,

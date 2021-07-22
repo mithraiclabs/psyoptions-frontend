@@ -219,17 +219,20 @@ const Markets = () => {
   useEffect(() => {
     // Load serum markets when the options chain changes
     // Only if they don't already exist for the matching call/put
-    const serumKeys = []
+    const serumKeys: PublicKey[] = []
+    const localLookUpKeys: string[] = []
     rowsToDisplay.forEach(({ call, put }) => {
       if (call?.serumKey && !serumMarkets[call.serumKey]) {
         serumKeys.push(call.serumMarketKey)
+        localLookUpKeys.push(call.serumKey)
       }
       if (put?.serumKey && !serumMarkets[put.serumKey]) {
         serumKeys.push(put.serumMarketKey)
+        localLookUpKeys.push(put.serumKey)
       }
     })
     if (serumKeys.length) {
-      fetchMultipleSerumMarkets(serumKeys)
+      fetchMultipleSerumMarkets(serumKeys, localLookUpKeys)
     }
   }, [chains, rowsToDisplay, fetchMultipleSerumMarkets, serumMarkets])
 

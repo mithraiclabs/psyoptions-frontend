@@ -9,7 +9,7 @@ const OptionsChainContext = createContext<{
   setChains: () => null,
 })
 
-const OptionsChainProvider = ({ children }) => {
+const OptionsChainProvider: React.FC = ({ children }) => {
   const [chains, setChains] = useState<ChainRow[]>([])
 
   return (

@@ -8,12 +8,11 @@ import {
 
 import { DexInstructions, Market } from '@mithraic-labs/serum'
 import BN from 'bn.js'
-import { MintLayout, Token } from '@solana/spl-token'
+import { MintLayout, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { Buffer } from 'buffer'
 
 import { MarketOptions, Orderbook } from '@mithraic-labs/serum/lib/market'
 import * as Sentry from '@sentry/react'
-import { TOKEN_PROGRAM_ID } from './tokenInstructions'
 
 export const getKeyForMarket = (market: Market) => {
   return `${market.baseMintAddress.toString()}-${market.quoteMintAddress.toString()}`

@@ -103,7 +103,7 @@ export const createMissingMintAccounts = async ({
         message: `You must have at least ${requiredUnderlyingAmount.toString(
           10,
         )} ${uAssetSymbol} in your ${uAssetSymbol} account ${truncatePublicKey(
-          _uAssetTokenAccount.pubKey,
+          _uAssetTokenAccount.pubKey.toString(),
         )} to mint ${numberOfContractsToMint} contract${
           numberOfContractsToMint > 1 ? 's' : ''
         }`,

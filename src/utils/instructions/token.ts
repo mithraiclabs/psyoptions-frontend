@@ -4,7 +4,7 @@
  * fetch and update data in their own manner.
  */
 
-import { AccountLayout, Token } from '@solana/spl-token'
+import { AccountLayout, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import {
   Account,
   PublicKey,
@@ -14,7 +14,6 @@ import {
   TransactionInstruction,
 } from '@solana/web3.js'
 import { CreateNewTokenAccountResponse } from 'src/types'
-import { TOKEN_PROGRAM_ID } from '../tokenInstructions'
 
 const SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID = new PublicKey(
   'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL',

@@ -1,5 +1,13 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import React from 'react'
-import { Switch, Route, BrowserRouter, StaticRouter } from 'react-router-dom'
+import {
+  Switch,
+  Route,
+  BrowserRouter,
+  StaticRouter,
+  BrowserRouterProps,
+  StaticRouterProps,
+} from 'react-router-dom'
 import crypto from 'crypto'
 
 import { isBrowser } from '../utils/isNode'
@@ -32,8 +40,10 @@ const RouteWithStatusCode = ({ children, ...props }) => (
     }}
   />
 )
-
-const Routes = (props) => {
+interface RoutesProps extends BrowserRouterProps, StaticRouterProps {
+  ssrPassword: string
+}
+const Routes: React.FC<RoutesProps> = (props) => {
   const [password] = usePassword()
 
   // Makes it a little harder for users to "break in" without being told the password
@@ -45,6 +55,7 @@ const Routes = (props) => {
 
   if (APP_PASSWORD_PROTECTED && APP_PASSWORD !== hash) {
     return (
+      // @ts-ignore: Router JSX element type does not have any construct or call signatures
       <Router {...props}>
         <LandingComingSoon showPasswordField />
       </Router>
@@ -52,6 +63,7 @@ const Routes = (props) => {
   }
 
   return (
+    // @ts-ignore: Router JSX element type does not have any construct or call signatures
     <Router {...props}>
       <Switch>
         <Route exact path="/">

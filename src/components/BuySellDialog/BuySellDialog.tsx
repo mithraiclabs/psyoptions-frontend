@@ -59,7 +59,7 @@ const BuySellDialog: React.VFC<{
   type: string
   optionMintKey: PublicKey
   writerTokenMintKey: PublicKey
-  serumKey: string
+  serumAddress: string
   date: Moment
   markPrice: number
   setLimitPrice: React.Dispatch<React.SetStateAction<string>>
@@ -82,7 +82,7 @@ const BuySellDialog: React.VFC<{
   type,
   optionMintKey,
   writerTokenMintKey,
-  serumKey,
+  serumAddress,
   date,
   markPrice,
   setLimitPrice,
@@ -95,10 +95,10 @@ const BuySellDialog: React.VFC<{
   const { pushErrorNotification } = useNotifications()
   const { connection, dexProgramId } = useConnection()
   const { balance, wallet, pubKey, connected } = useWallet()
-  const placeSellOrder = usePlaceSellOrder(serumKey)
-  const placeBuyOrder = usePlaceBuyOrder(serumKey)
+  const placeSellOrder = usePlaceSellOrder(serumAddress)
+  const placeBuyOrder = usePlaceBuyOrder(serumAddress)
   const { serumMarkets, fetchSerumMarket } = useSerum()
-  const { orderbook } = useSerumOrderbook(serumKey)
+  const { orderbook } = useSerumOrderbook(serumAddress)
   const { sendSignedTransaction } = useSendTransaction()
   const { feeRates: serumFeeRates, publicKey: serumDiscountFeeKey } =
     useSerumFeeDiscountKey()
@@ -132,7 +132,7 @@ const BuySellDialog: React.VFC<{
   const openPositionUAssetBalance =
     openPositionSize * amountPerContract.toNumber()
 
-  const serumMarketData = serumMarkets[serumKey]
+  const serumMarketData = serumMarkets[serumAddress]
   const serum = serumMarketData?.serumMarket
   const serumError = serumMarketData?.error
 
@@ -218,8 +218,8 @@ const BuySellDialog: React.VFC<{
       // Open to suggestions / refactoring
       await fetchSerumMarket(
         undefined,
-        serumKey.split('-')[0],
-        serumKey.split('-')[1],
+        new PublicKey(uAssetMint),
+        new PublicKey(qAssetMint),
       )
     } catch (error) {
       pushErrorNotification(error)
@@ -581,7 +581,7 @@ const BuySellDialog: React.VFC<{
                   </Box>
                   <UnsettledFunds
                     qAssetSymbol={type === 'call' ? qAssetSymbol : uAssetSymbol}
-                    serumKey={serumKey}
+                    serumMarketAddress={serumAddress}
                     qAssetDecimals={
                       type === 'call' ? qAssetDecimals : uAssetDecimals
                     }

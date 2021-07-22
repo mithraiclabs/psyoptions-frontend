@@ -15,7 +15,6 @@ const callOrPutTemplate = {
   volume: '',
   openInterest: '',
   size: '',
-  serumKey: '',
   initialized: false,
 }
 const useOptionsChain = () => {
@@ -117,7 +116,6 @@ const useOptionsChain = () => {
                   ? {
                       ...callOrPutTemplate,
                       ...call,
-                      serumKey: `${call?.optionMintKey}-${call?.qAssetMint}`,
                       initialized: true,
                     }
                   : (callOrPutTemplate as OptionRow),
@@ -125,7 +123,6 @@ const useOptionsChain = () => {
                   ? {
                       ...callOrPutTemplate,
                       ...put,
-                      serumKey: `${put?.optionMintKey}-${put?.uAssetMint}`,
                       initialized: true,
                     }
                   : (callOrPutTemplate as OptionRow),

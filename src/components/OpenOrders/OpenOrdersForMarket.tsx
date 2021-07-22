@@ -28,27 +28,32 @@ const OpenOrdersForMarket: React.FC<CallOrPut> = ({
   type,
   qAssetSymbol,
   uAssetSymbol,
-  serumKey,
+  serumMarketKey,
   strikePrice,
 }) => {
   const { serumMarkets } = useSerum()
   const [orderbooks] = useSerumOrderbooks()
   const [openOrders] = useSerumOpenOrders()
-  const { serumMarket } = serumMarkets[serumKey] || {}
+  const serumMarketAddress = serumMarketKey.toString()
+  const { serumMarket } = serumMarkets[serumMarketAddress] || {}
 
-  const handleCancelOrder = useCancelOrder(serumKey)
+  const handleCancelOrder = useCancelOrder(serumMarketAddress)
 
-  useSubscribeOpenOrders(serumKey)
+  useSubscribeOpenOrders(serumMarketAddress)
 
-  if (!serumMarket || !openOrders[serumKey]?.orders || !orderbooks[serumKey]) {
+  if (
+    !serumMarket ||
+    !openOrders[serumMarketAddress]?.orders ||
+    !orderbooks[serumMarketAddress]
+  ) {
     return null
   }
 
-  const { bidOrderbook, askOrderbook } = orderbooks[serumKey]
+  const { bidOrderbook, askOrderbook } = orderbooks[serumMarketAddress]
 
   const bids = [...(bidOrderbook || [])] as SerumBidOrAsk[]
   const asks = [...(askOrderbook || [])] as SerumBidOrAsk[]
-  const openOrderAccounts = openOrders[serumKey]?.orders || []
+  const openOrderAccounts = openOrders[serumMarketAddress]?.orders || []
   const bidPrices = {}
   const askPrices = {}
 

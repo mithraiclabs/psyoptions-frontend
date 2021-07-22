@@ -71,7 +71,7 @@ const OpenOrders: React.FC<{
 
   const openOrdersArray = optionMarkets
     .map((optionMarket) => {
-      if (optionMarket?.serumKey) {
+      if (optionMarket?.serumMarketKey) {
         return optionMarket
       }
       return undefined
@@ -117,7 +117,7 @@ const OpenOrders: React.FC<{
               openOrdersArray.map((optionMarket) => (
                 <OpenOrdersForMarket
                   {...optionMarket}
-                  key={`${optionMarket.serumKey}`}
+                  key={`${optionMarket.serumMarketKey.toString()}`}
                 />
               ))
             )}

@@ -69,7 +69,6 @@ export type OptionRow = OptionMarket & {
   change: string
   volume: string
   openInterest: string
-  serumKey: string
   serumMarketKey?: PublicKey
   initialized: boolean
   fraction: string

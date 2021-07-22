@@ -9,14 +9,14 @@ import useWallet from '../useWallet'
  * Fetch and return wallet's open orders for a given serum market
  */
 export const useSerumOpenOrderAccounts = (
-  key: string,
+  serumMarketAddress: string,
   skipFetch = false,
 ): OpenOrders[] | undefined => {
   const { connection } = useConnection()
   const { serumMarkets } = useSerum()
   const { pubKey } = useWallet()
   const [serumOpenOrders, setSerumOpenOrders] = useSerumOpenOrders()
-  const serumMarket = serumMarkets[key]?.serumMarket
+  const serumMarket = serumMarkets[serumMarketAddress]?.serumMarket
 
   useEffect(() => {
     if (serumMarket && !skipFetch) {
@@ -27,7 +27,7 @@ export const useSerumOpenOrderAccounts = (
         )
         setSerumOpenOrders((prevSerumOpenOrders) => ({
           ...prevSerumOpenOrders,
-          [key]: {
+          [serumMarketAddress]: {
             error: null,
             loading: false,
             orders: openOrders,
@@ -35,7 +35,14 @@ export const useSerumOpenOrderAccounts = (
         }))
       })()
     }
-  }, [connection, key, pubKey, serumMarket, setSerumOpenOrders, skipFetch])
+  }, [
+    connection,
+    serumMarketAddress,
+    pubKey,
+    serumMarket,
+    setSerumOpenOrders,
+    skipFetch,
+  ])
 
-  return serumOpenOrders[key]?.orders
+  return serumOpenOrders[serumMarketAddress]?.orders
 }

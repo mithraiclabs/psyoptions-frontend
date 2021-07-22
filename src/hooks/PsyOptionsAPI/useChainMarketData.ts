@@ -27,8 +27,10 @@ export const useChainMarketData = (
   const serumMarketIds = useMemo(
     () =>
       chain?.reduce((acc, chainRow) => {
-        const callMarketMeta = serumMarkets[chainRow?.call?.serumKey]
-        const putMarketMeta = serumMarkets[chainRow?.put?.serumKey]
+        const callMarketMeta =
+          serumMarkets[chainRow?.call?.serumMarketKey.toString()]
+        const putMarketMeta =
+          serumMarkets[chainRow?.put?.serumMarketKey.toString()]
         if (callMarketMeta?.serumMarket?.address) {
           acc.push(callMarketMeta.serumMarket.address.toString())
         }

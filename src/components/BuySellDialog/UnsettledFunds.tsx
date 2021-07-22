@@ -14,12 +14,12 @@ import {
  */
 export const UnsettledFunds: React.VFC<{
   qAssetSymbol: string
-  serumKey: string
+  serumMarketAddress: string
   qAssetDecimals: number
-}> = ({ qAssetSymbol, serumKey, qAssetDecimals }) => {
-  const unsettledFunds = useUnsettledFundsForMarket(serumKey)
-  const { settleFunds } = useSettleFunds(serumKey)
-  useSubscribeOpenOrders(serumKey)
+}> = ({ qAssetSymbol, serumMarketAddress, qAssetDecimals }) => {
+  const unsettledFunds = useUnsettledFundsForMarket(serumMarketAddress)
+  const { settleFunds } = useSettleFunds(serumMarketAddress)
+  useSubscribeOpenOrders(serumMarketAddress)
   const [loading, setLoading] = useState(false)
   const _settleFunds = useCallback(async () => {
     setLoading(true)

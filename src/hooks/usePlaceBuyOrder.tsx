@@ -18,7 +18,7 @@ type PlaceBuyOrderArgs = {
 }
 
 const usePlaceBuyOrder = (
-  serumKey: string,
+  serumMarketAddress: string,
 ): ((obj: PlaceBuyOrderArgs) => Promise<void>) => {
   const { pushErrorNotification } = useNotifications()
   const { wallet, pubKey } = useWallet()
@@ -26,7 +26,7 @@ const usePlaceBuyOrder = (
   const { sendTransaction } = useSendTransaction()
   const { subscribeToTokenAccount } = useOwnedTokenAccounts()
   const createAdHocOpenOrdersSub =
-    useCreateAdHocOpenOrdersSubscription(serumKey)
+    useCreateAdHocOpenOrdersSubscription(serumMarketAddress)
 
   return useCallback(
     async ({

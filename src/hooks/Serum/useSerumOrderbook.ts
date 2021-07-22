@@ -13,7 +13,7 @@ import useSerum from '../useSerum'
  * Fetch and return serum orderbook for specific market
  */
 export const useSerumOrderbook = (
-  key: string,
+  serumMarketAddress: string,
 ): {
   orderbook: OrderbookData | undefined
   loading: boolean
@@ -23,7 +23,7 @@ export const useSerumOrderbook = (
   const { serumMarkets } = useSerum()
   const [loading, setLoading] = useState(false)
   const [orderbooks, setOrderbooks] = useSerumOrderbooks()
-  const serumMarket = serumMarkets[key]?.serumMarket
+  const serumMarket = serumMarkets[serumMarketAddress]?.serumMarket
 
   useEffect(() => {
     if (serumMarket) {
@@ -33,7 +33,7 @@ export const useSerumOrderbook = (
         try {
           // We now batch load orderbooks, so there's likely no need to fetch again
           // if we successfully load and subscribe
-          if (!orderbooks[key]) {
+          if (!orderbooks[serumMarketAddress]) {
             console.log('*** loading individual orderbook')
             const {
               asks: _asks,
@@ -43,7 +43,7 @@ export const useSerumOrderbook = (
             } = await getOrderbook(connection, serumMarket)
             setOrderbooks((prevOrderbooks) => ({
               ...prevOrderbooks,
-              [key]: {
+              [serumMarketAddress]: {
                 // bidOrderbook and askOrderbook are the raw orderbook objects that come back from serum-ts
                 // These are not useable for displaying orders,
                 // But are needed for some other functionality such as finding open orders for an account
@@ -68,7 +68,7 @@ export const useSerumOrderbook = (
     }
   }, [
     connection,
-    key,
+    serumMarketAddress,
     orderbooks,
     pushNotification,
     serumMarket,
@@ -76,7 +76,7 @@ export const useSerumOrderbook = (
   ])
 
   return {
-    orderbook: orderbooks[key],
+    orderbook: orderbooks[serumMarketAddress],
     loading,
   }
 }

@@ -6,7 +6,7 @@ import useConnection from '../hooks/useConnection'
 
 const NotificationsContext = createContext(undefined)
 
-const NotificationsProvider = ({ children }) => {
+const NotificationsProvider: React.FC = ({ children }) => {
   const [notifications, setNotifications] = useState([
     // Examples of possible severity states:
     // {
@@ -65,10 +65,12 @@ const NotificationsProvider = ({ children }) => {
 
   // useCallback() and useMemo() to prevent whole page re-renders
   const pushNotification = useCallback(
-    (content) => 
+    (content) =>
       setNotifications((_notifications) => {
         // remove processing tx's with same txids, i.e. after success
-        const notifs = _notifications.filter(notif => notif.txid !== content.txid)
+        const notifs = _notifications.filter(
+          (notif) => notif.txid !== content.txid,
+        )
         return [content, ...notifs]
       }),
     [],

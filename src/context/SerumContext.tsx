@@ -17,7 +17,7 @@ export const useSerumContext = () => useContext(SerumContext)
 
 const initSerumMarkets: Record<string, LocalSerumMarket> = {}
 
-const SerumProvider = ({ children }) => {
+const SerumProvider: React.FC = ({ children }) => {
   const [serumMarkets, setSerumMarkets] = useState(initSerumMarkets)
 
   return (

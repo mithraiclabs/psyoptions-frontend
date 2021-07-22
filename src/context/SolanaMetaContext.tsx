@@ -1,18 +1,21 @@
 import React, { useState, createContext, useContext, useEffect } from 'react'
-import PropTypes from 'prop-types'
 import { AccountLayout } from '@solana/spl-token'
 import useConnection from '../hooks/useConnection'
 import useNotifications from '../hooks/useNotifications'
 
-const SolanaMetaContext = createContext()
+const SolanaMetaContext = createContext<{
+  splTokenAccountRentBalance?: number
+}>({
+  splTokenAccountRentBalance: null,
+})
+
 export const useSolanaMeta = () => useContext(SolanaMetaContext)
 
-export const SolanaMetaProvider = ({ children }) => {
+export const SolanaMetaProvider: React.FC = ({ children }) => {
   const { pushNotification } = useNotifications()
   const { connection } = useConnection()
-  const [splTokenAccountRentBalance, setSplTokenAccountRentBalance] = useState(
-    0,
-  )
+  const [splTokenAccountRentBalance, setSplTokenAccountRentBalance] =
+    useState(0)
 
   useEffect(() => {
     ;(async () => {
@@ -40,12 +43,4 @@ export const SolanaMetaProvider = ({ children }) => {
       {children}
     </SolanaMetaContext.Provider>
   )
-}
-
-SolanaMetaProvider.propTypes = {
-  children: PropTypes.node,
-}
-
-SolanaMetaProvider.defaultProps = {
-  children: null,
 }

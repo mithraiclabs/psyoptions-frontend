@@ -24,7 +24,7 @@ const ConnectionContext = createContext<ConnectionContextType>({
   networks,
 })
 
-const ConnectionProvider = ({ children }) => {
+const ConnectionProvider: React.FC = ({ children }) => {
   const [endpoint, setEndpoint] = useState(DEFAULT_NETWORK)
 
   const [connection, setConnection] = useState(

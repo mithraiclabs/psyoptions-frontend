@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import Button from '@material-ui/core/Button'
 
-import WalletAdapter from 'src/utils/wallet/walletAdapter'
+import WalletAdapter from '../utils/wallet/walletAdapter'
 import useWallet from '../hooks/useWallet'
 import WalletSelect from './WalletSelect'
 

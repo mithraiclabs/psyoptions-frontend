@@ -184,7 +184,7 @@ const BuySellDialog: React.VFC<{
       // baseLotSize should be 1 -- the options market token doesn't have decimals
       const baseLotSize = new BN('1')
 
-      const { tx1, tx2 } = await createInitializeMarketTx({
+      const { tx1, tx2, market } = await createInitializeMarketTx({
         connection,
         payer: pubKey,
         baseMint: optionMintKey,
@@ -217,7 +217,7 @@ const BuySellDialog: React.VFC<{
       // There may be a more efficient way to do this part since we have the keypair here
       // Open to suggestions / refactoring
       await fetchSerumMarket(
-        undefined,
+        market.publicKey,
         new PublicKey(uAssetMint),
         new PublicKey(qAssetMint),
       )

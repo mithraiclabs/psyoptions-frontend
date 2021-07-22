@@ -16,6 +16,7 @@ export const useBatchLoadMints = (mints: PublicKey[]) => {
   const [splTokenMints, setSPLTokenMints] = useSPLTokenMints()
 
   useEffect(() => {
+    if (!mints.length) return
     ;(async () => {
       try {
         const infos = await connection.getMultipleAccountsInfo(mints)

@@ -21,11 +21,12 @@ import {
 
 import { ClusterName, OptionMarket } from '../types'
 import { getSupportedMarketsByNetwork } from '../utils/networkInfo'
+import { findMarketByAssets } from '../utils/serum'
 
 const useOptionsMarkets = () => {
   const { pushErrorNotification, pushNotification } = useNotifications()
   const { wallet, pubKey } = useWallet()
-  const { connection, endpoint } = useConnection()
+  const { connection, dexProgramId, endpoint } = useConnection()
   const { splTokenAccountRentBalance } = useSolanaMeta()
   const { sendTransaction } = useSendTransaction()
   const { markets, setMarkets, marketsLoading, setMarketsLoading } = useContext(
@@ -33,6 +34,10 @@ const useOptionsMarkets = () => {
   )
   const { supportedAssets } = useAssetList()
 
+  /**
+   * fetches PsyOptions market data individually. Should only be used for local development as
+   * it makes chain requests inefficiently.
+   */
   const fetchMarketData = useCallback(async () => {
     try {
       if (marketsLoading) return
@@ -53,71 +58,81 @@ const useOptionsMarkets = () => {
 
       // Transform the market data to our expectations
       const newMarkets = {}
-      res.forEach((market) => {
-        const uAssetMint = market.marketData.underlyingAssetMintKey
-        const uAsset = supportedAssets.filter(
-          (asset) => asset.mintAddress === uAssetMint.toString(),
-        )[0]
-        const qAssetMint = market.marketData.quoteAssetMintKey
-        const qAsset = supportedAssets.filter(
-          (asset) => asset.mintAddress === qAssetMint.toString(),
-        )[0]
+      await Promise.all(
+        res.map(async (market) => {
+          const uAssetMint = market.marketData.underlyingAssetMintKey
+          const uAsset = supportedAssets.filter(
+            (asset) => asset.mintAddress === uAssetMint.toString(),
+          )[0]
+          const qAssetMint = market.marketData.quoteAssetMintKey
+          const qAsset = supportedAssets.filter(
+            (asset) => asset.mintAddress === qAssetMint.toString(),
+          )[0]
 
-        // BN.js doesn't handle decimals while bignumber.js can handle decimals of arbitrary sizes
-        // So convert all BN types to BigNumber
-        const amountPerContract = new BigNumber(
-          market.marketData.amountPerContract.toString(10),
-        ).div(10 ** uAsset?.decimals)
+          // BN.js doesn't handle decimals while bignumber.js can handle decimals of arbitrary sizes
+          // So convert all BN types to BigNumber
+          const amountPerContract = new BigNumber(
+            market.marketData.amountPerContract.toString(10),
+          ).div(10 ** uAsset?.decimals)
 
-        const quoteAmountPerContract = new BigNumber(
-          market.marketData.quoteAmountPerContract.toString(10),
-        ).div(10 ** qAsset?.decimals)
+          const quoteAmountPerContract = new BigNumber(
+            market.marketData.quoteAmountPerContract.toString(10),
+          ).div(10 ** qAsset?.decimals)
 
-        const strike = quoteAmountPerContract.div(
-          amountPerContract.toString(10),
-        )
+          const strike = quoteAmountPerContract.div(
+            amountPerContract.toString(10),
+          )
 
-        const {
-          expiration,
-          optionMintKey,
-          writerTokenMintKey,
-          underlyingAssetPoolKey,
-          underlyingAssetMintKey,
-          quoteAssetPoolKey,
-          quoteAssetMintKey,
-          optionMarketKey,
-        } = market.marketData
+          const {
+            expiration,
+            optionMintKey,
+            writerTokenMintKey,
+            underlyingAssetPoolKey,
+            underlyingAssetMintKey,
+            quoteAssetPoolKey,
+            quoteAssetMintKey,
+            optionMarketKey,
+          } = market.marketData
 
-        const newMarket: OptionMarket = {
-          key: `${expiration}-${uAsset.tokenSymbol}-${
-            qAsset.tokenSymbol
-          }-${amountPerContract.toString()}-${amountPerContract.toString()}/${quoteAmountPerContract.toString()}`,
-          amountPerContract,
-          quoteAmountPerContract,
-          size: `${amountPerContract.toString(10)}`,
-          uAssetSymbol: uAsset.tokenSymbol,
-          qAssetSymbol: qAsset.tokenSymbol,
-          uAssetMint: uAsset.mintAddress,
-          qAssetMint: qAsset.mintAddress,
-          strike,
-          optionMarketKey,
-          expiration,
-          optionMintKey,
-          writerTokenMintKey,
-          underlyingAssetPoolKey,
-          underlyingAssetMintKey,
-          quoteAssetPoolKey,
-          quoteAssetMintKey,
-        }
+          const serumMarket = await findMarketByAssets(
+            connection,
+            optionMintKey,
+            quoteAssetMintKey,
+            dexProgramId,
+          )
 
-        const key = `${newMarket.expiration}-${newMarket.uAssetSymbol}-${
-          newMarket.qAssetSymbol
-        }-${newMarket.size}-${amountPerContract.toString(
-          10,
-        )}/${quoteAmountPerContract.toString(10)}`
+          const newMarket: OptionMarket = {
+            key: `${expiration}-${uAsset.tokenSymbol}-${
+              qAsset.tokenSymbol
+            }-${amountPerContract.toString()}-${amountPerContract.toString()}/${quoteAmountPerContract.toString()}`,
+            amountPerContract,
+            quoteAmountPerContract,
+            size: `${amountPerContract.toString(10)}`,
+            uAssetSymbol: uAsset.tokenSymbol,
+            qAssetSymbol: qAsset.tokenSymbol,
+            uAssetMint: uAsset.mintAddress,
+            qAssetMint: qAsset.mintAddress,
+            strike,
+            optionMarketKey,
+            expiration,
+            optionMintKey,
+            writerTokenMintKey,
+            underlyingAssetPoolKey,
+            underlyingAssetMintKey,
+            quoteAssetPoolKey,
+            quoteAssetMintKey,
+            serumMarketKey: serumMarket.address,
+          }
 
-        newMarkets[key] = newMarket
-      })
+          const key = `${newMarket.expiration}-${newMarket.uAssetSymbol}-${
+            newMarket.qAssetSymbol
+          }-${newMarket.size}-${amountPerContract.toString(
+            10,
+          )}/${quoteAmountPerContract.toString(10)}`
+
+          newMarkets[key] = newMarket
+        }),
+      )
       // Not sure if we should replace the existing markets or merge them
       setMarkets(newMarkets)
       setMarketsLoading(false)

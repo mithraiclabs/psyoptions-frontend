@@ -118,7 +118,7 @@ const Markets = () => {
   const [showPriceChange, setShowPriceChange] = useState(true)
   const [showVolume, setShowVolume] = useState(true)
   const [showOI, setShowOI] = useState(true)
-  const [currentColumnsCount, setColumnsCount] = useState(17) // 17 columns 
+  const [currentColumnsCount, setColumnsCount] = useState(17) // 17 columns
 
   useEffect(() => {
     const availableSizes = getSizes({

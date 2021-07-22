@@ -1,30 +1,6 @@
 import React from 'react'
-import { withStyles } from '@material-ui/core/styles'
-import Button from '@material-ui/core/Button'
 import Tooltip from '@material-ui/core/Tooltip'
-import theme from '../../utils/theme'
-
-const StyledBuyButton = withStyles({
-  // The fakeDisabled prop is a hack/workaround
-  // to make the button look disabled but still show tooltips on hover
-  // Make sure to remove the onClick handler via props
-  root: ({ fakeDisabled }) =>
-    fakeDisabled
-      ? {
-          backgroundColor: theme.palette.success.dark,
-          color: 'rgba(255, 255, 255, 0.3)',
-          '&:hover': {
-            backgroundColor: theme.palette.success.dark,
-          },
-        }
-      : {
-          backgroundColor: theme.palette.success.main,
-          '&:hover': {
-            backgroundColor: theme.palette.success.light,
-          },
-          color: theme.palette.background.main,
-        },
-})(Button)
+import { StyledBuyButton } from './styles'
 
 const BuyButton = ({
   parsedLimitPrice,

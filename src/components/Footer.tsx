@@ -7,7 +7,7 @@ import TwitterIcon from '@material-ui/icons/Twitter'
 import GitHubIcon from '@material-ui/icons/GitHub'
 
 const Footer = () => (
-  <Box align="center" p={3}>
+  <Box p={3}>
     <Box
       display="flex"
       flexDirection="row"

@@ -7,7 +7,6 @@ import TableCell from '@material-ui/core/TableCell'
 import TableBody from '@material-ui/core/TableBody'
 
 import React, { memo } from 'react'
-import propTypes from 'prop-types'
 import theme from '../utils/theme'
 
 const successColor = theme.palette.success.main
@@ -29,19 +28,17 @@ const BidAskCell = withStyles({
 const centerBorder = { borderRight: `1px solid ${primaryColor}` }
 const topRowBorder = { borderTop: `1px solid ${bgLighterColor}` }
 
-const bidOrAskType = propTypes.shape({
-  size: propTypes.number,
-  price: propTypes.number,
-})
-
-const orderBookPropTypes = {
-  bids: propTypes.arrayOf(bidOrAskType),
-  asks: propTypes.arrayOf(bidOrAskType),
-  setLimitPrice: propTypes.func.isRequired,
-  setOrderSize: propTypes.func.isRequired,
+type BidOrAsk = {
+  size: number
+  price: number
 }
 
-const OrderBook = ({ bids = [], asks = [], setLimitPrice, setOrderSize }) => {
+const OrderBook: React.FC<{
+  bids: BidOrAsk[]
+  asks: BidOrAsk[]
+  setLimitPrice: (limitPrice: string) => void
+  setOrderSize: (orderSize: string) => void
+}> = ({ bids = [], asks = [], setLimitPrice, setOrderSize }) => {
   // Maybe we should do this zipping of the bids/asks elsewhere
   // Doing it here for quick and dirty solution, don't over-engineer right? :)
   const rows = []
@@ -58,9 +55,9 @@ const OrderBook = ({ bids = [], asks = [], setLimitPrice, setOrderSize }) => {
     i += 1
   }
 
-  const setPriceAndSize = (bidAsk) => {
-    if (bidAsk?.price) setLimitPrice(bidAsk.price)
-    if (bidAsk?.size) setOrderSize(bidAsk.size)
+  const setPriceAndSize = (bidAsk: BidOrAsk) => {
+    if (bidAsk?.price) setLimitPrice(bidAsk.price.toString())
+    if (bidAsk?.size) setOrderSize(bidAsk.size.toString())
   }
 
   return (
@@ -141,7 +138,5 @@ const OrderBook = ({ bids = [], asks = [], setLimitPrice, setOrderSize }) => {
     </>
   )
 }
-
-OrderBook.propTypes = orderBookPropTypes
 
 export default memo(OrderBook)

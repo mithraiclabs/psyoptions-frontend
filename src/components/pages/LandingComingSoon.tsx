@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import React, { useState } from 'react'
 import Box from '@material-ui/core/Box'
 import Button from '@material-ui/core/Button'
@@ -5,7 +6,7 @@ import TextField from '@material-ui/core/TextField'
 import { makeStyles, ThemeProvider } from '@material-ui/core/styles'
 
 import usePassword from '../../hooks/usePassword'
-
+// @ts-ignore
 import logo from '../../../assets/psyoptions-logo-light.png'
 import theme from '../../utils/theme'
 import Footer from '../Footer'

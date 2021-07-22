@@ -1,7 +1,7 @@
 import React, { createContext } from 'react'
 import { useCookieState } from 'use-cookie-state'
 
-const PasswordContext = createContext({})
+const PasswordContext = createContext([])
 
 const PasswordProvider = ({ children }) => {
   return (

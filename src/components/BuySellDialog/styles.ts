@@ -1,5 +1,5 @@
 import { withStyles } from '@material-ui/core/styles'
-import Button from '@material-ui/core/Button'
+import Button, { ButtonProps } from '@material-ui/core/Button'
 import FilledInput from '@material-ui/core/FilledInput'
 import theme from '../../utils/theme'
 
@@ -28,11 +28,16 @@ export const PlusMinusButton = withStyles({
     },
   },
 })(Button)
+
+type FakeButtonProps = ButtonProps & {
+  fakeDisabled: boolean
+}
+
 export const StyledSellButton = withStyles({
   // The fakeDisabled prop is a hack/workaround
   // to make the button look disabled but still show tooltips on hover
   // Make sure to remove the onClick handler via props
-  root: ({ fakeDisabled }) =>
+  root: ({ fakeDisabled }: FakeButtonProps) =>
     fakeDisabled
       ? {
           backgroundColor: theme.palette.error.dark,
@@ -46,5 +51,27 @@ export const StyledSellButton = withStyles({
           '&:hover': {
             backgroundColor: theme.palette.error.light,
           },
+        },
+})(Button)
+
+export const StyledBuyButton = withStyles({
+  // The fakeDisabled prop is a hack/workaround
+  // to make the button look disabled but still show tooltips on hover
+  // Make sure to remove the onClick handler via props
+  root: ({ fakeDisabled }: FakeButtonProps) =>
+    fakeDisabled
+      ? {
+          backgroundColor: theme.palette.success.dark,
+          color: 'rgba(255, 255, 255, 0.3)',
+          '&:hover': {
+            backgroundColor: theme.palette.success.dark,
+          },
+        }
+      : {
+          backgroundColor: theme.palette.success.main,
+          '&:hover': {
+            backgroundColor: theme.palette.success.light,
+          },
+          color: theme.palette.background.main,
         },
 })(Button)

@@ -27,21 +27,23 @@ export const ContractSizeSelector: React.VFC<{
   onChange: (
     e: React.ChangeEvent<{
       name?: string
-      value: unknown
+      value: string
     }>,
   ) => void
-  value: number
+  value: number | string
 }> = ({ onChange, value }) => {
   return (
     <Select
-      variant="filled"
+      formControlOptions={{
+        variant: 'filled',
+        style: {
+          minWidth: '100%',
+        },
+      }}
       label="Contract Size"
       value={value}
       onChange={onChange}
       options={supportedSizes}
-      style={{
-        minWidth: '100%',
-      }}
     />
   )
 }

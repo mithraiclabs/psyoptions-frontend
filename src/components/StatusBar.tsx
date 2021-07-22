@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import React, { useState } from 'react'
 import Box from '@material-ui/core/Box'
 import { useHistory } from 'react-router-dom'
@@ -12,6 +13,7 @@ import WalletStatus from './WalletStatus'
 import NetworkMenu from './NetworkMenu'
 
 import theme from '../utils/theme'
+// @ts-ignore: asset import
 import logo from '../../assets/psyoptions-logo-light.png'
 
 import useConnection from '../hooks/useConnection'

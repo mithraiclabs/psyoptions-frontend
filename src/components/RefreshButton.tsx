@@ -5,7 +5,10 @@ import CircularProgress from '@material-ui/core/CircularProgress'
 import Box from '@material-ui/core/Box'
 import Refresh from '@material-ui/icons/Refresh'
 
-const RefreshButton = ({ loading, onRefresh }) => {
+const RefreshButton: React.FC<{
+  loading: boolean
+  onRefresh: () => void
+}> = ({ loading, onRefresh }) => {
   const handleRefresh = () => {
     if (!loading) {
       onRefresh()

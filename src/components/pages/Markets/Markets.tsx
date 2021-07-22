@@ -305,7 +305,12 @@ const Markets = () => {
             >
               <Box px={0} py={0} width={['100%', '100%', '300px']}>
                 <Select
-                  variant="filled"
+                  formControlOptions={{
+                    variant: 'filled',
+                    style: {
+                      minWidth: '100%',
+                    },
+                  }}
                   label="Expiration Date"
                   value={date.toISOString()}
                   onChange={(e) => setSelectedDate(moment.utc(e.target.value))}
@@ -313,9 +318,6 @@ const Markets = () => {
                     value: d.toISOString(),
                     text: `${d.format('ll')} | 23:59:59 UTC`,
                   }))}
-                  style={{
-                    minWidth: '100%',
-                  }}
                 />
               </Box>
               <Box px={[0, 0, 2]} py={0} width={['100%', '100%', '200px']}>
@@ -336,7 +338,6 @@ const Markets = () => {
                 fontSize="12px"
                 display="flex"
                 alignItems="center"
-                // @ts-ignore: annoying MUI theme stuff
                 border={`1px solid ${theme.palette.background.lighter}`}
                 borderRadius={'20px'}
                 width={'fit-content'}
@@ -344,7 +345,7 @@ const Markets = () => {
                 <Box pr={1}>
                   <Box>
                     <SelectAsset
-                      disabled="false"
+                      disabled={false}
                       selectedAsset={uAsset}
                       onSelectAsset={(asset) => {
                         setUAsset(asset)
@@ -373,7 +374,6 @@ const Markets = () => {
                         <TCellLoading
                           colSpan={8}
                           style={{
-                            // @ts-ignore: annoying MUI theme stuff
                             backgroundColor: theme.palette.background.medium,
                           }}
                         >
@@ -383,7 +383,6 @@ const Markets = () => {
                         <TCellLoading
                           colSpan={8}
                           style={{
-                            // @ts-ignore: annoying MUI theme stuff
                             backgroundColor: theme.palette.background.medium,
                           }}
                         >

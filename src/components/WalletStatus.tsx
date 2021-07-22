@@ -7,7 +7,7 @@ import theme from '../utils/theme'
 
 import ConnectButton from './ConnectButton'
 
-const WalletStatus = () => {
+const WalletStatus: React.FC = () => {
   const { pubKey, connected } = useWallet()
   const pubKeyB58 = pubKey && pubKey.toBase58 && pubKey.toBase58().slice(0, 5)
 

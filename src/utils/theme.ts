@@ -1,5 +1,55 @@
 import { createMuiTheme } from '@material-ui/core/styles'
 
+type Gradients = {
+  secondary: string
+  secondaryPrimary: string
+  warning: string
+  error: string
+  success: string
+  info: string
+}
+
+declare module '@material-ui/core/styles/createMuiTheme' {
+  interface Theme {
+    gradients?: Gradients
+  }
+  interface ThemeOptions {
+    themeName?: string // optional
+    gradients?: Gradients
+    glow?: string
+  }
+}
+declare module '@material-ui/core/styles/createPalette' {
+  interface Palette {
+    border: {
+      main: string
+    }
+    disabled: {
+      main: string
+    }
+  }
+  interface PaletteOptions {
+    border: {
+      main: string
+    }
+    disabled: {
+      main: string
+    }
+  }
+  interface SimplePaletteColorOptions {
+    darker?: string
+  }
+  interface TypeBackground {
+    lighter?: string
+    light?: string
+    tableHighlight?: string
+    tabHighlight?: string
+    medium?: string
+    main?: string
+    marketsCallPutRow?: string
+  }
+}
+
 const theme = createMuiTheme({
   gradients: {
     secondary: 'linear-gradient(90deg, #24001A 0%, #790068 50%, #D18641 100%)',

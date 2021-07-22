@@ -1,14 +1,28 @@
 import React, { createContext, useState } from 'react'
-import { Connection } from '@solana/web3.js'
+import { Connection, PublicKey } from '@solana/web3.js'
 
-import { getDexProgramKeyByNetwork, networks } from '../utils/networkInfo'
+import {
+  getDexProgramKeyByNetwork,
+  Network,
+  networks,
+} from '../utils/networkInfo'
 
 // Default to first network that has a defined program id
 const DEFAULT_NETWORK = networks.find(
   (network) => network.programId !== undefined,
 )
 
-const ConnectionContext = createContext({})
+type ConnectionContextType = {
+  networks: Network[]
+  connection?: Connection
+  setConnection?: React.Dispatch<React.SetStateAction<Connection>>
+  endpoint?: Network
+  setEndpoint?: React.Dispatch<React.SetStateAction<Network>>
+  dexProgramId?: PublicKey
+}
+const ConnectionContext = createContext<ConnectionContextType>({
+  networks,
+})
 
 const ConnectionProvider = ({ children }) => {
   const [endpoint, setEndpoint] = useState(DEFAULT_NETWORK)

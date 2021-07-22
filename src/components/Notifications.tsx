@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
 import React from 'react'
 
 import Snackbar from '@material-ui/core/Snackbar'
@@ -44,7 +43,6 @@ const SimpleSnackbar = ({
       justifyContent="space-between"
       color={theme.palette.primary.light}
       style={{
-        // @ts-ignore: idk how to fix the Mui Theme
         background: theme.gradients[severity],
       }}
     >

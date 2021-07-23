@@ -7,6 +7,7 @@ import Tooltip from '@material-ui/core/Tooltip'
 import Box from '@material-ui/core/Box'
 import { withStyles, useTheme } from '@material-ui/core/styles'
 
+import BN from 'bn.js'
 import { OptionType, TokenAccount } from '../../../../types'
 import { formatExpirationTimestamp } from '../../../../utils/format'
 import useOptionsMarkets from '../../../../hooks/useOptionsMarkets'
@@ -121,7 +122,7 @@ export const WrittenOptionRow = React.memo(
           const quoteAssetPoolAccount = await quoteToken.getAccountInfo(
             market.quoteAssetPoolKey,
           )
-          if (!quoteAssetPoolAccount.amount.isZero()) {
+          if (!(quoteAssetPoolAccount.amount as BN).isZero()) {
             setQuoteAssetPoolNotEmpty(true)
           }
         } catch (err) {

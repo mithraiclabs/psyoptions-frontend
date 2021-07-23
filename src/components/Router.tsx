@@ -40,10 +40,8 @@ const RouteWithStatusCode = ({ children, ...props }) => (
     }}
   />
 )
-interface RoutesProps extends BrowserRouterProps, StaticRouterProps {
-  ssrPassword: string
-}
-const Routes: React.FC<RoutesProps> = (props) => {
+
+const Routes: React.FC<any> = (props) => {
   const [password] = usePassword()
 
   // Makes it a little harder for users to "break in" without being told the password

@@ -23,16 +23,14 @@ const useSerum = () => {
   const [_, setOrderbooks] = useSerumOrderbooks()
 
   const fetchMultipleSerumMarkets = useCallback(
-    async (serumMarketKeys: PublicKey[], localLookUpKeys?: string[]) => {
+    async (serumMarketKeys: PublicKey[]) => {
       try {
         // set that the serum markets are loading
-        if (localLookUpKeys) {
-          const loading: Record<string, LocalSerumMarket> = {}
-          localLookUpKeys.forEach((key) => {
-            loading[key] = { loading: true }
-          })
-          setSerumMarkets((_markets) => ({ ..._markets, ...loading }))
-        }
+        const loading: Record<string, LocalSerumMarket> = {}
+        serumMarketKeys.forEach((key) => {
+          loading[key.toString()] = { loading: true }
+        })
+        setSerumMarkets((_markets) => ({ ..._markets, ...loading }))
         // batch load the serum Market data
         const { serumMarketsInfo } = await batchSerumMarkets(
           connection,
@@ -70,15 +68,13 @@ const useSerum = () => {
   const fetchSerumMarket = useCallback(
     async (
       serumMarketKey: PublicKey | undefined,
-      mintA: string,
-      mintB: string,
+      baseMintKey: PublicKey,
+      quoteMintKey: PublicKey,
     ) => {
-      const key = `${mintA}-${mintB}`
-
       // Set individual loading states for each market
       setSerumMarkets((markets) => ({
         ...markets,
-        [key]: { loading: true },
+        [serumMarketKey.toString()]: { loading: true },
       }))
 
       let serumMarket: Market
@@ -94,8 +90,8 @@ const useSerum = () => {
         } else {
           serumMarket = await findMarketByAssets(
             connection,
-            new PublicKey(mintA),
-            new PublicKey(mintB),
+            baseMintKey,
+            quoteMintKey,
             dexProgramId,
           )
         }
@@ -115,7 +111,7 @@ const useSerum = () => {
       }
 
       setSerumMarkets((markets) => {
-        return { ...markets, [key]: newMarket }
+        return { ...markets, [serumMarket.address.toString()]: newMarket }
       })
 
       return newMarket

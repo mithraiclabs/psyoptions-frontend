@@ -5,11 +5,15 @@ import TableHead from '@material-ui/core/TableHead'
 import TableRow from '@material-ui/core/TableRow'
 import TableBody from '@material-ui/core/TableBody'
 import TableContainer from '@material-ui/core/TableContainer'
+import { OpenOrders as SerumOpenOrdersClass } from '@mithraic-labs/serum'
 
 import useSerum from '../../hooks/useSerum'
 import useWallet from '../../hooks/useWallet'
 import useConnection from '../../hooks/useConnection'
-import { useSerumOpenOrders } from '../../context/SerumOpenOrdersContext'
+import {
+  SerumOpenOrders,
+  useSerumOpenOrders,
+} from '../../context/SerumOpenOrdersContext'
 
 import ConnectButton from '../ConnectButton'
 import OpenOrdersForMarket from './OpenOrdersForMarket'
@@ -20,7 +24,7 @@ import { CallOrPut } from '../../types'
 const OpenOrders: React.FC<{
   optionMarkets: CallOrPut[]
 }> = ({ optionMarkets }) => {
-  const { connection } = useConnection()
+  const { connection, dexProgramId } = useConnection()
   const { wallet, pubKey, connected } = useWallet()
   const { serumMarkets } = useSerum()
   const [openOrders, setOpenOrders] = useSerumOpenOrders()
@@ -31,47 +35,42 @@ const OpenOrders: React.FC<{
   useEffect(() => {
     if (connection && serumMarkets && pubKey && openOrders) {
       const serumKeys = Object.keys(serumMarkets)
-
-      const fetchOpenOrders = async (key) => {
-        const { serumMarket } = serumMarkets[key]
-        if (serumMarket) {
-          const orders = await serumMarket.findOpenOrdersAccountsForOwner(
-            connection,
-            pubKey,
+      ;(async () => {
+        const openOrdersRes = await SerumOpenOrdersClass.findForOwner(
+          connection,
+          pubKey,
+          dexProgramId,
+        )
+        const newOpenOrders: SerumOpenOrders = {}
+        serumKeys.forEach((serumMarketAddress) => {
+          const orders = openOrdersRes.filter(
+            (openOrder) => openOrder.market.toString() === serumMarketAddress,
           )
-          setOpenOrders((prevOpenOrders) => ({
-            ...prevOpenOrders,
-            [key]: {
-              error: null,
-              loading: false,
-              orders,
-            },
-          }))
-        }
-      }
-
-      serumKeys.forEach((key) => {
-        const { loading, error } = serumMarkets[key]
-        if (!openOrders[key] && !loading && !error) {
-          // We have to set something here immediately
-          // Or else it will try to load the open orders many extra times
-          setOpenOrders((prev) => ({
-            ...prev,
-            [key]: {
-              loading: true,
-              error: null,
-              orders: [],
-            },
-          }))
-          fetchOpenOrders(key)
-        }
-      })
+          newOpenOrders[serumMarketAddress] = {
+            loading: false,
+            error: null,
+            orders,
+          }
+        })
+        setOpenOrders((prevOpenOrders) => ({
+          ...prevOpenOrders,
+          ...newOpenOrders,
+        }))
+      })()
     }
-  }, [connection, serumMarkets, wallet, pubKey, openOrders, setOpenOrders])
+  }, [
+    connection,
+    dexProgramId,
+    serumMarkets,
+    wallet,
+    pubKey,
+    openOrders,
+    setOpenOrders,
+  ])
 
   const openOrdersArray = optionMarkets
     .map((optionMarket) => {
-      if (optionMarket?.serumKey) {
+      if (optionMarket?.serumMarketKey) {
         return optionMarket
       }
       return undefined
@@ -117,7 +116,7 @@ const OpenOrders: React.FC<{
               openOrdersArray.map((optionMarket) => (
                 <OpenOrdersForMarket
                   {...optionMarket}
-                  key={`${optionMarket.serumKey}`}
+                  key={optionMarket.serumMarketKey.toString()}
                 />
               ))
             )}

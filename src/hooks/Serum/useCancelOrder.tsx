@@ -7,12 +7,12 @@ import { useSettleFunds } from './useSettleFunds'
 import useNotifications from '../useNotifications'
 import useSendTransaction from '../useSendTransaction'
 
-export const useCancelOrder = (serumKey: string) => {
+export const useCancelOrder = (serumMarketAddress: string) => {
   const { connection } = useConnection()
   const { wallet, pubKey } = useWallet()
   const { serumMarkets } = useSerum()
-  const { serumMarket } = serumMarkets[serumKey] || {}
-  const { makeSettleFundsTx } = useSettleFunds(serumKey)
+  const { serumMarket } = serumMarkets[serumMarketAddress] || {}
+  const { makeSettleFundsTx } = useSettleFunds(serumMarketAddress)
   const { pushErrorNotification } = useNotifications()
   const { sendSignedTransaction } = useSendTransaction()
 

@@ -73,10 +73,10 @@ const CallPutRow = ({
   const { serumMarkets } = useSerum()
   const initializeMarkets = useInitializeMarkets()
   const [orderbooks] = useSerumOrderbooks()
-  const callOrderbook = orderbooks[row.call?.serumKey]
-  const putOrderbook = orderbooks[row.put?.serumKey]
-  useSubscribeSerumOrderbook(row.call?.serumKey)
-  useSubscribeSerumOrderbook(row.put?.serumKey)
+  const callOrderbook = orderbooks[row.call?.serumMarketKey?.toString()]
+  const putOrderbook = orderbooks[row.put?.serumMarketKey?.toString()]
+  useSubscribeSerumOrderbook(row.call?.serumMarketKey?.toString())
+  useSubscribeSerumOrderbook(row.put?.serumMarketKey?.toString())
 
   const callHighestBid = callOrderbook?.bids[0]?.price
   const callLowestAsk = callOrderbook?.asks[0]?.price
@@ -254,7 +254,8 @@ const CallPutRow = ({
           </Button>
         )}
       </TCell>
-      {row.call?.serumKey && serumMarkets[row.call?.serumKey]?.loading ? (
+      {row.call?.serumMarketKey &&
+      serumMarkets[row.call.serumMarketKey?.toString()]?.loading ? (
         <TCellLoading colSpan={7} style={callCellStyle}>
           <Loading />
         </TCellLoading>
@@ -339,7 +340,8 @@ const CallPutRow = ({
         </h4>
       </TCellStrike>
 
-      {row.put?.serumKey && serumMarkets[row.put?.serumKey]?.loading ? (
+      {row.put?.serumMarketKey &&
+      serumMarkets[row.put.serumMarketKey.toString()]?.loading ? (
         <TCellLoading colSpan={7} style={putCellStyle}>
           <Loading />
         </TCellLoading>

@@ -15,7 +15,7 @@ import { MarketOptions, Orderbook } from '@mithraic-labs/serum/lib/market'
 import * as Sentry from '@sentry/react'
 
 export const getKeyForMarket = (market: Market) => {
-  return `${market.baseMintAddress.toString()}-${market.quoteMintAddress.toString()}`
+  return market.address.toString()
 }
 
 /**

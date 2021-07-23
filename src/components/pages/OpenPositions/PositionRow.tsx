@@ -9,6 +9,7 @@ import { makeStyles, withStyles, useTheme } from '@material-ui/core/styles'
 import * as Sentry from '@sentry/react'
 import BigNumber from 'bignumber.js'
 
+import { PublicKey } from '@solana/web3.js'
 import useExerciseOpenPosition from '../../../hooks/useExerciseOpenPosition'
 import useOwnedTokenAccounts from '../../../hooks/useOwnedTokenAccounts'
 import useNotifications from '../../../hooks/useNotifications'
@@ -56,8 +57,11 @@ const PositionRow: React.VFC<{
   const { supportedAssets } = useAssetList()
   const { ownedTokenAccounts } = useOwnedTokenAccounts()
   const { pushNotification } = useNotifications()
-  const serumMarketKey = `${row.market.optionMintKey}-${row?.qAssetMintAddress}`
-  useSerumMarket(serumMarketKey)
+  useSerumMarket(
+    row.market.serumMarketKey,
+    new PublicKey(row.market.optionMintKey),
+    new PublicKey(row?.qAssetMintAddress),
+  )
   const nowInSeconds = Date.now() / 1000
   const expired = row.expiration <= nowInSeconds
 

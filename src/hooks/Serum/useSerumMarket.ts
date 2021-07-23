@@ -10,11 +10,19 @@ import useNotifications from '../useNotifications'
 /**
  * Fetch and return a serum market
  */
-export const useSerumMarket = (key: string): LocalSerumMarket | undefined => {
+export const useSerumMarket = (
+  /* The string represenation of the Serum Market's PublicKey */
+  key: PublicKey,
+  /* The string represenation of the Serum Market's base asset's PublicKey */
+  mintA: PublicKey,
+  /* The string represenation of the Serum Market's quote asset's PublicKey */
+  mintB: PublicKey,
+): LocalSerumMarket | undefined => {
   const { pushNotification } = useNotifications()
   const { connection, dexProgramId } = useConnection()
   const { serumMarkets, setSerumMarkets } = useSerumContext()
-  const serumMarket = serumMarkets[key]
+  const serumAddress = key.toString()
+  const serumMarket = serumMarkets[serumAddress]
 
   useEffect(() => {
     if (serumMarket) {
@@ -25,22 +33,19 @@ export const useSerumMarket = (key: string): LocalSerumMarket | undefined => {
 
     setSerumMarkets((markets) => ({
       ...markets,
-      [key]: { loading: true },
+      [serumAddress]: { loading: true },
     }))
-    const mintA = key.split('-')[0]
-    const mintB = key.split('-')[1]
-
     ;(async () => {
       try {
         const market = await findMarketByAssets(
           connection,
-          new PublicKey(mintA),
-          new PublicKey(mintB),
+          mintA,
+          mintB,
           dexProgramId,
         )
         setSerumMarkets((markets) => ({
           ...markets,
-          [key]: {
+          [serumAddress]: {
             loading: false,
             serumMarket: market,
           },
@@ -48,7 +53,7 @@ export const useSerumMarket = (key: string): LocalSerumMarket | undefined => {
       } catch (err) {
         setSerumMarkets((markets) => ({
           ...markets,
-          [key]: {
+          [serumAddress]: {
             loading: false,
             error: err,
           },
@@ -64,7 +69,10 @@ export const useSerumMarket = (key: string): LocalSerumMarket | undefined => {
     connection,
     dexProgramId,
     key,
+    mintA,
+    mintB,
     pushNotification,
+    serumAddress,
     serumMarket,
     setSerumMarkets,
   ])

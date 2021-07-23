@@ -12,11 +12,13 @@ import useSerum from '../useSerum'
  *
  * Subscribes on mount
  */
-export const useSubscribeSerumOrderbook = (key: string): void => {
+export const useSubscribeSerumOrderbook = (
+  serumMarketAddress: string,
+): void => {
   const { connection } = useConnection()
   const { serumMarkets } = useSerum()
   const [, setOrderbooks] = useSerumOrderbooks()
-  const serumMarket = serumMarkets[key]?.serumMarket
+  const serumMarket = serumMarkets[serumMarketAddress]?.serumMarket
 
   useEffect(() => {
     let asksSubscription
@@ -32,10 +34,10 @@ export const useSubscribeSerumOrderbook = (key: string): void => {
             .map(([price, size]) => ({ price, size }))
           setOrderbooks((prevOrderbooks) => ({
             ...prevOrderbooks,
-            [key]: {
-              askOrderbook: prevOrderbooks[key]?.askOrderbook,
+            [serumMarketAddress]: {
+              askOrderbook: prevOrderbooks[serumMarketAddress]?.askOrderbook,
               bidOrderbook: book,
-              asks: prevOrderbooks[key]?.asks ?? [],
+              asks: prevOrderbooks[serumMarketAddress]?.asks ?? [],
               bids: _bids,
             },
           }))
@@ -50,11 +52,11 @@ export const useSubscribeSerumOrderbook = (key: string): void => {
             .map(([price, size]) => ({ price, size }))
           setOrderbooks((prevOrderbooks) => ({
             ...prevOrderbooks,
-            [key]: {
+            [serumMarketAddress]: {
               askOrderbook: book,
-              bidOrderbook: prevOrderbooks[key]?.bidOrderbook,
+              bidOrderbook: prevOrderbooks[serumMarketAddress]?.bidOrderbook,
               asks: _asks,
-              bids: prevOrderbooks[key]?.bids ?? [],
+              bids: prevOrderbooks[serumMarketAddress]?.bids ?? [],
             },
           }))
         },
@@ -69,5 +71,5 @@ export const useSubscribeSerumOrderbook = (key: string): void => {
         connection.removeAccountChangeListener(bidsSubscription)
       }
     }
-  }, [connection, key, serumMarket, setOrderbooks])
+  }, [connection, serumMarketAddress, serumMarket, setOrderbooks])
 }

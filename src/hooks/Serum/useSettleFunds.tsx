@@ -15,7 +15,7 @@ import useAssetList from '../useAssetList'
  * Returns function for settling the funds of a specific market
  */
 export const useSettleFunds = (
-  key: string,
+  serumMarketAddress: string,
 ): {
   makeSettleFundsTx: () => Promise<Transaction>
   settleFunds: () => Promise<void>
@@ -28,9 +28,10 @@ export const useSettleFunds = (
   const { USDCPublicKey } = useAssetList()
   const { ownedTokenAccounts, subscribeToTokenAccount } =
     useOwnedTokenAccounts()
-  const openOrders = useSerumOpenOrderAccounts(key, true)
-  const serumMarket = serumMarkets[key]?.serumMarket
-  const [baseMintAddress, quoteMintAddress] = key?.split('-') ?? []
+  const openOrders = useSerumOpenOrderAccounts(serumMarketAddress, true)
+  const serumMarket = serumMarkets[serumMarketAddress]?.serumMarket
+  const [baseMintAddress, quoteMintAddress] =
+    serumMarketAddress?.split('-') ?? []
   const baseTokenAccounts = ownedTokenAccounts[baseMintAddress] ?? []
   const quoteTokenAccounts = ownedTokenAccounts[quoteMintAddress] ?? []
   const { pubKey: baseTokenAccountKey } = getHighestAccount(baseTokenAccounts)

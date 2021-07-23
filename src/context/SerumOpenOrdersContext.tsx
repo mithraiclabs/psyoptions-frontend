@@ -7,7 +7,7 @@ type OpenOrdersData = {
   orders: OpenOrders[]
 }
 
-type SerumOpenOrders = Record<string, OpenOrdersData>
+export type SerumOpenOrders = Record<string, OpenOrdersData>
 type SerumOpenOrdersContext = [
   SerumOpenOrders,
   React.Dispatch<React.SetStateAction<SerumOpenOrders>>,

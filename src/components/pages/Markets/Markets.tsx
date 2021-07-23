@@ -220,19 +220,19 @@ const Markets = () => {
     // Load serum markets when the options chain changes
     // Only if they don't already exist for the matching call/put
     const serumKeys: PublicKey[] = []
-    const localLookUpKeys: string[] = []
     rowsToDisplay.forEach(({ call, put }) => {
-      if (call?.serumKey && !serumMarkets[call.serumKey]) {
+      if (
+        call?.serumMarketKey &&
+        !serumMarkets[call.serumMarketKey.toString()]
+      ) {
         serumKeys.push(call.serumMarketKey)
-        localLookUpKeys.push(call.serumKey)
       }
-      if (put?.serumKey && !serumMarkets[put.serumKey]) {
+      if (put?.serumMarketKey && !serumMarkets[put.serumMarketKey.toString()]) {
         serumKeys.push(put.serumMarketKey)
-        localLookUpKeys.push(put.serumKey)
       }
     })
     if (serumKeys.length) {
-      fetchMultipleSerumMarkets(serumKeys, localLookUpKeys)
+      fetchMultipleSerumMarkets(serumKeys)
     }
   }, [chains, rowsToDisplay, fetchMultipleSerumMarkets, serumMarkets])
 
@@ -285,6 +285,7 @@ const Markets = () => {
           }
           setLimitPrice={setLimitPrice}
           limitPrice={limitPrice}
+          serumAddress={callPutData.serumMarketKey?.toString()}
         />
         <Box
           display="flex"

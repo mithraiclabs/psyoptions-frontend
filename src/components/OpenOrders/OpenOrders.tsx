@@ -116,7 +116,7 @@ const OpenOrders: React.FC<{
               openOrdersArray.map((optionMarket) => (
                 <OpenOrdersForMarket
                   {...optionMarket}
-                  key={`${optionMarket.serumMarketKey.toString()}`}
+                  key={optionMarket.serumMarketKey.toString()}
                 />
               ))
             )}

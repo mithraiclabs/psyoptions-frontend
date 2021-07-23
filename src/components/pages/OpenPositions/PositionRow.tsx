@@ -16,7 +16,7 @@ import useNotifications from '../../../hooks/useNotifications'
 import useAssetList from '../../../hooks/useAssetList'
 import { useSerumMarket } from '../../../hooks/Serum'
 import { formatExpirationTimestamp } from '../../../utils/format'
-import { OptionMarket, TokenAccount } from '../../../types'
+import { OptionMarket, OptionType, TokenAccount } from '../../../types'
 
 const useStyles = makeStyles({
   dropdownOpen: {
@@ -73,18 +73,20 @@ const PositionRow: React.VFC<{
   // TODO -- The way we were getting market price was incorrect because it was pulling in the price of the options themselves, not the underlying asset. We should be pulling in the price of the underlying asset so we can calculate how much profit would be made from exercising. I left the above code in so that when we fix it later we don't have to start over.
   const price = null
 
-  let optionType = ''
+  let optionType: OptionType
   if (row?.uAssetSymbol) {
-    optionType = row?.uAssetSymbol?.match(/^USD/) ? 'put' : 'call'
+    optionType = row?.uAssetSymbol?.match(/^USD/)
+      ? OptionType.PUT
+      : OptionType.CALL
   }
 
   const strike =
-    optionType === 'put'
+    optionType === OptionType.PUT
       ? row.amountPerContract.dividedBy(row.quoteAmountPerContract).toString()
-      : row?.strikePrice
+      : row.market.strike.toString(10)
 
   const contractSize =
-    optionType === 'call'
+    optionType === OptionType.CALL
       ? row.amountPerContract.toString()
       : row.quoteAmountPerContract.toString()
 

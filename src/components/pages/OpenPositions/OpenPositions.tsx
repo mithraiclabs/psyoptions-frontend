@@ -36,6 +36,7 @@ const OpenPositions = () => {
             (acc, tokenAccount) => acc + tokenAccount.amount,
             0,
           ),
+          strike: markets[key]?.strike,
           strikePrice: markets[key]?.strikePrice,
           market: markets[key],
           qAssetMintAddress: markets[key]?.qAssetMint,

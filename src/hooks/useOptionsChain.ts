@@ -31,7 +31,7 @@ const useOptionsChain = () => {
    */
   const buildOptionsChain = useCallback(
     (dateTimestamp: number, contractSize?: number) => {
-      const markets = _markets as OptionMarket // for TS since useOptionsMarkets is not in TS
+      const markets = _markets
       try {
         if (marketsLoading) return
 

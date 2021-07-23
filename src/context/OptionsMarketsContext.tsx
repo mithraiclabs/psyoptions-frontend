@@ -2,7 +2,12 @@ import React, { useState, createContext } from 'react'
 
 import { OptionMarket } from '../types'
 
-const OptionsMarketsContext = createContext({
+const OptionsMarketsContext = createContext<{
+  markets: Record<string, OptionMarket>
+  setMarkets: React.Dispatch<React.SetStateAction<Record<string, OptionMarket>>>
+  marketsLoading: boolean
+  setMarketsLoading: React.Dispatch<React.SetStateAction<boolean>>
+}>({
   markets: {},
   setMarkets: null,
   marketsLoading: false,

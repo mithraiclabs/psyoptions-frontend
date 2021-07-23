@@ -7,7 +7,7 @@ import Tooltip from '@material-ui/core/Tooltip'
 import Box from '@material-ui/core/Box'
 import { withStyles, useTheme } from '@material-ui/core/styles'
 
-import { TokenAccount } from 'src/types'
+import { OptionType, TokenAccount } from '../../../../types'
 import { formatExpirationTimestamp } from '../../../../utils/format'
 import useOptionsMarkets from '../../../../hooks/useOptionsMarkets'
 import { useCloseWrittenOptionPostExpiration } from '../../../../hooks/useCloseWrittenOptionPostExpiration'
@@ -81,26 +81,32 @@ export const WrittenOptionRow = React.memo(
       initialWriterTokenAccount.pubKey,
     )
 
-    let optionType = ''
+    let optionType: OptionType
     if (market?.uAssetSymbol) {
-      optionType = market?.uAssetSymbol?.match(/^USD/) ? 'put' : 'call'
+      optionType = market?.uAssetSymbol?.match(/^USD/)
+        ? OptionType.PUT
+        : OptionType.CALL
     }
 
     const strike =
-      optionType === 'put'
+      optionType === OptionType.PUT
         ? market?.amountPerContract &&
           market.amountPerContract
             .dividedBy(market?.quoteAmountPerContract)
             .toString()
-        : market?.strikePrice
+        : market?.strike.toString(10)
 
     const uAssetSymbol =
-      optionType === 'call' ? market?.uAssetSymbol : market?.qAssetSymbol
+      optionType === OptionType.CALL
+        ? market?.uAssetSymbol
+        : market?.qAssetSymbol
 
     const uAssetImage = supportedAssets.find(
       (asset) =>
         asset?.tokenSymbol ===
-        (optionType === 'put' ? market?.qAssetSymbol : market?.uAssetSymbol),
+        (optionType === OptionType.PUT
+          ? market?.qAssetSymbol
+          : market?.uAssetSymbol),
     )?.icon
 
     useEffect(() => {
@@ -274,7 +280,8 @@ export const WrittenOptionRow = React.memo(
           {strike}
         </Box>
         <Box p={1} width="10%">
-          {initialWriterTokenAccount.amount * market.size} {market.uAssetSymbol}
+          {initialWriterTokenAccount.amount * parseInt(market.size, 10)}{' '}
+          {market.uAssetSymbol}
         </Box>
         <Box p={1} width="10%">
           {optionType === 'call'

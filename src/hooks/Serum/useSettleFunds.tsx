@@ -30,8 +30,8 @@ export const useSettleFunds = (
     useOwnedTokenAccounts()
   const openOrders = useSerumOpenOrderAccounts(serumMarketAddress, true)
   const serumMarket = serumMarkets[serumMarketAddress]?.serumMarket
-  const [baseMintAddress, quoteMintAddress] =
-    serumMarketAddress?.split('-') ?? []
+  const baseMintAddress = serumMarket.baseMintAddress.toString()
+  const quoteMintAddress = serumMarket.quoteMintAddress.toString()
   const baseTokenAccounts = ownedTokenAccounts[baseMintAddress] ?? []
   const quoteTokenAccounts = ownedTokenAccounts[quoteMintAddress] ?? []
   const { pubKey: baseTokenAccountKey } = getHighestAccount(baseTokenAccounts)
@@ -52,7 +52,7 @@ export const useSettleFunds = (
           await createAssociatedTokenAccountInstruction({
             payer: pubKey,
             owner: pubKey,
-            mintPublicKey: new PublicKey(baseMintAddress),
+            mintPublicKey: serumMarket.baseMintAddress,
           })
 
         transaction.add(createOptAccountTx)
@@ -66,7 +66,7 @@ export const useSettleFunds = (
           await createAssociatedTokenAccountInstruction({
             payer: pubKey,
             owner: pubKey,
-            mintPublicKey: new PublicKey(quoteMintAddress),
+            mintPublicKey: serumMarket.quoteMintAddress,
           })
 
         transaction.add(createOptAccountTx)
@@ -106,9 +106,7 @@ export const useSettleFunds = (
     connection,
     USDCPublicKey,
     pubKey,
-    baseMintAddress,
     subscribeToTokenAccount,
-    quoteMintAddress,
   ])
 
   const settleFunds = useCallback(async () => {

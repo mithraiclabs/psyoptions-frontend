@@ -3,6 +3,7 @@
  * TODO Initialize Serum markets for them
  */
 
+import dotenv from 'dotenv'
 import {
   initializeAccountsForMarket,
   initializeMarketInstruction,
@@ -13,6 +14,7 @@ import {
   Connection,
   Keypair,
   PublicKey,
+  sendAndConfirmTransaction,
   Transaction,
 } from '@solana/web3.js'
 import BigNumber from 'bignumber.js'
@@ -23,6 +25,9 @@ import { getSolanaConfig } from './helpers'
 import { getLastFridayOfMonths } from '../src/utils/dates'
 import { getAssetsByNetwork } from '../src/utils/networkInfo'
 import { ClusterName } from '../src/types'
+import BN from 'bn.js'
+import { createInitializeMarketTx } from '../src/utils/serum'
+dotenv.config()
 
 // TODO clean up with yargs
 if (!process.argv[2]) {
@@ -39,8 +44,10 @@ const solanaConfig = getSolanaConfig()
 const keyBuffer = fs.readFileSync(solanaConfig.keypair_path) as unknown
 const wallet = new Account(JSON.parse(keyBuffer as string))
 const connection = new Connection('http://localhost:8899', {
-  commitment: 'confirmed',
+  commitment: 'max',
 })
+
+const dexProgramId = new PublicKey(process.env.LOCAL_DEX_PROGRAM_ID)
 
 const initializeMarket = async (
   /** the keypair of the wallet creating the market */
@@ -70,9 +77,16 @@ const initializeMarket = async (
     payerKey: wallet.publicKey,
     programId,
   })
-  console.log('*** sending initializeAccountsForMarket TX')
+  console.log('*** sending createAccountsTx TX', new Date().toISOString())
 
-  await connection.sendTransaction(createAccountsTx, [wallet, ...signers])
+  await sendAndConfirmTransaction(
+    connection,
+    createAccountsTx,
+    [wallet, ...signers],
+    {
+      commitment: 'confirmed',
+    },
+  )
 
   // create and send transaction for initializing the option market
   const initializeMarketIx = await initializeMarketInstruction({
@@ -90,9 +104,9 @@ const initializeMarket = async (
   })
   const transaction = new Transaction()
   transaction.add(initializeMarketIx)
-  await connection.sendTransaction(transaction, [wallet], {
-    skipPreflight: false,
-    preflightCommitment: 'recent',
+  console.log('** sending initialize market TX', new Date().toISOString())
+  await sendAndConfirmTransaction(connection, transaction, [wallet], {
+    commitment: 'confirmed',
   })
   const [optionMarketKey] = await Market.getDerivedAddressFromParams({
     programId,
@@ -102,7 +116,7 @@ const initializeMarket = async (
     quoteAmountPerContract: quoteAmountPerContract.toNumber(),
     expirationUnixTimestamp,
   })
-  return optionMarketKey
+  return { optionMarketKey, optionMintKey }
 }
 
 ;(async () => {
@@ -115,7 +129,7 @@ const initializeMarket = async (
   const usdc = assets.find((asset) => asset.tokenSymbol.match('USDC'))
   const btcKey = new PublicKey(btc.mintAddress)
   const usdcKey = new PublicKey(usdc.mintAddress)
-  const wholeBtcPerContract = 0.05
+  const wholeBtcPerContract = 0.1
   const underlyingAmountPerContract = new BigNumber(
     wholeBtcPerContract,
   ).multipliedBy(new BigNumber(10).pow(btc.decimals))
@@ -131,7 +145,7 @@ const initializeMarket = async (
     usdcKey.toString(),
     expirationUnixTimestamp,
   )
-  await initializeMarket(
+  const { optionMarketKey, optionMintKey } = await initializeMarket(
     wallet,
     underlyingAmountPerContract,
     quoteAssetPerContract,
@@ -139,4 +153,28 @@ const initializeMarket = async (
     usdcKey,
     expirationUnixTimestamp,
   )
+
+  // This will likely be USDC or USDT but could be other things in some cases
+  const quoteLotSize = new BN(0.01 * 10 ** usdc.decimals)
+  // baseLotSize should be 1 -- the options market token doesn't have decimals
+  const baseLotSize = new BN('1')
+  console.log('*** intializing serum market', new Date().toISOString())
+  const { tx1, tx2, signers1, signers2, market } =
+    await createInitializeMarketTx({
+      connection,
+      payer: wallet.publicKey,
+      baseMint: optionMintKey,
+      quoteMint: usdcKey,
+      baseLotSize,
+      quoteLotSize,
+      dexProgramId,
+    })
+
+  await sendAndConfirmTransaction(connection, tx1, [wallet, ...signers1], {
+    commitment: 'confirmed',
+  })
+
+  await sendAndConfirmTransaction(connection, tx2, [wallet, ...signers2], {
+    commitment: 'confirmed',
+  })
 })()

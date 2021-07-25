@@ -301,14 +301,14 @@ export const createInitializeMarketTx = async ({
   )
 
   const { blockhash } = await connection.getRecentBlockhash()
-  const signers1 = [payer, baseVault, quoteVault]
+  const signers1 = [baseVault, quoteVault]
   tx1.feePayer = payer
   tx1.recentBlockhash = blockhash
-  tx1.partialSign(...signers1.slice(1))
-  const signers2 = [payer, market, requestQueue, eventQueue, bids, asks]
+  tx1.partialSign(...signers1)
+  const signers2 = [market, requestQueue, eventQueue, bids, asks]
   tx2.feePayer = payer
   tx2.recentBlockhash = blockhash
-  tx2.partialSign(...signers2.slice(1))
+  tx2.partialSign(...signers2)
   return {
     tx1,
     signers1,

@@ -10,6 +10,7 @@
     "lint:fix": "npx eslint . --fix",
     "seed": "./node_modules/typescript/bin/tsc ./scripts/seedLocalNet.ts --esModuleInterop && node ./scripts/seedLocalNet.js",
     "seed:mintTokens": "./node_modules/typescript/bin/tsc ./scripts/mintLocalNetTokens.ts --esModuleInterop && node ./scripts/mintLocalNetTokens.js",
+    "seed:localChain": "./node_modules/typescript/bin/tsc ./scripts/seedLocalChain.ts --esModuleInterop && node ./scripts/seedLocalChain.js",
     "start": "npm run build",
     "test": "echo \"Error: no test specified\" && exit 1",
     "type-check": "tsc --noEmit",

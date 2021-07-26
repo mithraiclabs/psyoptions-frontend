@@ -1,6 +1,7 @@
 /**
  * TODO Create 4 CALL and 4 PUT markets for the Friday ending this month
  * TODO Initialize Serum markets for them
+ * TODO seed some bids and asks with some random accounts
  */
 
 import dotenv from 'dotenv'

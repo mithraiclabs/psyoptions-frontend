@@ -5,6 +5,9 @@ const fs = require('fs')
 export const serumDexProgramKeypair = './serum/dex/serum_dex-keypair.json'
 export const serumDexBinaryPath = './serum/dex/serum_dex.so'
 
+export const wait = (delayMS: number) =>
+  new Promise((resolve) => setTimeout(resolve, delayMS))
+
 export const getSolanaConfig = () => {
   // Read the default key file
   const HOME = os.homedir()

@@ -39,6 +39,7 @@ proc.on('close', (code) => {
     await wait(1000)
   }
 
+  // Run a bash script to set up a lot of stuff
   const localSetupProc = exec(
     './scripts/local_setup.sh',
     {
@@ -54,7 +55,7 @@ proc.on('close', (code) => {
       },
     },
     () => {
-      console.log('*** done with the local setup')
+      console.log('********* DONE LOCAL SETUP *********')
     },
   )
   localSetupProc.stdout.on('data', (data) => {

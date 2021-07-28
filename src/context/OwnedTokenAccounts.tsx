@@ -136,35 +136,38 @@ export const OwnedTokenAccountsProvider: React.FC = ({ children }) => {
     }
 
     ;(async () => {
-      const filters = getOwnedTokenAccountsFilter(pubKey)
       setLoading(true)
       try {
         // @ts-expect-error we know what we're doing
-        const resp = await connection._rpcRequest('getProgramAccounts', [
-          TOKEN_PROGRAM_ID.toBase58(),
+        const resp = await connection._rpcRequest('getTokenAccountsByOwner', [
+          pubKey.toBase58(),
+          {
+            programId: TOKEN_PROGRAM_ID.toBase58(),
+          },
           {
             commitment: connection.commitment,
-            filters,
           },
         ])
         const _ownedTokenAccounts = {}
-        resp.result?.forEach(({ account, pubkey }) => {
-          const accountInfo = AccountLayout.decode(bs58.decode(account.data))
-          const initialAccount = convertAccountInfoToLocalStruct(
-            accountInfo,
-            new PublicKey(pubkey),
-          )
-          const mint = initialAccount.mint.toString()
-          if (_ownedTokenAccounts[mint]) {
-            _ownedTokenAccounts[mint].push(initialAccount)
-          } else {
-            _ownedTokenAccounts[mint] = [initialAccount]
-          }
-          if (!subscriptionsRef.current[pubkey]) {
-            // Subscribe to the SPL token account updates only if no subscription exists for this token.
-            subscribeToTokenAccount(new PublicKey(pubkey))
-          }
-        })
+        if (resp?.result?.value) {
+          resp.result.value.forEach(({ account, pubkey }) => {
+            const accountInfo = AccountLayout.decode(bs58.decode(account.data))
+            const initialAccount = convertAccountInfoToLocalStruct(
+              accountInfo,
+              new PublicKey(pubkey),
+            )
+            const mint = initialAccount.mint.toString()
+            if (_ownedTokenAccounts[mint]) {
+              _ownedTokenAccounts[mint].push(initialAccount)
+            } else {
+              _ownedTokenAccounts[mint] = [initialAccount]
+            }
+            if (!subscriptionsRef.current[pubkey]) {
+              // Subscribe to the SPL token account updates only if no subscription exists for this token.
+              subscribeToTokenAccount(new PublicKey(pubkey))
+            }
+          })
+        }
         setOwnedTokenAccounts(_ownedTokenAccounts)
       } catch (err) {
         pushNotification({

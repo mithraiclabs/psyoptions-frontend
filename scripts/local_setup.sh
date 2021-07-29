@@ -17,6 +17,7 @@ if test -f $OPTIONS_REPO/options/deployed_programs/psyoptions-local-keypair.json
   echo "local keypair file exists"
 else
   solana-keygen new --no-passphrase --outfile $OPTIONS_REPO/options/deployed_programs/psyoptions-local-keypair.json
+  # TODO append the PsyOptions program ID to the .env file if it is not already there
 fi
 # deploy the program
 solana program deploy --program-id $OPTIONS_REPO/options/deployed_programs/psyoptions-local-keypair.json $OPTIONS_REPO/options/target/deploy/psyoptions.so
@@ -25,6 +26,7 @@ solana program deploy --program-id $OPTIONS_REPO/options/deployed_programs/psyop
 cd $DEX_REPO
 cargo build-bpf --manifest-path dex/Cargo.toml
 solana program deploy $DEX_REPO/dex/target/deploy/serum_dex.so
+# TODO append the DEX program ID to the .env file if it is not already there
 
 cd $FRONTEND_REPO
 # seed the chain with multiple assets

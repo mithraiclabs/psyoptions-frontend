@@ -35,7 +35,7 @@ const getFaucetAddressByMint = (mint: PublicKey) => {
  * Before running this script
  */
 ;(async () => {
-  const connection = new Connection('https://devnet.solana.com')
+  const connection = new Connection('https://api.devnet.solana.com')
   const optionProgramKey = new PublicKey(
     'GDvqQy3FkDB2wyNwgZGp5YkmRMUmWbhNNWDMYKbLSZ5N',
   )

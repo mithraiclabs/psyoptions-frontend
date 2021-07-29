@@ -4,6 +4,7 @@ import { MARKETS } from '@mithraic-labs/serum'
 /* eslint-disable */
 import { MarketMeta } from '@mithraic-labs/market-meta'
 import { ClusterName } from '../types'
+import { Token } from '@mithraic-labs/market-meta/dist/types'
 
 export type Network = {
   name: ClusterName
@@ -99,7 +100,7 @@ const getSupportedMarketsByNetwork = (name: ClusterName) => {
   }
 }
 
-const getAssetsByNetwork = (name: ClusterName) => {
+const getAssetsByNetwork = (name: ClusterName): Token[] => {
   switch (name) {
     case ClusterName.mainnet:
       return MarketMeta.mainnet.tokens

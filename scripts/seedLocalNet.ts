@@ -1,40 +1,13 @@
-const SPLToken = require('@solana/spl-token')
-const SolWeb3 = require('@solana/web3.js')
-const fs = require('fs')
-
-const { MintLayout, Token, TOKEN_PROGRAM_ID } = SPLToken
-const {
+import { MintLayout, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import {
   Account,
   Connection,
+  Keypair,
   Transaction,
   sendAndConfirmTransaction,
   SystemProgram,
-} = SolWeb3
-
-/**
- * Create Account with 1000 (i think) SOL
- */
-const createPayerWithSol = async (connection, amount = 100000000000) => {
-  const payer = new Account()
-  console.log(`requesting airdrop of ${amount} to ${payer.publicKey}`)
-  await connection.requestAirdrop(payer.publicKey, amount)
-  let retries = 60
-  for (;;) {
-    // sleep half a second
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    const balance = await connection.getBalance(payer.publicKey)
-    console.log('account balance ', balance)
-    if (amount === balance) {
-      return payer
-    }
-    if (--retries <= 0) {
-      throw new Error('Failed to airdrop SOL to payer for seed')
-    }
-  }
-}
-
-const trustWalletERC20Icon = (address) =>
-  `https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/${address}/logo.png`
+} from '@solana/web3.js'
+const fs = require('fs')
 
 /**
  * Seed local net with SPL tokens for development purposes.
@@ -50,10 +23,10 @@ const trustWalletERC20Icon = (address) =>
   const keyBuffer = fs.readFileSync(keyPairFilePath)
   payer = new Account(JSON.parse(keyBuffer))
 
-  const splMint1 = new Account()
-  const splMint2 = new Account()
-  const splMint3 = new Account()
-  const splMint4 = new Account()
+  const splMint1 = new Keypair()
+  const splMint2 = new Keypair()
+  const splMint3 = new Keypair()
+  const splMint4 = new Keypair()
 
   console.log(
     'Attempting to create SPL Mints ',

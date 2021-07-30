@@ -7,7 +7,6 @@ import {
   useUpdateForm,
   useFormState,
 } from '../../../../context/SimpleUIContext'
-import useExpirationDate from '../../../../hooks/useExpirationDate'
 
 const ChooseDateButton = ({ date, selected, onClick }) => {
   const theme = useTheme()
@@ -41,25 +40,25 @@ const ChooseDateButton = ({ date, selected, onClick }) => {
   )
 }
 
-const ChooseExpiration = () => {
-  const { setSelectedDate, dates } = useExpirationDate()
-  const { tokenSymbol, direction } = useFormState()
+const ChooseStrike = () => {
+  const { tokenSymbol, direction, expirationUnixTimestamp } = useFormState()
   const updateForm = useUpdateForm()
   const history = useHistory()
   const [selectedExpiration, setSelectedExpiration] = useState(0)
 
   // If previous form state didn't exist, send user back to first page (choose asset)
   useEffect(() => {
-    if (!tokenSymbol || !direction) {
+    if (!tokenSymbol || !direction || !expirationUnixTimestamp) {
       history.replace('/simple/choose-asset')
     }
-  }, [tokenSymbol, direction, history])
 
-  const handleMakeSelection = (d) => {
+    // If previous form state did exist, we need to load the markets on mount
+  }, [tokenSymbol, direction, history, expirationUnixTimestamp])
+
+  const handleMakeSelection = (expiration) => {
     if (!selectedExpiration) {
-      setSelectedDate(d)
-      setSelectedExpiration(d.unix())
-      updateForm('expirationUnixTimestamp', d.unix())
+      setSelectedExpiration(expiration)
+      updateForm('expirationUnixTimestamp', expiration)
 
       // TODO: animated transition between pages instead of a timeout
       setTimeout(() => {
@@ -77,17 +76,9 @@ const ChooseExpiration = () => {
       display="flex"
       justifyContent="center"
     >
-      {dates.slice(0, 3).map((date) => (
-        <Box my={1} key={date.unix()}>
-          <ChooseDateButton
-            date={date}
-            onClick={() => handleMakeSelection(date)}
-            selected={selectedExpiration === date.unix()}
-          />
-        </Box>
-      ))}
+      to do
     </Box>
   )
 }
 
-export default memo(ChooseExpiration)
+export default memo(ChooseStrike)

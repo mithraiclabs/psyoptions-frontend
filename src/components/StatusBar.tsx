@@ -51,6 +51,17 @@ const NavOptions = React.memo(() => {
           Markets
         </Button>
       </Box>
+      <Box mx={2}>
+        <Button
+          href="/simple/choose-asset"
+          onClick={(e) => {
+            e.preventDefault()
+            history.push('/simple/choose-asset')
+          }}
+        >
+          Beginner UI
+        </Button>
+      </Box>
       {INITIALIZE_PAGE_ENABLED && (
         <Box mx={2}>
           <Button

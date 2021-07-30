@@ -1,5 +1,5 @@
-import React, { memo, useCallback, useState } from 'react'
-import { Switch, Route, useHistory, useLocation } from 'react-router-dom'
+import React, { memo, useEffect, useState } from 'react'
+import { useHistory } from 'react-router-dom'
 import Box from '@material-ui/core/Box'
 import Button from '@material-ui/core/Button'
 import Avatar from '@material-ui/core/Avatar'
@@ -70,7 +70,7 @@ const ChooseAssetButton = ({
 const ChooseAnAsset = () => {
   const updateForm = useUpdateForm()
   const history = useHistory()
-  const { supportedAssets } = useAssetList()
+  const { supportedAssets, setUAsset } = useAssetList()
   const assetWhitelist = ['SOL', 'BTC', 'ETH']
   const [selectedTokenSymbol, setSelectedTokenSymbol] = useState('')
 
@@ -78,10 +78,11 @@ const ChooseAnAsset = () => {
     assetWhitelist.includes(asset.tokenSymbol),
   )
 
-  const handleMakeSelection = ({ tokenSymbol }) => {
+  const handleMakeSelection = (asset) => {
     if (!selectedTokenSymbol) {
-      setSelectedTokenSymbol(tokenSymbol)
-      updateForm('tokenSymbol', tokenSymbol)
+      setSelectedTokenSymbol(asset.tokenSymbol)
+      updateForm('tokenSymbol', asset.tokenSymbol)
+      setUAsset(asset)
 
       // TODO: animated transition between pages instead of a timeout
       setTimeout(() => {

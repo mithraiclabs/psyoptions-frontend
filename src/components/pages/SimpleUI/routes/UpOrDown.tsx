@@ -1,5 +1,5 @@
 import React, { memo, useEffect, useState } from 'react'
-import { Switch, Route, useHistory, useLocation } from 'react-router-dom'
+import { useHistory } from 'react-router-dom'
 import Box from '@material-ui/core/Box'
 import Button from '@material-ui/core/Button'
 import ArrowUpward from '@material-ui/icons/ArrowUpward'

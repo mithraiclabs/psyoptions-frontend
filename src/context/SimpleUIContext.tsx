@@ -1,7 +1,12 @@
 import React, { createContext, useContext, useReducer } from 'react'
 import type { Dispatch } from 'react'
 
-type FormState = Record<string, unknown>
+type FormState = {
+  tokenSymbol: string
+  direction: 'up' | 'down' | ''
+  expirationUnixTimestamp: number
+  strike: number
+}
 
 type ContextValue = {
   state: FormState
@@ -15,7 +20,14 @@ type UpdateFormAction = {
 
 type UpdateFormDispatcher = (key: string, value: any) => void
 
-// Simple reducer that replaces key/value pairs in the existing state
+const initialState: FormState = {
+  tokenSymbol: '',
+  direction: '',
+  expirationUnixTimestamp: 0,
+  strike: 0,
+}
+
+// Simple reducer that replaces key/value pairs of the form state
 const formReducer = (state: FormState, action: UpdateFormAction) => {
   return {
     ...state,
@@ -23,10 +35,8 @@ const formReducer = (state: FormState, action: UpdateFormAction) => {
   }
 }
 
-const initialState: FormState = {}
-
 export const SimpleUIFormContext = createContext<ContextValue>({
-  state: {},
+  state: initialState,
   dispatch: () => {},
 })
 

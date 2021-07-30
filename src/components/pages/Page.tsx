@@ -9,8 +9,15 @@ const Page: React.FC<{
   children: React.ReactNode
   background?: string
   hideNavbar?: boolean
+  transparentNavbar?: boolean
   center?: boolean
-}> = ({ children, background, hideNavbar, center = true }) => (
+}> = ({
+  children,
+  background,
+  hideNavbar,
+  transparentNavbar = false,
+  center = true,
+}) => (
   <>
     <Notifications />
     <Box
@@ -19,7 +26,7 @@ const Page: React.FC<{
       flexDirection="column"
       style={{ background }}
     >
-      {hideNavbar ? null : <StatusBar />}
+      {hideNavbar ? null : <StatusBar transparent={transparentNavbar} />}
       <Box
         px={[0, 0, 4]}
         minHeight="100%"

@@ -113,6 +113,50 @@ const Landing = () => {
           p={2}
         >
           <Box display="flex" flexDirection={['column', 'row', 'row']}>
+            <Box
+              px={2}
+              pt={1}
+              pb={4}
+              m={1}
+              width={['300px']}
+              height={['266px']}
+              display="flex"
+              flexDirection="column"
+              alignItems="center"
+              justifyContent="space-between"
+              className={landingCard}
+            >
+              <Box
+                flexGrow={1}
+                display="flex"
+                flexDirection="column"
+                justifyContent="center"
+              >
+                <h2
+                  style={{
+                    textTransform: 'none',
+                    textAlign: 'center',
+                    fontSize: '36px',
+                  }}
+                >
+                  Beginner UI
+                </h2>
+              </Box>
+              <Button
+                color="primary"
+                variant="outlined"
+                style={{ whiteSpace: 'nowrap' }}
+                href="/simple/choose-asset"
+                onClick={(e) => {
+                  e.preventDefault()
+                  history.push('/simple/choose-asset')
+                }}
+              >
+                Trade Now
+              </Button>
+            </Box>
+          </Box>
+          <Box display="flex" flexDirection={['column', 'row', 'row']}>
             <LandingCard
               title={`${Object.keys(markets).length}`}
               text={`Options Market${

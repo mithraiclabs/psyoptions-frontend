@@ -1,53 +1,29 @@
 import React, { useEffect } from 'react'
 import { Switch, Route, useHistory, useLocation } from 'react-router-dom'
 import Box from '@material-ui/core/Box'
-import { useTheme } from '@material-ui/core/styles'
 
 import StatusBar from '../../StatusBar'
 import Notifications from '../../Notifications'
+
+import StepIndicator from './SimpleUIStepIndicator'
+import PageTitle from './SimpleUIPageTitle'
 import ChooseAnAsset from './routes/ChooseAnAsset'
-
-const UpOrDown = () => {
-  return <Box p={2}>up or down</Box>
-}
-
-const StepIndicator = ({ on = false }) => {
-  const theme = useTheme()
-  const { primary, background } = theme?.palette as any
-
-  return (
-    <Box
-      width="16%"
-      height={'4px'}
-      borderRadius={'2px'}
-      bgcolor={on ? primary?.main : background?.light}
-    />
-  )
-}
+import UpOrDown from './routes/UpOrDown'
+import ChooseExpiration from './routes/ChooseExpiration'
 
 const pageBg =
   'linear-gradient(360deg, #42203B 14.41%, rgba(27, 26, 45, 0.81) 55.79%, #101017 93.84%), #101017'
 
 export const SimpleUI: React.FC = () => {
-  // const theme = useTheme()
   const history = useHistory()
   const location = useLocation()
 
   useEffect(() => {
-    // Go to choose asset screen by default
+    // Redirect base path back to homepage
     if (location?.pathname.match(/\/simple\/?$/)) {
-      history.replace('/simple/choose-asset')
+      history.replace('/')
     }
   }, [location, history])
-
-  let pageTitle = ''
-  // let pageSubTitle = ''
-  if (location?.pathname.match(/\/simple\/choose-asset\/?$/)) {
-    pageTitle = 'Choose An Asset'
-  }
-  if (location?.pathname.match(/\/simple\/up-or-down\/?$/)) {
-    pageTitle = `I think it's going...`
-  }
 
   return (
     <>
@@ -59,25 +35,9 @@ export const SimpleUI: React.FC = () => {
         style={{ background: pageBg }}
       >
         <StatusBar transparent />
-        <Box
-          p={2}
-          pt={[3, 3, 5]}
-          display="flex"
-          justifyContent="space-between"
-          flexDirection="row"
-          width="100%"
-          maxWidth="400px"
-          mx={'auto'}
-        >
-          <StepIndicator on />
-          <StepIndicator />
-          <StepIndicator />
-          <StepIndicator />
-          <StepIndicator />
-          <StepIndicator />
-        </Box>
+        <StepIndicator />
         <Box maxWidth="400px" mx={'auto'} p={2}>
-          <h3 style={{ margin: 0 }}>{pageTitle}</h3>
+          <PageTitle />
         </Box>
         <Box
           minHeight="100%"
@@ -102,7 +62,11 @@ export const SimpleUI: React.FC = () => {
           >
             <Switch>
               <Route component={ChooseAnAsset} path="/simple/choose-asset" />
-              <Route component={UpOrDown} path="/simple/:asset/up-or-down" />
+              <Route component={UpOrDown} path="/simple/up-or-down" />
+              <Route
+                component={ChooseExpiration}
+                path="/simple/choose-expiration"
+              />
             </Switch>
           </Box>
         </Box>

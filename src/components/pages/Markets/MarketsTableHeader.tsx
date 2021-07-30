@@ -17,8 +17,8 @@ export const MarketsTableHeader: React.FC<{
   setShowPriceChange: (bool: boolean) => void
   setShowVolume: (bool: boolean) => void
   setShowOI: (bool: boolean) => void
-  // currentColumnsCount: number
-  // setColumnsCount: (num: number) => void
+  currentColumnsCount: number
+  setColumnsCount: (num: number) => void
 }> = React.memo(({ 
   uAssetSymbol,
   qAssetSymbol,
@@ -30,16 +30,16 @@ export const MarketsTableHeader: React.FC<{
   setShowPriceChange,
   setShowVolume,
   setShowOI,
-  // currentColumnsCount,
-  // setColumnsCount,
+  currentColumnsCount,
+  setColumnsCount,
  }) => {
-  const colWidth = (1 / 8) * 100
+  const colWidth = (1 / currentColumnsCount) * 100
 
   return (
     <TableHead>
       <TableRow>
         <THeadCell
-          colSpan={8}
+          colSpan={Math.floor(currentColumnsCount / 2)}
           style={{ borderTop: 'none', padding: '16px 20px' }}
         >
           <h3 style={{ margin: 0 }}>
@@ -81,12 +81,12 @@ export const MarketsTableHeader: React.FC<{
             setShowPriceChange={setShowPriceChange}
             setShowVolume={setShowVolume}
             setShowOI={setShowOI}
-            // currentColumnsCount={currentColumnsCount}
-            // setColumnsCount={setColumnsCount}
+            currentColumnsCount={currentColumnsCount}
+            setColumnsCount={setColumnsCount}
           />
         </TCellStrike>
         <THeadCell
-          colSpan={8}
+          colSpan={Math.floor(currentColumnsCount / 2)}
           style={{ borderTop: 'none', padding: '16px 20px' }}
         >
           <h3 style={{ margin: 0 }}>
@@ -137,7 +137,7 @@ export const MarketsTableHeader: React.FC<{
             </THeadCell>
           )
         }
-        <THeadCell align="left" width={'90px'}>
+        <THeadCell align="left" width={`${colWidth}%`}>
           <StyledTooltip
             placement="top"
             title={
@@ -149,7 +149,7 @@ export const MarketsTableHeader: React.FC<{
             <Box display="inline">Bid</Box>
           </StyledTooltip>
         </THeadCell>
-        <THeadCell align="left" width={'90px'}>
+        <THeadCell align="left" width={`${colWidth}%`}>
           <StyledTooltip
             placement="top"
             title={
@@ -163,7 +163,7 @@ export const MarketsTableHeader: React.FC<{
         </THeadCell>
         {
           showIV && (
-            <THeadCell align="left" width={'70px'}>
+            <THeadCell align="left" width={`${colWidth}%`}>
               <StyledTooltip
                 placement="top"
                 title={
@@ -179,7 +179,7 @@ export const MarketsTableHeader: React.FC<{
         }
         {
           showPriceChange && (
-            <THeadCell align="left">
+            <THeadCell align="left" width={`${colWidth}%`}>
               <StyledTooltip
                 placement="top"
                 title={
@@ -195,7 +195,7 @@ export const MarketsTableHeader: React.FC<{
         }
         {
           showVolume && (
-            <THeadCell align="left">
+            <THeadCell align="left" width={`${colWidth}%`}>
               <StyledTooltip
                 placement="top"
                 title={
@@ -211,7 +211,7 @@ export const MarketsTableHeader: React.FC<{
         }
         {
           showOI && (
-            <THeadCell align="left">
+            <THeadCell align="left" width={`${colWidth}%`}>
               <StyledTooltip
                 placement="top"
                 title={
@@ -239,7 +239,7 @@ export const MarketsTableHeader: React.FC<{
 
         {
           showIV && (
-            <THeadCell align="right" width={'70px'}>
+            <THeadCell align="right" width={`${colWidth}%`}>
               <StyledTooltip
                 placement="top"
                 title={
@@ -253,7 +253,7 @@ export const MarketsTableHeader: React.FC<{
             </THeadCell>
           )
         }
-        <THeadCell align="right" width={'90px'}>
+        <THeadCell align="right" width={`${colWidth}%`}>
           <StyledTooltip
             placement="top"
             title={
@@ -265,7 +265,7 @@ export const MarketsTableHeader: React.FC<{
             <Box display="inline">Bid</Box>
           </StyledTooltip>
         </THeadCell>
-        <THeadCell align="right" width={'90px'}>
+        <THeadCell align="right" width={`${colWidth}%`}>
           <StyledTooltip
             placement="top"
             title={
@@ -279,7 +279,7 @@ export const MarketsTableHeader: React.FC<{
         </THeadCell>
         {
           showIV && (
-            <THeadCell align="right" width={'70px'}>
+            <THeadCell align="right" width={`${colWidth}%`}>
               <StyledTooltip
                 placement="top"
                 title={
@@ -295,7 +295,7 @@ export const MarketsTableHeader: React.FC<{
         }
         {
           showPriceChange && (
-            <THeadCell align="right">
+            <THeadCell align="right" width={`${colWidth}%`}>
               <StyledTooltip
                 placement="top"
                 title={
@@ -311,7 +311,7 @@ export const MarketsTableHeader: React.FC<{
         }
         {
           showVolume && (
-            <THeadCell align="right">
+            <THeadCell align="right" width={`${colWidth}%`}>
               <StyledTooltip
                 placement="top"
                 title={
@@ -327,7 +327,7 @@ export const MarketsTableHeader: React.FC<{
         }
         {
           showOI && (
-            <THeadCell align="right">
+            <THeadCell align="right" width={`${colWidth}%`}>
               <StyledTooltip
                 placement="top"
                 title={

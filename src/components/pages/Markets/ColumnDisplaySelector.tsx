@@ -1,4 +1,4 @@
-import React, { useState, useReducer }from 'react'
+import React, { useState } from 'react'
 import Popover from '@material-ui/core/Popover'
 import { makeStyles, createStyles, Theme } from '@material-ui/core/styles';
 import SettingsIcon from '@material-ui/icons/Settings'
@@ -24,8 +24,8 @@ export const ColumnDisplaySelector: React.FC<{
   setShowPriceChange: (bool: boolean) => void
   setShowVolume: (bool: boolean) => void
   setShowOI: (bool: boolean) => void
-  // currentColumnsCount: number
-  // setColumnsCount: (num: number) => void
+  currentColumnsCount: number
+  setColumnsCount: (num: number) => void
 }> = React.memo(({
   showIV,
   showPriceChange,
@@ -35,8 +35,8 @@ export const ColumnDisplaySelector: React.FC<{
   setShowPriceChange,
   setShowVolume,
   setShowOI,
-  // currentColumnsCount,
-  // setColumnsCount,
+  currentColumnsCount,
+  setColumnsCount,
 }) =>  {
   const classes = useStyles();
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
@@ -83,9 +83,11 @@ export const ColumnDisplaySelector: React.FC<{
                 checked={showIV} // true or false
                 onChange={(e) => {
                   setShowIV(e.target.checked)
-                  // e.target.checked
-                  //   ? setColumnsCount(currentColumnsCount + 2)
-                  //   : setColumnsCount(currentColumnsCount - 2)
+                  if (e.target.checked) {
+                    setColumnsCount(currentColumnsCount + 4)
+                  } else {
+                    setColumnsCount(currentColumnsCount - 4)
+                  }
                 }}
                 name="checkedIV"
                 color="primary"
@@ -99,6 +101,11 @@ export const ColumnDisplaySelector: React.FC<{
                 checked={showPriceChange}
                 onChange={(e) => {
                   setShowPriceChange(e.target.checked)
+                  if (e.target.checked) {
+                    setColumnsCount(currentColumnsCount + 2)
+                  } else {
+                    setColumnsCount(currentColumnsCount - 2)
+                  }
                 }}
                 name="checkedChange"
                 color="primary"
@@ -112,6 +119,11 @@ export const ColumnDisplaySelector: React.FC<{
                 checked={showVolume}
                 onChange={(e) => {
                   setShowVolume(e.target.checked)
+                  if (e.target.checked) {
+                    setColumnsCount(currentColumnsCount + 2)
+                  } else {
+                    setColumnsCount(currentColumnsCount - 2)
+                  }
                 }}
                 name="checkedVolume"
                 color="primary"
@@ -125,6 +137,11 @@ export const ColumnDisplaySelector: React.FC<{
                 checked={showOI}
                 onChange={(e) => {
                   setShowOI(e.target.checked)
+                  if (e.target.checked) {
+                    setColumnsCount(currentColumnsCount + 2)
+                  } else {
+                    setColumnsCount(currentColumnsCount - 2)
+                  }
                 }}
                 name="checkedOpenInterest"
                 color="primary"

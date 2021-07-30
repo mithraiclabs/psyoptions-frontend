@@ -143,7 +143,7 @@ const Faucets = () => {
       USDC,
       usdcAccount,
       100_000,
-      'Claim 100,0000 USDC',
+      'Claim 100,000 USDC',
     )
     setLoadingUSDC(false)
   }

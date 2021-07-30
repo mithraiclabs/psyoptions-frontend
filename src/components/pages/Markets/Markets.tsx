@@ -118,7 +118,7 @@ const Markets = () => {
   const [showPriceChange, setShowPriceChange] = useState(true)
   const [showVolume, setShowVolume] = useState(true)
   const [showOI, setShowOI] = useState(true)
-  // const [currentColumnsCount, setColumnsCount] = useState(8) // 8 per side 
+  const [currentColumnsCount, setColumnsCount] = useState(17) // 17 columns 
 
   useEffect(() => {
     const availableSizes = getSizes({
@@ -301,7 +301,7 @@ const Markets = () => {
     currentPageStart !== currentPageEnd
       ? `${currentPageStart}-${currentPageEnd} of ${filteredChain.length}`
       : `${currentPageStart} of ${filteredChain.length}`
-// console.log('current col count', currentColumnsCount)
+console.log('current col count', currentColumnsCount)
   return (
     <MarketDataProvider chain={chains}>
       <Page>
@@ -416,8 +416,8 @@ const Markets = () => {
                   setShowPriceChange={setShowPriceChange}
                   setShowVolume={setShowVolume}
                   setShowOI={setShowOI}
-                  // currentColumnsCount={currentColumnsCount}
-                  // setColumnsCount={setColumnsCount}
+                  currentColumnsCount={currentColumnsCount}
+                  setColumnsCount={setColumnsCount}
                 />
                 <TableBody>
                   {rows.map((row) => {

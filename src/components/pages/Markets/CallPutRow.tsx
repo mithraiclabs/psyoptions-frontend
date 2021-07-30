@@ -58,6 +58,7 @@ type CallPutRowProps = {
   showPriceChange: boolean
   showVolume: boolean
   showOI: boolean
+  // currentColumnsCount: number
 }
 
 const CallPutRow = ({
@@ -75,6 +76,7 @@ const CallPutRow = ({
   showPriceChange,
   showVolume,
   showOI,
+  // currentColumnsCount
 }: CallPutRowProps) => {
   const { connected } = useWallet()
   const { pushNotification } = useNotifications()

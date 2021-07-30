@@ -24,6 +24,8 @@ export const ColumnDisplaySelector: React.FC<{
   setShowPriceChange: (bool: boolean) => void
   setShowVolume: (bool: boolean) => void
   setShowOI: (bool: boolean) => void
+  // currentColumnsCount: number
+  // setColumnsCount: (num: number) => void
 }> = React.memo(({
   showIV,
   showPriceChange,
@@ -33,6 +35,8 @@ export const ColumnDisplaySelector: React.FC<{
   setShowPriceChange,
   setShowVolume,
   setShowOI,
+  // currentColumnsCount,
+  // setColumnsCount,
 }) =>  {
   const classes = useStyles();
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
@@ -79,6 +83,9 @@ export const ColumnDisplaySelector: React.FC<{
                 checked={showIV} // true or false
                 onChange={(e) => {
                   setShowIV(e.target.checked)
+                  // e.target.checked
+                  //   ? setColumnsCount(currentColumnsCount + 2)
+                  //   : setColumnsCount(currentColumnsCount - 2)
                 }}
                 name="checkedIV"
                 color="primary"

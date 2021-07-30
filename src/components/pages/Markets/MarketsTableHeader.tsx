@@ -17,6 +17,8 @@ export const MarketsTableHeader: React.FC<{
   setShowPriceChange: (bool: boolean) => void
   setShowVolume: (bool: boolean) => void
   setShowOI: (bool: boolean) => void
+  // currentColumnsCount: number
+  // setColumnsCount: (num: number) => void
 }> = React.memo(({ 
   uAssetSymbol,
   qAssetSymbol,
@@ -28,7 +30,10 @@ export const MarketsTableHeader: React.FC<{
   setShowPriceChange,
   setShowVolume,
   setShowOI,
+  // currentColumnsCount,
+  // setColumnsCount,
  }) => {
+  const colWidth = (1 / 8) * 100
 
   return (
     <TableHead>
@@ -76,6 +81,8 @@ export const MarketsTableHeader: React.FC<{
             setShowPriceChange={setShowPriceChange}
             setShowVolume={setShowVolume}
             setShowOI={setShowOI}
+            // currentColumnsCount={currentColumnsCount}
+            // setColumnsCount={setColumnsCount}
           />
         </TCellStrike>
         <THeadCell
@@ -116,7 +123,7 @@ export const MarketsTableHeader: React.FC<{
 
         {
           showIV && (
-            <THeadCell align="left" width={'70px'}>
+            <THeadCell align="left" width={`${colWidth}%`}>
               <StyledTooltip
                 placement="top"
                 title={

@@ -301,7 +301,7 @@ const Markets = () => {
     currentPageStart !== currentPageEnd
       ? `${currentPageStart}-${currentPageEnd} of ${filteredChain.length}`
       : `${currentPageStart} of ${filteredChain.length}`
-console.log('current col count', currentColumnsCount)
+
   return (
     <MarketDataProvider chain={chains}>
       <Page>

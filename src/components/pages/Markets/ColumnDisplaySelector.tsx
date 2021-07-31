@@ -41,7 +41,6 @@ export const ColumnDisplaySelector: React.FC<{
   const classes = useStyles();
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
 
-  console.log('selector status', showIV)
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
   };
@@ -49,10 +48,6 @@ export const ColumnDisplaySelector: React.FC<{
   const handleClose = () => {
     setAnchorEl(null);
   };
-
-  // const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-  //   setState({ ...state, [event.target.name]: event.target.checked });
-  // };
 
   const open = Boolean(anchorEl);
   const id = open ? 'column-display-selector' : undefined;

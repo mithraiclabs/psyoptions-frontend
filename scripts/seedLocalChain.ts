@@ -121,8 +121,9 @@ const initializeMarket = async (
 }
 
 ;(async () => {
-  // create markets for the end of the current month
-  const expirationDate = getLastFridayOfMonths(1)[0]
+  // create markets for the end of the current month,
+  // end of next month if last friday on this month passed
+  const expirationDate = getLastFridayOfMonths(1)[0] ? getLastFridayOfMonths(1)[0] : getLastFridayOfMonths(2)[0]
   // We have to divide the JS timestamp by 1,000 to get the timestamp in miliseconds
   const expirationUnixTimestamp = expirationDate.unix()
   const assets = getAssetsByNetwork(ClusterName.localhost)

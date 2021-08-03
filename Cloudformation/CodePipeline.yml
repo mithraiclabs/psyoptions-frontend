@@ -306,7 +306,8 @@ Resources:
                     "ContainerPort": "${ContainerPort}",
                     "HostedZoneId": "${HostedZoneId}",
                     "DomainName": "staging-${DomainName}",
-                    "DomainCertificateArn": "${DomainCertificateArn}"
+                    "DomainCertificateArn": "${DomainCertificateArn}",
+                    "Environment": "staging"
                   }
                 RoleArn:
                   Fn::GetAtt: [CloudformationExecutionRole, Arn]
@@ -372,7 +373,8 @@ Resources:
                     "ContainerPort": "${ContainerPort}",
                     "HostedZoneId": "${HostedZoneId}",
                     "DomainName": "${DomainName}",
-                    "DomainCertificateArn": "${DomainCertificateArn}"
+                    "DomainCertificateArn": "${DomainCertificateArn}",
+                    "Environment": "production"
                   }
                 RoleArn:
                   Fn::GetAtt: [CloudformationExecutionRole, Arn]

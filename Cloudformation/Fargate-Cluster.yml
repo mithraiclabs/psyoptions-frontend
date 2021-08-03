@@ -1,6 +1,8 @@
 Parameters:
   ResourcePrefix:
     Type: String
+  Environment:
+    Type: String
   ContainerPort:
     Type: Number
   ImageURI:
@@ -153,7 +155,7 @@ Resources:
             - Name: APP_PASSWORD_PROTECTED
               Value: true
             - Name: SENTRY_ENVIRONMENT
-              Value: staging
+              Value: !Ref Environment
             - Name: DEVNET_FAUCET_USDC
               Value: E6wQSMPGqHn7dqEMeWcSVfjdkwd8ED5CncQ9BtMNGtUG
             - Name: DEVNET_FAUCET_BTC

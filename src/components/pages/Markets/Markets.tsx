@@ -127,11 +127,12 @@ const Markets = () => {
 
   // Unfortunately we need to set contract size in a useEffect because uAsset is asynchronously loaded
   useEffect(() => {
-    if (!contractSize || !sizeOptions.find((s) => s.value === contractSize)) {
-      // TODO adjust this to use market-meta info for default size on a given asset
+    if (sizeOptions.find((s) => s.value === uAsset.defaultContractSize)) {
+      setContractSize(uAsset.defaultContractSize)
+    } else {
       setContractSize(sizeOptions[0].value)
     }
-  }, [uAsset, contractSize, sizeOptions])
+  }, [uAsset.defaultContractSize, sizeOptions])
 
   // mainnet mark price from bonfida
   const bonfidaMarkPrice = useBonfidaMarkPrice({

@@ -11,8 +11,8 @@ import { useTheme, withStyles } from '@material-ui/core/styles'
 import KeyboardArrowDown from '@material-ui/icons/KeyboardArrowDown'
 import { debounce } from 'throttle-debounce'
 
+import { Token } from '@mithraic-labs/market-meta/dist/types'
 import useAssetList from '../hooks/useAssetList'
-import { Asset } from '../types'
 
 const CustomChip = withStyles({
   disabled: {
@@ -23,8 +23,8 @@ const CustomChip = withStyles({
 
 const SelectAsset: React.FC<{
   label?: string
-  selectedAsset: Asset
-  onSelectAsset?: (asset: Asset) => void
+  selectedAsset: Token
+  onSelectAsset?: (asset: Token) => void
   disabled?: boolean
 }> = ({
   label = 'Select Asset',

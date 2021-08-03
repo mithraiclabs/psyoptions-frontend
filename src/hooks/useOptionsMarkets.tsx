@@ -100,6 +100,10 @@ const useOptionsMarkets = () => {
             quoteAssetMintKey,
             dexProgramId,
           )
+          // Short circuit if there is no serumMarket because OptionMarket must have a serumMarketKey
+          if (!serumMarket) {
+            return
+          }
 
           const newMarket: OptionMarket = {
             key: `${expiration}-${uAsset.tokenSymbol}-${
@@ -221,7 +225,17 @@ const useOptionsMarkets = () => {
     return {}
   }, [connection, fetchMarketData, supportedAssets, endpoint]) // eslint-disable-line
 
-  const getSizes = ({ uAssetSymbol, qAssetSymbol, date }) => {
+  const getSizes = ({ uAssetSymbol, qAssetSymbol }) => {
+    const keyPart = `-${uAssetSymbol}-${qAssetSymbol}-`
+
+    const sizes = Object.keys(markets)
+      .filter((key) => key.match(keyPart))
+      .map((key) => markets[key].size)
+
+    return [...new Set(sizes)]
+  }
+
+  const getSizesWithDate = ({ uAssetSymbol, qAssetSymbol, date }) => {
     const keyPart = `${date}-${uAssetSymbol}-${qAssetSymbol}-`
 
     const sizes = Object.keys(markets)
@@ -361,6 +375,7 @@ const useOptionsMarkets = () => {
     setMarketsLoading,
     getStrikePrices,
     getSizes,
+    getSizesWithDate,
     getDates,
     mint,
     createAccountsAndMint,

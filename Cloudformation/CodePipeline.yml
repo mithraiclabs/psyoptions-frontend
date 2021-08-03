@@ -2,7 +2,7 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: The CloudFormation template for the CodePipeline.
 
 Parameters:
-  Stage:
+  ResourcePrefix:
     Type: String
     Default: staging
   GithubBranch:
@@ -42,13 +42,17 @@ Resources:
     Type: AWS::ECR::Repository
     Properties:
       RepositoryName:
-        !Join ['-', [!Ref Stage, !Ref 'AWS::AccountId', 'ecr-repository']]
+        !Join [
+          '-',
+          [!Ref ResourcePrefix, !Ref 'AWS::AccountId', 'ecr-repository'],
+        ]
 
   # Create an S3 Bucket to store build artifacts
   S3Bucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Join ['-', [!Ref Stage, !Ref 'AWS::AccountId', 's3bucket']]
+      BucketName:
+        !Join ['-', [!Ref ResourcePrefix, !Ref 'AWS::AccountId', 's3bucket']]
 
   # Create Access Role for CodePipeLine
   CodePipeLineExecutionRole:
@@ -64,7 +68,10 @@ Resources:
         - 'arn:aws:iam::aws:policy/AdministratorAccess'
       Policies:
         - PolicyName:
-            !Join ['-', [!Ref Stage, !Ref 'AWS::AccountId', 'Pipeline-Role']]
+            !Join [
+              '-',
+              [!Ref ResourcePrefix, !Ref 'AWS::AccountId', 'Pipeline-Role'],
+            ]
           PolicyDocument:
             Version: 2012-10-17
             Statement:
@@ -101,7 +108,8 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/CloudWatchLogsFullAccess
       Policies:
-        - PolicyName: !Join ['-', [!Ref Stage, !Ref 'AWS::AccountId', 'CB-ECR']]
+        - PolicyName:
+            !Join ['-', [!Ref ResourcePrefix, !Ref 'AWS::AccountId', 'CB-ECR']]
           PolicyDocument:
             Version: 2012-10-17
             Statement:
@@ -117,7 +125,10 @@ Resources:
                   - 'ecr:GetDownloadUrlForLayer'
                 Resource: '*'
         - PolicyName:
-            !Join ['-', [!Ref Stage, !Ref 'AWS::AccountId', 'CB-Resources']]
+            !Join [
+              '-',
+              [!Ref ResourcePrefix, !Ref 'AWS::AccountId', 'CB-Resources'],
+            ]
           PolicyDocument:
             Version: 2012-10-17
             Statement:
@@ -145,7 +156,11 @@ Resources:
         - PolicyName:
             !Join [
               '-',
-              [!Ref Stage, !Ref 'AWS::AccountId', 'FargateCloudFormation'],
+              [
+                !Ref ResourcePrefix,
+                !Ref 'AWS::AccountId',
+                'FargateCloudFormation',
+              ],
             ]
           PolicyDocument:
             Version: 2012-10-17
@@ -201,7 +216,11 @@ Resources:
             Value: !Ref SecretsArn
           - Name: KmsArn
             Value: !Ref KmsArn
-      Name: !Join ['-', [!Ref Stage, !Ref 'AWS::AccountId', 'BuildProject']]
+      Name:
+        !Join [
+          '-',
+          [!Ref ResourcePrefix, !Ref 'AWS::AccountId', 'BuildProject'],
+        ]
       ServiceRole: !Ref CodeBuildExecutionRole
       Source:
         Type: CODEPIPELINE
@@ -214,9 +233,14 @@ Resources:
     DependsOn: S3Bucket
     Properties:
       ArtifactStore:
-        Location: !Join ['-', [!Ref Stage, !Ref 'AWS::AccountId', 's3bucket']]
+        Location:
+          !Join ['-', [!Ref ResourcePrefix, !Ref 'AWS::AccountId', 's3bucket']]
         Type: S3
-      Name: !Join ['-', [!Ref Stage, !Ref 'AWS::AccountId', 'CodePipeLine']]
+      Name:
+        !Join [
+          '-',
+          [!Ref ResourcePrefix, !Ref 'AWS::AccountId', 'CodePipeLine'],
+        ]
       RestartExecutionOnUpdate: False
       RoleArn:
         Fn::GetAtt: [CodePipeLineExecutionRole, Arn]
@@ -260,6 +284,72 @@ Resources:
               RunOrder: 1
 
         # Deploy the project by executing Fargate-Cluster.yml file in the Source code with Cloudformation.
+        - Name: StagingDeploy
+          Actions:
+            - Name: Deploy
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Version: 1
+                Provider: CloudFormation
+              InputArtifacts:
+                - Name: source-output-artifacts
+                - Name: build-output-artifacts
+              Configuration:
+                ActionMode: CREATE_UPDATE
+                Capabilities: CAPABILITY_NAMED_IAM
+                # Pass parameter values to Fargate-Cluster.yml for deployment
+                ParameterOverrides: !Sub |
+                  {
+                    "ImageURI" : { "Fn::GetParam" : ["build-output-artifacts", "imagedefinitions.json", "ImageURI"] },
+                    "ResourcePrefix":  "s-${ResourcePrefix}",
+                    "ContainerPort": "${ContainerPort}",
+                    "HostedZoneId": "${HostedZoneId}",
+                    "DomainName": "staging-${DomainName}",
+                    "DomainCertificateArn": "${DomainCertificateArn}"
+                  }
+                RoleArn:
+                  Fn::GetAtt: [CloudformationExecutionRole, Arn]
+                StackName:
+                  !Join [
+                    '-',
+                    [
+                      's',
+                      !Ref ResourcePrefix,
+                      !Ref 'AWS::AccountId',
+                      'FargateECSCluster',
+                    ],
+                  ]
+                TemplatePath: source-output-artifacts::Cloudformation/Fargate-Cluster.yml
+              RunOrder: 1
+            - Name: Approval
+              ActionTypeId:
+                Category: Approval
+                Owner: AWS
+                Version: 1
+                Provider: Manual
+              RunOrder: 2
+            - Name: DeleteTestStack
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Provider: CloudFormation
+                Version: '1'
+              Configuration:
+                ActionMode: DELETE_ONLY
+                RoleArn: !GetAtt CloudformationExecutionRole.Arn
+                StackName:
+                  !Join [
+                    '-',
+                    [
+                      's',
+                      !Ref ResourcePrefix,
+                      !Ref 'AWS::AccountId',
+                      'ECSCluster',
+                    ],
+                  ]
+              RunOrder: 3
+        # Deploy the project by executing Fargate-Cluster.yml file in the Source code with Cloudformation.
         - Name: Deploy
           Actions:
             - Name: Deploy
@@ -278,7 +368,7 @@ Resources:
                 ParameterOverrides: !Sub |
                   {
                     "ImageURI" : { "Fn::GetParam" : ["build-output-artifacts", "imagedefinitions.json", "ImageURI"] },
-                    "Stage":  "${Stage}",
+                    "ResourcePrefix":  "${ResourcePrefix}",
                     "ContainerPort": "${ContainerPort}",
                     "HostedZoneId": "${HostedZoneId}",
                     "DomainName": "${DomainName}",
@@ -289,7 +379,11 @@ Resources:
                 StackName:
                   !Join [
                     '-',
-                    [!Ref Stage, !Ref 'AWS::AccountId', 'FargateECSCluster'],
+                    [
+                      !Ref ResourcePrefix,
+                      !Ref 'AWS::AccountId',
+                      'FargateECSCluster',
+                    ],
                   ]
                 TemplatePath: source-output-artifacts::Cloudformation/Fargate-Cluster.yml
               RunOrder: 1

@@ -275,7 +275,7 @@ Resources:
       Protocol: HTTPS
       SslPolicy: ELBSecurityPolicy-2016-08
 
-  # Create a DNS record for the specified Hosted Zone and subdomain
+  # Create a DNS record for the specified Hosted Zone and subdomain that accepts all countries
   Route53DnsRecord:
     Type: AWS::Route53::RecordSet
     Properties:
@@ -284,6 +284,20 @@ Resources:
         EvaluateTargetHealth: true
         HostedZoneId: !GetAtt LoadBalancer.CanonicalHostedZoneID
       HostedZoneId: !Ref HostedZoneId
+      GeoLocation: 
+        CountryCode: '*'
+      Name: !Ref DomainName
+      Type: A
+
+  # Redirect restricted countries to notice
+  Route53DnsRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      ResourceRecords:
+        - '127.0.0.1'
+      HostedZoneId: !Ref HostedZoneId
+      GeoLocation: 
+        CountryCode: 'US'
       Name: !Ref DomainName
       Type: A
 

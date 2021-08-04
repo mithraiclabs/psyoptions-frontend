@@ -54,6 +54,10 @@ type CallPutRowProps = {
   onClickBuySellCall: (callOrPut: any) => void
   onClickBuySellPut: (callOrPut: any) => void
   setLimitPrice: (callOrPut: any) => void
+  showIV: boolean
+  showPriceChange: boolean
+  showVolume: boolean
+  showOI: boolean
 }
 
 const CallPutRow = ({
@@ -67,6 +71,10 @@ const CallPutRow = ({
   onClickBuySellCall,
   onClickBuySellPut,
   setLimitPrice,
+  showIV,
+  showPriceChange,
+  showVolume,
+  showOI,
 }: CallPutRowProps) => {
   const { connected } = useWallet()
   const { pushNotification } = useNotifications()
@@ -261,14 +269,18 @@ const CallPutRow = ({
         </TCellLoading>
       ) : (
         <>
-          <TCell
-            align="left"
-            style={callCellStyle}
-            width={'70px'}
-            onClick={() => openBuySellModal('call')}
-          >
-            {(callBidIV && `${callBidIV.toFixed(1)}%`) || <Empty>{'—'}</Empty>}
-          </TCell>
+          {showIV && (
+            <TCell
+              align="left"
+              style={callCellStyle}
+              width={'70px'}
+              onClick={() => openBuySellModal('call')}
+            >
+              {(callBidIV && `${callBidIV.toFixed(1)}%`) || (
+                <Empty>{'—'}</Empty>
+              )}
+            </TCell>
+          )}
           <TCell
             align="left"
             style={callCellStyle}
@@ -293,44 +305,54 @@ const CallPutRow = ({
               <Empty>{'—'}</Empty>
             )}
           </TCell>
-          <TCell
-            align="left"
-            style={callCellStyle}
-            width={'70px'}
-            onClick={() => openBuySellModal('call')}
-          >
-            {(callAskIV && `${callAskIV.toFixed(1)}%`) || <Empty>{'—'}</Empty>}
-          </TCell>
-          <TCell
-            align="left"
-            style={callCellStyle}
-            onClick={() => openBuySellModal('call')}
-          >
-            {marketTrackerData?.[row.call?.serumMarketKey?.toString()]
-              ?.change ? (
-              `${
-                marketTrackerData?.[row.call?.serumMarketKey?.toString()]
-                  ?.change
-              }%`
-            ) : (
-              <Empty>{'—'}</Empty>
-            )}
-          </TCell>
-          <TCell
-            align="left"
-            style={callCellStyle}
-            onClick={() => openBuySellModal('call')}
-          >
-            {marketTrackerData?.[row.call?.serumMarketKey?.toString()]
-              ?.volume || <Empty>{'—'}</Empty>}
-          </TCell>
-          <TCell
-            align="left"
-            style={callCellStyle}
-            onClick={() => openBuySellModal('call')}
-          >
-            {callOptionMintInfo?.supply.toString() || <Empty>{'—'}</Empty>}
-          </TCell>
+          {showIV && (
+            <TCell
+              align="left"
+              style={callCellStyle}
+              width={'70px'}
+              onClick={() => openBuySellModal('call')}
+            >
+              {(callAskIV && `${callAskIV.toFixed(1)}%`) || (
+                <Empty>{'—'}</Empty>
+              )}
+            </TCell>
+          )}
+          {showPriceChange && (
+            <TCell
+              align="left"
+              style={callCellStyle}
+              onClick={() => openBuySellModal('call')}
+            >
+              {marketTrackerData?.[row.call?.serumMarketKey?.toString()]
+                ?.change ? (
+                `${
+                  marketTrackerData?.[row.call?.serumMarketKey?.toString()]
+                    ?.change
+                }%`
+              ) : (
+                <Empty>{'—'}</Empty>
+              )}
+            </TCell>
+          )}
+          {showVolume && (
+            <TCell
+              align="left"
+              style={callCellStyle}
+              onClick={() => openBuySellModal('call')}
+            >
+              {marketTrackerData?.[row.call?.serumMarketKey?.toString()]
+                ?.volume || <Empty>{'—'}</Empty>}
+            </TCell>
+          )}
+          {showOI && (
+            <TCell
+              align="left"
+              style={callCellStyle}
+              onClick={() => openBuySellModal('call')}
+            >
+              {callOptionMintInfo?.supply.toString() || <Empty>{'—'}</Empty>}
+            </TCell>
+          )}
         </>
       )}
 
@@ -347,14 +369,16 @@ const CallPutRow = ({
         </TCellLoading>
       ) : (
         <>
-          <TCell
-            align="right"
-            style={putCellStyle}
-            width={'70px'}
-            onClick={() => openBuySellModal('put')}
-          >
-            {(putBidIV && `${putBidIV.toFixed(1)}%`) || <Empty>{'—'}</Empty>}
-          </TCell>
+          {showIV && (
+            <TCell
+              align="right"
+              style={putCellStyle}
+              width={'70px'}
+              onClick={() => openBuySellModal('put')}
+            >
+              {(putBidIV && `${putBidIV.toFixed(1)}%`) || <Empty>{'—'}</Empty>}
+            </TCell>
+          )}
           <TCell
             align="right"
             style={putCellStyle}
@@ -379,43 +403,52 @@ const CallPutRow = ({
               <Empty>{'—'}</Empty>
             )}
           </TCell>
-          <TCell
-            align="right"
-            style={putCellStyle}
-            width={'70px'}
-            onClick={() => openBuySellModal('put')}
-          >
-            {(putAskIV && `${putAskIV.toFixed(1)}%`) || <Empty>{'—'}</Empty>}
-          </TCell>
-          <TCell
-            align="right"
-            style={putCellStyle}
-            onClick={() => openBuySellModal('put')}
-          >
-            {marketTrackerData?.[row.put?.serumMarketKey?.toString()]
-              ?.change ? (
-              `${
-                marketTrackerData?.[row.put?.serumMarketKey?.toString()]?.change
-              }%`
-            ) : (
-              <Empty>{'—'}</Empty>
-            )}
-          </TCell>
-          <TCell
-            align="right"
-            style={putCellStyle}
-            onClick={() => openBuySellModal('put')}
-          >
-            {marketTrackerData?.[row.put?.serumMarketKey?.toString()]
-              ?.volume || <Empty>{'—'}</Empty>}
-          </TCell>
-          <TCell
-            align="right"
-            style={putCellStyle}
-            onClick={() => openBuySellModal('put')}
-          >
-            {putOptionMintInfo?.supply.toString() || <Empty>{'—'}</Empty>}
-          </TCell>
+          {showIV && (
+            <TCell
+              align="right"
+              style={putCellStyle}
+              width={'70px'}
+              onClick={() => openBuySellModal('put')}
+            >
+              {(putAskIV && `${putAskIV.toFixed(1)}%`) || <Empty>{'—'}</Empty>}
+            </TCell>
+          )}
+          {showPriceChange && (
+            <TCell
+              align="right"
+              style={putCellStyle}
+              onClick={() => openBuySellModal('put')}
+            >
+              {marketTrackerData?.[row.put?.serumMarketKey?.toString()]
+                ?.change ? (
+                `${
+                  marketTrackerData?.[row.put?.serumMarketKey?.toString()]
+                    ?.change
+                }%`
+              ) : (
+                <Empty>{'—'}</Empty>
+              )}
+            </TCell>
+          )}
+          {showVolume && (
+            <TCell
+              align="right"
+              style={putCellStyle}
+              onClick={() => openBuySellModal('put')}
+            >
+              {marketTrackerData?.[row.put?.serumMarketKey?.toString()]
+                ?.volume || <Empty>{'—'}</Empty>}
+            </TCell>
+          )}
+          {showOI && (
+            <TCell
+              align="right"
+              style={putCellStyle}
+              onClick={() => openBuySellModal('put')}
+            >
+              {putOptionMintInfo?.supply.toString() || <Empty>{'—'}</Empty>}
+            </TCell>
+          )}
         </>
       )}
       <TCell align="right" style={putCellStyle} width={'120px'}>

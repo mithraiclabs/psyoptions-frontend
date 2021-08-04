@@ -114,6 +114,11 @@ const Markets = () => {
   const [sizeOptions, setSizeOptions] = useState(defaultSizeOptions)
   const [limitPrice, setLimitPrice] = useState('0')
   const rowsPerPage = 7
+  const [showIV, setShowIV] = useState(true)
+  const [showPriceChange, setShowPriceChange] = useState(true)
+  const [showVolume, setShowVolume] = useState(true)
+  const [showOI, setShowOI] = useState(true)
+  const [currentColumnsCount, setColumnsCount] = useState(17) // 17 columns
 
   useEffect(() => {
     const availableSizes = getSizes({
@@ -403,6 +408,16 @@ const Markets = () => {
                 <MarketsTableHeader
                   uAssetSymbol={uAsset?.tokenSymbol || ''}
                   qAssetSymbol={qAsset?.tokenSymbol}
+                  showIV={showIV}
+                  showPriceChange={showPriceChange}
+                  showVolume={showVolume}
+                  showOI={showOI}
+                  setShowIV={setShowIV}
+                  setShowPriceChange={setShowPriceChange}
+                  setShowVolume={setShowVolume}
+                  setShowOI={setShowOI}
+                  currentColumnsCount={currentColumnsCount}
+                  setColumnsCount={setColumnsCount}
                 />
                 <TableBody>
                   {rows.map((row) => {
@@ -439,6 +454,10 @@ const Markets = () => {
                         onClickBuySellPut={handleBuySellClick}
                         markPrice={markPrice}
                         setLimitPrice={setLimitPrice}
+                        showIV={showIV}
+                        showPriceChange={showPriceChange}
+                        showVolume={showVolume}
+                        showOI={showOI}
                       />
                     )
                   })}

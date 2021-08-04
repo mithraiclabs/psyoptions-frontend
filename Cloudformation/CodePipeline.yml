@@ -227,8 +227,8 @@ Resources:
         # This file (buildspec.yml In Source code) contains commands to Create and Push a docker image to the ECR_REPOSITORY_URI
         BuildSpec: buildspec.yml
 
-  # Create CodePipeline with 3 stages (Source, Build and Deploy)
-  CodePipeLine:
+  # CodePipeline for staging deployments that release on every push to master
+  StagingCodePipeLine:
     Type: AWS::CodePipeline::Pipeline
     DependsOn: S3Bucket
     Properties:
@@ -239,7 +239,7 @@ Resources:
       Name:
         !Join [
           '-',
-          [!Ref ResourcePrefix, !Ref 'AWS::AccountId', 'CodePipeLine'],
+          ['s',!Ref ResourcePrefix, !Ref 'AWS::AccountId', 'CodePipeLine'],
         ]
       RestartExecutionOnUpdate: False
       RoleArn:
@@ -350,6 +350,104 @@ Resources:
                     ],
                   ]
               RunOrder: 3
+        # Deploy the project by executing Fargate-Cluster.yml file in the Source code with Cloudformation.
+        - Name: Deploy
+          Actions:
+            - Name: Deploy
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Version: 1
+                Provider: CloudFormation
+              InputArtifacts:
+                - Name: source-output-artifacts
+                - Name: build-output-artifacts
+              Configuration:
+                ActionMode: CREATE_UPDATE
+                Capabilities: CAPABILITY_NAMED_IAM
+                # Pass parameter values to Fargate-Cluster.yml for deployment
+                ParameterOverrides: !Sub |
+                  {
+                    "ImageURI" : { "Fn::GetParam" : ["build-output-artifacts", "imagedefinitions.json", "ImageURI"] },
+                    "ResourcePrefix":  "${ResourcePrefix}",
+                    "ContainerPort": "${ContainerPort}",
+                    "HostedZoneId": "${HostedZoneId}",
+                    "DomainName": "${DomainName}",
+                    "DomainCertificateArn": "${DomainCertificateArn}",
+                    "Environment": "production"
+                  }
+                RoleArn:
+                  Fn::GetAtt: [CloudformationExecutionRole, Arn]
+                StackName:
+                  !Join [
+                    '-',
+                    [
+                      !Ref ResourcePrefix,
+                      !Ref 'AWS::AccountId',
+                      'FargateECSCluster',
+                    ],
+                  ]
+                TemplatePath: source-output-artifacts::Cloudformation/Fargate-Cluster.yml
+              RunOrder: 1
+
+  # CodePipeline for production deployments that release by a manual click
+  ProductionCodePipeLine:
+    Type: AWS::CodePipeline::Pipeline
+    DependsOn: S3Bucket
+    Properties:
+      ArtifactStore:
+        Location:
+          !Join ['-', [!Ref ResourcePrefix, !Ref 'AWS::AccountId', 's3bucket']]
+        Type: S3
+      Name:
+        !Join [
+          '-',
+          [!Ref ResourcePrefix, !Ref 'AWS::AccountId', 'CodePipeLine'],
+        ]
+      RestartExecutionOnUpdate: False
+      RoleArn:
+        Fn::GetAtt: [CodePipeLineExecutionRole, Arn]
+
+      Stages:
+        # Download source code from Github Repo to source-output-artifacts path in S3 Bucket
+        - Name: Source
+          Actions:
+            - Name: SourceAction
+              ActionTypeId:
+                Category: Source
+                Owner: AWS
+                Version: 1
+                Provider: CodeStarSourceConnection
+              OutputArtifacts:
+                - Name: source-output-artifacts
+              Configuration:
+                ConnectionArn: !Ref CodeStarGithubConnectionArn
+                FullRepositoryId: !Ref FullRepositoryId
+                BranchName: !Ref GithubBranch
+                DetectChanges: true
+                OutputArtifactFormat: 'CODE_ZIP'
+                # We choose not to automatically deploy to production. We must manually trigger the release within AWS
+                DetectChanges: false
+              Region: !Ref AwsRegion
+              RunOrder: 1
+
+        # Build the project using the BuildProject and Output build artifacts to build-output-artifacts path in S3 Bucket
+        - Name: Build
+          Actions:
+            - Name: Build
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Version: 1
+                Provider: CodeBuild
+              OutputArtifacts:
+                - Name: build-output-artifacts
+              InputArtifacts:
+                - Name: source-output-artifacts
+              Configuration:
+                ProjectName: !Ref BuildProject
+              RunOrder: 1
+
         # Deploy the project by executing Fargate-Cluster.yml file in the Source code with Cloudformation.
         - Name: Deploy
           Actions:

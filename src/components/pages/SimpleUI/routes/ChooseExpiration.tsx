@@ -9,6 +9,8 @@ import {
 } from '../../../../context/SimpleUIContext'
 import useExpirationDate from '../../../../hooks/useExpirationDate'
 
+import { SimpleUIPage } from '../SimpeUIPage'
+
 const ChooseDateButton = ({ date, selected, onClick }) => {
   const theme = useTheme()
 
@@ -69,24 +71,26 @@ const ChooseExpiration = () => {
   }
 
   return (
-    <Box
-      width="100%"
-      px={2}
-      py={1}
-      flexDirection="column"
-      display="flex"
-      justifyContent="center"
-    >
-      {dates.slice(0, 3).map((date) => (
-        <Box my={1} key={date.unix()}>
-          <ChooseDateButton
-            date={date}
-            onClick={() => handleMakeSelection(date)}
-            selected={selectedExpiration === date.unix()}
-          />
-        </Box>
-      ))}
-    </Box>
+    <SimpleUIPage title={`On or before this date`}>
+      <Box
+        width="100%"
+        px={2}
+        py={1}
+        flexDirection="column"
+        display="flex"
+        justifyContent="center"
+      >
+        {dates.slice(0, 3).map((date) => (
+          <Box my={1} key={date.unix()}>
+            <ChooseDateButton
+              date={date}
+              onClick={() => handleMakeSelection(date)}
+              selected={selectedExpiration === date.unix()}
+            />
+          </Box>
+        ))}
+      </Box>
+    </SimpleUIPage>
   )
 }
 

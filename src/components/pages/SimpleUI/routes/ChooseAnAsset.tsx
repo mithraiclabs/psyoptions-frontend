@@ -8,6 +8,8 @@ import useAssetList from '../../../../hooks/useAssetList'
 import { useBonfidaMarkPrice } from '../../../../hooks/useBonfidaMarkPrice'
 import { useUpdateForm } from '../../../../context/SimpleUIContext'
 
+import { SimpleUIPage } from '../SimpeUIPage'
+
 const ChooseAssetButton = ({
   tokenSymbol,
   icon,
@@ -92,19 +94,21 @@ const ChooseAnAsset = () => {
   }
 
   return (
-    <Box width="100%" px={2} py={1}>
-      {assets.map((asset) => (
-        <Box my={2} key={asset.tokenSymbol}>
-          <ChooseAssetButton
-            tokenSymbol={asset.tokenSymbol}
-            icon={asset.icon}
-            tokenName={asset.tokenName}
-            selected={selectedTokenSymbol === asset.tokenSymbol}
-            onClick={() => handleMakeSelection(asset)}
-          />
-        </Box>
-      ))}
-    </Box>
+    <SimpleUIPage title={'Choose an Asset'}>
+      <Box width="100%" px={2} py={1}>
+        {assets.map((asset) => (
+          <Box my={2} key={asset.tokenSymbol}>
+            <ChooseAssetButton
+              tokenSymbol={asset.tokenSymbol}
+              icon={asset.icon}
+              tokenName={asset.tokenName}
+              selected={selectedTokenSymbol === asset.tokenSymbol}
+              onClick={() => handleMakeSelection(asset)}
+            />
+          </Box>
+        ))}
+      </Box>
+    </SimpleUIPage>
   )
 }
 

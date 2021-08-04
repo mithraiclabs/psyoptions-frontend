@@ -10,6 +10,8 @@ import {
   useFormState,
 } from '../../../../context/SimpleUIContext'
 
+import { SimpleUIPage } from '../SimpeUIPage'
+
 const UpOrDownButton = ({ selected, onClick, direction }) => {
   const theme = useTheme()
 
@@ -74,31 +76,33 @@ const UpOrDown = () => {
   }
 
   return (
-    <Box
-      width="100%"
-      px={2}
-      py={1}
-      flexDirection="row"
-      display="flex"
-      justifyContent="space-around"
-    >
-      <Box textAlign="center">
-        <UpOrDownButton
-          selected={selectedDirection === 'up'}
-          direction="up"
-          onClick={() => handleMakeSelection('up')}
-        />
-        <h3>Up</h3>
+    <SimpleUIPage title={`I think it's going`}>
+      <Box
+        width="100%"
+        px={2}
+        py={1}
+        flexDirection="row"
+        display="flex"
+        justifyContent="space-around"
+      >
+        <Box textAlign="center">
+          <UpOrDownButton
+            selected={selectedDirection === 'up'}
+            direction="up"
+            onClick={() => handleMakeSelection('up')}
+          />
+          <h3>Up</h3>
+        </Box>
+        <Box textAlign="center">
+          <UpOrDownButton
+            selected={selectedDirection === 'down'}
+            direction="down"
+            onClick={() => handleMakeSelection('down')}
+          />
+          <h3>Down</h3>
+        </Box>
       </Box>
-      <Box textAlign="center">
-        <UpOrDownButton
-          selected={selectedDirection === 'down'}
-          direction="down"
-          onClick={() => handleMakeSelection('down')}
-        />
-        <h3>Down</h3>
-      </Box>
-    </Box>
+    </SimpleUIPage>
   )
 }
 

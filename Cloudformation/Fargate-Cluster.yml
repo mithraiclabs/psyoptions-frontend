@@ -1,5 +1,7 @@
 Parameters:
-  Stage:
+  ResourcePrefix:
+    Type: String
+  Environment:
     Type: String
   ContainerPort:
     Type: Number
@@ -21,14 +23,15 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName:
-        !Join ['-', [!Ref Stage, !Ref 'AWS::AccountId', 'Container']]
+        !Join ['-', [!Ref ResourcePrefix, !Ref 'AWS::AccountId', 'Container']]
       RetentionInDays: 7
 
   # Create an ECS Cluster
   Cluster:
     Type: AWS::ECS::Cluster
     Properties:
-      ClusterName: !Join ['-', [!Ref Stage, !Ref 'AWS::AccountId', 'Cluster']]
+      ClusterName:
+        !Join ['-', [!Ref ResourcePrefix, !Ref 'AWS::AccountId', 'Cluster']]
       ClusterSettings:
         - Name: containerInsights
           Value: enabled
@@ -102,7 +105,10 @@ Resources:
     Type: AWS::IAM::Role
     Properties:
       RoleName:
-        !Join ['-', [!Ref Stage, !Ref 'AWS::AccountId', 'ExecutionRole']]
+        !Join [
+          '-',
+          [!Ref ResourcePrefix, !Ref 'AWS::AccountId', 'ExecutionRole'],
+        ]
       AssumeRolePolicyDocument:
         Statement:
           - Effect: Allow
@@ -124,7 +130,11 @@ Resources:
       TaskRoleArn: !Ref ExecutionRole
       ExecutionRoleArn: !Ref ExecutionRole
       ContainerDefinitions:
-        - Name: !Join ['-', [!Ref Stage, !Ref 'AWS::AccountId', 'Container']]
+        - Name:
+            !Join [
+              '-',
+              [!Ref ResourcePrefix, !Ref 'AWS::AccountId', 'Container'],
+            ]
           Image: !Ref ImageURI
           Cpu: 512
           Memory: 1024
@@ -141,11 +151,11 @@ Resources:
             - Name: MAINNET_DEX_PROGRAM_ID
               Value: EUqojwWA2rd19FZrzeBncJsm38Jm1hEhE3zsmX3bRc2o
             - Name: APP_PASSWORD
-              Value: 89fe0dbb9a8e940c4e88f40ae9738db57dbe38a8
+              Value: 4448579c7dd64a7f824ce8a28fb51376ebf05039
             - Name: APP_PASSWORD_PROTECTED
               Value: true
             - Name: SENTRY_ENVIRONMENT
-              Value: staging
+              Value: !Ref Environment
             - Name: DEVNET_FAUCET_USDC
               Value: E6wQSMPGqHn7dqEMeWcSVfjdkwd8ED5CncQ9BtMNGtUG
             - Name: DEVNET_FAUCET_BTC
@@ -160,7 +170,10 @@ Resources:
             Options:
               awslogs-region: !Ref 'AWS::Region'
               awslogs-group:
-                !Join ['-', [!Ref Stage, !Ref 'AWS::AccountId', 'Container']]
+                !Join [
+                  '-',
+                  [!Ref ResourcePrefix, !Ref 'AWS::AccountId', 'Container'],
+                ]
               awslogs-stream-prefix: 'logs'
   # Creat a security group for load balancer and open port 80 in bound from internet
   LoadBalancerSecurityGroup:
@@ -169,7 +182,11 @@ Resources:
       GroupDescription:
         !Join [
           '-',
-          [!Ref Stage, !Ref 'AWS::AccountId', 'LoadBalancerSecurityGroup'],
+          [
+            !Ref ResourcePrefix,
+            !Ref 'AWS::AccountId',
+            'LoadBalancerSecurityGroup',
+          ],
         ]
       VpcId: !Ref VPC
       SecurityGroupIngress:
@@ -189,7 +206,11 @@ Resources:
       GroupDescription:
         !Join [
           '-',
-          [!Ref Stage, !Ref 'AWS::AccountId', 'ContainerSecurityGroup'],
+          [
+            !Ref ResourcePrefix,
+            !Ref 'AWS::AccountId',
+            'ContainerSecurityGroup',
+          ],
         ]
       VpcId: !Ref VPC
       SecurityGroupIngress:
@@ -215,7 +236,8 @@ Resources:
   TargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
-      Name: !Join ['-', [!Ref Stage, !Ref 'AWS::AccountId', 'TargetGroup']]
+      Name:
+        !Join ['-', [!Ref ResourcePrefix, !Ref 'AWS::AccountId', 'TargetGroup']]
       Port: 80
       Protocol: HTTP
       TargetType: ip
@@ -253,8 +275,8 @@ Resources:
       Protocol: HTTPS
       SslPolicy: ELBSecurityPolicy-2016-08
 
-  # Create a DNS record for the specified Hosted Zone and subdomain
-  Route53DnsRecord:
+  # Create a DNS record for the specified Hosted Zone and subdomain that accepts all countries
+  AllCountriesDns:
     Type: AWS::Route53::RecordSet
     Properties:
       AliasTarget:
@@ -262,8 +284,25 @@ Resources:
         EvaluateTargetHealth: true
         HostedZoneId: !GetAtt LoadBalancer.CanonicalHostedZoneID
       HostedZoneId: !Ref HostedZoneId
+      GeoLocation:
+        CountryCode: '*'
       Name: !Ref DomainName
       Type: A
+      SetIdentifier: 1
+
+  # Redirect restricted countries to notice
+  BlockUsDns:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      ResourceRecords:
+        - '127.0.0.1'
+      TTL: 60
+      HostedZoneId: !Ref HostedZoneId
+      GeoLocation:
+        CountryCode: 'US'
+      Name: !Ref DomainName
+      Type: A
+      SetIdentifier: 2
 
   # Create an ECS Service and add created Cluster, TaskDefintion, Subnets, TargetGroup and SecurityGroup
   ECSService:
@@ -273,7 +312,7 @@ Resources:
       - HttpsLoadBalancerListener
     Properties:
       ServiceName:
-        !Join ['-', [!Ref Stage, !Ref 'AWS::AccountId', 'ECSService']]
+        !Join ['-', [!Ref ResourcePrefix, !Ref 'AWS::AccountId', 'ECSService']]
       Cluster: !Ref Cluster
       TaskDefinition: !Ref TaskDefinition
       DesiredCount: 1
@@ -289,6 +328,9 @@ Resources:
             - !Ref ContainerSecurityGroup
       LoadBalancers:
         - ContainerName:
-            !Join ['-', [!Ref Stage, !Ref 'AWS::AccountId', 'Container']]
+            !Join [
+              '-',
+              [!Ref ResourcePrefix, !Ref 'AWS::AccountId', 'Container'],
+            ]
           ContainerPort: !Ref ContainerPort
           TargetGroupArn: !Ref TargetGroup

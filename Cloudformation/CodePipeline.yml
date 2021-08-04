@@ -346,7 +346,7 @@ Resources:
                       's',
                       !Ref ResourcePrefix,
                       !Ref 'AWS::AccountId',
-                      'ECSCluster',
+                      'FargateECSCluster',
                     ],
                   ]
               RunOrder: 3

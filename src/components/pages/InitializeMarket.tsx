@@ -22,7 +22,6 @@ import useAssetList from '../../hooks/useAssetList'
 import { useOptionMarket } from '../../hooks/useOptionMarket'
 
 import ConnectButton from '../ConnectButton'
-import { ContractSizeSelector } from '../ContractSizeSelector'
 import { useInitializeMarkets } from '../../hooks/useInitializeMarkets'
 import { convertStrikeToAmountsPer } from '../../utils/strikeConversions'
 
@@ -184,9 +183,12 @@ const InitializeMarket = () => {
 
           <Box display="flex" borderBottom={darkBorder}>
             <Box width="50%" p={2} borderRight={darkBorder}>
-              <ContractSizeSelector
-                onChange={(e) => setSize(e.target.value)}
+              <TextField
                 value={size}
+                label="Contract Size"
+                variant="filled"
+                onChange={(e) => setSize(e.target.value)}
+                helperText={Number.isNaN(size) ? 'Must be a number' : null}
               />
             </Box>
             <Box width="50%" p={2}>

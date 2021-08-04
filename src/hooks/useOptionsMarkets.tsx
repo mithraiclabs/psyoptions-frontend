@@ -1,4 +1,4 @@
-import { useContext, useCallback } from 'react'
+import { useContext, useCallback, useMemo } from 'react'
 import BigNumber from 'bignumber.js'
 import { Market } from '@mithraic-labs/psyoptions'
 import { Connection, PublicKey } from '@solana/web3.js'
@@ -100,6 +100,10 @@ const useOptionsMarkets = () => {
             quoteAssetMintKey,
             dexProgramId,
           )
+          // Short circuit if there is no serumMarket because OptionMarket must have a serumMarketKey
+          if (!serumMarket) {
+            return
+          }
 
           const newMarket: OptionMarket = {
             key: `${expiration}-${uAsset.tokenSymbol}-${
@@ -221,15 +225,31 @@ const useOptionsMarkets = () => {
     return {}
   }, [connection, fetchMarketData, supportedAssets, endpoint]) // eslint-disable-line
 
-  const getSizes = ({ uAssetSymbol, qAssetSymbol, date }) => {
-    const keyPart = `${date}-${uAssetSymbol}-${qAssetSymbol}-`
+  const getSizes = useCallback(
+    ({ uAssetSymbol, qAssetSymbol }) => {
+      const keyPart = `-${uAssetSymbol}-${qAssetSymbol}-`
 
-    const sizes = Object.keys(markets)
-      .filter((key) => key.match(keyPart))
-      .map((key) => markets[key].size)
+      const sizes = Object.keys(markets)
+        .filter((key) => key.match(keyPart))
+        .map((key) => markets[key].size)
 
-    return [...new Set(sizes)]
-  }
+      return [...new Set(sizes)]
+    },
+    [markets],
+  )
+
+  const getSizesWithDate = useCallback(
+    ({ uAssetSymbol, qAssetSymbol, date }) => {
+      const keyPart = `${date}-${uAssetSymbol}-${qAssetSymbol}-`
+
+      const sizes = Object.keys(markets)
+        .filter((key) => key.match(keyPart))
+        .map((key) => markets[key].size)
+
+      return [...new Set(sizes)]
+    },
+    [markets],
+  )
 
   const getStrikePrices = ({ uAssetSymbol, qAssetSymbol, date, size }) => {
     const keyPart = `${date}-${uAssetSymbol}-${qAssetSymbol}-${size}-`
@@ -361,6 +381,7 @@ const useOptionsMarkets = () => {
     setMarketsLoading,
     getStrikePrices,
     getSizes,
+    getSizesWithDate,
     getDates,
     mint,
     createAccountsAndMint,

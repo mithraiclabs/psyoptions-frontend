@@ -47,6 +47,25 @@ import { useBatchLoadMints } from '../../../hooks/SPLToken'
 
 const dblsp = `${'\u00A0'}${'\u00A0'}`
 
+const defaultSizeOptions = [
+  {
+    value: 100,
+    text: '100',
+  },
+  {
+    value: 10,
+    text: '10',
+  },
+  {
+    value: 1,
+    text: '1',
+  },
+  {
+    value: 0.1,
+    text: '0.1',
+  },
+]
+
 const rowTemplate = {
   call: {
     key: '',
@@ -75,7 +94,7 @@ const rowTemplate = {
 const USE_BONFIDA_MARK_PRICE = true
 
 const defaultContractSizes = {
-  BTC: 1,
+  BTC: 0.1,
   other: 100,
 }
 
@@ -84,7 +103,7 @@ const Markets = () => {
   const { selectedDate: date, setSelectedDate, dates } = useExpirationDate()
   const [contractSize, setContractSize] = useState(100)
   const { chains, buildOptionsChain } = useOptionsChain()
-  const { marketsLoading } = useOptionsMarkets()
+  const { getSizes, marketsLoading } = useOptionsMarkets()
   const { serumMarkets, fetchMultipleSerumMarkets } = useSerum()
   const [round, setRound] = useState(true)
   const [buySellDialogOpen, setBuySellDialogOpen] = useState(false)
@@ -92,15 +111,28 @@ const Markets = () => {
   const [showAllStrikes] = useState(true) // TODO: let user configure this
   const [page, setPage] = useState(0)
   const [initialMarkPrice, setInitialMarkPrice] = useState(null)
+  const [sizeOptions, setSizeOptions] = useState(defaultSizeOptions)
   const [limitPrice, setLimitPrice] = useState('0')
   const rowsPerPage = 7
 
+  useEffect(() => {
+    const availableSizes = getSizes({
+      uAssetSymbol: uAsset.tokenSymbol,
+      qAssetSymbol: qAsset.tokenSymbol,
+    })
+    setSizeOptions(
+      availableSizes.map((s) => ({ text: s.toString(), value: parseFloat(s) })),
+    )
+  }, [getSizes, uAsset.tokenSymbol, qAsset.tokenSymbol])
+
   // Unfortunately we need to set contract size in a useEffect because uAsset is asynchronously loaded
   useEffect(() => {
-    setContractSize(
-      defaultContractSizes[uAsset?.tokenSymbol] || defaultContractSizes.other,
-    )
-  }, [uAsset])
+    if (sizeOptions.find((s) => s.value === uAsset.defaultContractSize)) {
+      setContractSize(uAsset.defaultContractSize)
+    } else {
+      setContractSize(sizeOptions[0].value)
+    }
+  }, [uAsset.defaultContractSize, sizeOptions])
 
   // mainnet mark price from bonfida
   const bonfidaMarkPrice = useBonfidaMarkPrice({
@@ -328,6 +360,7 @@ const Markets = () => {
                 <ContractSizeSelector
                   onChange={updateContractSize}
                   value={contractSize}
+                  options={sizeOptions}
                 />
               </Box>
               <Box py={[2, 2, 0]}>

@@ -1,8 +1,8 @@
 import React, { createContext, useEffect, useMemo, useState } from 'react'
 import { PublicKey } from '@solana/web3.js'
+import { Token } from '@mithraic-labs/market-meta/dist/types'
 import useConnection from '../hooks/useConnection'
 import { getAssetsByNetwork } from '../utils/networkInfo'
-import { Asset } from '../types'
 
 type TickerPair = {
   uAssetSymbol?: string
@@ -12,18 +12,18 @@ type TickerPair = {
 type AssetListContext = {
   srmPublicKey: PublicKey | null
   USDCPublicKey: PublicKey | null
-  supportedAssets: Asset[]
-  setSupportedAssets: React.Dispatch<React.SetStateAction<Asset[]>>
-  uAsset: Asset | null
-  qAsset: Asset | null
-  setUAsset: React.Dispatch<React.SetStateAction<Asset | null>>
-  setQAsset: React.Dispatch<React.SetStateAction<Asset | null>>
+  supportedAssets: Token[]
+  setSupportedAssets: React.Dispatch<React.SetStateAction<Token[]>>
+  uAsset: Token | null
+  qAsset: Token | null
+  setUAsset: React.Dispatch<React.SetStateAction<Token | null>>
+  setQAsset: React.Dispatch<React.SetStateAction<Token | null>>
   assetListLoading: boolean
 }
 
 const defaultAssetPairsByNetworkName: Record<string, TickerPair> = {
   Mainnet: {
-    uAssetSymbol: 'SOL',
+    uAssetSymbol: 'BTC',
     qAssetSymbol: 'USDC',
   },
   Devnet: {
@@ -54,9 +54,9 @@ const AssetListContext = createContext<AssetListContext>({
 
 const AssetListProvider: React.FC = ({ children }) => {
   const { endpoint } = useConnection()
-  const [supportedAssets, setSupportedAssets] = useState<Asset[]>([])
-  const [uAsset, setUAsset] = useState<Asset | null>(null)
-  const [qAsset, setQAsset] = useState<Asset | null>(null)
+  const [supportedAssets, setSupportedAssets] = useState<Token[]>([])
+  const [uAsset, setUAsset] = useState<Token | null>(null)
+  const [qAsset, setQAsset] = useState<Token | null>(null)
   const [assetListLoading, setAssetListLoading] = useState(true)
   const srmPublicKey = useMemo(() => {
     const srm = supportedAssets.find((asset) => asset.tokenSymbol === 'SRM')
@@ -68,12 +68,12 @@ const AssetListProvider: React.FC = ({ children }) => {
   }, [supportedAssets])
 
   useEffect(() => {
-    const setDefaultAssets = (assets: Asset[]) => {
+    const setDefaultAssets = (assets: Token[]) => {
       if (assets && assets.length > 1) {
         const defaultAssetPair =
           defaultAssetPairsByNetworkName[endpoint.name] || {}
-        let defaultUAsset: Asset | null = null
-        let defaultQAsset: Asset | null = null
+        let defaultUAsset: Token | null = null
+        let defaultQAsset: Token | null = null
         assets.forEach((asset) => {
           if (asset.tokenSymbol === defaultAssetPair.uAssetSymbol) {
             defaultUAsset = asset
@@ -92,7 +92,7 @@ const AssetListProvider: React.FC = ({ children }) => {
       }
     }
 
-    const basicAssets = getAssetsByNetwork(endpoint.name) as Asset[]
+    const basicAssets = getAssetsByNetwork(endpoint.name)
     setSupportedAssets(basicAssets)
     setDefaultAssets(basicAssets)
     setAssetListLoading(false)

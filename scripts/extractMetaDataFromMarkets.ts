@@ -94,6 +94,8 @@ const DEX_PROGRAM_ID = new PublicKey(
         quoteAssetPerContract:
           market.marketData.quoteAmountPerContract.toString(),
         serumMarketAddress: serumMarketMeta[0].publicKey.toString(),
+        serumProgramId: DEX_PROGRAM_ID.toString(),
+        psyOptionsProgramId: OPTION_PROGRAM_ID.toString(),
       })
     } catch (error) {
       console.log(`ERROR: for market ${market.pubkey.toString()}\n`, error)

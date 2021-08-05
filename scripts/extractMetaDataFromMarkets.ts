@@ -1,28 +1,57 @@
 import { Connection, PublicKey } from '@solana/web3.js'
 import { Market } from '@mithraic-labs/psyoptions'
 import { Market as SerumMarket } from '@mithraic-labs/serum'
-
+import * as yargs from 'yargs'
 const fs = require('fs')
 
+yargs
+  .option('rpc-url', {
+    type: 'string',
+    description: 'Solana RPC url',
+  })
+  .option('psyoption-program-id', {
+    alias: 'psy-d',
+    type: 'string',
+    description: 'The PsyOptions program ID',
+  })
+  .option('dex-program-id', {
+    alias: 'serum-id',
+    type: 'string',
+    description: 'The Serum program ID',
+  })
+  .option('mint1-address', {
+    type: 'string',
+    description: 'The PublicKey for the first mint of the pair',
+  })
+  .option('mint2-address', {
+    type: 'string',
+    description: 'The PublicKey for the second mint of the pair',
+  })
 const wait = (delayMS: number) =>
   new Promise((resolve) => setTimeout(resolve, delayMS))
 
 const OPTION_PROGRAM_ID = new PublicKey(
-  'GDvqQy3FkDB2wyNwgZGp5YkmRMUmWbhNNWDMYKbLSZ5N',
+  yargs.argv['psyoption-program-id'] ||
+    'GDvqQy3FkDB2wyNwgZGp5YkmRMUmWbhNNWDMYKbLSZ5N',
 )
 
 const DEX_PROGRAM_ID = new PublicKey(
-  'DESVgJVGajEgKGXhb6XmqDHGz3VjdgP7rEVESBgxmroY',
+  yargs.argv['dex-program-id'] ||
+    'DESVgJVGajEgKGXhb6XmqDHGz3VjdgP7rEVESBgxmroY',
 )
 
 ;(async () => {
-  const connection = new Connection('https://api.devnet.solana.com')
+  const connection = new Connection(
+    (yargs.argv['rpc-url'] as string) || 'https://api.devnet.solana.com',
+  )
 
   const devnetBTCKey = new PublicKey(
-    'C6kYXcaRUMqeBF5fhg165RWU7AnpT9z92fvKNoMqjmz6',
+    yargs.argv['mint1-address'] ||
+      'C6kYXcaRUMqeBF5fhg165RWU7AnpT9z92fvKNoMqjmz6',
   )
   const devnetUSDCKey = new PublicKey(
-    'E6Z6zLzk8MWY3TY8E87mr88FhGowEPJTeMWzkqtL6qkF',
+    yargs.argv['mint2-address'] ||
+      'E6Z6zLzk8MWY3TY8E87mr88FhGowEPJTeMWzkqtL6qkF',
   )
 
   let res = await Market.getAllMarketsBySplSupport(
@@ -41,17 +70,6 @@ const DEX_PROGRAM_ID = new PublicKey(
       const underlyingAssetMint =
         market.marketData.underlyingAssetMintKey.toString()
       const quoteAssetMint = market.marketData.quoteAssetMintKey.toString()
-      let quoteAssetSymbol, underlyingAssetSymbol
-      if (quoteAssetMint === devnetBTCKey.toString()) {
-        quoteAssetSymbol = 'BTC'
-      } else if (quoteAssetMint === devnetUSDCKey.toString()) {
-        quoteAssetSymbol = 'USDC'
-      }
-      if (underlyingAssetMint === devnetBTCKey.toString()) {
-        underlyingAssetSymbol = 'BTC'
-      } else if (underlyingAssetMint === devnetUSDCKey.toString()) {
-        underlyingAssetSymbol = 'USDC'
-      }
 
       const serumMarketMeta = await SerumMarket.findAccountsByMints(
         connection,
@@ -68,11 +86,9 @@ const DEX_PROGRAM_ID = new PublicKey(
           market.marketData.writerTokenMintKey.toString(),
         quoteAssetMint,
         quoteAssetPoolAddress: market.marketData.quoteAssetPoolKey.toString(),
-        quoteAssetSymbol,
         underlyingAssetMint,
         underlyingAssetPoolAddress:
           market.marketData.underlyingAssetPoolKey.toString(),
-        underlyingAssetSymbol,
         underlyingAssetPerContract:
           market.marketData.amountPerContract.toString(),
         quoteAssetPerContract:

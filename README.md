@@ -22,6 +22,12 @@ We aim to make development setup as easy as possible. Follow the steps below:
 2. Run `npm run start`
    - This will run the local UI server
 
+### Extracting market meta data
+
+```console
+./node_modules/ts-node/dist/bin.js scripts/extractMetaDataFromMarkets.ts --rpc-url http://localhost:8899 --psyoption-program-id LOCAL_PROGRAM_ID --dex-program-id LOCAL_DEX_PROGRAM_ID --mint1-address MINT1_ADDRESS --mint2-address MINT2_ADDRESS
+```
+
 ### Deploying the app to dev and prod:
 
 See <a href="https://github.com/mithraiclabs/solana-options-frontend/blob/master/docs/Deploying.md">Deploy Docs</a>

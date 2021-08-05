@@ -122,22 +122,24 @@ const Markets = () => {
 
   useEffect(() => {
     const availableSizes = getSizes({
-      uAssetSymbol: uAsset.tokenSymbol,
-      qAssetSymbol: qAsset.tokenSymbol,
+      uAssetSymbol: uAsset?.tokenSymbol,
+      qAssetSymbol: qAsset?.tokenSymbol,
     })
     setSizeOptions(
       availableSizes.map((s) => ({ text: s.toString(), value: parseFloat(s) })),
     )
-  }, [getSizes, uAsset.tokenSymbol, qAsset.tokenSymbol])
+  }, [getSizes, uAsset?.tokenSymbol, qAsset?.tokenSymbol])
 
   // Unfortunately we need to set contract size in a useEffect because uAsset is asynchronously loaded
   useEffect(() => {
-    if (sizeOptions.find((s) => s.value === uAsset.defaultContractSize)) {
+    if (sizeOptions.find((s) => s.value === uAsset?.defaultContractSize)) {
       setContractSize(uAsset.defaultContractSize)
     } else {
-      setContractSize(sizeOptions[0].value)
+      if (sizeOptions[0]) {
+        setContractSize(sizeOptions[0].value)
+      }
     }
-  }, [uAsset.defaultContractSize, sizeOptions])
+  }, [uAsset?.defaultContractSize, sizeOptions])
 
   // mainnet mark price from bonfida
   const bonfidaMarkPrice = useBonfidaMarkPrice({

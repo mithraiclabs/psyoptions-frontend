@@ -3,6 +3,7 @@ import { Connection, PublicKey } from '@solana/web3.js'
 
 import {
   getDexProgramKeyByNetwork,
+  getGraphQLUrlByNetwork,
   Network,
   networks,
 } from '../utils/networkInfo'
@@ -19,6 +20,7 @@ type ConnectionContextType = {
   endpoint?: Network
   setEndpoint?: React.Dispatch<React.SetStateAction<Network>>
   dexProgramId?: PublicKey
+  graphQLUrl?: string
 }
 const ConnectionContext = createContext<ConnectionContextType>({
   networks,
@@ -38,13 +40,14 @@ const ConnectionProvider: React.FC = ({ children }) => {
     setConnection(new Connection(newEndpoint.url, 'confirmed'))
   }
 
-  const state = {
+  const state: ConnectionContextType = {
     networks,
     connection,
     setConnection,
     endpoint,
     setEndpoint: handleSetEndpoint,
     dexProgramId: getDexProgramKeyByNetwork(endpoint.name),
+    graphQLUrl: getGraphQLUrlByNetwork(endpoint.name),
   }
 
   return (

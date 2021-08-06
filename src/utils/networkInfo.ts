@@ -59,6 +59,21 @@ const getDexProgramKeyByNetwork = (name: ClusterName) => {
   }
 }
 
+const getGraphQLUrlByNetwork = (name: ClusterName) => {
+  switch (name) {
+    case 'Mainnet':
+      return ''
+    case 'Devnet':
+      return 'https://api.psyoptions.io'
+    case 'Testnet':
+      return ''
+    case 'localhost':
+      return 'http://localhost:8080'
+    default:
+      return undefined
+  }
+}
+
 const getSerumMarketsByNetwork = (name: ClusterName) => {
   switch (name) {
     case networks[0].name:
@@ -126,6 +141,7 @@ const getAssetsByNetwork = (name: ClusterName): Token[] => {
 export {
   getAssetsByNetwork,
   getDexProgramKeyByNetwork,
+  getGraphQLUrlByNetwork,
   getSupportedMarketsByNetwork,
   getSerumMarketsByNetwork,
   networks,

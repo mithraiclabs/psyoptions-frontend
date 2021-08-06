@@ -10,13 +10,13 @@ export type TrackerMarketData = {
   serum_address: string
   volume: number | null
 }
-
-const query = `query chainMarkets($serumMarketIds: [String!]) {
-  markets(where: { serum_address: {_in: $serumMarketIds } }) {
-    id
+// TODO this should probably be a subscription so the data is automatically streamed to the UI
+const query = `query chainMarkets($serumMarketAddresses: [String!]) {
+  serum_markets(where: { address: {_in: $serumMarketAddresses } }) {
+    latest_price
     change(args: {duration: "24 hours", percentage: true})
     volume
-    serum_address
+    address
   }
 }`
 
@@ -24,7 +24,7 @@ export const useChainMarketData = (
   chain: ChainRow[] | undefined,
 ): Record<string, TrackerMarketData> => {
   const { serumMarkets } = useSerumContext()
-  const serumMarketIds = useMemo(
+  const serumMarketAddresses = useMemo(
     () =>
       chain?.reduce((acc, chainRow) => {
         const callMarketMeta =
@@ -44,9 +44,9 @@ export const useChainMarketData = (
 
   const [{ data }] = useQuery({
     query,
-    pause: !serumMarketIds.length,
+    pause: !serumMarketAddresses.length,
     variables: {
-      serumMarketIds,
+      serumMarketAddresses,
     },
   })
 

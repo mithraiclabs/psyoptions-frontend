@@ -4,10 +4,11 @@ import { useSerumContext } from '../../context/SerumContext'
 import { ChainRow } from '../../types'
 
 export type TrackerMarketData = {
+  // eslint-disable-next-line camelcase
+  latest_price: number | null
   change: number | null
   id: number
-  // eslint-disable-next-line camelcase
-  serum_address: string
+  address: string
   volume: number | null
 }
 // TODO this should probably be a subscription so the data is automatically streamed to the UI

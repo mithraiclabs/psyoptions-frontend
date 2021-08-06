@@ -13,10 +13,12 @@ export const MarketsTableHeader: React.FC<{
   showPriceChange: boolean
   showVolume: boolean
   showOI: boolean
-  setShowIV: (bool: boolean) => void
-  setShowPriceChange: (bool: boolean) => void
-  setShowVolume: (bool: boolean) => void
-  setShowOI: (bool: boolean) => void
+  showLastPrice: boolean
+  setShowIV: React.Dispatch<React.SetStateAction<boolean>>
+  setShowPriceChange: React.Dispatch<React.SetStateAction<boolean>>
+  setShowVolume: React.Dispatch<React.SetStateAction<boolean>>
+  setShowOI: React.Dispatch<React.SetStateAction<boolean>>
+  setShowLastPrice: React.Dispatch<React.SetStateAction<boolean>>
   currentColumnsCount: number
   setColumnsCount: (num: number) => void
 }> = React.memo(
@@ -27,10 +29,12 @@ export const MarketsTableHeader: React.FC<{
     showPriceChange,
     showVolume,
     showOI,
+    showLastPrice,
     setShowIV,
     setShowPriceChange,
     setShowVolume,
     setShowOI,
+    setShowLastPrice,
     currentColumnsCount,
     setColumnsCount,
   }) => {
@@ -80,6 +84,7 @@ export const MarketsTableHeader: React.FC<{
               setShowPriceChange={setShowPriceChange}
               setShowVolume={setShowVolume}
               setShowOI={setShowOI}
+              setShowLastPrice={setShowLastPrice}
               currentColumnsCount={currentColumnsCount}
               setColumnsCount={setColumnsCount}
             />
@@ -169,6 +174,16 @@ export const MarketsTableHeader: React.FC<{
                 }
               >
                 <Box display="inline">IVA</Box>
+              </StyledTooltip>
+            </THeadCell>
+          )}
+          {showLastPrice && (
+            <THeadCell align="left" width={`${colWidth}%`}>
+              <StyledTooltip
+                placement="top"
+                title={<Box p={1}>{`The price of the last matched order`}</Box>}
+              >
+                <Box display="inline">Last Price</Box>
               </StyledTooltip>
             </THeadCell>
           )}
@@ -277,6 +292,16 @@ export const MarketsTableHeader: React.FC<{
                 }
               >
                 <Box display="inline">IVA</Box>
+              </StyledTooltip>
+            </THeadCell>
+          )}
+          {showLastPrice && (
+            <THeadCell align="left" width={`${colWidth}%`}>
+              <StyledTooltip
+                placement="top"
+                title={<Box p={1}>{`The price of the last matched order`}</Box>}
+              >
+                <Box display="inline">Last Price</Box>
               </StyledTooltip>
             </THeadCell>
           )}

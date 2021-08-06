@@ -116,9 +116,10 @@ const Markets = () => {
   const rowsPerPage = 7
   const [showIV, setShowIV] = useState(true)
   const [showPriceChange, setShowPriceChange] = useState(true)
+  const [showLastPrice, setShowLastPrice] = useState(true)
   const [showVolume, setShowVolume] = useState(true)
   const [showOI, setShowOI] = useState(true)
-  const [currentColumnsCount, setColumnsCount] = useState(17) // 17 columns
+  const [currentColumnsCount, setColumnsCount] = useState(19) // 19 columns
 
   useEffect(() => {
     const availableSizes = getSizes({
@@ -414,8 +415,10 @@ const Markets = () => {
                   showPriceChange={showPriceChange}
                   showVolume={showVolume}
                   showOI={showOI}
+                  showLastPrice={showLastPrice}
                   setShowIV={setShowIV}
                   setShowPriceChange={setShowPriceChange}
+                  setShowLastPrice={setShowLastPrice}
                   setShowVolume={setShowVolume}
                   setShowOI={setShowOI}
                   currentColumnsCount={currentColumnsCount}
@@ -426,7 +429,7 @@ const Markets = () => {
                     return fullPageLoading ? (
                       <tr key={`${row.key}`}>
                         <TCellLoading
-                          colSpan={8}
+                          colSpan={9}
                           style={{
                             backgroundColor: theme.palette.background.medium,
                           }}
@@ -435,7 +438,7 @@ const Markets = () => {
                         </TCellLoading>
                         <TCellStrike />
                         <TCellLoading
-                          colSpan={8}
+                          colSpan={9}
                           style={{
                             backgroundColor: theme.palette.background.medium,
                           }}
@@ -459,12 +462,16 @@ const Markets = () => {
                         showIV={showIV}
                         showPriceChange={showPriceChange}
                         showVolume={showVolume}
+                        showLastPrice={showLastPrice}
                         showOI={showOI}
                       />
                     )
                   })}
                   <TableRow>
-                    <THeadCell colSpan={17} style={{ borderBottom: 'none' }}>
+                    <THeadCell
+                      colSpan={currentColumnsCount}
+                      style={{ borderBottom: 'none' }}
+                    >
                       <Box
                         py={1}
                         px={[1, 1, 0]}

@@ -28,9 +28,9 @@ export const useChainMarketData = (
     () =>
       chain?.reduce((acc, chainRow) => {
         const callMarketMeta =
-          serumMarkets[chainRow?.call?.serumMarketKey.toString()]
+          serumMarkets[chainRow?.call?.serumMarketKey?.toString()]
         const putMarketMeta =
-          serumMarkets[chainRow?.put?.serumMarketKey.toString()]
+          serumMarkets[chainRow?.put?.serumMarketKey?.toString()]
         if (callMarketMeta?.serumMarket?.address) {
           acc.push(callMarketMeta.serumMarket.address.toString())
         }
@@ -52,8 +52,8 @@ export const useChainMarketData = (
 
   return useMemo(
     () =>
-      data?.markets?.reduce((acc, trackerData) => {
-        acc[trackerData.serum_address] = trackerData
+      data?.serum_markets?.reduce((acc, trackerData) => {
+        acc[trackerData.address] = trackerData
         return acc
       }, {}) ?? {},
     [data],

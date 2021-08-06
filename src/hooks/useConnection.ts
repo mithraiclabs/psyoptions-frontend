@@ -2,8 +2,14 @@ import { useContext } from 'react'
 import { ConnectionContext } from '../context/ConnectionContext'
 
 const useConnection = () => {
-  const { networks, connection, endpoint, setEndpoint, dexProgramId } =
-    useContext(ConnectionContext)
+  const {
+    networks,
+    connection,
+    endpoint,
+    graphQLUrl,
+    setEndpoint,
+    dexProgramId,
+  } = useContext(ConnectionContext)
 
   return {
     networks,
@@ -11,6 +17,7 @@ const useConnection = () => {
     endpoint,
     setEndpoint,
     dexProgramId,
+    graphQLUrl,
   }
 }
 

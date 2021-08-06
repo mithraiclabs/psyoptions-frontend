@@ -64,11 +64,11 @@ const getGraphQLUrlByNetwork = (name: ClusterName) => {
     case 'Mainnet':
       return ''
     case 'Devnet':
-      return 'https://api.psyoptions.io'
+      return 'https://api.psyoptions.io/v1/graphql'
     case 'Testnet':
       return ''
     case 'localhost':
-      return 'http://localhost:8080'
+      return 'http://localhost:8080/v1/graphql'
     default:
       return undefined
   }

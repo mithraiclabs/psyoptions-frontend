@@ -2,7 +2,6 @@ import React, { useEffect } from 'react'
 import { StaticRouterProps } from 'react-router-dom'
 import Store from '../context/store'
 import useOptionsMarkets from '../hooks/useOptionsMarkets'
-import { GraphQLProvider } from './GraphQLProvider'
 import Router from './Router'
 
 const App = ({ location = { pathname: '/' }, context = {}, ssrPassword }) => {
@@ -19,11 +18,9 @@ const App = ({ location = { pathname: '/' }, context = {}, ssrPassword }) => {
 
 const WrappedApp = (props) => {
   return (
-    <GraphQLProvider>
-      <Store>
-        <App {...props} />
-      </Store>
-    </GraphQLProvider>
+    <Store>
+      <App {...props} />
+    </Store>
   )
 }
 

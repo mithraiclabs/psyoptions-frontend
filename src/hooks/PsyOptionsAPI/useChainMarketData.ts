@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { useQuery } from 'urql'
+import { useSubscription } from 'urql'
 import { useSerumContext } from '../../context/SerumContext'
 import { ChainRow } from '../../types'
 
@@ -11,8 +11,8 @@ export type TrackerMarketData = {
   address: string
   volume: number | null
 }
-// TODO this should probably be a subscription so the data is automatically streamed to the UI
-const query = `query chainMarkets($serumMarketAddresses: [String!]) {
+
+const subMessage = `subscription chainMarkets($serumMarketAddresses: [String!]) {
   serum_markets(where: { address: {_in: $serumMarketAddresses } }) {
     latest_price
     change(args: {duration: "24 hours", percentage: true})
@@ -20,6 +20,15 @@ const query = `query chainMarkets($serumMarketAddresses: [String!]) {
     address
   }
 }`
+
+const handleSubscription = (messages = [], response) => {
+  return (
+    response?.serum_markets?.reduce((acc, trackerData) => {
+      acc[trackerData.address] = trackerData
+      return acc
+    }, {}) ?? {}
+  )
+}
 
 export const useChainMarketData = (
   chain: ChainRow[] | undefined,
@@ -43,20 +52,16 @@ export const useChainMarketData = (
     [chain, serumMarkets],
   )
 
-  const [{ data }] = useQuery({
-    query,
-    pause: !serumMarketAddresses.length,
-    variables: {
-      serumMarketAddresses,
+  const [res] = useSubscription(
+    {
+      query: subMessage,
+      pause: !serumMarketAddresses.length,
+      variables: {
+        serumMarketAddresses,
+      },
     },
-  })
-
-  return useMemo(
-    () =>
-      data?.serum_markets?.reduce((acc, trackerData) => {
-        acc[trackerData.address] = trackerData
-        return acc
-      }, {}) ?? {},
-    [data],
+    handleSubscription,
   )
+
+  return res.data
 }

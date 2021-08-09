@@ -28,7 +28,7 @@ export const GraphQLProvider: React.FC = ({ children }) => {
       isClient: !isServerSide,
       initialState: !isServerSide ? window.__URQL_DATA__ : undefined,
     })
-    console.log('**** defaultExchanges', defaultExchanges)
+
     return createClient({
       url: graphQLUrl,
       exchanges: [

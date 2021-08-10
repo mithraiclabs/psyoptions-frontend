@@ -1,3 +1,4 @@
+import { SSRData } from 'urql'
 import WalletAdapter from './src/utils/wallet/walletAdapter'
 
 interface SolongAdapter extends WalletAdapter {
@@ -15,5 +16,6 @@ declare global {
   interface Window {
     solana?: MathOrPhantomAdapter
     solong?: SolongAdapter
+    __URQL_DATA__?: SSRData
   }
 }

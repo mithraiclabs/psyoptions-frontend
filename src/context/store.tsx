@@ -16,11 +16,13 @@ import { SerumOrderbooksProvider } from './SerumOrderbookContext'
 import { SPLTokenMintsProvider } from './SPLTokenMintsContext'
 import { SerumOpenOrdersProvider } from './SerumOpenOrdersContext'
 import { ExpirationDateProvider } from './ExpirationDateContext'
+import { GraphQLProvider } from './GraphQLProvider'
 
 const _providers = [
   // eslint-disable-next-line react/no-children-prop
   <ThemeProvider theme={theme} children={<div />} />,
   <ConnectionProvider />,
+  <GraphQLProvider />,
   <NotificationsProvider />,
   <SolanaMetaProvider />,
   <AssetListProvider />,

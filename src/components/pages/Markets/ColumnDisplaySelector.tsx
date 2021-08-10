@@ -20,10 +20,11 @@ export const ColumnDisplaySelector: React.FC<{
   showPriceChange: boolean
   showVolume: boolean
   showOI: boolean
-  setShowIV: (bool: boolean) => void
-  setShowPriceChange: (bool: boolean) => void
-  setShowVolume: (bool: boolean) => void
-  setShowOI: (bool: boolean) => void
+  setShowIV: React.Dispatch<React.SetStateAction<boolean>>
+  setShowPriceChange: React.Dispatch<React.SetStateAction<boolean>>
+  setShowVolume: React.Dispatch<React.SetStateAction<boolean>>
+  setShowOI: React.Dispatch<React.SetStateAction<boolean>>
+  setShowLastPrice: React.Dispatch<React.SetStateAction<boolean>>
   currentColumnsCount: number
   setColumnsCount: (num: number) => void
 }> = React.memo(
@@ -36,6 +37,7 @@ export const ColumnDisplaySelector: React.FC<{
     setShowPriceChange,
     setShowVolume,
     setShowOI,
+    setShowLastPrice,
     currentColumnsCount,
     setColumnsCount,
   }) => {
@@ -144,6 +146,24 @@ export const ColumnDisplaySelector: React.FC<{
                 />
               }
               label="Open Interest"
+            />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={showOI}
+                  onChange={(e) => {
+                    setShowLastPrice(e.target.checked)
+                    if (e.target.checked) {
+                      setColumnsCount(currentColumnsCount + 2)
+                    } else {
+                      setColumnsCount(currentColumnsCount - 2)
+                    }
+                  }}
+                  name="checkedLastPrice"
+                  color="primary"
+                />
+              }
+              label="Last Price"
             />
           </FormGroup>
         </Popover>

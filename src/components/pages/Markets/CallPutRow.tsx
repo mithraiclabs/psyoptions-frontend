@@ -58,6 +58,7 @@ type CallPutRowProps = {
   showPriceChange: boolean
   showVolume: boolean
   showOI: boolean
+  showLastPrice: boolean
 }
 
 const CallPutRow = ({
@@ -75,6 +76,7 @@ const CallPutRow = ({
   showPriceChange,
   showVolume,
   showOI,
+  showLastPrice,
 }: CallPutRowProps) => {
   const { connected } = useWallet()
   const { pushNotification } = useNotifications()
@@ -264,7 +266,7 @@ const CallPutRow = ({
       </TCell>
       {row.call?.serumMarketKey &&
       serumMarkets[row.call.serumMarketKey?.toString()]?.loading ? (
-        <TCellLoading colSpan={7} style={callCellStyle}>
+        <TCellLoading colSpan={8} style={callCellStyle}>
           <Loading />
         </TCellLoading>
       ) : (
@@ -317,6 +319,23 @@ const CallPutRow = ({
               )}
             </TCell>
           )}
+          {showLastPrice && (
+            <TCell
+              align="left"
+              style={callCellStyle}
+              onClick={() => openBuySellModal('call')}
+            >
+              {marketTrackerData?.[row.call?.serumMarketKey?.toString()]
+                ?.latest_price ? (
+                `$${
+                  marketTrackerData?.[row.call?.serumMarketKey?.toString()]
+                    ?.latest_price
+                }`
+              ) : (
+                <Empty>{'—'}</Empty>
+              )}
+            </TCell>
+          )}
           {showPriceChange && (
             <TCell
               align="left"
@@ -364,7 +383,7 @@ const CallPutRow = ({
 
       {row.put?.serumMarketKey &&
       serumMarkets[row.put.serumMarketKey.toString()]?.loading ? (
-        <TCellLoading colSpan={7} style={putCellStyle}>
+        <TCellLoading colSpan={8} style={putCellStyle}>
           <Loading />
         </TCellLoading>
       ) : (
@@ -411,6 +430,23 @@ const CallPutRow = ({
               onClick={() => openBuySellModal('put')}
             >
               {(putAskIV && `${putAskIV.toFixed(1)}%`) || <Empty>{'—'}</Empty>}
+            </TCell>
+          )}
+          {showLastPrice && (
+            <TCell
+              align="right"
+              style={putCellStyle}
+              onClick={() => openBuySellModal('call')}
+            >
+              {marketTrackerData?.[row.put?.serumMarketKey?.toString()]
+                ?.latest_price ? (
+                `$${
+                  marketTrackerData?.[row.put?.serumMarketKey?.toString()]
+                    ?.latest_price
+                }`
+              ) : (
+                <Empty>{'—'}</Empty>
+              )}
             </TCell>
           )}
           {showPriceChange && (

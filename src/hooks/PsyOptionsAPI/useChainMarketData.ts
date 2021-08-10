@@ -1,36 +1,46 @@
 import { useMemo } from 'react'
-import { useQuery } from 'urql'
+import { useSubscription } from 'urql'
 import { useSerumContext } from '../../context/SerumContext'
 import { ChainRow } from '../../types'
 
 export type TrackerMarketData = {
+  // eslint-disable-next-line camelcase
+  latest_price: number | null
   change: number | null
   id: number
-  // eslint-disable-next-line camelcase
-  serum_address: string
+  address: string
   volume: number | null
 }
 
-const query = `query chainMarkets($serumMarketIds: [String!]) {
-  markets(where: { serum_address: {_in: $serumMarketIds } }) {
-    id
+const subMessage = `subscription chainMarkets($serumMarketAddresses: [String!]) {
+  serum_markets(where: { address: {_in: $serumMarketAddresses } }) {
+    latest_price
     change(args: {duration: "24 hours", percentage: true})
     volume
-    serum_address
+    address
   }
 }`
+
+const handleSubscription = (messages = [], response) => {
+  return (
+    response?.serum_markets?.reduce((acc, trackerData) => {
+      acc[trackerData.address] = trackerData
+      return acc
+    }, {}) ?? {}
+  )
+}
 
 export const useChainMarketData = (
   chain: ChainRow[] | undefined,
 ): Record<string, TrackerMarketData> => {
   const { serumMarkets } = useSerumContext()
-  const serumMarketIds = useMemo(
+  const serumMarketAddresses = useMemo(
     () =>
       chain?.reduce((acc, chainRow) => {
         const callMarketMeta =
-          serumMarkets[chainRow?.call?.serumMarketKey.toString()]
+          serumMarkets[chainRow?.call?.serumMarketKey?.toString()]
         const putMarketMeta =
-          serumMarkets[chainRow?.put?.serumMarketKey.toString()]
+          serumMarkets[chainRow?.put?.serumMarketKey?.toString()]
         if (callMarketMeta?.serumMarket?.address) {
           acc.push(callMarketMeta.serumMarket.address.toString())
         }
@@ -42,20 +52,16 @@ export const useChainMarketData = (
     [chain, serumMarkets],
   )
 
-  const [{ data }] = useQuery({
-    query,
-    pause: !serumMarketIds.length,
-    variables: {
-      serumMarketIds,
+  const [res] = useSubscription(
+    {
+      query: subMessage,
+      pause: !serumMarketAddresses.length,
+      variables: {
+        serumMarketAddresses,
+      },
     },
-  })
-
-  return useMemo(
-    () =>
-      data?.markets?.reduce((acc, trackerData) => {
-        acc[trackerData.serum_address] = trackerData
-        return acc
-      }, {}) ?? {},
-    [data],
+    handleSubscription,
   )
+
+  return res.data
 }

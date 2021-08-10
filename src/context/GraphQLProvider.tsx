@@ -8,7 +8,7 @@ import {
   subscriptionExchange,
 } from 'urql'
 
-import { isBrowser } from '../utils/isNode'
+import { isNode, isBrowser } from '../utils/isNode'
 import useConnection from '../hooks/useConnection'
 
 export const GraphQLProvider: React.FC = ({ children }) => {
@@ -22,11 +22,11 @@ export const GraphQLProvider: React.FC = ({ children }) => {
       graphQLUrl.replace('http', 'ws'),
       { reconnect: true },
     )
-    const isServerSide = typeof window === 'undefined'
+
     // The `ssrExchange` must be initialized with `isClient` and `initialState`
     const ssr = ssrExchange({
-      isClient: !isServerSide,
-      initialState: !isServerSide ? window.__URQL_DATA__ : undefined,
+      isClient: !isNode,
+      initialState: !isNode ? window.__URQL_DATA__ : undefined,
     })
 
     return createClient({

@@ -23,6 +23,8 @@ import History from './pages/History'
 import Markets from './pages/Markets'
 import Faucets from './pages/Faucets'
 import NotFound from './pages/NotFound'
+import ProhibitedJurisdiction from './pages/ProhibitedJurisdiction'
+import { DISALLOWED_COUNTRIES, useCountry } from '../hooks/useCountry'
 
 const { INITIALIZE_PAGE_ENABLED, APP_PASSWORD_PROTECTED, APP_PASSWORD } =
   process.env
@@ -43,6 +45,7 @@ const RouteWithStatusCode = ({ children, ...props }) => (
 
 const Routes: React.FC<any> = (props) => {
   const [password] = usePassword()
+  const countryCode = useCountry()
 
   // Makes it a little harder for users to "break in" without being told the password
   // This makes it so they can't just paste the hash from the html into the cookie
@@ -56,6 +59,16 @@ const Routes: React.FC<any> = (props) => {
       // @ts-ignore: Router JSX element type does not have any construct or call signatures
       <Router {...props}>
         <LandingComingSoon showPasswordField />
+      </Router>
+    )
+  }
+
+  // Checks and routes the user based on whether their country is prohited
+  if (DISALLOWED_COUNTRIES.includes(countryCode)) {
+    return (
+      // @ts-ignore: Router JSX element type does not have any construct or call signatures
+      <Router {...props}>
+        <ProhibitedJurisdiction />
       </Router>
     )
   }

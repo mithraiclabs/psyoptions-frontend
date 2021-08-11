@@ -51,6 +51,7 @@ export type OptionMarket = {
   quoteAssetPoolKey: PublicKey
   quoteAssetMintKey: PublicKey
   serumMarketKey?: PublicKey
+  psyOptionsProgramId: string
 }
 
 export type ChainRow = {

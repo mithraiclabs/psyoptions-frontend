@@ -126,6 +126,7 @@ const useOptionsMarkets = () => {
             quoteAssetPoolKey,
             quoteAssetMintKey,
             serumMarketKey: serumMarket.address,
+            psyOptionsProgramId: endpoint.programId,
           }
 
           const key = `${newMarket.expiration}-${newMarket.uAssetSymbol}-${
@@ -204,6 +205,7 @@ const useOptionsMarkets = () => {
           quoteAssetPoolKey: new PublicKey(market.quoteAssetPoolAddress),
           quoteAssetMintKey: new PublicKey(market.quoteAssetMint),
           serumMarketKey: new PublicKey(market.serumMarketAddress),
+          psyOptionsProgramId: market.psyOptionsProgramId,
         }
 
         const key = `${newMarket.expiration}-${newMarket.uAssetSymbol}-${
@@ -278,7 +280,7 @@ const useOptionsMarkets = () => {
       const { transaction: mintTx } = await mintInstructions({
         numberOfContractsToMint: numberOfContracts,
         authorityPubkey: pubKey,
-        programId: new PublicKey(endpoint.programId),
+        programId: new PublicKey(marketData.psyOptionsProgramId),
         market: marketData,
         mintedOptionDestKey,
         writerTokenDestKey,

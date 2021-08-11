@@ -63,7 +63,7 @@ export const useCloseWrittenOptionPostExpiration = (
             _underlyingAssetDestKey = wrappedSolAccount.publicKey
           }
           const ix = await closePostExpirationCoveredCallInstruction({
-            programId: new PublicKey(endpoint.programId),
+            programId: new PublicKey(market.psyOptionsProgramId),
             optionMarketKey: market.optionMarketKey,
             underlyingAssetDestKey: _underlyingAssetDestKey,
             underlyingAssetPoolKey: market.underlyingAssetPoolKey,
@@ -128,7 +128,7 @@ export const useCloseWrittenOptionPostExpiration = (
       market.optionMarketKey,
       market.underlyingAssetPoolKey,
       market.writerTokenMintKey,
-      endpoint.programId,
+      market.psyOptionsProgramId,
       writerTokenSourceKey,
       pubKey,
       connection,

@@ -147,6 +147,7 @@ export const useInitializeMarkets = (): ((
               underlyingAssetMintKey,
               quoteAssetPoolKey,
               quoteAssetMintKey,
+              psyOptionsProgramId: programId.toString(),
             }
 
             return marketData

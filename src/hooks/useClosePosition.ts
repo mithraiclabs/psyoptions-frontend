@@ -63,7 +63,7 @@ export const useClosePosition = (
           }
 
           const closePositionIx = await closePositionInstruction({
-            programId: new PublicKey(endpoint.programId),
+            programId: new PublicKey(market.psyOptionsProgramId),
             optionMarketKey: market.optionMarketKey,
             underlyingAssetPoolKey: market.underlyingAssetPoolKey,
             optionMintKey: market.optionMintKey,
@@ -130,7 +130,7 @@ export const useClosePosition = (
       market.underlyingAssetPoolKey,
       market.optionMintKey,
       market.writerTokenMintKey,
-      endpoint.programId,
+      market.psyOptionsProgramId,
       optionTokenSrcKey,
       pubKey,
       writerTokenSourceKey,

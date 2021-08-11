@@ -275,8 +275,8 @@ Resources:
       Protocol: HTTPS
       SslPolicy: ELBSecurityPolicy-2016-08
 
-  # Create a DNS record for the specified Hosted Zone and subdomain that accepts all countries
-  AllCountriesDns:
+  # Create a DNS record for the specified Hosted Zone and subdomain
+  Route53DnsRecord:
     Type: AWS::Route53::RecordSet
     Properties:
       AliasTarget:
@@ -284,25 +284,8 @@ Resources:
         EvaluateTargetHealth: true
         HostedZoneId: !GetAtt LoadBalancer.CanonicalHostedZoneID
       HostedZoneId: !Ref HostedZoneId
-      GeoLocation:
-        CountryCode: '*'
       Name: !Ref DomainName
       Type: A
-      SetIdentifier: 1
-
-  # Redirect restricted countries to notice
-  BlockUsDns:
-    Type: AWS::Route53::RecordSet
-    Properties:
-      ResourceRecords:
-        - '127.0.0.1'
-      TTL: 60
-      HostedZoneId: !Ref HostedZoneId
-      GeoLocation:
-        CountryCode: 'US'
-      Name: !Ref DomainName
-      Type: A
-      SetIdentifier: 2
 
   # Create an ECS Service and add created Cluster, TaskDefintion, Subnets, TargetGroup and SecurityGroup
   ECSService:

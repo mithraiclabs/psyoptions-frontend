@@ -5,7 +5,11 @@ import Notifications from '../Notifications'
 import Footer from '../Footer'
 
 // Default page template
-const Page = ({ children, background }) => (
+const Page: React.FC<{
+  children: React.ReactNode
+  background?: string
+  hideNavbar?: boolean
+}> = ({ children, background, hideNavbar }) => (
   <>
     <Notifications />
     <Box
@@ -14,7 +18,7 @@ const Page = ({ children, background }) => (
       flexDirection="column"
       style={{ background }}
     >
-      <StatusBar />
+      {hideNavbar ? null : <StatusBar />}
       <Box
         px={[0, 0, 4]}
         minHeight="100%"
@@ -29,9 +33,5 @@ const Page = ({ children, background }) => (
     </Box>
   </>
 )
-
-Page.defaultProps = {
-  background: undefined,
-}
 
 export default React.memo(Page)

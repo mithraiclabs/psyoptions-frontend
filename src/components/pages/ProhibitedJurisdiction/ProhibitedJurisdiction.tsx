@@ -18,10 +18,6 @@ const useStyles = makeStyles({
     WebkitTextFillColor: 'transparent',
     fontSize: 'inherit',
   },
-  landingCard: {
-    borderRadius: '4px',
-    border: `1px solid ${theme.palette.primary.main}`,
-  },
 })
 
 const pageBg =

@@ -5,11 +5,11 @@ import Notifications from '../Notifications'
 import Footer from '../Footer'
 
 // Default page template
-const Page: React.FC<{ background?: string; hideNavbar?: boolean }> = ({
-  children,
-  background,
-  hideNavbar,
-}) => (
+const Page: React.FC<{
+  children: React.ReactNode
+  background?: string
+  hideNavbar?: boolean
+}> = ({ children, background, hideNavbar }) => (
   <>
     <Notifications />
     <Box
@@ -34,4 +34,4 @@ const Page: React.FC<{ background?: string; hideNavbar?: boolean }> = ({
   </>
 )
 
-export default Page
+export default React.memo(Page)

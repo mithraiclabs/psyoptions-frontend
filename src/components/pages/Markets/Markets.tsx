@@ -37,10 +37,12 @@ import CallPutRow from './CallPutRow'
 import BuySellDialog from '../../BuySellDialog'
 import Loading from '../../Loading'
 import OpenOrders from '../../OpenOrders'
+import UnsettledBalancesTable from '../../UnsettledBalancesTable'
 import { ContractSizeSelector } from '../../ContractSizeSelector'
 
 import { TCellLoading, THeadCell, TCellStrike, PageButton } from './styles'
 import Balances from './MarketsBalances'
+import MarketsUnsettledBalances from './MarketsUnsettledBalances'
 import { MarketsTableHeader } from './MarketsTableHeader'
 import { CallOrPut, OptionType } from '../../../types'
 import { useBatchLoadMints } from '../../../hooks/SPLToken'
@@ -376,8 +378,12 @@ const Markets = () => {
                   options={sizeOptions}
                 />
               </Box>
-              <Box py={0}>
+              <Box px={[0, 0, 2]} py={[2, 2, 0]}>
                 <Balances />
+              </Box>
+              {/* unsettledBalances && */}
+              <Box py={[2, 2, 0]}>
+                <MarketsUnsettledBalances />
               </Box>
             </Box>
             <Box px={[1, 1, 0]} py={[2, 2, 1]} width={['100%', '100%', 'auto']}>
@@ -550,6 +556,9 @@ const Markets = () => {
             </TableContainer>
             <Box>
               <OpenOrders optionMarkets={marketsFlat} />
+            </Box>
+            <Box id='unsettled-balances-table'>
+              <UnsettledBalancesTable optionMarkets={marketsFlat}/>
             </Box>
           </Box>
         </Box>

@@ -114,7 +114,7 @@ const NavOptions = React.memo(() => {
   )
 })
 
-const StatusBar = ({ transparent }) => {
+const StatusBar = ({ transparent = false }) => {
   const [drawerOpen, setDrawerOpen] = useState(false)
 
   return (
@@ -137,9 +137,11 @@ const StatusBar = ({ transparent }) => {
         display="flex"
         justifyContent="space-between"
         flexDirection="row"
-        bgcolor={
-          transparent ? 'transparent' : theme.gradients?.secondaryPrimary
-        }
+        style={{
+          background: transparent
+            ? 'transparent'
+            : theme.gradients?.secondaryPrimary,
+        }}
       >
         <Box display="flex">
           <Hidden smDown>

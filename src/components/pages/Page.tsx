@@ -20,7 +20,7 @@ const Page: React.FC<{
     >
       {hideNavbar ? null : <StatusBar />}
       <Box
-        px={[0, 0, 4]}
+        px={[0, 0, 2]}
         minHeight="100%"
         display="flex"
         flexDirection="column"

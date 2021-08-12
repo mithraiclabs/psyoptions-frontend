@@ -3,7 +3,7 @@ import React, { useState, memo } from 'react'
 import Close from '@material-ui/icons/Close'
 import Box from '@material-ui/core/Box'
 import Chip from '@material-ui/core/Chip'
-import Dialog from '@material-ui/core/Dialog'
+// import Dialog from '@material-ui/core/Dialog'
 import Button from '@material-ui/core/Button'
 import CircularProgress from '@material-ui/core/CircularProgress'
 import Done from '@material-ui/icons/Done'
@@ -34,6 +34,8 @@ import BuyButton from './BuyButton'
 import SellButton from './SellButton'
 import { StyledFilledInput, PlusMinusButton } from './styles'
 import ConnectButton from '../ConnectButton'
+
+import DialogFullscreenMobile from '../DialogFullscreenMobile'
 
 const bgLighterColor = (theme.palette.background as any).lighter
 
@@ -348,8 +350,8 @@ const BuySellDialog: React.VFC<{
   }
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth={'lg'}>
-      <Box py={1} px={2} width="680px" maxWidth={['100%']}>
+    <DialogFullscreenMobile open={open} onClose={onClose} maxWidth={'lg'}>
+      <Box py={1} px={2} width={['100%', '100%', '680px']} maxWidth={['100%']}>
         <Box
           p={1}
           pr={0}
@@ -616,7 +618,7 @@ const BuySellDialog: React.VFC<{
           </Box>
         </Box>
       </Box>
-    </Dialog>
+    </DialogFullscreenMobile>
   )
 }
 

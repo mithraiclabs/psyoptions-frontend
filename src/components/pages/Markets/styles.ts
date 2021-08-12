@@ -11,7 +11,7 @@ export const StyledTooltip = withStyles(() => ({
   tooltip: {
     backgroundColor: theme.palette.background.lighter,
     maxWidth: 370,
-    fontSize: '12px',
+    fontSize: '13px',
     lineHeight: '18px',
   },
 }))(Tooltip)
@@ -32,7 +32,7 @@ export const TCell = withStyles({
   root: {
     padding: '4px 8px',
     whiteSpace: 'nowrap',
-    fontSize: '12px',
+    fontSize: '13px',
     border: 'none',
     height: '48px',
     background: theme.palette.background.marketsCallPutRow,
@@ -43,7 +43,7 @@ export const TCellLoading = withStyles({
   root: {
     padding: '4px 8px',
     whiteSpace: 'nowrap',
-    fontSize: '12px',
+    fontSize: '13px',
     height: '48px',
     border: 'none',
     background: 'transparent',
@@ -54,7 +54,7 @@ export const THeadCell = withStyles({
   root: {
     padding: '4px 7px',
     whiteSpace: 'nowrap',
-    fontSize: '12px',
+    fontSize: '13px',
     height: '48px',
     border: 'none',
     borderTop: borderLight,
@@ -67,7 +67,7 @@ export const THeadCellStrike = withStyles({
   root: {
     padding: '4px 7px',
     whiteSpace: 'nowrap',
-    fontSize: '12px',
+    fontSize: '13px',
     height: '48px',
     border: 'none',
     borderTop: borderLight,
@@ -81,7 +81,7 @@ export const TCellStrike = withStyles({
   root: {
     padding: '4px 8px',
     whiteSpace: 'nowrap',
-    fontSize: '12px',
+    fontSize: '13px',
     height: '48px',
     border: 'none',
     width: '130px',

@@ -377,7 +377,7 @@ const CallPutRow = ({
       )}
 
       <TCellStrike align="center">
-        <Box fontSize={'16px'}>{formatStrike(row.strike)}</Box>
+        <Box fontSize={'15px'}>{formatStrike(row.strike)}</Box>
       </TCellStrike>
 
       {row.put?.serumMarketKey &&

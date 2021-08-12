@@ -30,7 +30,7 @@ const usePlaceSellOrder = (
 ): ((obj: PlaceSellOrderArgs) => Promise<void>) => {
   const { pushErrorNotification } = useNotifications()
   const { wallet, pubKey } = useWallet()
-  const { connection, endpoint } = useConnection()
+  const { connection } = useConnection()
   const { splTokenAccountRentBalance } = useSolanaMeta()
   const { subscribeToTokenAccount } = useOwnedTokenAccounts()
   const { sendSignedTransaction } = useSendTransaction()
@@ -59,7 +59,7 @@ const usePlaceSellOrder = (
         if (numberOfContractsToMint > 0) {
           // Mint missing contracs before placing order
           const { error, response } = await createMissingAccountsAndMint({
-            optionsProgramId: new PublicKey(endpoint.programId),
+            optionsProgramId: new PublicKey(optionMarket.psyOptionsProgramId),
             authorityPubkey: pubKey,
             owner: pubKey,
             market: optionMarket,
@@ -169,7 +169,6 @@ const usePlaceSellOrder = (
     [
       connection,
       createAdHocOpenOrdersSub,
-      endpoint.programId,
       pubKey,
       pushErrorNotification,
       sendSignedTransaction,

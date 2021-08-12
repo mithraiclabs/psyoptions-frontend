@@ -22,7 +22,7 @@ const useExerciseOpenPosition = (
       const { transaction: tx } = await exerciseCoveredCall({
         connection,
         payerKey: pubKey,
-        programId: endpoint.programId,
+        programId: market.psyOptionsProgramId,
         optionMintKey: market.optionMintKey,
         optionMarketKey: market.optionMarketKey,
         exerciserQuoteAssetKey: new PublicKey(exerciserQuoteAssetAddress),
@@ -52,7 +52,6 @@ const useExerciseOpenPosition = (
   }, [
     connection,
     pubKey,
-    endpoint.programId,
     market,
     exerciserQuoteAssetAddress,
     exerciserUnderlyingAssetAddress,

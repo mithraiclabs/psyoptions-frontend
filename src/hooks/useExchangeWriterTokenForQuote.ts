@@ -51,7 +51,7 @@ export const useExchangeWriterTokenForQuote = (
         _quoteAssetDestKey = wrappedSolAccount.publicKey
       }
       const ix = await exchangeWriterTokenForQuoteInstruction({
-        programId: new PublicKey(endpoint.programId),
+        programId: new PublicKey(market.psyOptionsProgramId),
         optionMarketKey: market.optionMarketKey,
         writerTokenMintKey: market.writerTokenMintKey,
         writerTokenSourceAuthorityKey: pubKey,
@@ -91,7 +91,7 @@ export const useExchangeWriterTokenForQuote = (
     market.optionMarketKey,
     market.writerTokenMintKey,
     market.quoteAssetPoolKey,
-    endpoint.programId,
+    market.psyOptionsProgramId,
     pubKey,
     writerTokenSourceKey,
     connection,

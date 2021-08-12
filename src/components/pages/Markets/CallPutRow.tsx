@@ -2,6 +2,7 @@ import React, { useState, useCallback, useMemo } from 'react'
 
 import CircularProgress from '@material-ui/core/CircularProgress'
 import Button from '@material-ui/core/Button'
+import Box from '@material-ui/core/Box'
 import moment, { Moment } from 'moment'
 import BigNumber from 'bignumber.js'
 
@@ -376,9 +377,7 @@ const CallPutRow = ({
       )}
 
       <TCellStrike align="center">
-        <h4 style={{ margin: 0, fontWeight: 400 }}>
-          {formatStrike(row.strike)}
-        </h4>
+        <Box fontSize={'15px'}>{formatStrike(row.strike)}</Box>
       </TCellStrike>
 
       {row.put?.serumMarketKey &&

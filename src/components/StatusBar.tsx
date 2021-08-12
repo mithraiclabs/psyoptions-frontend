@@ -121,7 +121,7 @@ const StatusBar = React.memo(() => {
         </SwipeableDrawer>
       </Hidden>
       <Box
-        px={[2, 2, 3]}
+        px={2}
         py={1}
         display="flex"
         justifyContent="space-between"

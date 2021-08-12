@@ -347,7 +347,7 @@ const Markets = () => {
               alignItems={['left', 'left', 'center']}
               justifyContent="space-between"
             >
-              <Box px={0} py={0} width={['100%', '100%', '300px']}>
+              <Box p={[2, 2, 0]} width={['100%', '100%', '300px']}>
                 <Select
                   formControlOptions={{
                     variant: 'filled',
@@ -364,14 +364,19 @@ const Markets = () => {
                   }))}
                 />
               </Box>
-              <Box px={[0, 0, 2]} py={0} width={['100%', '100%', '200px']}>
+              <Box
+                pt={[0, 0, 2]}
+                pb={[2, 2, 2]}
+                px={2}
+                width={['100%', '100%', '200px']}
+              >
                 <ContractSizeSelector
                   onChange={updateContractSize}
                   value={contractSize}
                   options={sizeOptions}
                 />
               </Box>
-              <Box py={[2, 2, 0]}>
+              <Box py={0}>
                 <Balances />
               </Box>
             </Box>

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import Box from '@material-ui/core/Box'
 import Table from '@material-ui/core/Table'
 import TableHead from '@material-ui/core/TableHead'
@@ -28,12 +28,19 @@ const OpenOrders: React.FC<{
   const { wallet, pubKey, connected } = useWallet()
   const { serumMarkets } = useSerum()
   const [openOrders, setOpenOrders] = useSerumOpenOrders()
+  const [openOrdersLoaded, setOpenOrdersLoaded] = useState(false)
 
   /**
    * Load open orders for each serum market if we haven't already done so
    */
   useEffect(() => {
-    if (connection && serumMarkets && pubKey && openOrders) {
+    if (
+      connection &&
+      serumMarkets &&
+      pubKey &&
+      openOrders &&
+      !openOrdersLoaded
+    ) {
       const serumKeys = Object.keys(serumMarkets)
       ;(async () => {
         const openOrdersRes = await SerumOpenOrdersClass.findForOwner(
@@ -56,6 +63,7 @@ const OpenOrders: React.FC<{
           ...prevOpenOrders,
           ...newOpenOrders,
         }))
+        setOpenOrdersLoaded(true)
       })()
     }
   }, [
@@ -66,6 +74,7 @@ const OpenOrders: React.FC<{
     pubKey,
     openOrders,
     setOpenOrders,
+    openOrdersLoaded,
   ])
 
   const openOrdersArray = optionMarkets

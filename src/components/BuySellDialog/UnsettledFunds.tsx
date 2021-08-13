@@ -1,6 +1,6 @@
-import CircularProgress from '@material-ui/core/CircularProgress'
+// import CircularProgress from '@material-ui/core/CircularProgress'
 import Box from '@material-ui/core/Box'
-import Button from '@material-ui/core/Button'
+// import Button from '@material-ui/core/Button'
 import React, { useCallback, useState } from 'react'
 import BigNumber from 'bignumber.js'
 import {
@@ -8,6 +8,7 @@ import {
   useSubscribeOpenOrders,
   useUnsettledFundsForMarket,
 } from '../../hooks/Serum'
+import TxButton from '../TxButton'
 
 /**
  * UI for showing the user their unsettled funds for an single option market.
@@ -35,10 +36,6 @@ export const UnsettledFunds: React.VFC<{
     return null
   }
 
-  if (loading) {
-    return <CircularProgress />
-  }
-
   const valueUnsettled = new BigNumber(unsettledFunds.quoteFree.toString())
   return (
     <Box justifyContent="flex-end" textAlign="center" width="100%">
@@ -50,9 +47,14 @@ export const UnsettledFunds: React.VFC<{
           {valueUnsettled.dividedBy(10 ** qAssetDecimals).toString()}
         </Box>
       </Box>
-      <Button color="primary" onClick={_settleFunds} variant="outlined">
-        Settle Funds
-      </Button>
+      <TxButton
+        color="primary"
+        onClick={_settleFunds}
+        variant="outlined"
+        loading={loading}
+      >
+        {loading ? 'Settling Funds' : 'Settle Funds'}
+      </TxButton>
     </Box>
   )
 }

@@ -9,10 +9,14 @@ type TxButtonProps = {
 } & ButtonProps
 
 const TxButton = (props: TxButtonProps) => {
-  const { loading, onClick, children } = props
+  const { disabled, loading, onClick, children } = props
 
   return (
-    <Button {...props} disabled={loading} onClick={loading ? null : onClick}>
+    <Button
+      {...props}
+      disabled={disabled || loading}
+      onClick={loading ? null : onClick}
+    >
       <Box
         display="flex"
         flexDirection="row"

@@ -18,6 +18,7 @@ import useConnection from '../../../../hooks/useConnection'
 import { useExchangeWriterTokenForQuote } from '../../../../hooks/useExchangeWriterTokenForQuote'
 import useNotifications from '../../../../hooks/useNotifications'
 import useAssetList from '../../../../hooks/useAssetList'
+import TxButton from '../../../TxButton'
 
 const StyledTooltip = withStyles((theme) => ({
   tooltip: {
@@ -48,6 +49,9 @@ export const WrittenOptionRow = React.memo(
     heldContracts,
   }: WrittenOptionRowProps) => {
     const theme = useTheme()
+    const [closeOneLoading, setCloseOneLoading] = useState(false)
+    const [closeAllLoading, setCloseAllLoading] = useState(false)
+    const [claimQuoteLoading, setClaimQuoteLoading] = useState(false)
     const { supportedAssets } = useAssetList()
     const { pushNotification } = useNotifications()
     const { connection } = useConnection()
@@ -81,6 +85,30 @@ export const WrittenOptionRow = React.memo(
       ownedUAssetKey,
       initialWriterTokenAccount.pubKey,
     )
+
+    const handleCloseOne = async () => {
+      setCloseOneLoading(true)
+      await closePosition()
+      setCloseOneLoading(false)
+    }
+
+    const handleCloseAll = async (numContracts) => {
+      setCloseAllLoading(true)
+      await closePosition(numContracts)
+      setCloseAllLoading(false)
+    }
+
+    const handleCloseOnePostExpiration = async () => {
+      setCloseOneLoading(true)
+      await closeOptionPostExpiration(initialWriterTokenAccount.amount)
+      setCloseOneLoading(false)
+    }
+
+    const handleClaimQuote = async () => {
+      setClaimQuoteLoading(true)
+      await exchangeWriterTokenForQuote()
+      setClaimQuoteLoading(false)
+    }
 
     let optionType: OptionType
     if (market?.uAssetSymbol) {
@@ -160,15 +188,14 @@ export const WrittenOptionRow = React.memo(
               justifyContent="flex-start"
             >
               <Box p={1}>
-                <Button
+                <TxButton
                   color="primary"
                   variant="outlined"
-                  onClick={() => {
-                    closeOptionPostExpiration(initialWriterTokenAccount.amount)
-                  }}
+                  onClick={handleCloseOnePostExpiration}
+                  loading={closeOneLoading}
                 >
-                  Close
-                </Button>
+                  {closeOneLoading ? 'Closing' : 'Close'}
+                </TxButton>
               </Box>
             </Box>
           </StyledTooltip>
@@ -193,21 +220,22 @@ export const WrittenOptionRow = React.memo(
                 justifyContent="flex-start"
               >
                 <Box p={1}>
-                  <Button
+                  <TxButton
                     color="primary"
                     variant="outlined"
-                    onClick={closePosition}
+                    onClick={handleCloseOne}
                     disabled={!canClose}
+                    loading={closeOneLoading}
                   >
-                    Close One
-                  </Button>
+                    {closeOneLoading ? 'Closing One' : 'Close one'}
+                  </TxButton>
                 </Box>
                 <Box p={1}>
-                  <Button
+                  <TxButton
                     color="primary"
                     variant="outlined"
                     onClick={() => {
-                      closePosition(
+                      handleCloseAll(
                         Math.min(
                           ownedOptionTokenAccounts?.[0]?.amount,
                           initialWriterTokenAccount.amount,
@@ -215,9 +243,10 @@ export const WrittenOptionRow = React.memo(
                       )
                     }}
                     disabled={!canClose}
+                    loading={closeAllLoading}
                   >
-                    Close All
-                  </Button>
+                    {closeAllLoading ? 'Closing All' : 'Close All'}
+                  </TxButton>
                 </Box>
               </Box>
             </StyledTooltip>
@@ -238,14 +267,15 @@ export const WrittenOptionRow = React.memo(
                 justifyContent="flex-start"
                 p={1}
               >
-                <Button
+                <TxButton
                   color="primary"
                   variant="outlined"
-                  onClick={exchangeWriterTokenForQuote}
+                  onClick={handleClaimQuote}
                   style={{ marginLeft: holdsContracts ? 8 : 0 }}
+                  loading={claimQuoteLoading}
                 >
-                  Claim Quote
-                </Button>
+                  {claimQuoteLoading ? 'Claiming Quote' : 'Claim Quote'}
+                </TxButton>
               </Box>
             </StyledTooltip>
           )}

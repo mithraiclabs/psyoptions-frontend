@@ -3,7 +3,6 @@ import Box from '@material-ui/core/Box'
 import Collapse from '@material-ui/core/Collapse'
 import Tooltip from '@material-ui/core/Tooltip'
 import Avatar from '@material-ui/core/Avatar'
-import Button from '@material-ui/core/Button'
 import KeyboardArrowDown from '@material-ui/icons/KeyboardArrowDown'
 import { makeStyles, withStyles, useTheme } from '@material-ui/core/styles'
 import * as Sentry from '@sentry/react'
@@ -17,6 +16,7 @@ import useAssetList from '../../../hooks/useAssetList'
 import { useSerumMarket } from '../../../hooks/Serum'
 import { formatExpirationTimestamp } from '../../../utils/format'
 import { OptionMarket, OptionType, TokenAccount } from '../../../types'
+import TxButton from '../../TxButton'
 
 const useStyles = makeStyles({
   dropdownOpen: {
@@ -53,6 +53,7 @@ const PositionRow: React.VFC<{
   }
 }> = ({ row }) => {
   const classes = useStyles()
+  const [loading, setLoading] = useState(false)
   const [visible, setVisible] = useState(false)
   const { supportedAssets } = useAssetList()
   const { ownedTokenAccounts } = useOwnedTokenAccounts()
@@ -111,13 +112,16 @@ const PositionRow: React.VFC<{
 
   const handleExercisePosition = useCallback(async () => {
     try {
+      setLoading(true)
       await exercise()
+      setLoading(false)
     } catch (err) {
       Sentry.captureException(err)
       pushNotification({
         severity: 'error',
         message: `${err}`,
       })
+      setLoading(false)
     }
   }, [exercise, pushNotification])
 
@@ -188,13 +192,14 @@ const PositionRow: React.VFC<{
           {expired && <Box color={theme.palette.error.main}>Expired</Box>}
           {!expired && (
             <StyledTooltip title={<Box p={2}>{exerciseTooltipLabel}</Box>}>
-              <Button
+              <TxButton
                 color="primary"
                 variant="outlined"
                 onClick={handleExercisePosition}
+                loading={loading}
               >
-                Exercise
-              </Button>
+                {loading ? 'Exercising' : 'Exercise'}
+              </TxButton>
             </StyledTooltip>
           )}
         </Box>
@@ -239,13 +244,14 @@ const PositionRow: React.VFC<{
                     <StyledTooltip
                       title={<Box p={2}>{exerciseTooltipLabel}</Box>}
                     >
-                      <Button
+                      <TxButton
                         color="primary"
                         variant="outlined"
                         onClick={handleExercisePosition}
+                        loading={loading}
                       >
-                        Exercise
-                      </Button>
+                        {loading ? 'Exercising' : 'Exercise'}
+                      </TxButton>
                     </StyledTooltip>
                   )}
                 </Box>

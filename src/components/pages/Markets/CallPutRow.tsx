@@ -345,10 +345,9 @@ const CallPutRow = ({
             >
               {marketTrackerData?.[row.call?.serumMarketKey?.toString()]
                 ?.change ? (
-                `${
-                  marketTrackerData?.[row.call?.serumMarketKey?.toString()]
-                    ?.change
-                }%`
+                `${marketTrackerData?.[
+                  row.call?.serumMarketKey?.toString()
+                ]?.change.toFixed(1)}%`
               ) : (
                 <Empty>{'—'}</Empty>
               )}
@@ -456,10 +455,9 @@ const CallPutRow = ({
             >
               {marketTrackerData?.[row.put?.serumMarketKey?.toString()]
                 ?.change ? (
-                `${
-                  marketTrackerData?.[row.put?.serumMarketKey?.toString()]
-                    ?.change
-                }%`
+                `${marketTrackerData?.[
+                  row.put?.serumMarketKey?.toString()
+                ]?.change.toFixed(1)}%`
               ) : (
                 <Empty>{'—'}</Empty>
               )}

@@ -22,6 +22,7 @@ const useSerum = () => {
   const { serumMarkets, setSerumMarkets } = useContext(SerumContext)
   const [_, setOrderbooks] = useSerumOrderbooks()
 
+  // TODO - fix batched serum program ids
   const fetchMultipleSerumMarkets = useCallback(
     async (serumMarketKeys: PublicKey[]) => {
       try {

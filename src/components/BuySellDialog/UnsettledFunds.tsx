@@ -16,10 +16,11 @@ export const UnsettledFunds: React.VFC<{
   qAssetSymbol: string
   serumMarketAddress: string
   qAssetDecimals: number
-}> = ({ qAssetSymbol, serumMarketAddress, qAssetDecimals }) => {
+  serumProgramId: string
+}> = ({ qAssetSymbol, serumMarketAddress, qAssetDecimals, serumProgramId }) => {
   const unsettledFunds = useUnsettledFundsForMarket(serumMarketAddress)
   const { settleFunds } = useSettleFunds(serumMarketAddress)
-  useSubscribeOpenOrders(serumMarketAddress)
+  useSubscribeOpenOrders(serumMarketAddress, serumProgramId)
   const [loading, setLoading] = useState(false)
   const _settleFunds = useCallback(async () => {
     setLoading(true)

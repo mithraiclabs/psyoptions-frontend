@@ -43,6 +43,7 @@ const OpenOrders: React.FC<{
     ) {
       const serumKeys = Object.keys(serumMarkets)
       ;(async () => {
+        // TODO - find open orders for EACH serum dex program in optionMarkets
         const openOrdersRes = await SerumOpenOrdersClass.findForOwner(
           connection,
           pubKey,

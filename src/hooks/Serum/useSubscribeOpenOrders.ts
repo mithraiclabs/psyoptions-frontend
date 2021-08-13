@@ -7,8 +7,11 @@ import useConnection from '../useConnection'
 /**
  * Handle subscriptions to serum OpenOrders for given market key
  */
-export const useSubscribeOpenOrders = (key: string): void => {
-  const { connection, dexProgramId } = useConnection()
+export const useSubscribeOpenOrders = (
+  key: string,
+  serumProgramId: string,
+): void => {
+  const { connection } = useConnection()
   const [serumOpenOrders, setSerumOpenOrders] = useSerumOpenOrders()
   const openOrders = serumOpenOrders[key]
 
@@ -20,7 +23,7 @@ export const useSubscribeOpenOrders = (key: string): void => {
           const _openOrder = OpenOrders.fromAccountInfo(
             openOrder.address,
             accountInfo,
-            dexProgramId,
+            new PublicKey(serumProgramId),
           )
           setSerumOpenOrders((prevSerumOpenOrders) => {
             const orders = prevSerumOpenOrders[key]?.orders || []
@@ -53,7 +56,7 @@ export const useSubscribeOpenOrders = (key: string): void => {
         )
       }
     }
-  }, [connection, dexProgramId, key, openOrders, setSerumOpenOrders])
+  }, [connection, serumProgramId, key, openOrders, setSerumOpenOrders])
 }
 
 /**

@@ -94,7 +94,7 @@ const BuySellDialog: React.VFC<{
   const [initializingSerum, setInitializingSerum] = useState(false)
   const [placeOrderLoading, setPlaceOrderLoading] = useState(false)
   const { pushErrorNotification } = useNotifications()
-  const { connection, dexProgramId } = useConnection()
+  const { connection } = useConnection()
   const { balance, wallet, pubKey, connected } = useWallet()
   const placeSellOrder = usePlaceSellOrder(serumAddress)
   const placeBuyOrder = usePlaceBuyOrder(serumAddress)
@@ -195,7 +195,7 @@ const BuySellDialog: React.VFC<{
             : new PublicKey(uAssetMint),
         baseLotSize,
         quoteLotSize,
-        dexProgramId,
+        dexProgramId: new PublicKey(optionMarket.serumProgramId),
       })
 
       const signed = await wallet.signAllTransactions([tx1, tx2])
@@ -586,6 +586,7 @@ const BuySellDialog: React.VFC<{
                     qAssetDecimals={
                       type === 'call' ? qAssetDecimals : uAssetDecimals
                     }
+                    serumProgramId={optionMarket.serumProgramId}
                   />
                 </>
               ) : !connected ? (

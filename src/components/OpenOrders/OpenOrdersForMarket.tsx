@@ -30,6 +30,7 @@ const OpenOrdersForMarket: React.FC<CallOrPut> = ({
   uAssetSymbol,
   serumMarketKey,
   strikePrice,
+  serumProgramId,
 }) => {
   const { serumMarkets } = useSerum()
   const [orderbooks] = useSerumOrderbooks()
@@ -39,7 +40,7 @@ const OpenOrdersForMarket: React.FC<CallOrPut> = ({
 
   const handleCancelOrder = useCancelOrder(serumMarketAddress)
 
-  useSubscribeOpenOrders(serumMarketAddress)
+  useSubscribeOpenOrders(serumMarketAddress, serumProgramId)
 
   if (
     !serumMarket ||

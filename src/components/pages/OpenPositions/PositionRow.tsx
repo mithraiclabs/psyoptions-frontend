@@ -61,6 +61,7 @@ const PositionRow: React.VFC<{
     row.market.serumMarketKey,
     new PublicKey(row.market.optionMintKey),
     new PublicKey(row?.qAssetMintAddress),
+    row.market.serumProgramId,
   )
   const nowInSeconds = Date.now() / 1000
   const expired = row.expiration <= nowInSeconds

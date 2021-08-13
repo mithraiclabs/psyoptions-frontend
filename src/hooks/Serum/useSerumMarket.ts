@@ -17,9 +17,10 @@ export const useSerumMarket = (
   mintA: PublicKey,
   /* The string represenation of the Serum Market's quote asset's PublicKey */
   mintB: PublicKey,
+  serumProgramId: string,
 ): LocalSerumMarket | undefined => {
   const { pushNotification } = useNotifications()
-  const { connection, dexProgramId } = useConnection()
+  const { connection } = useConnection()
   const { serumMarkets, setSerumMarkets } = useSerumContext()
   const serumAddress = key.toString()
   const serumMarket = serumMarkets[serumAddress]
@@ -37,6 +38,7 @@ export const useSerumMarket = (
     }))
     ;(async () => {
       try {
+        const dexProgramId = new PublicKey(serumProgramId)
         const market = await findMarketByAssets(
           connection,
           mintA,
@@ -67,7 +69,7 @@ export const useSerumMarket = (
     })()
   }, [
     connection,
-    dexProgramId,
+    serumProgramId,
     key,
     mintA,
     mintB,

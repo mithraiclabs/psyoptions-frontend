@@ -6,14 +6,14 @@ import useLocalStorageState from 'use-local-storage-state'
 
 const Disclaimer = () => {
   const [hasAcceptedDisclaimer, setHasAcceptedDisclaimer] =
-    useLocalStorageState('hasAcceptedDisclaimer', 'no')
+    useLocalStorageState('hasAcceptedDisclaimer', false)
 
   const dismissDisclaimer = () => {
-    setHasAcceptedDisclaimer('yes')
+    setHasAcceptedDisclaimer(true)
   }
 
   return (
-    <Dialog open={hasAcceptedDisclaimer !== 'yes'} maxWidth={'lg'}>
+    <Dialog open={!hasAcceptedDisclaimer} maxWidth={'lg'}>
       <Box p={2} width="740px" maxWidth="100%">
         <Box px={1} py={2} textAlign="center">
           <h2 style={{ margin: '0' }}>Warning!</h2>

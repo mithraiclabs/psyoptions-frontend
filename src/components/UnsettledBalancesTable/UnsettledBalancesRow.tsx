@@ -122,7 +122,7 @@ const UnsettledBalancesRow: React.FC<CallOrPut> = ({
               </TCell>
               <TCell>{strikePrice}</TCell>
               <TCell>{`${contractSize} ${uAssetSymbol}`}</TCell>
-              <TCell>{order?.size}</TCell>
+              <TCell>Options Count</TCell>
               <TCell
                 style={{
                   color:
@@ -131,16 +131,16 @@ const UnsettledBalancesRow: React.FC<CallOrPut> = ({
                       : theme.palette.error.main,
                 }}
               >
-                {order?.price}
+                Unsettled Assets
               </TCell>
-              {/* <TCell>TODO</TCell> */}
               <TCell align="right">
                 <Button
                   variant="outlined"
                   color="primary"
+                  // update to settle funds function
                   onClick={() => handleCancelOrder(order)}
                 >
-                  Cancel
+                  Settle
                 </Button>
               </TCell>
             </TableRow>

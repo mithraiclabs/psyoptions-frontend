@@ -80,6 +80,7 @@ export const MarketsTableHeader: React.FC<{
               showPriceChange={showPriceChange}
               showVolume={showVolume}
               showOI={showOI}
+              showLastPrice={showLastPrice}
               setShowIV={setShowIV}
               setShowPriceChange={setShowPriceChange}
               setShowVolume={setShowVolume}

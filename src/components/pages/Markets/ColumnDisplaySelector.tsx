@@ -20,6 +20,7 @@ export const ColumnDisplaySelector: React.FC<{
   showPriceChange: boolean
   showVolume: boolean
   showOI: boolean
+  showLastPrice: boolean
   setShowIV: React.Dispatch<React.SetStateAction<boolean>>
   setShowPriceChange: React.Dispatch<React.SetStateAction<boolean>>
   setShowVolume: React.Dispatch<React.SetStateAction<boolean>>
@@ -33,6 +34,7 @@ export const ColumnDisplaySelector: React.FC<{
     showPriceChange,
     showVolume,
     showOI,
+    showLastPrice,
     setShowIV,
     setShowPriceChange,
     setShowVolume,
@@ -150,7 +152,7 @@ export const ColumnDisplaySelector: React.FC<{
             <FormControlLabel
               control={
                 <Checkbox
-                  checked={showOI}
+                  checked={showLastPrice}
                   onChange={(e) => {
                     setShowLastPrice(e.target.checked)
                     if (e.target.checked) {

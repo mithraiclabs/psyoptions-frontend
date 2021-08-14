@@ -74,7 +74,7 @@ export const useExchangeWriterTokenForQuote = (
         )
       }
 
-      sendTransaction({
+      await sendTransaction({
         transaction,
         wallet,
         signers,

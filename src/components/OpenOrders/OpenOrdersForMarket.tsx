@@ -1,6 +1,5 @@
-import React from 'react'
+import React, { useState } from 'react'
 import TableRow from '@material-ui/core/TableRow'
-import Button from '@material-ui/core/Button'
 import moment from 'moment'
 import { PublicKey } from '@solana/web3.js'
 
@@ -13,12 +12,76 @@ import theme from '../../utils/theme'
 
 import { TCell } from './OpenOrderStyles'
 import { CallOrPut } from '../../types'
+import TxButton from '../TxButton'
 
 type SerumBidOrAsk = {
   side: string
   price: number
   size: number
   openOrdersAddress: PublicKey
+}
+
+const OrderRow = ({
+  order,
+  type,
+  expiration,
+  uAssetSymbol,
+  qAssetSymbol,
+  strikePrice,
+  contractSize,
+  handleCancelOrder,
+}) => {
+  const [loading, setLoading] = useState(false)
+
+  const cancelOrder = async () => {
+    setLoading(true)
+    await handleCancelOrder(order)
+    setLoading(false)
+  }
+
+  return (
+    <TableRow hover key={`${JSON.stringify(order)}`}>
+      <TCell
+        style={{
+          color:
+            order?.side === 'buy'
+              ? theme.palette.success.main
+              : theme.palette.error.main,
+        }}
+      >
+        {order?.side}
+      </TCell>
+      <TCell>{type}</TCell>
+      <TCell>{`${qAssetSymbol}/${uAssetSymbol}`}</TCell>
+      <TCell>
+        {`${moment.utc(expiration * 1000).format('LL')} 23:59:59 UTC`}
+      </TCell>
+      <TCell>{strikePrice}</TCell>
+      <TCell>{`${contractSize} ${uAssetSymbol}`}</TCell>
+      <TCell>{order?.size}</TCell>
+      <TCell
+        style={{
+          color:
+            order?.side === 'buy'
+              ? theme.palette.success.main
+              : theme.palette.error.main,
+        }}
+      >
+        {order?.price}
+      </TCell>
+      {/* <TCell>TODO</TCell> */}
+      <TCell align="right">
+        <TxButton
+          variant="outlined"
+          color="primary"
+          onClick={() => cancelOrder()}
+          loading={loading}
+        >
+          {loading ? 'Canceling' : 'Cancel'}
+        </TxButton>
+      </TCell>
+    </TableRow>
+  )
 }
 
 // Render all open orders for a given market as table rows
@@ -104,46 +167,16 @@ const OpenOrdersForMarket: React.FC<CallOrPut> = ({
       {actualOpenOrders &&
         actualOpenOrders.map((order) => {
           return (
-            <TableRow hover key={`${JSON.stringify(order)}`}>
-              <TCell
-                style={{
-                  color:
-                    order?.side === 'buy'
-                      ? theme.palette.success.main
-                      : theme.palette.error.main,
-                }}
-              >
-                {order?.side}
-              </TCell>
-              <TCell>{type}</TCell>
-              <TCell>{`${qAssetSymbol}/${uAssetSymbol}`}</TCell>
-              <TCell>
-                {`${moment.utc(expiration * 1000).format('LL')} 23:59:59 UTC`}
-              </TCell>
-              <TCell>{strikePrice}</TCell>
-              <TCell>{`${contractSize} ${uAssetSymbol}`}</TCell>
-              <TCell>{order?.size}</TCell>
-              <TCell
-                style={{
-                  color:
-                    order?.side === 'buy'
-                      ? theme.palette.success.main
-                      : theme.palette.error.main,
-                }}
-              >
-                {order?.price}
-              </TCell>
-              {/* <TCell>TODO</TCell> */}
-              <TCell align="right">
-                <Button
-                  variant="outlined"
-                  color="primary"
-                  onClick={() => handleCancelOrder(order)}
-                >
-                  Cancel
-                </Button>
-              </TCell>
-            </TableRow>
+            <OrderRow
+              order={order}
+              type={type}
+              expiration={expiration}
+              uAssetSymbol={uAssetSymbol}
+              qAssetSymbol={qAssetSymbol}
+              strikePrice={strikePrice}
+              contractSize={contractSize}
+              handleCancelOrder={handleCancelOrder}
+            />
           )
         })}
     </>

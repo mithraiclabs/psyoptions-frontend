@@ -33,14 +33,14 @@ export const useCancelOrder = (serumMarketAddress: string) => {
           const [signedCancelTx, signedSettleTx] =
             await wallet.signAllTransactions([cancelTx, settleTx])
 
-          sendSignedTransaction({
+          await sendSignedTransaction({
             signedTransaction: signedCancelTx,
             connection,
             sendingMessage: 'Processing: Cancel Order',
             successMessage: 'Confirmed: Cancel Order',
           })
 
-          sendSignedTransaction({
+          await sendSignedTransaction({
             signedTransaction: signedSettleTx,
             connection,
             sendingMessage: 'Processing: Settle Funds',

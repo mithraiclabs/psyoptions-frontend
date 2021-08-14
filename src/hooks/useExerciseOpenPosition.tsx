@@ -38,7 +38,7 @@ const useExerciseOpenPosition = (
       })
 
       // TODO add the Asset Pair to the push note messages
-      sendTransaction({
+      await sendTransaction({
         transaction: tx,
         wallet,
         connection,

@@ -114,7 +114,7 @@ export const useSettleFunds = (
   const settleFunds = useCallback(async () => {
     try {
       const transaction = await makeSettleFundsTx()
-      sendTransaction({
+      await sendTransaction({
         transaction,
         wallet,
         connection,

@@ -150,10 +150,6 @@ Resources:
               Value: DESVgJVGajEgKGXhb6XmqDHGz3VjdgP7rEVESBgxmroY
             - Name: MAINNET_DEX_PROGRAM_ID
               Value: EUqojwWA2rd19FZrzeBncJsm38Jm1hEhE3zsmX3bRc2o
-            - Name: APP_PASSWORD
-              Value: 4448579c7dd64a7f824ce8a28fb51376ebf05039
-            - Name: APP_PASSWORD_PROTECTED
-              Value: true
             - Name: SENTRY_ENVIRONMENT
               Value: !Ref Environment
             - Name: DEVNET_FAUCET_USDC

@@ -559,7 +559,11 @@ console.log('serummarketkey', callPutData.serumMarketKey?.toString())
               <OpenOrders optionMarkets={marketsFlat} />
             </Box>
             <Box id='unsettled-balances-table'>
-              <UnsettledBalancesTable optionMarkets={marketsFlat}/>
+              <UnsettledBalancesTable
+                uAssetDecimals={uAsset?.decimals}
+                qAssetDecimals={qAsset?.decimals}
+                optionMarkets={marketsFlat}
+              />
             </Box>
           </Box>
         </Box>

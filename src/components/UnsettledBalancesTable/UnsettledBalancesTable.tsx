@@ -18,12 +18,18 @@ import {
 import ConnectButton from '../ConnectButton'
 import UnsettledBalancesRow from './UnsettledBalancesRow'
 import { TCell, THeadCell } from './UnsettledBalancesStyles'
-import { CallOrPut } from '../../types'
+import { CallOrPut, Asset } from '../../types'
 
 // Render all open orders for all optionMarkets specified in props
-const OpenOrders: React.FC<{
+const UnsettledBalancesTable: React.FC<{
   optionMarkets: CallOrPut[]
-}> = ({ optionMarkets }) => {
+  uAssetDecimals: number
+  qAssetDecimals: number
+}> = ({ 
+  optionMarkets,
+  uAssetDecimals,
+  qAssetDecimals,
+ }) => {
   // const { connection, dexProgramId } = useConnection()
   const { 
     // wallet, 
@@ -81,7 +87,7 @@ const OpenOrders: React.FC<{
   // ])
   
   // filters out non-initialized serum markets
-  const openOrdersArray = optionMarkets
+  const existingMarketsArray = optionMarkets
     .map((optionMarket) => {
       if (optionMarket?.serumMarketKey) {
         return optionMarket
@@ -89,8 +95,8 @@ const OpenOrders: React.FC<{
       return undefined
     })
     .filter((item) => !!item)
-console.log('serumOpenOrders', openOrders)
-console.log('openOrdersArray', openOrdersArray)
+  // if !connected or no unsettled: dont render 
+
   return (
     <Box mt={'20px'}>
       <TableContainer>
@@ -98,14 +104,13 @@ console.log('openOrdersArray', openOrdersArray)
           <TableHead>
             <TableRow>
               <THeadCell
-                colSpan={10}
+                colSpan={9}
                 style={{ borderTop: 'none', padding: '16px 20px' }}
               >
                 <h3 style={{ margin: 0 }}>Unsettled Balances</h3>
               </THeadCell>
             </TableRow>
             <TableRow>
-              <THeadCell>Side</THeadCell>
               <THeadCell>Option Type</THeadCell>
               <THeadCell>Asset Pair</THeadCell>
               <THeadCell>Expiration</THeadCell>
@@ -127,9 +132,11 @@ console.log('openOrdersArray', openOrdersArray)
                 </TCell>
               </TableRow>
             ) : (
-              openOrdersArray.map((optionMarket) => (
+              existingMarketsArray.map((optionMarket) => (
                 <UnsettledBalancesRow
                   {...optionMarket}
+                  uAssetDecimals={uAssetDecimals}
+                  qAssetDecimals={qAssetDecimals}
                   key={`${optionMarket.serumMarketKey.toString()}-unsettled`}
                 />
               ))
@@ -141,4 +148,4 @@ console.log('openOrdersArray', openOrdersArray)
   )
 }
 
-export default React.memo(OpenOrders)
+export default React.memo(UnsettledBalancesTable)

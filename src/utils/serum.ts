@@ -47,14 +47,13 @@ export const batchSerumMarkets = async (
     orderbookKeys.push(d.bids)
     orderbookKeys.push(d.asks)
   })
-  console.log('mintKeys', mintKeys?.map(bn => bn.toString()))
-  console.log('orderBookKeys', orderbookKeys?.map(bn => bn.toString()))
+  
   const [mintInfos, orderBookInfos] = await Promise.all([
     connection.getMultipleAccountsInfo(mintKeys),
     connection.getMultipleAccountsInfo(orderbookKeys),
   ])
   const mints = mintInfos?.map((mintInfo) => MintLayout.decode(mintInfo.data))
-console.log('mintinfos', mints)
+
   // instantiate the many markets
   const serumMarketsInfo = decoded.map((d, index) => {
     const { decimals: baseMintDecimals } = mints?.[index * 2]
@@ -84,7 +83,7 @@ console.log('mintinfos', mints)
       },
     }
   })
-
+console.log('serumMarketsInfo', serumMarketsInfo)
   return { serumMarketsInfo, orderbookKeys }
 }
 

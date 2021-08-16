@@ -1,22 +1,23 @@
-import React, { useCallback, useState } from 'react'
+import React, { useState } from 'react'
 import TableRow from '@material-ui/core/TableRow'
-import Button from '@material-ui/core/Button'
 import moment from 'moment'
 import { PublicKey } from '@solana/web3.js'
+import BigNumber from 'bignumber.js'
 
 import useSerum from '../../hooks/useSerum'
 import { useSerumOpenOrders } from '../../context/SerumOpenOrdersContext'
 import { useSerumOrderbooks } from '../../context/SerumOrderbookContext'
 import {
   useSubscribeOpenOrders,
-  useCancelOrder,
   useSettleFunds,
+  useUnsettledFundsForMarket,
 } from '../../hooks/Serum'
 
 import theme from '../../utils/theme'
 
 import { TCell } from './UnsettledBalancesStyles'
-import { CallOrPut } from '../../types'
+import { UnsettledRow } from '../../types'
+import TxButton from '../TxButton'
 
 type SerumBidOrAsk = {
   side: string
@@ -25,8 +26,56 @@ type SerumBidOrAsk = {
   openOrdersAddress: PublicKey
 }
 
+const UnsettledRow = ({
+  type,
+  expiration,
+  uAssetSymbol,
+  qAssetSymbol,
+  strikePrice,
+  contractSize,
+  unsettledFunds,
+  settleFunds,
+  qAssetDecimals,
+}) => {
+  const [loading, setLoading] = useState(false)
+
+  const handleSettleFunds = async () => {
+    setLoading(true)
+    await settleFunds()
+    setLoading(false)
+  }
+
+  const tokensUnsettled = new BigNumber(unsettledFunds.quoteFree.toString())
+  return (
+    <TableRow hover key={`someunsettledKey`}>
+      <TCell>{type}</TCell>
+      <TCell>{`${qAssetSymbol}/${uAssetSymbol}`}</TCell>
+      <TCell>
+        {`${moment.utc(expiration * 1000).format('LL')} 23:59:59 UTC`}
+      </TCell>
+      <TCell>{strikePrice}</TCell>
+      <TCell>{`${contractSize} ${uAssetSymbol}`}</TCell>
+      <TCell>{unsettledFunds.baseFree.toString()}</TCell>
+      <TCell>
+        {tokensUnsettled.dividedBy(10 ** qAssetDecimals).toString()}
+        {' '}{type === 'put'? uAssetSymbol : qAssetSymbol}
+      </TCell>
+      <TCell align="right">
+        <TxButton
+          variant="outlined"
+          color="primary"
+          onClick={() => handleSettleFunds()}
+          loading={loading}
+        >
+          {loading ? 'Settling funds' : 'Settle Funds'}
+        </TxButton>
+      </TCell>
+    </TableRow>
+  )
+}
+
 // Render all open orders for a given market as table rows
-const UnsettledBalancesRow: React.FC<CallOrPut> = ({
+const UnsettledBalancesRow: React.FC<UnsettledRow> = ({
   expiration,
   size: contractSize,
   type,
@@ -34,6 +83,8 @@ const UnsettledBalancesRow: React.FC<CallOrPut> = ({
   uAssetSymbol,
   serumMarketKey,
   strikePrice,
+  qAssetDecimals,
+  uAssetDecimals,
 }) => {
   const { serumMarkets } = useSerum()
   const [orderbooks] = useSerumOrderbooks()
@@ -41,122 +92,80 @@ const UnsettledBalancesRow: React.FC<CallOrPut> = ({
   const serumMarketAddress = serumMarketKey.toString()
   const { serumMarket } = serumMarkets[serumMarketAddress] || {}
   const { settleFunds } = useSettleFunds(serumMarketAddress)
-  const [loading, setLoading] = useState(false)
-  const _settleFunds = useCallback(async () => {
-    setLoading(true)
-    await settleFunds()
-    setLoading(false)
-  }, [settleFunds])
-
-  const handleCancelOrder = useCancelOrder(serumMarketAddress)
+  const unsettledFunds = useUnsettledFundsForMarket(serumMarketAddress)
 
   useSubscribeOpenOrders(serumMarketAddress)
-
+console.log('unsettledfunds row', unsettledFunds.baseFree.toNumber(), unsettledFunds.quoteFree.toNumber(), qAssetDecimals, uAssetDecimals, serumMarketAddress)
   if (
     !serumMarket ||
-    !openOrders[serumMarketAddress]?.orders ||
-    !orderbooks[serumMarketAddress]
+    unsettledFunds.baseFree.toNumber() <= 0 &&
+    unsettledFunds.quoteFree.toNumber() <= 0
   ) {
     return null
   }
 
-  const { bidOrderbook, askOrderbook } = orderbooks[serumMarketAddress]
+  // const { bidOrderbook, askOrderbook } = orderbooks[serumMarketAddress]
 
-  const bids = [...(bidOrderbook || [])] as SerumBidOrAsk[]
-  const asks = [...(askOrderbook || [])] as SerumBidOrAsk[]
-  const openOrderAccounts = openOrders[serumMarketAddress]?.orders || []
-  const bidPrices = {}
-  const askPrices = {}
+  // const bids = [...(bidOrderbook || [])] as SerumBidOrAsk[]
+  // const asks = [...(askOrderbook || [])] as SerumBidOrAsk[]
+  // const openOrderAccounts = openOrders[serumMarketAddress]?.orders || []
+  // const bidPrices = {}
+  // const askPrices = {}
 
-  // Some manual bugfixing:
-  // If this wallet has multiple open orders of same price
-  // We need to subtract the size of all orders beyond the first order from the first one
-  // Seems to be a bug in the serum code that returns orderbooks
-  // The first order of a given price for a wallet returns the total size the wallet has placed at that price, rather than the single order size
+  // // Some manual bugfixing:
+  // // If this wallet has multiple open orders of same price
+  // // We need to subtract the size of all orders beyond the first order from the first one
+  // // Seems to be a bug in the serum code that returns orderbooks
+  // // The first order of a given price for a wallet returns the total size the wallet has placed at that price, rather than the single order size
 
-  asks.forEach((order) => {
-    if (
-      openOrderAccounts.some((a) => order.openOrdersAddress.equals(a.address))
-    ) {
-      const askPricesArr = askPrices[`${order.price}`]
-      if (askPricesArr?.length > 0) {
-        askPricesArr[0].size -= order.size
-        askPricesArr.push(order)
-      } else {
-        askPrices[`${order.price}`] = [order]
-      }
-    }
-  })
+  // asks.forEach((order) => {
+  //   if (
+  //     openOrderAccounts.some((a) => order.openOrdersAddress.equals(a.address))
+  //   ) {
+  //     const askPricesArr = askPrices[`${order.price}`]
+  //     if (askPricesArr?.length > 0) {
+  //       askPricesArr[0].size -= order.size
+  //       askPricesArr.push(order)
+  //     } else {
+  //       askPrices[`${order.price}`] = [order]
+  //     }
+  //   }
+  // })
 
-  // We can modify the bid order sizes in-place if we reverse them first
-  // The order with "incorrect size" will be at the end for bids, when reversed it will be at the beginning
-  bids.reverse()
-  bids.forEach((order) => {
-    if (
-      openOrderAccounts.some((a) => order.openOrdersAddress.equals(a.address))
-    ) {
-      const bidPricesArr = bidPrices[`${order.price}`]
-      if (bidPricesArr?.length > 0) {
-        bidPricesArr[0].size -= order.size
-        bidPricesArr.push(order)
-      } else {
-        bidPrices[`${order.price}`] = [order]
-      }
-    }
-  })
+  // // We can modify the bid order sizes in-place if we reverse them first
+  // // The order with "incorrect size" will be at the end for bids, when reversed it will be at the beginning
+  // bids.reverse()
+  // bids.forEach((order) => {
+  //   if (
+  //     openOrderAccounts.some((a) => order.openOrdersAddress.equals(a.address))
+  //   ) {
+  //     const bidPricesArr = bidPrices[`${order.price}`]
+  //     if (bidPricesArr?.length > 0) {
+  //       bidPricesArr[0].size -= order.size
+  //       bidPricesArr.push(order)
+  //     } else {
+  //       bidPrices[`${order.price}`] = [order]
+  //     }
+  //   }
+  // })
 
-  const actualOpenOrders = [
-    ...Object.values(bidPrices),
-    ...Object.values(askPrices),
-  ].flat() as SerumBidOrAsk[]
+  // const actualOpenOrders = [
+  //   ...Object.values(bidPrices),
+  //   ...Object.values(askPrices),
+  // ].flat() as SerumBidOrAsk[]
 
   return (
-    <>
-      {actualOpenOrders &&
-        actualOpenOrders.map((order) => {
-          return (
-            <TableRow hover key={`${JSON.stringify(order)}`}>
-              <TCell
-                style={{
-                  color:
-                    order?.side === 'buy'
-                      ? theme.palette.success.main
-                      : theme.palette.error.main,
-                }}
-              >
-                {order?.side}
-              </TCell>
-              <TCell>{type}</TCell>
-              <TCell>{`${qAssetSymbol}/${uAssetSymbol}`}</TCell>
-              <TCell>
-                {`${moment.utc(expiration * 1000).format('LL')} 23:59:59 UTC`}
-              </TCell>
-              <TCell>{strikePrice}</TCell>
-              <TCell>{`${contractSize} ${uAssetSymbol}`}</TCell>
-              <TCell>Options Count</TCell>
-              <TCell
-                style={{
-                  color:
-                    order?.side === 'buy'
-                      ? theme.palette.success.main
-                      : theme.palette.error.main,
-                }}
-              >
-                Unsettled Assets
-              </TCell>
-              <TCell align="right">
-                <Button
-                  variant="outlined"
-                  color="primary"
-                  onClick={_settleFunds}
-                >
-                  Settle
-                </Button>
-              </TCell>
-            </TableRow>
-          )
-        })}
-    </>
+    <UnsettledRow
+      type={type}
+      expiration={expiration}
+      uAssetSymbol={uAssetSymbol}
+      qAssetSymbol={qAssetSymbol}
+      strikePrice={strikePrice}
+      contractSize={contractSize}
+      unsettledFunds={unsettledFunds}
+      settleFunds={settleFunds}
+      qAssetDecimals={qAssetDecimals}
+    />
   )
 }
 

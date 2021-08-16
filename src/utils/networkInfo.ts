@@ -10,6 +10,7 @@ export type Network = {
   name: ClusterName
   url: string
   programId: string
+  wsEndpoint?: string
 }
 
 // Note these network values are used for determining the asset list.
@@ -17,13 +18,14 @@ export type Network = {
 const networks: Network[] = [
   {
     name: ClusterName.mainnet,
-    url: clusterApiUrl('mainnet-beta'),
+    url: 'https://psyihvlpdrvouxwqbu.main.genesysgo.net:8899',
+    wsEndpoint: 'wss://psyihvlpdrvouxwqbu.main.genesysgo.net:8900',
     programId: process.env.MAINNET_PROGRAM_ID,
   },
   {
     name: ClusterName.devnet,
-    url: clusterApiUrl('devnet'),
-    // url: 'https://devnet.psyoptions.io',
+    url: 'https://psytrbhymqlkfrhudd.dev.genesysgo.net:8899',
+    wsEndpoint: 'wss://psytrbhymqlkfrhudd.dev.genesysgo.net:8900',
     programId: process.env.DEVNET_PROGRAM_ID,
   },
   {

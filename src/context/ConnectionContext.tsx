@@ -30,7 +30,10 @@ const ConnectionProvider: React.FC = ({ children }) => {
   const [endpoint, setEndpoint] = useState(DEFAULT_NETWORK)
 
   const [connection, setConnection] = useState(
-    new Connection(endpoint.url, 'confirmed'),
+    new Connection(endpoint.url, {
+      commitment: 'confirmed',
+      wsEndpoint: endpoint.wsEndpoint,
+    }),
   )
 
   const handleSetEndpoint = (newEndpoint) => {

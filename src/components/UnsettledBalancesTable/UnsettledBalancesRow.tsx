@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useCallback, useState } from 'react'
 import TableRow from '@material-ui/core/TableRow'
 import Button from '@material-ui/core/Button'
 import moment from 'moment'
@@ -7,7 +7,11 @@ import { PublicKey } from '@solana/web3.js'
 import useSerum from '../../hooks/useSerum'
 import { useSerumOpenOrders } from '../../context/SerumOpenOrdersContext'
 import { useSerumOrderbooks } from '../../context/SerumOrderbookContext'
-import { useSubscribeOpenOrders, useCancelOrder } from '../../hooks/Serum'
+import {
+  useSubscribeOpenOrders,
+  useCancelOrder,
+  useSettleFunds,
+} from '../../hooks/Serum'
 
 import theme from '../../utils/theme'
 
@@ -36,6 +40,13 @@ const UnsettledBalancesRow: React.FC<CallOrPut> = ({
   const [openOrders] = useSerumOpenOrders()
   const serumMarketAddress = serumMarketKey.toString()
   const { serumMarket } = serumMarkets[serumMarketAddress] || {}
+  const { settleFunds } = useSettleFunds(serumMarketAddress)
+  const [loading, setLoading] = useState(false)
+  const _settleFunds = useCallback(async () => {
+    setLoading(true)
+    await settleFunds()
+    setLoading(false)
+  }, [settleFunds])
 
   const handleCancelOrder = useCancelOrder(serumMarketAddress)
 
@@ -137,8 +148,7 @@ const UnsettledBalancesRow: React.FC<CallOrPut> = ({
                 <Button
                   variant="outlined"
                   color="primary"
-                  // update to settle funds function
-                  onClick={() => handleCancelOrder(order)}
+                  onClick={_settleFunds}
                 >
                   Settle
                 </Button>

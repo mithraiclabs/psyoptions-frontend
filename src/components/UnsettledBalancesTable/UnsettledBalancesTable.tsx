@@ -24,59 +24,63 @@ import { CallOrPut } from '../../types'
 const OpenOrders: React.FC<{
   optionMarkets: CallOrPut[]
 }> = ({ optionMarkets }) => {
-  const { connection, dexProgramId } = useConnection()
-  const { wallet, pubKey, connected } = useWallet()
-  const { serumMarkets } = useSerum()
+  // const { connection, dexProgramId } = useConnection()
+  const { 
+    // wallet, 
+    // pubKey, 
+    connected } = useWallet()
+  // const { serumMarkets } = useSerum()
   const [openOrders, setOpenOrders] = useSerumOpenOrders()
-  const [openOrdersLoaded, setOpenOrdersLoaded] = useState(false)
+  // const [openOrdersLoaded, setOpenOrdersLoaded] = useState(false)
 
   /**
    * Load open orders for each serum market if we haven't already done so
    */
-  useEffect(() => {
-    if (
-      connection &&
-      serumMarkets &&
-      pubKey &&
-      openOrders &&
-      !openOrdersLoaded
-    ) {
-      const serumKeys = Object.keys(serumMarkets)
-      ;(async () => {
-        const openOrdersRes = await SerumOpenOrdersClass.findForOwner(
-          connection,
-          pubKey,
-          dexProgramId,
-        )
-        const newOpenOrders: SerumOpenOrders = {}
-        serumKeys.forEach((serumMarketAddress) => {
-          const orders = openOrdersRes.filter(
-            (openOrder) => openOrder.market.toString() === serumMarketAddress,
-          )
-          newOpenOrders[serumMarketAddress] = {
-            loading: false,
-            error: null,
-            orders,
-          }
-        })
-        setOpenOrders((prevOpenOrders) => ({
-          ...prevOpenOrders,
-          ...newOpenOrders,
-        }))
-        setOpenOrdersLoaded(true)
-      })()
-    }
-  }, [
-    connection,
-    dexProgramId,
-    serumMarkets,
-    wallet,
-    pubKey,
-    openOrders,
-    setOpenOrders,
-    openOrdersLoaded,
-  ])
-
+  // useEffect(() => {
+  //   if (
+  //     connection &&
+  //     serumMarkets &&
+  //     pubKey &&
+  //     openOrders &&
+  //     !openOrdersLoaded
+  //   ) {
+  //     const serumKeys = Object.keys(serumMarkets)
+  //     ;(async () => {
+  //       const openOrdersRes = await SerumOpenOrdersClass.findForOwner(
+  //         connection,
+  //         pubKey,
+  //         dexProgramId,
+  //       )
+  //       const newOpenOrders: SerumOpenOrders = {}
+  //       serumKeys.forEach((serumMarketAddress) => {
+  //         const orders = openOrdersRes.filter(
+  //           (openOrder) => openOrder.market.toString() === serumMarketAddress,
+  //         )
+  //         newOpenOrders[serumMarketAddress] = {
+  //           loading: false,
+  //           error: null,
+  //           orders,
+  //         }
+  //       })
+  //       setOpenOrders((prevOpenOrders) => ({
+  //         ...prevOpenOrders,
+  //         ...newOpenOrders,
+  //       }))
+  //       setOpenOrdersLoaded(true)
+  //     })()
+  //   }
+  // }, [
+  //   connection,
+  //   dexProgramId,
+  //   serumMarkets,
+  //   wallet,
+  //   pubKey,
+  //   openOrders,
+  //   setOpenOrders,
+  //   openOrdersLoaded,
+  // ])
+  
+  // filters out non-initialized serum markets
   const openOrdersArray = optionMarkets
     .map((optionMarket) => {
       if (optionMarket?.serumMarketKey) {
@@ -85,7 +89,8 @@ const OpenOrders: React.FC<{
       return undefined
     })
     .filter((item) => !!item)
-
+console.log('serumOpenOrders', openOrders)
+console.log('openOrdersArray', openOrdersArray)
   return (
     <Box mt={'20px'}>
       <TableContainer>
@@ -125,7 +130,7 @@ const OpenOrders: React.FC<{
               openOrdersArray.map((optionMarket) => (
                 <UnsettledBalancesRow
                   {...optionMarket}
-                  key={optionMarket.serumMarketKey.toString()}
+                  key={`${optionMarket.serumMarketKey.toString()}-unsettled`}
                 />
               ))
             )}

@@ -306,7 +306,7 @@ const Markets = () => {
     currentPageStart !== currentPageEnd
       ? `${currentPageStart}-${currentPageEnd} of ${filteredChain.length}`
       : `${currentPageStart} of ${filteredChain.length}`
-console.log('callPutData', callPutData)
+
 console.log('serummarketkey', callPutData.serumMarketKey?.toString())
   return (
     <MarketDataProvider chain={chains}>

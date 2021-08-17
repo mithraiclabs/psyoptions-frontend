@@ -127,6 +127,7 @@ const useOptionsMarkets = () => {
             quoteAssetMintKey,
             serumMarketKey: serumMarket.address,
             psyOptionsProgramId: endpoint.programId,
+            serumProgramId: dexProgramId.toString(),
           }
 
           const key = `${newMarket.expiration}-${newMarket.uAssetSymbol}-${
@@ -206,6 +207,7 @@ const useOptionsMarkets = () => {
           quoteAssetMintKey: new PublicKey(market.quoteAssetMint),
           serumMarketKey: new PublicKey(market.serumMarketAddress),
           psyOptionsProgramId: market.psyOptionsProgramId,
+          serumProgramId: market.serumProgramId,
         }
 
         const key = `${newMarket.expiration}-${newMarket.uAssetSymbol}-${

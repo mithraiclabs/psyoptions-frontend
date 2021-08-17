@@ -16,7 +16,6 @@ import UnsettledBalancesRow from './UnsettledBalancesRow'
 import { TCell, THeadCell } from './UnsettledBalancesStyles'
 import { CallOrPut } from '../../types'
 
-// Render all open orders for all optionMarkets specified in props
 const UnsettledBalancesTable: React.FC<{
   optionMarkets: CallOrPut[]
   uAssetDecimals: number

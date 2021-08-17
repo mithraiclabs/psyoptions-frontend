@@ -70,7 +70,7 @@ const UnsettledRow = ({
           onClick={() => handleSettleFunds()}
           loading={loading}
         >
-          {loading ? 'Settling funds' : 'Settle Funds'}
+          {loading ? 'Settling Funds' : 'Settle Funds'}
         </TxButton>
       </TCell>
     </TableRow>

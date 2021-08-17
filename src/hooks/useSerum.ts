@@ -72,6 +72,7 @@ const useSerum = () => {
       serumMarketKey: PublicKey | undefined,
       baseMintKey: PublicKey,
       quoteMintKey: PublicKey,
+      serumProgramKey?: PublicKey,
     ) => {
       // Set individual loading states for each market
       setSerumMarkets((markets) => ({
@@ -87,14 +88,14 @@ const useSerum = () => {
             connection,
             serumMarketKey,
             {},
-            dexProgramId,
+            serumProgramKey || dexProgramId,
           )
         } else {
           serumMarket = await findMarketByAssets(
             connection,
             baseMintKey,
             quoteMintKey,
-            dexProgramId,
+            serumProgramKey || dexProgramId,
           )
         }
       } catch (err) {

@@ -137,3 +137,8 @@ export type LocalSerumMarket = {
   error?: Error | string
   serumMarket?: Market
 }
+
+export type SerumMarketAndProgramId = {
+  serumMarketKey: PublicKey
+  serumProgramId: string
+}

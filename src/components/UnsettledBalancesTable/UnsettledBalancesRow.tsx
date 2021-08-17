@@ -14,6 +14,10 @@ import { TCell } from './UnsettledBalancesStyles'
 import { UnsettledRow } from '../../types'
 import TxButton from '../TxButton'
 
+const Empty = ({ children }) => (
+  <span style={{ opacity: '0.3' }}>{children}</span>
+)
+
 const UnsettledRow = ({
   serumMarketKey,
   type,
@@ -35,6 +39,17 @@ const UnsettledRow = ({
   }, [settleFunds])
 
   const tokensUnsettled = new BigNumber(unsettledFunds.quoteFree.toString())
+
+  const unsettledAssets = () => {
+    if (tokensUnsettled.dividedBy(10 ** qAssetDecimals).toString() === '0') {
+      return <Empty>{'-'}</Empty>
+    }
+    return (
+      `${tokensUnsettled.dividedBy(10 ** qAssetDecimals).toString()}
+      ${' '}${type === 'put'? uAssetSymbol : qAssetSymbol}`
+    )
+  }
+
   return (
     <TableRow hover key={`tr-unsettled-${serumMarketKey}`}>
       <TCell>{type}</TCell>
@@ -46,8 +61,7 @@ const UnsettledRow = ({
       <TCell>{`${contractSize} ${uAssetSymbol}`}</TCell>
       <TCell>{unsettledFunds.baseFree.toString()}</TCell>
       <TCell>
-        {tokensUnsettled.dividedBy(10 ** qAssetDecimals).toString()}
-        {' '}{type === 'put'? uAssetSymbol : qAssetSymbol}
+        {unsettledAssets()}
       </TCell>
       <TCell align="right">
         <TxButton

@@ -1,32 +1,21 @@
-import React, { useState } from 'react'
+import React, { useState, useCallback } from 'react'
 import TableRow from '@material-ui/core/TableRow'
 import moment from 'moment'
-import { PublicKey } from '@solana/web3.js'
 import BigNumber from 'bignumber.js'
 
 import useSerum from '../../hooks/useSerum'
-import { useSerumOpenOrders } from '../../context/SerumOpenOrdersContext'
-import { useSerumOrderbooks } from '../../context/SerumOrderbookContext'
 import {
   useSubscribeOpenOrders,
   useSettleFunds,
   useUnsettledFundsForMarket,
 } from '../../hooks/Serum'
 
-import theme from '../../utils/theme'
-
 import { TCell } from './UnsettledBalancesStyles'
 import { UnsettledRow } from '../../types'
 import TxButton from '../TxButton'
 
-type SerumBidOrAsk = {
-  side: string
-  price: number
-  size: number
-  openOrdersAddress: PublicKey
-}
-
 const UnsettledRow = ({
+  serumMarketKey,
   type,
   expiration,
   uAssetSymbol,
@@ -39,15 +28,15 @@ const UnsettledRow = ({
 }) => {
   const [loading, setLoading] = useState(false)
 
-  const handleSettleFunds = async () => {
+  const handleSettleFunds = useCallback(async () => {
     setLoading(true)
     await settleFunds()
     setLoading(false)
-  }
+  }, [settleFunds])
 
   const tokensUnsettled = new BigNumber(unsettledFunds.quoteFree.toString())
   return (
-    <TableRow hover key={`someunsettledKey`}>
+    <TableRow hover key={`tr-unsettled-${serumMarketKey}`}>
       <TCell>{type}</TCell>
       <TCell>{`${qAssetSymbol}/${uAssetSymbol}`}</TCell>
       <TCell>
@@ -74,7 +63,7 @@ const UnsettledRow = ({
   )
 }
 
-// Render all open orders for a given market as table rows
+// Render all unsettled balances for a given market as table rows
 const UnsettledBalancesRow: React.FC<UnsettledRow> = ({
   expiration,
   size: contractSize,
@@ -84,18 +73,15 @@ const UnsettledBalancesRow: React.FC<UnsettledRow> = ({
   serumMarketKey,
   strikePrice,
   qAssetDecimals,
-  uAssetDecimals,
 }) => {
   const { serumMarkets } = useSerum()
-  const [orderbooks] = useSerumOrderbooks()
-  const [openOrders] = useSerumOpenOrders()
   const serumMarketAddress = serumMarketKey.toString()
   const { serumMarket } = serumMarkets[serumMarketAddress] || {}
   const { settleFunds } = useSettleFunds(serumMarketAddress)
   const unsettledFunds = useUnsettledFundsForMarket(serumMarketAddress)
 
   useSubscribeOpenOrders(serumMarketAddress)
-console.log('unsettledfunds row', unsettledFunds.baseFree.toNumber(), unsettledFunds.quoteFree.toNumber(), qAssetDecimals, uAssetDecimals, serumMarketAddress)
+
   if (
     !serumMarket ||
     unsettledFunds.baseFree.toNumber() <= 0 &&
@@ -104,58 +90,9 @@ console.log('unsettledfunds row', unsettledFunds.baseFree.toNumber(), unsettledF
     return null
   }
 
-  // const { bidOrderbook, askOrderbook } = orderbooks[serumMarketAddress]
-
-  // const bids = [...(bidOrderbook || [])] as SerumBidOrAsk[]
-  // const asks = [...(askOrderbook || [])] as SerumBidOrAsk[]
-  // const openOrderAccounts = openOrders[serumMarketAddress]?.orders || []
-  // const bidPrices = {}
-  // const askPrices = {}
-
-  // // Some manual bugfixing:
-  // // If this wallet has multiple open orders of same price
-  // // We need to subtract the size of all orders beyond the first order from the first one
-  // // Seems to be a bug in the serum code that returns orderbooks
-  // // The first order of a given price for a wallet returns the total size the wallet has placed at that price, rather than the single order size
-
-  // asks.forEach((order) => {
-  //   if (
-  //     openOrderAccounts.some((a) => order.openOrdersAddress.equals(a.address))
-  //   ) {
-  //     const askPricesArr = askPrices[`${order.price}`]
-  //     if (askPricesArr?.length > 0) {
-  //       askPricesArr[0].size -= order.size
-  //       askPricesArr.push(order)
-  //     } else {
-  //       askPrices[`${order.price}`] = [order]
-  //     }
-  //   }
-  // })
-
-  // // We can modify the bid order sizes in-place if we reverse them first
-  // // The order with "incorrect size" will be at the end for bids, when reversed it will be at the beginning
-  // bids.reverse()
-  // bids.forEach((order) => {
-  //   if (
-  //     openOrderAccounts.some((a) => order.openOrdersAddress.equals(a.address))
-  //   ) {
-  //     const bidPricesArr = bidPrices[`${order.price}`]
-  //     if (bidPricesArr?.length > 0) {
-  //       bidPricesArr[0].size -= order.size
-  //       bidPricesArr.push(order)
-  //     } else {
-  //       bidPrices[`${order.price}`] = [order]
-  //     }
-  //   }
-  // })
-
-  // const actualOpenOrders = [
-  //   ...Object.values(bidPrices),
-  //   ...Object.values(askPrices),
-  // ].flat() as SerumBidOrAsk[]
-
   return (
     <UnsettledRow
+      serumMarketKey={serumMarketKey}
       type={type}
       expiration={expiration}
       uAssetSymbol={uAssetSymbol}

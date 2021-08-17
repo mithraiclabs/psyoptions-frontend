@@ -47,7 +47,7 @@ export const batchSerumMarkets = async (
     orderbookKeys.push(d.bids)
     orderbookKeys.push(d.asks)
   })
-  
+
   const [mintInfos, orderBookInfos] = await Promise.all([
     connection.getMultipleAccountsInfo(mintKeys),
     connection.getMultipleAccountsInfo(orderbookKeys),
@@ -83,7 +83,7 @@ export const batchSerumMarkets = async (
       },
     }
   })
-console.log('serumMarketsInfo', serumMarketsInfo)
+
   return { serumMarketsInfo, orderbookKeys }
 }
 

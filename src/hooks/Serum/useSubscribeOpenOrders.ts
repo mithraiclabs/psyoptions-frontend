@@ -3,6 +3,7 @@ import { PublicKey } from '@solana/web3.js'
 import { useCallback, useEffect, useRef } from 'react'
 import { useSerumOpenOrders } from '../../context/SerumOpenOrdersContext'
 import useConnection from '../useConnection'
+import { hasUnsettled } from '../../utils/hasUnsettled'
 
 /**
  * Handle subscriptions to serum OpenOrders for given market key
@@ -34,12 +35,14 @@ export const useSubscribeOpenOrders = (key: string): void => {
               [index]: _openOrder,
             })
 
+            const containsUnsettled = hasUnsettled(updatedOpenOrders)
             return {
               ...prevSerumOpenOrders,
               [key]: {
                 loading: false,
                 error: null,
                 orders: updatedOpenOrders,
+                hasUnsettled: containsUnsettled,
               },
             }
           })
@@ -101,12 +104,14 @@ export const useCreateAdHocOpenOrdersSubscription = (
             [index]: _openOrder,
           })
 
+          const containsUnsettled = hasUnsettled(updatedOpenOrders)
           return {
             ...prevSerumOpenOrders,
             [key]: {
               loading: false,
               error: null,
               orders: updatedOpenOrders,
+              hasUnsettled: containsUnsettled,
             },
           }
         })

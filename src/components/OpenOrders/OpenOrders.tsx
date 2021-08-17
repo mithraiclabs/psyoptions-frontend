@@ -14,6 +14,7 @@ import {
   SerumOpenOrders,
   useSerumOpenOrders,
 } from '../../context/SerumOpenOrdersContext'
+import { hasUnsettled } from '../../utils/hasUnsettled'
 
 import ConnectButton from '../ConnectButton'
 import OpenOrdersForMarket from './OpenOrdersForMarket'
@@ -53,10 +54,13 @@ const OpenOrders: React.FC<{
           const orders = openOrdersRes.filter(
             (openOrder) => openOrder.market.toString() === serumMarketAddress,
           )
+          
+          const containsUnsettled = hasUnsettled(orders)
           newOpenOrders[serumMarketAddress] = {
             loading: false,
             error: null,
             orders,
+            hasUnsettled: containsUnsettled,
           }
         })
         setOpenOrders((prevOpenOrders) => ({

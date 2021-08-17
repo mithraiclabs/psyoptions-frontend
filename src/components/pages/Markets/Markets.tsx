@@ -307,7 +307,6 @@ const Markets = () => {
       ? `${currentPageStart}-${currentPageEnd} of ${filteredChain.length}`
       : `${currentPageStart} of ${filteredChain.length}`
 
-console.log('serummarketkey', callPutData.serumMarketKey?.toString())
   return (
     <MarketDataProvider chain={chains}>
       <Page>
@@ -382,7 +381,6 @@ console.log('serummarketkey', callPutData.serumMarketKey?.toString())
               <Box px={[0, 0, 2]} py={[2, 2, 0]}>
                 <Balances />
               </Box>
-              {/* unsettledBalances && */}
               <Box py={[2, 2, 0]}>
                 <MarketsUnsettledBalances />
               </Box>

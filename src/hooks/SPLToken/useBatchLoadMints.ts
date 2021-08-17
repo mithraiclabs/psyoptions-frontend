@@ -20,7 +20,6 @@ export const useBatchLoadMints = (mints: PublicKey[]) => {
     ;(async () => {
       try {
         const infos = await connection.getMultipleAccountsInfo(mints)
-        console.log('mints batch', infos)
         const mintInfos: Record<string, MintInfo> = {}
         infos.forEach((info, index) => {
           const mintInfo = MintLayout.decode(info.data)

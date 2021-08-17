@@ -1,24 +1,20 @@
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import Box from '@material-ui/core/Box'
 import Table from '@material-ui/core/Table'
 import TableHead from '@material-ui/core/TableHead'
 import TableRow from '@material-ui/core/TableRow'
 import TableBody from '@material-ui/core/TableBody'
 import TableContainer from '@material-ui/core/TableContainer'
-import { OpenOrders as SerumOpenOrdersClass } from '@mithraic-labs/serum'
 
-import useSerum from '../../hooks/useSerum'
 import useWallet from '../../hooks/useWallet'
-import useConnection from '../../hooks/useConnection'
 import {
-  SerumOpenOrders,
   useSerumOpenOrders,
 } from '../../context/SerumOpenOrdersContext'
 
 import ConnectButton from '../ConnectButton'
 import UnsettledBalancesRow from './UnsettledBalancesRow'
 import { TCell, THeadCell } from './UnsettledBalancesStyles'
-import { CallOrPut, Asset } from '../../types'
+import { CallOrPut } from '../../types'
 
 // Render all open orders for all optionMarkets specified in props
 const UnsettledBalancesTable: React.FC<{
@@ -30,61 +26,17 @@ const UnsettledBalancesTable: React.FC<{
   uAssetDecimals,
   qAssetDecimals,
  }) => {
-  // const { connection, dexProgramId } = useConnection()
-  const { 
-    // wallet, 
-    // pubKey, 
-    connected } = useWallet()
-  // const { serumMarkets } = useSerum()
-  const [openOrders, setOpenOrders] = useSerumOpenOrders()
-  // const [openOrdersLoaded, setOpenOrdersLoaded] = useState(false)
+  const { connected } = useWallet()
+  const [serumOpenOrders] = useSerumOpenOrders()
 
-  /**
-   * Load open orders for each serum market if we haven't already done so
-   */
-  // useEffect(() => {
-  //   if (
-  //     connection &&
-  //     serumMarkets &&
-  //     pubKey &&
-  //     openOrders &&
-  //     !openOrdersLoaded
-  //   ) {
-  //     const serumKeys = Object.keys(serumMarkets)
-  //     ;(async () => {
-  //       const openOrdersRes = await SerumOpenOrdersClass.findForOwner(
-  //         connection,
-  //         pubKey,
-  //         dexProgramId,
-  //       )
-  //       const newOpenOrders: SerumOpenOrders = {}
-  //       serumKeys.forEach((serumMarketAddress) => {
-  //         const orders = openOrdersRes.filter(
-  //           (openOrder) => openOrder.market.toString() === serumMarketAddress,
-  //         )
-  //         newOpenOrders[serumMarketAddress] = {
-  //           loading: false,
-  //           error: null,
-  //           orders,
-  //         }
-  //       })
-  //       setOpenOrders((prevOpenOrders) => ({
-  //         ...prevOpenOrders,
-  //         ...newOpenOrders,
-  //       }))
-  //       setOpenOrdersLoaded(true)
-  //     })()
-  //   }
-  // }, [
-  //   connection,
-  //   dexProgramId,
-  //   serumMarkets,
-  //   wallet,
-  //   pubKey,
-  //   openOrders,
-  //   setOpenOrders,
-  //   openOrdersLoaded,
-  // ])
+  const hasUnsettled = Object.values(serumOpenOrders).map(serumMarketAddress => {
+    return !!serumMarketAddress?.hasUnsettled
+  }).includes(true)
+  
+  // Don't show if not connected or has no unsettled
+  if (!connected || !hasUnsettled) {
+    return null
+  }
   
   // filters out non-initialized serum markets
   const existingMarketsArray = optionMarkets
@@ -95,8 +47,7 @@ const UnsettledBalancesTable: React.FC<{
       return undefined
     })
     .filter((item) => !!item)
-  // if !connected or no unsettled: dont render 
-
+    
   return (
     <Box mt={'20px'}>
       <TableContainer>

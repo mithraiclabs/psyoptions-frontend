@@ -1,10 +1,10 @@
-import { Market, OpenOrders } from '@mithraic-labs/serum'
+import { OpenOrders } from '@mithraic-labs/serum'
 import { useEffect } from 'react'
 import { useSerumOpenOrders } from '../../context/SerumOpenOrdersContext'
 import useConnection from '../useConnection'
 import useSerum from '../useSerum'
 import useWallet from '../useWallet'
-
+import { hasUnsettled } from '../../utils/hasUnsettled'
 /**
  * Fetch and return wallet's open orders for a given serum market
  */
@@ -25,12 +25,14 @@ export const useSerumOpenOrderAccounts = (
           connection,
           pubKey,
         )
+        const containsUnsettled = hasUnsettled(openOrders)
         setSerumOpenOrders((prevSerumOpenOrders) => ({
           ...prevSerumOpenOrders,
           [serumMarketAddress]: {
             error: null,
             loading: false,
             orders: openOrders,
+            hasUnsettled: containsUnsettled,
           },
         }))
       })()

@@ -5,6 +5,7 @@ type OpenOrdersData = {
   loading: boolean
   error: string | null
   orders: OpenOrders[]
+  hasUnsettled: boolean
 }
 
 export type SerumOpenOrders = Record<string, OpenOrdersData>

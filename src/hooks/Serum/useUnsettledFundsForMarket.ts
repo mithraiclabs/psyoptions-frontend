@@ -13,7 +13,7 @@ export const useUnsettledFundsForMarket = (
 ): { baseFree: BN; quoteFree: BN } => {
   const openOrders = useSerumOpenOrderAccounts(key)
   const initOpenOrders = openOrders?.[0]
-console.log('openUnsettledOrders', openOrders)
+
   return {
     baseFree: initOpenOrders?.baseTokenFree ?? BN_ZERO,
     quoteFree: initOpenOrders?.quoteTokenFree ?? BN_ZERO,

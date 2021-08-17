@@ -136,6 +136,7 @@ export type LocalSerumMarket = {
   loading?: boolean
   error?: Error | string
   serumMarket?: Market
+  serumProgramId?: string
 }
 
 export type SerumMarketAndProgramId = {

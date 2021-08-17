@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { PublicKey } from '@solana/web3.js'
 import Box from '@material-ui/core/Box'
 import Table from '@material-ui/core/Table'
 import TableHead from '@material-ui/core/TableHead'
@@ -25,7 +26,7 @@ import { CallOrPut } from '../../types'
 const OpenOrders: React.FC<{
   optionMarkets: CallOrPut[]
 }> = ({ optionMarkets }) => {
-  const { connection, dexProgramId } = useConnection()
+  const { connection } = useConnection()
   const { wallet, pubKey, connected } = useWallet()
   const { serumMarkets } = useSerum()
   const [openOrders, setOpenOrders] = useSerumOpenOrders()
@@ -42,27 +43,38 @@ const OpenOrders: React.FC<{
       openOrders &&
       !openOrdersLoaded
     ) {
-      const serumKeys = Object.keys(serumMarkets)
+      const serumProgramIds = Array.from(
+        new Set(
+          Object.values(serumMarkets).map((market) => market.serumProgramId),
+        ),
+      )
+
       ;(async () => {
-        const openOrdersRes = await SerumOpenOrdersClass.findForOwner(
-          connection,
-          pubKey,
-          dexProgramId,
-        )
         const newOpenOrders: SerumOpenOrders = {}
-        serumKeys.forEach((serumMarketAddress) => {
-          const orders = openOrdersRes.filter(
-            (openOrder) => openOrder.market.toString() === serumMarketAddress,
-          )
-          
-          const containsUnsettled = hasUnsettled(orders)
-          newOpenOrders[serumMarketAddress] = {
-            loading: false,
-            error: null,
-            orders,
-            hasUnsettled: containsUnsettled,
-          }
-        })
+        await Promise.all(
+          serumProgramIds.map(async (programId) => {
+            const openOrdersRes = await SerumOpenOrdersClass.findForOwner(
+              connection,
+              pubKey,
+              new PublicKey(programId),
+            )
+            Object.keys(serumMarkets)
+              .filter((key) => serumMarkets[key].serumProgramId === programId)
+              .forEach((serumMarketAddress) => {
+                const orders = openOrdersRes.filter(
+                  (openOrder) =>
+                    openOrder.market.toString() === serumMarketAddress,
+                )
+                const containsUnsettled = hasUnsettled(orders)
+                newOpenOrders[serumMarketAddress] = {
+                  loading: false,
+                  error: null,
+                  orders,
+                  hasUnsettled: containsUnsettled,
+                }
+              })
+          }),
+        )
         setOpenOrders((prevOpenOrders) => ({
           ...prevOpenOrders,
           ...newOpenOrders,
@@ -72,7 +84,6 @@ const OpenOrders: React.FC<{
     }
   }, [
     connection,
-    dexProgramId,
     serumMarkets,
     wallet,
     pubKey,

@@ -38,6 +38,8 @@ Resources:
     Type: AWS::CertificateManager::Certificate
     Properties: 
       DomainName: !Ref CertificateDomain
+      SubjectAlternativeNames: 
+        - psyoptions.io
       DomainValidationOptions:
         - DomainName: !Ref CertificateDomain
           HostedZoneId: !Ref HostedZoneId

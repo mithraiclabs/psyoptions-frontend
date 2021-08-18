@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import BN from 'bn.js'
+import { Redirect } from 'react-router-dom'
 import { PublicKey, Transaction, LAMPORTS_PER_SOL } from '@solana/web3.js'
 import CircularProgress from '@material-ui/core/CircularProgress'
 import Box from '@material-ui/core/Box'
@@ -40,7 +41,7 @@ const LoadingAirdrop = () => (
 const Faucets = () => {
   const { pushErrorNotification } = useNotifications()
   const { balance: solBalance, connected, wallet, pubKey } = useWallet()
-  const { connection } = useConnection()
+  const { connection, endpoint } = useConnection()
   const { supportedAssets: assets } = useAssetList()
   const { sendTransaction } = useSendTransaction()
   const {
@@ -152,6 +153,10 @@ const Faucets = () => {
     setLoadingPSY(true)
     await createAccountsAndAirdrop(PSY, psyAccount, 1000, 'Claim 1,000 PSY')
     setLoadingPSY(false)
+  }
+
+  if (endpoint?.name !== 'Devnet') {
+    return <Redirect to="/markets" />
   }
 
   return (

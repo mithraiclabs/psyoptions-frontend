@@ -45,7 +45,7 @@ const InitializeMarket = () => {
   if (multiple && parsedBasePrice) {
     strikePrices = getStrikePrices(parsedBasePrice)
   } else if (parsedBasePrice) {
-    strikePrices = getStrikePrices(parsedBasePrice, 1, 0)
+    strikePrices = [new BigNumber(parsedBasePrice)]
   }
 
   const underlyingDecimalFactor = new BigNumber(10).pow(

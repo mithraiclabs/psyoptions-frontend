@@ -146,10 +146,12 @@ Resources:
               Value: true
             - Name: DEVNET_PROGRAM_ID
               Value: GDvqQy3FkDB2wyNwgZGp5YkmRMUmWbhNNWDMYKbLSZ5N
+            - Name: MAINNET_PROGRAM_ID
+              Value: AAcHauRu6eUDePN3hDDAUTbgyRq5xFbRZJCLsUdpBCJb
             - Name: DEVNET_DEX_PROGRAM_ID
               Value: DESVgJVGajEgKGXhb6XmqDHGz3VjdgP7rEVESBgxmroY
             - Name: MAINNET_DEX_PROGRAM_ID
-              Value: EUqojwWA2rd19FZrzeBncJsm38Jm1hEhE3zsmX3bRc2o
+              Value: 9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin
             - Name: SENTRY_ENVIRONMENT
               Value: !Ref Environment
             - Name: DEVNET_FAUCET_USDC
@@ -158,6 +160,8 @@ Resources:
               Value: 97z3NzcDxqRMyE7F73PuHEmAbA72S7eDopjhe7GTymTk
             - Name: DEVNET_FAUCET_PSY
               Value: 7jJJnHWagPPG544FtxSVp8eD52FwCsARcqqup1q3XVio
+            - Name: USDC_SERUM_REFERRER_ADDRESS
+              Value: 6c33US7ErPmLXZog9SyChQUYUrrJY51k4GmzdhrbhNnD
           PortMappings:
             - ContainerPort: !Ref ContainerPort
               HostPort: !Ref ContainerPort

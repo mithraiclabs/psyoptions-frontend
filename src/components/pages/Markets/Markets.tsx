@@ -169,13 +169,6 @@ const Markets = () => {
     }
   }, [initialMarkPrice, markPrice, setInitialMarkPrice])
 
-  const supportedStrikePrices = useMemo(() => {
-    if (initialMarkPrice && showAllStrikes === false) {
-      return getStrikePrices(initialMarkPrice).map((price) => price.toNumber())
-    }
-    return intervals.map((price) => price.toNumber())
-  }, [initialMarkPrice, showAllStrikes])
-
   const fullPageLoading = assetListLoading || marketsLoading
 
   let precision
@@ -190,13 +183,7 @@ const Markets = () => {
     }
   }
 
-  const filteredChain = useMemo(
-    () =>
-      chains.filter((row) => {
-        return supportedStrikePrices.includes(row.strike.toNumber())
-      }),
-    [chains, supportedStrikePrices],
-  )
+  const filteredChain = chains
 
   const numberOfPages = Math.ceil(filteredChain.length / rowsPerPage)
 
@@ -562,7 +549,7 @@ const Markets = () => {
             <Box>
               <OpenOrders optionMarkets={marketsFlat} />
             </Box>
-            <Box id='unsettled-balances-table'>
+            <Box id="unsettled-balances-table">
               <UnsettledBalancesTable
                 uAssetDecimals={uAsset?.decimals}
                 qAssetDecimals={qAsset?.decimals}

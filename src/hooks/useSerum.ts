@@ -14,7 +14,7 @@ import {
   SerumOrderbooks,
   useSerumOrderbooks,
 } from '../context/SerumOrderbookContext'
-import { LocalSerumMarket } from '../types'
+import { LocalSerumMarket, SerumMarketAndProgramId } from '../types'
 
 const useSerum = () => {
   const { pushNotification } = useNotifications()
@@ -23,12 +23,12 @@ const useSerum = () => {
   const [_, setOrderbooks] = useSerumOrderbooks()
 
   const fetchMultipleSerumMarkets = useCallback(
-    async (serumMarketKeys: PublicKey[]) => {
+    async (serumMarketKeys: SerumMarketAndProgramId[]) => {
       try {
         // set that the serum markets are loading
         const loading: Record<string, LocalSerumMarket> = {}
-        serumMarketKeys.forEach((key) => {
-          loading[key.toString()] = { loading: true }
+        serumMarketKeys.forEach(({ serumMarketKey }) => {
+          loading[serumMarketKey.toString()] = { loading: true }
         })
         setSerumMarkets((_markets) => ({ ..._markets, ...loading }))
         // batch load the serum Market data
@@ -36,25 +36,27 @@ const useSerum = () => {
           connection,
           serumMarketKeys,
           {},
-          dexProgramId,
         )
         const newMarkets = {}
         const newOrderbooks: SerumOrderbooks = {}
-        serumMarketsInfo.forEach(({ market, orderbookData }) => {
-          const key = getKeyForMarket(market)
-          newMarkets[key] = {
-            loading: false,
-            serumMarket: market,
-          }
-          newOrderbooks[getKeyForMarket(market)] = orderbookData
-        })
+        serumMarketsInfo.forEach(
+          ({ market, orderbookData, serumProgramId }) => {
+            const key = getKeyForMarket(market)
+            newMarkets[key] = {
+              loading: false,
+              serumMarket: market,
+              serumProgramId,
+            }
+            newOrderbooks[getKeyForMarket(market)] = orderbookData
+          },
+        )
         setSerumMarkets((_markets) => ({ ..._markets, ...newMarkets }))
         setOrderbooks((_orderbooks) => ({ ..._orderbooks, ...newOrderbooks }))
       } catch (error) {
         console.error(error)
       }
     },
-    [connection, dexProgramId, setOrderbooks, setSerumMarkets],
+    [connection, setOrderbooks, setSerumMarkets],
   )
 
   /**
@@ -70,6 +72,7 @@ const useSerum = () => {
       serumMarketKey: PublicKey | undefined,
       baseMintKey: PublicKey,
       quoteMintKey: PublicKey,
+      serumProgramKey?: PublicKey,
     ) => {
       // Set individual loading states for each market
       setSerumMarkets((markets) => ({
@@ -85,14 +88,14 @@ const useSerum = () => {
             connection,
             serumMarketKey,
             {},
-            dexProgramId,
+            serumProgramKey || dexProgramId,
           )
         } else {
           serumMarket = await findMarketByAssets(
             connection,
             baseMintKey,
             quoteMintKey,
-            dexProgramId,
+            serumProgramKey || dexProgramId,
           )
         }
       } catch (err) {

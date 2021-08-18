@@ -14,6 +14,8 @@ import { Buffer } from 'buffer'
 import { MarketOptions, Orderbook } from '@mithraic-labs/serum/lib/market'
 import * as Sentry from '@sentry/react'
 
+import type { SerumMarketAndProgramId } from '../types'
+
 export const getKeyForMarket = (market: Market) => {
   return market.address.toString()
 }
@@ -23,68 +25,103 @@ export const getKeyForMarket = (market: Market) => {
  */
 export const batchSerumMarkets = async (
   connection: Connection,
-  addresses: PublicKey[],
+  serumMarketAndProgramIds: SerumMarketAndProgramId[],
   options: MarketOptions = {},
-  programId: PublicKey,
   depth = 10,
 ) => {
-  // Load all of the MarketState data
-  const marketInfos = await connection.getMultipleAccountsInfo(addresses)
-  if (!marketInfos || !marketInfos.length) {
-    throw new Error('Markets not found')
-  }
-  // decode all of the markets
-  const decoded = marketInfos.map((accountInfo) =>
-    Market.getLayout(programId).decode(accountInfo.data),
-  )
+  const serumPrograms = {}
 
-  // Load all of the SPL Token Mint data and orderbook data for the markets
-  const mintKeys: PublicKey[] = []
-  const orderbookKeys: PublicKey[] = []
-  decoded.forEach((d) => {
-    mintKeys.push(d.baseMint)
-    mintKeys.push(d.quoteMint)
-    orderbookKeys.push(d.bids)
-    orderbookKeys.push(d.asks)
-  })
-
-  const [mintInfos, orderBookInfos] = await Promise.all([
-    connection.getMultipleAccountsInfo(mintKeys),
-    connection.getMultipleAccountsInfo(orderbookKeys),
-  ])
-  const mints = mintInfos?.map((mintInfo) => MintLayout.decode(mintInfo.data))
-
-  // instantiate the many markets
-  const serumMarketsInfo = decoded.map((d, index) => {
-    const { decimals: baseMintDecimals } = mints?.[index * 2]
-    const { decimals: quoteMintDecimals } = mints?.[index * 2 + 1]
-    const bidsAccountInfo = orderBookInfos[index * 2]
-    const asksAccountInfo = orderBookInfos[index * 2 + 1]
-    const market = new Market(
-      d,
-      baseMintDecimals,
-      quoteMintDecimals,
-      options,
-      programId,
-    )
-    const bidOrderbook = Orderbook.decode(market, bidsAccountInfo.data)
-    const askOrderbook = Orderbook.decode(market, asksAccountInfo.data)
-    return {
-      market,
-      orderbookData: {
-        asks: askOrderbook
-          .getL2(depth)
-          .map(([price, size]) => ({ price, size })),
-        bids: bidOrderbook
-          .getL2(depth)
-          .map(([price, size]) => ({ price, size })),
-        bidOrderbook,
-        askOrderbook,
-      },
+  serumMarketAndProgramIds.forEach(({ serumMarketKey, serumProgramId }) => {
+    if (serumPrograms[serumProgramId]?.addresses) {
+      serumPrograms[serumProgramId].addresses.push(serumMarketKey)
+    } else {
+      serumPrograms[serumProgramId] = {
+        addresses: [serumMarketKey],
+      }
     }
   })
 
-  return { serumMarketsInfo, orderbookKeys }
+  // All orderbook keys and serum infos across diff serum programs
+  // For now I am going to return them all combined
+  // but the ideal architecture later might be to return a key/value map of the seurm program id
+  // with the orderobok keys and the info separated by program id
+  const allOrderbookKeys: PublicKey[] = []
+  const allSerumMarketsInfo = []
+
+  // This is not 100% optimal still, because it's now broken down into multiple batches by serum program
+  // However, I doubt there will ever be more than 2-3 serum program ids max
+  // so this should not affect perf too much
+  await Promise.all(
+    Object.keys(serumPrograms).map(async (key) => {
+      const { addresses } = serumPrograms[key]
+      const programId = new PublicKey(key)
+      // Load all of the MarketState data
+      const marketInfos = await connection.getMultipleAccountsInfo(addresses)
+      if (!marketInfos || !marketInfos.length) {
+        throw new Error('Markets not found')
+      }
+      // decode all of the markets
+      const decoded = marketInfos.map((accountInfo) =>
+        Market.getLayout(programId).decode(accountInfo.data),
+      )
+
+      // Load all of the SPL Token Mint data and orderbook data for the markets
+      const mintKeys: PublicKey[] = []
+      const orderbookKeys: PublicKey[] = []
+      decoded.forEach((d) => {
+        mintKeys.push(d.baseMint)
+        mintKeys.push(d.quoteMint)
+        orderbookKeys.push(d.bids)
+        orderbookKeys.push(d.asks)
+      })
+      const [mintInfos, orderBookInfos] = await Promise.all([
+        connection.getMultipleAccountsInfo(mintKeys),
+        connection.getMultipleAccountsInfo(orderbookKeys),
+      ])
+      const mints = mintInfos?.map((mintInfo) =>
+        MintLayout.decode(mintInfo.data),
+      )
+
+      // instantiate the many markets
+      const serumMarketsInfo = decoded.map((d, index) => {
+        const { decimals: baseMintDecimals } = mints?.[index * 2]
+        const { decimals: quoteMintDecimals } = mints?.[index * 2 + 1]
+        const bidsAccountInfo = orderBookInfos[index * 2]
+        const asksAccountInfo = orderBookInfos[index * 2 + 1]
+        const market = new Market(
+          d,
+          baseMintDecimals,
+          quoteMintDecimals,
+          options,
+          programId,
+        )
+        const bidOrderbook = Orderbook.decode(market, bidsAccountInfo.data)
+        const askOrderbook = Orderbook.decode(market, asksAccountInfo.data)
+        return {
+          market,
+          orderbookData: {
+            asks: askOrderbook
+              .getL2(depth)
+              .map(([price, size]) => ({ price, size })),
+            bids: bidOrderbook
+              .getL2(depth)
+              .map(([price, size]) => ({ price, size })),
+            bidOrderbook,
+            askOrderbook,
+          },
+          serumProgramId: key,
+        }
+      })
+
+      allOrderbookKeys.push(...orderbookKeys)
+      allSerumMarketsInfo.push(...serumMarketsInfo)
+    }),
+  )
+
+  return {
+    serumMarketsInfo: allSerumMarketsInfo,
+    orderbookKeys: allOrderbookKeys,
+  }
 }
 
 /**

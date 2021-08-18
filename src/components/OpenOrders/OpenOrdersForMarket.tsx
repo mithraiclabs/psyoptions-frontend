@@ -40,7 +40,7 @@ const OrderRow = ({
   }
 
   return (
-    <TableRow hover key={`${JSON.stringify(order)}`}>
+    <TableRow hover>
       <TCell
         style={{
           color:
@@ -98,11 +98,11 @@ const OpenOrdersForMarket: React.FC<CallOrPut> = ({
   const [orderbooks] = useSerumOrderbooks()
   const [openOrders] = useSerumOpenOrders()
   const serumMarketAddress = serumMarketKey.toString()
-  const { serumMarket } = serumMarkets[serumMarketAddress] || {}
+  const { serumMarket, serumProgramId } = serumMarkets[serumMarketAddress] || {}
 
   const handleCancelOrder = useCancelOrder(serumMarketAddress)
 
-  useSubscribeOpenOrders(serumMarketAddress)
+  useSubscribeOpenOrders(serumMarketAddress, serumProgramId)
 
   if (
     !serumMarket ||
@@ -176,6 +176,7 @@ const OpenOrdersForMarket: React.FC<CallOrPut> = ({
               strikePrice={strikePrice}
               contractSize={contractSize}
               handleCancelOrder={handleCancelOrder}
+              key={JSON.stringify(order)}
             />
           )
         })}

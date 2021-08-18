@@ -44,7 +44,7 @@ import { TCellLoading, THeadCell, TCellStrike, PageButton } from './styles'
 import Balances from './MarketsBalances'
 import MarketsUnsettledBalances from './MarketsUnsettledBalances'
 import { MarketsTableHeader } from './MarketsTableHeader'
-import { CallOrPut, OptionType } from '../../../types'
+import { CallOrPut, OptionType, SerumMarketAndProgramId } from '../../../types'
 import { useBatchLoadMints } from '../../../hooks/SPLToken'
 
 const dblsp = `${'\u00A0'}${'\u00A0'}`
@@ -261,16 +261,22 @@ const Markets = () => {
   useEffect(() => {
     // Load serum markets when the options chain changes
     // Only if they don't already exist for the matching call/put
-    const serumKeys: PublicKey[] = []
+    const serumKeys: SerumMarketAndProgramId[] = []
     rowsToDisplay.forEach(({ call, put }) => {
       if (
         call?.serumMarketKey &&
         !serumMarkets[call.serumMarketKey.toString()]
       ) {
-        serumKeys.push(call.serumMarketKey)
+        serumKeys.push({
+          serumMarketKey: call.serumMarketKey,
+          serumProgramId: call.serumProgramId,
+        })
       }
       if (put?.serumMarketKey && !serumMarkets[put.serumMarketKey.toString()]) {
-        serumKeys.push(put.serumMarketKey)
+        serumKeys.push({
+          serumMarketKey: put.serumMarketKey,
+          serumProgramId: put.serumProgramId,
+        })
       }
     })
     if (serumKeys.length) {

@@ -114,6 +114,10 @@ const BuySellDialog: React.VFC<{
     quoteAmountPerContract,
   })
 
+  const serumProgramKey = optionMarket?.serumProgramId
+    ? new PublicKey(optionMarket.serumProgramId)
+    : null
+
   const optionAccounts = ownedTokenAccounts[`${optionMintKey}`] || []
   const writerAccounts = ownedTokenAccounts[`${writerTokenMintKey}`] || []
   const uAssetAccounts = ownedTokenAccounts[uAssetMint] || []
@@ -195,7 +199,7 @@ const BuySellDialog: React.VFC<{
             : new PublicKey(uAssetMint),
         baseLotSize,
         quoteLotSize,
-        dexProgramId,
+        dexProgramId: serumProgramKey || dexProgramId,
       })
 
       const signed = await wallet.signAllTransactions([tx1, tx2])
@@ -221,6 +225,7 @@ const BuySellDialog: React.VFC<{
         market.publicKey,
         new PublicKey(uAssetMint),
         new PublicKey(qAssetMint),
+        serumProgramKey,
       )
     } catch (error) {
       pushErrorNotification(error)

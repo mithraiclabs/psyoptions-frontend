@@ -31,7 +31,7 @@ export const useInitializeMarkets = (): ((
 ) => Promise<any[]>) => {
   const { pushErrorNotification } = useNotifications()
   const { wallet, pubKey } = useWallet()
-  const { connection, endpoint } = useConnection()
+  const { connection, endpoint, dexProgramId } = useConnection()
   const { setMarkets } = useContext(OptionsMarketsContext)
   const { sendTransaction } = useSendTransaction()
 
@@ -148,6 +148,7 @@ export const useInitializeMarkets = (): ((
               quoteAssetPoolKey,
               quoteAssetMintKey,
               psyOptionsProgramId: programId.toString(),
+              serumProgramId: dexProgramId.toString(),
             }
 
             return marketData
@@ -179,6 +180,7 @@ export const useInitializeMarkets = (): ((
       setMarkets,
       sendTransaction,
       wallet,
+      dexProgramId,
     ],
   )
 }

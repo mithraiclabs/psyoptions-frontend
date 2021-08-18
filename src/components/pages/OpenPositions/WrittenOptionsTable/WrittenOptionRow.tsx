@@ -138,6 +138,12 @@ export const WrittenOptionRow = React.memo(
           : market?.uAssetSymbol),
     )?.icon
 
+    const lockedAmount =
+      initialWriterTokenAccount.amount * parseInt(market.size, 10)
+    const lockedAmountDisplay = `${lockedAmount}`.match(/\./g)
+      ? `≈${lockedAmount.toFixed(2)}`
+      : lockedAmount
+
     useEffect(() => {
       ;(async () => {
         try {
@@ -311,8 +317,7 @@ export const WrittenOptionRow = React.memo(
           {strike}
         </Box>
         <Box p={1} width="10%">
-          {initialWriterTokenAccount.amount * parseInt(market.size, 10)}{' '}
-          {market.uAssetSymbol}
+          {lockedAmountDisplay} {market.uAssetSymbol}
         </Box>
         <Box p={1} width="10%">
           {optionType === 'call'

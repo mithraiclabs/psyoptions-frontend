@@ -74,6 +74,8 @@ const InitializeMarket = () => {
   })
   const canInitialize = !market
 
+  console.log(market)
+
   const assetsSelected = uAsset && qAsset
   const parametersValid = size && !Number.isNaN(size) && strikePrices.length > 0
 
@@ -213,7 +215,7 @@ const InitializeMarket = () => {
               <Box pb={2}>
                 <TextField
                   value={basePrice}
-                  label="Base Price"
+                  label="Strike Price"
                   variant="filled"
                   onChange={handleChangeBasePrice}
                   helperText={
@@ -223,15 +225,6 @@ const InitializeMarket = () => {
               </Box>
             </Box>
           </Box>
-
-          {parametersValid ? (
-            <Box p={1}>
-              <Box p={1}>
-                Strike Prices to Initialize: <br />
-                {strikePrices.map((n, i) => (i === 0 ? `${n}` : `, ${n}`))}
-              </Box>
-            </Box>
-          ) : null}
 
           <Box p={2}>
             {loading ? (

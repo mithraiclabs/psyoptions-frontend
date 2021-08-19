@@ -7,9 +7,12 @@ import TextField from '@material-ui/core/TextField'
 import Switch from '@material-ui/core/Switch'
 import FormControlLabel from '@material-ui/core/FormControlLabel'
 import CircularProgress from '@material-ui/core/CircularProgress'
-import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
-import { KeyboardDatePicker, MuiPickersUtilsProvider } from '@material-ui/pickers'
-import DateFnsUtils from "@date-io/date-fns";
+import HelpOutlineIcon from '@material-ui/icons/HelpOutline'
+import {
+  KeyboardDatePicker,
+  MuiPickersUtilsProvider,
+} from '@material-ui/pickers'
+import DateFnsUtils from '@date-io/date-fns'
 import 'date-fns'
 import moment from 'moment'
 import Page from './Page'
@@ -84,8 +87,8 @@ const InitializeMarket = () => {
   }
 
   const handleSelectedDateChange = (date: Date | null) => {
-    setSelectorDate(moment.utc(date).endOf('day'));
-  };
+    setSelectorDate(moment.utc(date).endOf('day'))
+  }
 
   const handleInitialize = async () => {
     try {
@@ -135,7 +138,12 @@ const InitializeMarket = () => {
             <h2 style={{ margin: '10px 0 0' }}>Initialize New Market</h2>
           </Box>
 
-          <Box p={2} borderBottom={darkBorder} display="flex" alignItems="center">
+          <Box
+            p={2}
+            borderBottom={darkBorder}
+            display="flex"
+            alignItems="center"
+          >
             Expires On:
             <Box
               display="flex"
@@ -145,6 +153,7 @@ const InitializeMarket = () => {
             >
               <MuiPickersUtilsProvider utils={DateFnsUtils}>
                 <KeyboardDatePicker
+                  autoOk
                   disablePast
                   variant="inline"
                   format="MM/dd/yyyy"

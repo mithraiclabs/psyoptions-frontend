@@ -7,6 +7,7 @@ import TextField from '@material-ui/core/TextField'
 import Switch from '@material-ui/core/Switch'
 import FormControlLabel from '@material-ui/core/FormControlLabel'
 import CircularProgress from '@material-ui/core/CircularProgress'
+import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import { KeyboardDatePicker, MuiPickersUtilsProvider } from '@material-ui/pickers'
 import DateFnsUtils from "@date-io/date-fns";
 import 'date-fns'
@@ -14,11 +15,11 @@ import moment from 'moment'
 import Page from './Page'
 import SelectAsset from '../SelectAsset'
 import theme from '../../utils/theme'
+import { StyledTooltip } from './Markets/styles'
 
 import useNotifications from '../../hooks/useNotifications'
 import useWallet from '../../hooks/useWallet'
 import { getStrikePrices } from '../../utils/getStrikePrices'
-import useExpirationDate from '../../hooks/useExpirationDate'
 import useAssetList from '../../hooks/useAssetList'
 import { useOptionMarket } from '../../hooks/useOptionMarket'
 
@@ -34,7 +35,7 @@ const InitializeMarket = () => {
   const initializeMarkets = useInitializeMarkets()
   const [multiple, setMultiple] = useState(false)
   const [basePrice, setBasePrice] = useState('0')
-  const { selectedDate, setSelectedDate, dates } = useExpirationDate()
+  const [selectorDate, setSelectorDate] = useState(moment.utc())
   const { uAsset, qAsset, setUAsset } = useAssetList()
   const [size, setSize] = useState('1')
   const [loading, setLoading] = useState(false)
@@ -65,7 +66,7 @@ const InitializeMarket = () => {
     )
   }
   const market = useOptionMarket({
-    date: selectedDate.unix(),
+    date: selectorDate.unix(),
     uAssetSymbol: uAsset?.tokenSymbol,
     qAssetSymbol: qAsset?.tokenSymbol,
     size,
@@ -83,7 +84,8 @@ const InitializeMarket = () => {
   }
 
   const handleSelectedDateChange = (date: Date | null) => {
-    setSelectedDate(moment.utc(date));
+    console.log('date', moment.utc(date).endOf('day').toISOString())
+    setSelectorDate(moment.utc(date).endOf('day'));
   };
 
   const handleInitialize = async () => {
@@ -100,7 +102,7 @@ const InitializeMarket = () => {
         qAssetMint: qAsset.mintAddress,
         uAssetDecimals: uAsset.decimals,
         qAssetDecimals: qAsset.decimals,
-        expiration: selectedDate.unix(),
+        expiration: selectorDate.unix(),
       })
       setLoading(false)
     } catch (err) {
@@ -136,16 +138,21 @@ const InitializeMarket = () => {
 
           <Box p={2} borderBottom={darkBorder} display="flex" alignItems="center">
             Expires On:
-            <Box display="flex" flexWrap="wrap">
+            <Box
+              display="flex"
+              flexWrap="wrap"
+              flexDirection="row"
+              alignItems="center"
+            >
               <MuiPickersUtilsProvider utils={DateFnsUtils}>
                 <KeyboardDatePicker
                   disablePast
                   variant="inline"
                   format="MM/dd/yyyy"
-                  margin="normal"
+                  inputVariant="filled"
                   id="date-picker-inline"
                   label="MM/DD/YYYY"
-                  value={selectedDate}
+                  value={selectorDate}
                   onChange={handleSelectedDateChange}
                   KeyboardButtonProps={{
                     'aria-label': 'change date',
@@ -153,6 +160,17 @@ const InitializeMarket = () => {
                   style={{ marginLeft: theme.spacing(4) }}
                 />
               </MuiPickersUtilsProvider>
+              <StyledTooltip
+                title={
+                  <Box p={1}>
+                    All expirations occur at 23:59:59 UTC on any selected date.
+                  </Box>
+                }
+              >
+                <Box p={2}>
+                  <HelpOutlineIcon />
+                </Box>
+              </StyledTooltip>
             </Box>
           </Box>
 

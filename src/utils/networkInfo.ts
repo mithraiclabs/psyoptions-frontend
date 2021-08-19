@@ -24,9 +24,8 @@ const networks: Network[] = [
   },
   {
     name: ClusterName.devnet,
-    // url: 'https://psytrbhymqlkfrhudd.dev.genesysgo.net:8899',
-    // wsEndpoint: 'wss://psytrbhymqlkfrhudd.dev.genesysgo.net:8900',
-    url: clusterApiUrl('devnet'),
+    url: 'https://psytrbhymqlkfrhudd.dev.genesysgo.net:8899',
+    wsEndpoint: 'wss://psytrbhymqlkfrhudd.dev.genesysgo.net:8900',
     programId: process.env.DEVNET_PROGRAM_ID,
   },
   {

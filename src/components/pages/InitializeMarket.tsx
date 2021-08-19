@@ -83,7 +83,6 @@ const InitializeMarket = () => {
   }
 
   const handleSelectedDateChange = (date: Date | null) => {
-    console.log('date from picker', date)
     setSelectedDate(moment.utc(date));
   };
 

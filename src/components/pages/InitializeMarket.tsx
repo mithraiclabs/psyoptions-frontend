@@ -3,13 +3,10 @@ import BigNumber from 'bignumber.js'
 import Box from '@material-ui/core/Box'
 import Paper from '@material-ui/core/Paper'
 import Button from '@material-ui/core/Button'
-import Chip from '@material-ui/core/Chip'
 import TextField from '@material-ui/core/TextField'
 import Switch from '@material-ui/core/Switch'
 import FormControlLabel from '@material-ui/core/FormControlLabel'
 import CircularProgress from '@material-ui/core/CircularProgress'
-import NoSsr from '@material-ui/core/NoSsr'
-import Done from '@material-ui/icons/Done'
 import { KeyboardDatePicker, MuiPickersUtilsProvider } from '@material-ui/pickers'
 import DateFnsUtils from "@date-io/date-fns";
 import 'date-fns'
@@ -157,31 +154,6 @@ const InitializeMarket = () => {
                   style={{ marginLeft: theme.spacing(4) }}
                 />
               </MuiPickersUtilsProvider>
-              {/* <NoSsr>
-                {dates.map((d) => {
-                  const label = `${d.format('ll')}`
-                  const selected =
-                    d.toISOString() === selectedDate.toISOString()
-                  const onClick = () => setSelectedDate(d)
-                  return (
-                    <Chip
-                      key={label}
-                      clickable
-                      size="small"
-                      label={label}
-                      color="primary"
-                      onClick={onClick}
-                      onDelete={selected ? onClick : undefined}
-                      deleteIcon={selected ? <Done /> : undefined}
-                      variant={selected ? undefined : 'outlined'}
-                      style={{
-                        marginTop: theme.spacing(2),
-                        marginRight: theme.spacing(2),
-                      }}
-                    />
-                  )
-                })}
-              </NoSsr> */}
             </Box>
           </Box>
 

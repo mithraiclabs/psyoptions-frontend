@@ -3,13 +3,14 @@ import BigNumber from 'bignumber.js'
 import Box from '@material-ui/core/Box'
 import Paper from '@material-ui/core/Paper'
 import Button from '@material-ui/core/Button'
-import Chip from '@material-ui/core/Chip'
 import TextField from '@material-ui/core/TextField'
 import Switch from '@material-ui/core/Switch'
 import FormControlLabel from '@material-ui/core/FormControlLabel'
 import CircularProgress from '@material-ui/core/CircularProgress'
-import NoSsr from '@material-ui/core/NoSsr'
-import Done from '@material-ui/icons/Done'
+import { KeyboardDatePicker, MuiPickersUtilsProvider } from '@material-ui/pickers'
+import DateFnsUtils from "@date-io/date-fns";
+import 'date-fns'
+import moment from 'moment'
 import Page from './Page'
 import SelectAsset from '../SelectAsset'
 import theme from '../../utils/theme'
@@ -81,6 +82,10 @@ const InitializeMarket = () => {
     setBasePrice(input)
   }
 
+  const handleSelectedDateChange = (date: Date | null) => {
+    setSelectedDate(moment.utc(date));
+  };
+
   const handleInitialize = async () => {
     try {
       setLoading(true)
@@ -129,34 +134,25 @@ const InitializeMarket = () => {
             <h2 style={{ margin: '10px 0 0' }}>Initialize New Market</h2>
           </Box>
 
-          <Box p={2} borderBottom={darkBorder}>
+          <Box p={2} borderBottom={darkBorder} display="flex" alignItems="center">
             Expires On:
             <Box display="flex" flexWrap="wrap">
-              <NoSsr>
-                {dates.map((d) => {
-                  const label = `${d.format('ll')}`
-                  const selected =
-                    d.toISOString() === selectedDate.toISOString()
-                  const onClick = () => setSelectedDate(d)
-                  return (
-                    <Chip
-                      key={label}
-                      clickable
-                      size="small"
-                      label={label}
-                      color="primary"
-                      onClick={onClick}
-                      onDelete={selected ? onClick : undefined}
-                      deleteIcon={selected ? <Done /> : undefined}
-                      variant={selected ? undefined : 'outlined'}
-                      style={{
-                        marginTop: theme.spacing(2),
-                        marginRight: theme.spacing(2),
-                      }}
-                    />
-                  )
-                })}
-              </NoSsr>
+              <MuiPickersUtilsProvider utils={DateFnsUtils}>
+                <KeyboardDatePicker
+                  disablePast
+                  variant="inline"
+                  format="MM/dd/yyyy"
+                  margin="normal"
+                  id="date-picker-inline"
+                  label="MM/DD/YYYY"
+                  value={selectedDate}
+                  onChange={handleSelectedDateChange}
+                  KeyboardButtonProps={{
+                    'aria-label': 'change date',
+                  }}
+                  style={{ marginLeft: theme.spacing(4) }}
+                />
+              </MuiPickersUtilsProvider>
             </Box>
           </Box>
 

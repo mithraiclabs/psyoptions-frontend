@@ -22,7 +22,6 @@ import { StyledTooltip } from './Markets/styles'
 
 import useNotifications from '../../hooks/useNotifications'
 import useWallet from '../../hooks/useWallet'
-import { getStrikePrices } from '../../utils/getStrikePrices'
 import useAssetList from '../../hooks/useAssetList'
 import { useOptionMarket } from '../../hooks/useOptionMarket'
 
@@ -36,7 +35,6 @@ const InitializeMarket = () => {
   const { pushNotification } = useNotifications()
   const { connected } = useWallet()
   const initializeMarkets = useInitializeMarkets()
-  const [multiple, setMultiple] = useState(false)
   const [basePrice, setBasePrice] = useState('0')
   const [selectorDate, setSelectorDate] = useState(moment.utc().endOf('day'))
   const { uAsset, qAsset, setUAsset } = useAssetList()
@@ -47,9 +45,7 @@ const InitializeMarket = () => {
     basePrice && basePrice.replace(/^\./, '0.'),
   )
   let strikePrices = []
-  if (multiple && parsedBasePrice) {
-    strikePrices = getStrikePrices(parsedBasePrice)
-  } else if (parsedBasePrice) {
+  if (parsedBasePrice) {
     strikePrices = [new BigNumber(parsedBasePrice)]
   }
 
@@ -225,27 +221,6 @@ const InitializeMarket = () => {
                   }
                 />
               </Box>
-            </Box>
-          </Box>
-
-          <Box display="flex" alignItems="center" borderBottom={darkBorder}>
-            <Box width="50%" p={2}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={multiple}
-                    onChange={() => setMultiple(!multiple)}
-                    name="multiple"
-                    color="secondary"
-                  />
-                }
-                label="Multi Strikes"
-              />
-            </Box>
-            <Box width="50%" p={2}>
-              {!multiple
-                ? 'Strike price will be rounded up to nearest supported price'
-                : null}
             </Box>
           </Box>
 

@@ -35,7 +35,7 @@ const InitializeMarket = () => {
   const initializeMarkets = useInitializeMarkets()
   const [multiple, setMultiple] = useState(false)
   const [basePrice, setBasePrice] = useState('0')
-  const [selectorDate, setSelectorDate] = useState(moment.utc())
+  const [selectorDate, setSelectorDate] = useState(moment.utc().endOf('day'))
   const { uAsset, qAsset, setUAsset } = useAssetList()
   const [size, setSize] = useState('1')
   const [loading, setLoading] = useState(false)
@@ -84,7 +84,6 @@ const InitializeMarket = () => {
   }
 
   const handleSelectedDateChange = (date: Date | null) => {
-    console.log('date', moment.utc(date).endOf('day').toISOString())
     setSelectorDate(moment.utc(date).endOf('day'));
   };
 

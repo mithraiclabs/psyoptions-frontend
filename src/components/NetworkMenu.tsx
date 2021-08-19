@@ -43,7 +43,7 @@ const NetworkMenu = () => {
   const loading = marketsLoading || assetListLoading
 
   const handleSelectNetwork = (network: Network) => {
-    if (loading) return
+    if (loading || network.name === endpoint.name) return
     setEndpoint(network)
     // Reset assets, markets, and chain when changing endpoint
     // This allows us to refresh everything when changing the endpoint

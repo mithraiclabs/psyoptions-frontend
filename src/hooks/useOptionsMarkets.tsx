@@ -171,11 +171,11 @@ const useOptionsMarkets = () => {
         // So convert all BN types to BigNumber
         const amountPerContract = new BigNumber(
           market.underlyingAssetPerContract,
-        ).div(10 ** uAsset.decimals)
+        ).div(10 ** uAsset?.decimals)
 
         const quoteAmountPerContract = new BigNumber(
           market.quoteAssetPerContract,
-        ).div(10 ** qAsset.decimals)
+        ).div(10 ** qAsset?.decimals)
 
         const strike = quoteAmountPerContract.div(
           amountPerContract.toString(10),

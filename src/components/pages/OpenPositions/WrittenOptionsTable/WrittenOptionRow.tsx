@@ -139,9 +139,9 @@ export const WrittenOptionRow = React.memo(
     )?.icon
 
     const lockedAmount =
-      initialWriterTokenAccount.amount * parseInt(market.size, 10)
-    const lockedAmountDisplay = `${lockedAmount}`.match(/\./g)
-      ? `≈${lockedAmount.toFixed(2)}`
+      initialWriterTokenAccount.amount * parseFloat(market.size)
+    const lockedAmountDisplay = `${lockedAmount}`.match(/\.(.{4,})$/)
+      ? `≈${lockedAmount.toFixed(3)}`
       : lockedAmount
 
     useEffect(() => {

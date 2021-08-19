@@ -10,6 +10,10 @@ import FormControlLabel from '@material-ui/core/FormControlLabel'
 import CircularProgress from '@material-ui/core/CircularProgress'
 import NoSsr from '@material-ui/core/NoSsr'
 import Done from '@material-ui/icons/Done'
+import { KeyboardDatePicker, MuiPickersUtilsProvider } from '@material-ui/pickers'
+import DateFnsUtils from "@date-io/date-fns";
+import 'date-fns'
+import moment from 'moment'
 import Page from './Page'
 import SelectAsset from '../SelectAsset'
 import theme from '../../utils/theme'
@@ -81,6 +85,11 @@ const InitializeMarket = () => {
     setBasePrice(input)
   }
 
+  const handleSelectedDateChange = (date: Date | null) => {
+    console.log('date from picker', date)
+    setSelectedDate(moment.utc(date));
+  };
+
   const handleInitialize = async () => {
     try {
       setLoading(true)
@@ -129,10 +138,26 @@ const InitializeMarket = () => {
             <h2 style={{ margin: '10px 0 0' }}>Initialize New Market</h2>
           </Box>
 
-          <Box p={2} borderBottom={darkBorder}>
+          <Box p={2} borderBottom={darkBorder} display="flex" alignItems="center">
             Expires On:
             <Box display="flex" flexWrap="wrap">
-              <NoSsr>
+              <MuiPickersUtilsProvider utils={DateFnsUtils}>
+                <KeyboardDatePicker
+                  disablePast
+                  variant="inline"
+                  format="MM/dd/yyyy"
+                  margin="normal"
+                  id="date-picker-inline"
+                  label="MM/DD/YYYY"
+                  value={selectedDate}
+                  onChange={handleSelectedDateChange}
+                  KeyboardButtonProps={{
+                    'aria-label': 'change date',
+                  }}
+                  style={{ marginLeft: theme.spacing(4) }}
+                />
+              </MuiPickersUtilsProvider>
+              {/* <NoSsr>
                 {dates.map((d) => {
                   const label = `${d.format('ll')}`
                   const selected =
@@ -156,7 +181,7 @@ const InitializeMarket = () => {
                     />
                   )
                 })}
-              </NoSsr>
+              </NoSsr> */}
             </Box>
           </Box>
 

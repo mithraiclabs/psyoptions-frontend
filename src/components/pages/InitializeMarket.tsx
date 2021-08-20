@@ -248,7 +248,13 @@ const InitializeMarket = () => {
           <Box display="flex" alignItems="center" borderBottom={darkBorder}>
             <Box width="50%" p={2}>
             <FormControl component="fieldset">
-              <RadioGroup aria-label="gender" name="gender1" value={callOrPut} onChange={handleChangeCallPut}>
+              <RadioGroup
+                aria-label="gender"
+                name="gender1"
+                value={callOrPut}
+                onChange={handleChangeCallPut}
+                row
+              >
                 <FormControlLabel value="calls" control={<Radio />} label="Calls" />
                 <FormControlLabel value="puts" control={<Radio />} label="Puts" />
               </RadioGroup>

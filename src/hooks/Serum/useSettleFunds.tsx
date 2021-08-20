@@ -21,7 +21,7 @@ export const useSettleFunds = (
   settleFunds: () => Promise<void>
 } => {
   const { pushErrorNotification } = useNotifications()
-  const { connection } = useConnection()
+  const { connection, endpoint } = useConnection()
   const { serumMarkets } = useSerum()
   const { wallet, pubKey } = useWallet()
   const { sendTransaction } = useSendTransaction()
@@ -83,8 +83,8 @@ export const useSettleFunds = (
           _baseTokenAccountKey,
           _quoteTokenAccountKey,
           serumMarket.quoteMintAddress.equals(USDCPublicKey) &&
-            process.env.USDC_SERUM_REFERRER_ADDRESS
-            ? new PublicKey(process.env.USDC_SERUM_REFERRER_ADDRESS)
+            endpoint.serumReferrerId
+            ? new PublicKey(endpoint.serumReferrerId)
             : undefined,
         )
       transaction.add(settleTx)
@@ -101,6 +101,7 @@ export const useSettleFunds = (
     }
     return undefined
   }, [
+    endpoint.serumReferrerId,
     serumMarket,
     openOrders,
     baseTokenAccountKey,

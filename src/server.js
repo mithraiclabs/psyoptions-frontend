@@ -68,7 +68,6 @@ const {
   DEVNET_FAUCET_USDC,
   DEVNET_FAUCET_BTC,
   DEVNET_FAUCET_PSY,
-  USDC_SERUM_REFERRER_ADDRESS,
 } = process.env
 
 server.use((req, res) => {
@@ -105,7 +104,6 @@ server.use((req, res) => {
         DEVNET_FAUCET_USDC,
         DEVNET_FAUCET_BTC,
         DEVNET_FAUCET_PSY,
-        USDC_SERUM_REFERRER_ADDRESS,
         SERVICE_WORKER: serviceWorkerManifest['main.js'].match(
           /rate-limited-fetch-worker.*/,
         )[0],

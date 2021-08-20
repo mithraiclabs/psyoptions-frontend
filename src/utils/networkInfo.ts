@@ -11,6 +11,7 @@ export type Network = {
   url: string
   programId: string
   wsEndpoint?: string
+  serumReferrerId?: string
 }
 
 // Note these network values are used for determining the asset list.
@@ -21,12 +22,14 @@ const networks: Network[] = [
     url: 'https://psyihvlpdrvouxwqbu.main.genesysgo.net:8899',
     wsEndpoint: 'wss://psyihvlpdrvouxwqbu.main.genesysgo.net:8900',
     programId: process.env.MAINNET_PROGRAM_ID,
+    serumReferrerId: 'CzuipkNnvG4JaTQPjgAseWLNhLZFYxMcYpd2G8hDLHco',
   },
   {
     name: ClusterName.devnet,
     url: 'https://psytrbhymqlkfrhudd.dev.genesysgo.net:8899',
     wsEndpoint: 'wss://psytrbhymqlkfrhudd.dev.genesysgo.net:8900',
     programId: process.env.DEVNET_PROGRAM_ID,
+    serumReferrerId: '4wpxNqqAqLtZscg1VZWnnBTQnzJSc42HtSitjpLfm3jz',
   },
   {
     name: ClusterName.testnet,

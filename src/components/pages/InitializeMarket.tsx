@@ -4,8 +4,10 @@ import Box from '@material-ui/core/Box'
 import Paper from '@material-ui/core/Paper'
 import Button from '@material-ui/core/Button'
 import TextField from '@material-ui/core/TextField'
-import Switch from '@material-ui/core/Switch'
 import FormControlLabel from '@material-ui/core/FormControlLabel'
+import FormControl from '@material-ui/core/FormControl';
+import Radio from '@material-ui/core/Radio';
+import RadioGroup from '@material-ui/core/RadioGroup';
 import CircularProgress from '@material-ui/core/CircularProgress'
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline'
 import {
@@ -40,6 +42,7 @@ const InitializeMarket = () => {
   const { uAsset, qAsset, setUAsset } = useAssetList()
   const [size, setSize] = useState('1')
   const [loading, setLoading] = useState(false)
+  const [callOrPut, setCallOrPut] = useState('calls')
 
   const parsedBasePrice = parseFloat(
     basePrice && basePrice.replace(/^\./, '0.'),
@@ -74,8 +77,6 @@ const InitializeMarket = () => {
   })
   const canInitialize = !market
 
-  console.log(market)
-
   const assetsSelected = uAsset && qAsset
   const parametersValid = size && !Number.isNaN(size) && strikePrices.length > 0
 
@@ -88,20 +89,38 @@ const InitializeMarket = () => {
     setSelectorDate(moment.utc(date).endOf('day'))
   }
 
+  const handleChangeCallPut = (e) => {
+    setCallOrPut(e.target.value);
+  };
+
   const handleInitialize = async () => {
     try {
       setLoading(true)
+      const ua = callOrPut === 'calls' ? uAsset : qAsset
+      const qa = callOrPut === 'calls' ? qAsset : uAsset
+
+      let amountsPerContract
+      let quoteAmountsPerContract
+
+      if (callOrPut === 'calls') {
+        amountsPerContract = new BigNumber(size)
+        quoteAmountsPerContract = strikePrices.map((sp) =>
+          sp.multipliedBy(size)
+        )
+      } else {
+        amountsPerContract = strikePrices[0].multipliedBy(size)
+        quoteAmountsPerContract = [new BigNumber(size)]
+      }
+
       await initializeMarkets({
-        amountPerContract: new BigNumber(size),
-        quoteAmountsPerContract: strikePrices.map((sp) =>
-          sp.multipliedBy(size),
-        ),
-        uAssetSymbol: uAsset.tokenSymbol,
-        qAssetSymbol: qAsset.tokenSymbol,
-        uAssetMint: uAsset.mintAddress,
-        qAssetMint: qAsset.mintAddress,
-        uAssetDecimals: uAsset.decimals,
-        qAssetDecimals: qAsset.decimals,
+        amountPerContract: amountsPerContract,
+        quoteAmountsPerContract,
+        uAssetSymbol: ua.tokenSymbol,
+        qAssetSymbol: qa.tokenSymbol,
+        uAssetMint: ua.mintAddress,
+        qAssetMint: qa.mintAddress,
+        uAssetDecimals: ua.decimals,
+        qAssetDecimals: qa.decimals,
         expiration: selectorDate.unix(),
       })
       setLoading(false)
@@ -223,6 +242,28 @@ const InitializeMarket = () => {
                   }
                 />
               </Box>
+            </Box>
+          </Box>
+
+          <Box display="flex" alignItems="center" borderBottom={darkBorder}>
+            <Box width="50%" p={2}>
+            <FormControl component="fieldset">
+              <RadioGroup
+                aria-label="gender"
+                name="gender1"
+                value={callOrPut}
+                onChange={handleChangeCallPut}
+                row
+              >
+                <FormControlLabel value="calls" control={<Radio />} label="Calls" />
+                <FormControlLabel value="puts" control={<Radio />} label="Puts" />
+              </RadioGroup>
+            </FormControl>
+            </Box>
+            <Box width="50%" p={2}>
+              {callOrPut === 'calls'
+                ? 'Initialize calls for market'
+                : 'Initialize puts for market'}
             </Box>
           </Box>
 

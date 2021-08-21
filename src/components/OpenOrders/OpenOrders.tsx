@@ -45,7 +45,9 @@ const OpenOrders: React.FC<{
     ) {
       const serumProgramIds = Array.from(
         new Set(
-          Object.values(serumMarkets).map((market) => market.serumProgramId),
+          Object.values(serumMarkets)
+            .filter((market) => market.serumProgramId)
+            .map((market) => market.serumProgramId),
         ),
       )
 

@@ -17,6 +17,7 @@ import {
 import DateFnsUtils from '@date-io/date-fns'
 import 'date-fns'
 import moment from 'moment'
+import useLocalStorageState from 'use-local-storage-state'
 import Page from './Page'
 import SelectAsset from '../SelectAsset'
 import theme from '../../utils/theme'
@@ -45,7 +46,8 @@ const InitializeMarket = () => {
   const [size, setSize] = useState('1')
   const [loading, setLoading] = useState(false)
   const [callOrPut, setCallOrPut] = useState('calls')
-  const [initializedMarketMeta, setInitializedMarketMeta] = useState([])
+  const [initializedMarketMeta, setInitializedMarketMeta] =
+    useLocalStorageState('initialized-markets', [])
 
   const parsedBasePrice = parseFloat(
     basePrice && basePrice.replace(/^\./, '0.'),
@@ -344,7 +346,21 @@ const InitializeMarket = () => {
           minHeight="100%"
           pb={[0, 0, 4]}
         >
-          Initialized Market Data
+          <Box
+            display="flex"
+            flex="1"
+            alignItems="center"
+            justifyContent="space-between"
+            maxWidth="1000px"
+          >
+            Initialized Market Data
+            <Button
+              color="secondary"
+              onClick={() => setInitializedMarketMeta([])}
+            >
+              Clear data
+            </Button>
+          </Box>
           <Paper style={{ maxWidth: '1000px', alignItems: 'center' }}>
             <Box component="pre" display="inline">
               {JSON.stringify(initializedMarketMeta, null, 4)}

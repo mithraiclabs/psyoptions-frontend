@@ -5,9 +5,9 @@ import Paper from '@material-ui/core/Paper'
 import Button from '@material-ui/core/Button'
 import TextField from '@material-ui/core/TextField'
 import FormControlLabel from '@material-ui/core/FormControlLabel'
-import FormControl from '@material-ui/core/FormControl';
-import Radio from '@material-ui/core/Radio';
-import RadioGroup from '@material-ui/core/RadioGroup';
+import FormControl from '@material-ui/core/FormControl'
+import Radio from '@material-ui/core/Radio'
+import RadioGroup from '@material-ui/core/RadioGroup'
 import CircularProgress from '@material-ui/core/CircularProgress'
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline'
 import {
@@ -30,6 +30,7 @@ import { useOptionMarket } from '../../hooks/useOptionMarket'
 import ConnectButton from '../ConnectButton'
 import { useInitializeMarkets } from '../../hooks/useInitializeMarkets'
 import { convertStrikeToAmountsPer } from '../../utils/strikeConversions'
+import useConnection from '../../hooks/useConnection'
 
 const darkBorder = `1px solid ${theme.palette.background.main}`
 
@@ -37,12 +38,14 @@ const InitializeMarket = () => {
   const { pushNotification } = useNotifications()
   const { connected } = useWallet()
   const initializeMarkets = useInitializeMarkets()
+  const { endpoint } = useConnection()
   const [basePrice, setBasePrice] = useState('0')
   const [selectorDate, setSelectorDate] = useState(moment.utc().endOf('day'))
   const { uAsset, qAsset, setUAsset } = useAssetList()
   const [size, setSize] = useState('1')
   const [loading, setLoading] = useState(false)
   const [callOrPut, setCallOrPut] = useState('calls')
+  const [initializedMarketMeta, setInitializedMarketMeta] = useState([])
 
   const parsedBasePrice = parseFloat(
     basePrice && basePrice.replace(/^\./, '0.'),
@@ -90,8 +93,8 @@ const InitializeMarket = () => {
   }
 
   const handleChangeCallPut = (e) => {
-    setCallOrPut(e.target.value);
-  };
+    setCallOrPut(e.target.value)
+  }
 
   const handleInitialize = async () => {
     try {
@@ -105,14 +108,14 @@ const InitializeMarket = () => {
       if (callOrPut === 'calls') {
         amountsPerContract = new BigNumber(size)
         quoteAmountsPerContract = strikePrices.map((sp) =>
-          sp.multipliedBy(size)
+          sp.multipliedBy(size),
         )
       } else {
         amountsPerContract = strikePrices[0].multipliedBy(size)
         quoteAmountsPerContract = [new BigNumber(size)]
       }
 
-      await initializeMarkets({
+      const markets = await initializeMarkets({
         amountPerContract: amountsPerContract,
         quoteAmountsPerContract,
         uAssetSymbol: ua.tokenSymbol,
@@ -124,6 +127,28 @@ const InitializeMarket = () => {
         expiration: selectorDate.unix(),
       })
       setLoading(false)
+      setInitializedMarketMeta((prevMarketsMetaArr) => {
+        const marketsMetaArr = markets.map((_market) => ({
+          expiration: _market.expiration,
+          optionMarketAddress: _market.optionMarketKey.toString(),
+          optionContractMintAddress: _market.optionMintKey.toString(),
+          optionWriterTokenMintAddress: _market.writerTokenMintKey.toString(),
+          quoteAssetMint: _market.quoteAssetMintKey.toString(),
+          quoteAssetPoolAddress: _market.quoteAssetPoolKey.toString(),
+          underlyingAssetMint: _market.underlyingAssetMintKey.toString(),
+          underlyingAssetPoolAddress: _market.underlyingAssetPoolKey.toString(),
+          underlyingAssetPerContract: _market.amountPerContract
+            .multipliedBy(new BigNumber(10).pow(ua.decimals))
+            .toString(),
+          quoteAssetPerContract: _market.quoteAmountPerContract
+            .multipliedBy(new BigNumber(10).pow(qa.decimals))
+            .toString(),
+          // TODO serumMarketAddress:
+          // TODO serumProgramId:
+          psyOptionsProgramId: endpoint.programId,
+        }))
+        return [...prevMarketsMetaArr, ...marketsMetaArr]
+      })
     } catch (err) {
       setLoading(false)
       // TODO: display some meaningful error state to user
@@ -144,6 +169,7 @@ const InitializeMarket = () => {
         flexDirection="column"
         minHeight="100%"
         pb={[0, 0, 4]}
+        mt={2}
       >
         <Paper
           style={{
@@ -247,18 +273,26 @@ const InitializeMarket = () => {
 
           <Box display="flex" alignItems="center" borderBottom={darkBorder}>
             <Box width="50%" p={2}>
-            <FormControl component="fieldset">
-              <RadioGroup
-                aria-label="gender"
-                name="gender1"
-                value={callOrPut}
-                onChange={handleChangeCallPut}
-                row
-              >
-                <FormControlLabel value="calls" control={<Radio />} label="Calls" />
-                <FormControlLabel value="puts" control={<Radio />} label="Puts" />
-              </RadioGroup>
-            </FormControl>
+              <FormControl component="fieldset">
+                <RadioGroup
+                  aria-label="gender"
+                  name="gender1"
+                  value={callOrPut}
+                  onChange={handleChangeCallPut}
+                  row
+                >
+                  <FormControlLabel
+                    value="calls"
+                    control={<Radio />}
+                    label="Calls"
+                  />
+                  <FormControlLabel
+                    value="puts"
+                    control={<Radio />}
+                    label="Puts"
+                  />
+                </RadioGroup>
+              </FormControl>
             </Box>
             <Box width="50%" p={2}>
               {callOrPut === 'calls'
@@ -301,6 +335,23 @@ const InitializeMarket = () => {
           </Box>
         </Paper>
       </Box>
+      {initializedMarketMeta.length > 0 && (
+        <Box
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+          flexDirection="column"
+          minHeight="100%"
+          pb={[0, 0, 4]}
+        >
+          Initialized Market Data
+          <Paper style={{ maxWidth: '1000px', alignItems: 'center' }}>
+            <Box component="pre" display="inline">
+              {JSON.stringify(initializedMarketMeta, null, 4)}
+            </Box>
+          </Paper>
+        </Box>
+      )}
     </Page>
   )
 }

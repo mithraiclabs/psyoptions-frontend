@@ -106,8 +106,8 @@ const useOptionsMarkets = () => {
           }
 
           const newMarket: OptionMarket = {
-            key: `${expiration}-${uAsset.tokenSymbol}-${
-              qAsset.tokenSymbol
+            key: `${expiration}-${uAsset?.tokenSymbol}-${
+              qAsset?.tokenSymbol
             }-${amountPerContract.toString()}-${amountPerContract.toString()}/${quoteAmountPerContract.toString()}`,
             amountPerContract,
             quoteAmountPerContract,
@@ -182,16 +182,16 @@ const useOptionsMarkets = () => {
         )
 
         const newMarket: OptionMarket = {
-          key: `${market.expiration}-${uAsset.tokenSymbol}-${
-            qAsset.tokenSymbol
+          key: `${market.expiration}-${uAsset?.tokenSymbol}-${
+            qAsset?.tokenSymbol
           }-${amountPerContract.toString()}-${amountPerContract.toString()}/${quoteAmountPerContract.toString()}`,
           amountPerContract,
           quoteAmountPerContract,
           size: `${amountPerContract.toString(10)}`,
-          uAssetSymbol: uAsset.tokenSymbol,
-          qAssetSymbol: qAsset.tokenSymbol,
-          uAssetMint: uAsset.mintAddress,
-          qAssetMint: qAsset.mintAddress,
+          uAssetSymbol: uAsset?.tokenSymbol,
+          qAssetSymbol: qAsset?.tokenSymbol,
+          uAssetMint: uAsset?.mintAddress,
+          qAssetMint: qAsset?.mintAddress,
           strike,
           optionMarketKey: new PublicKey(market.optionMarketAddress),
           expiration: market.expiration,

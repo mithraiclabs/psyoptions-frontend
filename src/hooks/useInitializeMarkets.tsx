@@ -27,8 +27,7 @@ type InitMarketParams = {
 }
 export const useInitializeMarkets = (): ((
   obj: InitMarketParams,
-  // TODO use right type
-) => Promise<any[]>) => {
+) => Promise<OptionMarket[]>) => {
   const { pushErrorNotification } = useNotifications()
   const { wallet, pubKey } = useWallet()
   const { connection, endpoint, dexProgramId } = useConnection()
@@ -84,13 +83,6 @@ export const useInitializeMarkets = (): ((
 
             const underlyingAssetMintKey = new PublicKey(uAssetMint)
             const quoteAssetMintKey = new PublicKey(qAssetMint)
-
-            console.log(
-              'UI log',
-              amountPerContract.toString(),
-              amountPerContractU64,
-              uAssetDecimals,
-            )
 
             // create and send transaction for initializing the option market
             const initializeMarketIx = await initializeMarketInstruction({

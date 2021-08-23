@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useMemo } from 'react'
 
+import { styled } from '@material-ui/core'
 import CircularProgress from '@material-ui/core/CircularProgress'
 import Button from '@material-ui/core/Button'
 import Box from '@material-ui/core/Box'
@@ -37,6 +38,16 @@ const Bid = ({ children }) => (
 const Ask = ({ children }) => (
   <span style={{ color: theme.palette.error.light }}>{children}</span>
 )
+
+const ChangeCell = styled(TCell)(({ change }: { change: number }) => {
+  if (change > 0) {
+    return { color: theme.palette.success.main }
+  }
+  if (change < 0) {
+    return { color: theme.palette.error.light }
+  }
+  return {}
+})
 
 type CallPutRowProps = {
   row: {
@@ -232,6 +243,11 @@ const CallPutRow = ({
     }
   }
 
+  const putChange =
+    marketTrackerData?.[row.put?.serumMarketKey?.toString()]?.change
+  const callChange =
+    marketTrackerData?.[row.call?.serumMarketKey?.toString()]?.change
+
   return (
     <TRow hover role="checkbox" tabIndex={-1}>
       <TCell align="left" style={callCellStyle} width={'120px'}>
@@ -338,20 +354,14 @@ const CallPutRow = ({
             </TCell>
           )}
           {showPriceChange && (
-            <TCell
+            <ChangeCell
+              change={callChange}
               align="left"
               style={callCellStyle}
               onClick={() => openBuySellModal('call')}
             >
-              {marketTrackerData?.[row.call?.serumMarketKey?.toString()]
-                ?.change ? (
-                `${marketTrackerData?.[
-                  row.call?.serumMarketKey?.toString()
-                ]?.change.toFixed(1)}%`
-              ) : (
-                <Empty>{'—'}</Empty>
-              )}
-            </TCell>
+              {callChange ? `${callChange.toFixed(1)}%` : <Empty>{'—'}</Empty>}
+            </ChangeCell>
           )}
           {showVolume && (
             <TCell
@@ -448,20 +458,14 @@ const CallPutRow = ({
             </TCell>
           )}
           {showPriceChange && (
-            <TCell
+            <ChangeCell
+              change={putChange}
               align="right"
               style={putCellStyle}
               onClick={() => openBuySellModal('put')}
             >
-              {marketTrackerData?.[row.put?.serumMarketKey?.toString()]
-                ?.change ? (
-                `${marketTrackerData?.[
-                  row.put?.serumMarketKey?.toString()
-                ]?.change.toFixed(1)}%`
-              ) : (
-                <Empty>{'—'}</Empty>
-              )}
-            </TCell>
+              {putChange ? `${putChange.toFixed(1)}%` : <Empty>{'—'}</Empty>}
+            </ChangeCell>
           )}
           {showVolume && (
             <TCell

@@ -65,6 +65,8 @@ export const createNewTokenAccount = ({
 
 /**
  * Create and initialize a Associated SPL Token account for the provided owner.
+ *
+ * TODO: refactor to use the SPL Token JS library (https://github.com/solana-labs/solana-program-library/blob/master/token/js/client/token.js#L2306)
  */
 export const createAssociatedTokenAccountInstruction = async ({
   payer,

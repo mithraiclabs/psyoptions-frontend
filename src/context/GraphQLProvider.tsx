@@ -20,7 +20,10 @@ export const GraphQLProvider: React.FC = ({ children }) => {
     }
     const subscriptionClient = new SubscriptionClient(
       graphQLUrl.replace('http', 'ws'),
-      { reconnect: true },
+      {
+        reconnect: true,
+        inactivityTimeout: 30_000,
+      },
     )
 
     // The `ssrExchange` must be initialized with `isClient` and `initialState`

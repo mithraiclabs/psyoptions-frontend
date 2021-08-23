@@ -239,8 +239,6 @@ const CallPutRow = ({
           ''
         ) : loading.call ? (
           <CircularProgress size={32} />
-        ) : !connected ? (
-          <ConnectButton>Connect</ConnectButton>
         ) : row.call?.initialized ? (
           <Button
             variant="outlined"
@@ -489,8 +487,6 @@ const CallPutRow = ({
           ''
         ) : loading.put ? (
           <CircularProgress size={32} />
-        ) : !connected ? (
-          <ConnectButton>Connect</ConnectButton>
         ) : row.put?.initialized ? (
           <Button
             variant="outlined"

@@ -467,6 +467,7 @@ const Markets = () => {
                         showVolume={showVolume}
                         showLastPrice={showLastPrice}
                         showOI={showOI}
+                        contractSize={contractSize}
                       />
                     )
                   })}

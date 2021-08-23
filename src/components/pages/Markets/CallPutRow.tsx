@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo } from 'react'
 
-import { Theme, styled } from '@material-ui/core'
+import { styled } from '@material-ui/core'
 import CircularProgress from '@material-ui/core/CircularProgress'
 import Button from '@material-ui/core/Button'
 import Box from '@material-ui/core/Box'

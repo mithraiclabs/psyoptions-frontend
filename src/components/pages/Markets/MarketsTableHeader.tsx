@@ -297,7 +297,7 @@ export const MarketsTableHeader: React.FC<{
             </THeadCell>
           )}
           {showLastPrice && (
-            <THeadCell align="left" width={`${colWidth}%`}>
+            <THeadCell align="right" width={`${colWidth}%`}>
               <StyledTooltip
                 placement="top"
                 title={<Box p={1}>{`The price of the last matched order`}</Box>}

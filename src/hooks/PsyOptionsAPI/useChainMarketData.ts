@@ -16,7 +16,7 @@ const subMessage = `subscription chainMarkets($serumMarketAddresses: [String!]) 
   serum_markets(where: { address: {_in: $serumMarketAddresses } }) {
     latest_price
     change(args: {duration: "24 hours", percentage: true})
-    volume
+    volume(args:{duration: "24 hours"})
     address
   }
 }`

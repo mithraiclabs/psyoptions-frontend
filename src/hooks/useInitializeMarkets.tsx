@@ -32,7 +32,7 @@ export const useInitializeMarkets = (): ((
   const { wallet, pubKey } = useWallet()
   const { connection, endpoint, dexProgramId } = useConnection()
   const { setMarkets } = useContext(OptionsMarketsContext)
-  const { sendTransaction } = useSendTransaction()
+  const { sendTransaction, sendSignedTransaction } = useSendTransaction()
 
   return useCallback(
     async ({
@@ -64,14 +64,6 @@ export const useInitializeMarkets = (): ((
               payerKey: pubKey,
               programId,
             })
-            await sendTransaction({
-              transaction: createAccountsTx,
-              wallet,
-              signers,
-              connection,
-              sendingMessage: 'Processing: Create Market Accounts',
-              successMessage: 'Confirmed: Create Market Accounts',
-            })
 
             // TODO -- can we encode these to the buffer without converting back to the built-in number type?
             const amountPerContractU64 = amountPerContract
@@ -99,12 +91,30 @@ export const useInitializeMarkets = (): ((
               expirationUnixTimestamp: expiration,
             })
 
-            const transaction = new Transaction()
-            transaction.add(initializeMarketIx)
-            await sendTransaction({
-              transaction,
-              wallet,
-              signers: [],
+            const initializeTransaction = new Transaction()
+            initializeTransaction.add(initializeMarketIx)
+
+            // Sign and approve both create accunts and initialize txes
+            const { blockhash } = await connection.getRecentBlockhash()
+            createAccountsTx.recentBlockhash = blockhash
+            createAccountsTx.feePayer = pubKey
+            createAccountsTx.partialSign(...signers)
+            initializeTransaction.feePayer = pubKey
+            initializeTransaction.recentBlockhash = blockhash
+            const [signedCreateTx, signedSettleTx] =
+              await wallet.signAllTransactions([
+                createAccountsTx,
+                initializeTransaction,
+              ])
+
+            await sendSignedTransaction({
+              signedTransaction: signedCreateTx,
+              connection,
+              sendingMessage: 'Processing: Create Market Accounts',
+              successMessage: 'Confirmed: Create Market Accounts',
+            })
+            await sendSignedTransaction({
+              signedTransaction: signedSettleTx,
               connection,
               sendingMessage: 'Processing: Initialize Market',
               successMessage: 'Confirmed: Initialize Market',
@@ -170,9 +180,9 @@ export const useInitializeMarkets = (): ((
       pubKey,
       pushErrorNotification,
       setMarkets,
-      sendTransaction,
       wallet,
       dexProgramId,
+      sendSignedTransaction,
     ],
   )
 }

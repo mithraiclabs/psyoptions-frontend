@@ -5,6 +5,7 @@ import getPhantomAdapter from './adapters/phantom'
 import getMathAdapter from './adapters/math'
 import getSolongAdapter from './adapters/solong'
 import getSolflareAdapter from './adapters/solflare'
+import getSolletExtAdaptor from './adapters/solletExtension'
 
 type GetAdapterFunction = () => WalletAdapter | undefined
 
@@ -19,6 +20,11 @@ const wallets: Wallet[] = [
     name: 'Phantom',
     icon: 'https://www.phantom.app/img/logo.png',
     getAdapter: getPhantomAdapter,
+  },
+  {
+    name: 'Sollet Extension',
+    icon: 'https://cdn.jsdelivr.net/gh/solana-labs/oyster@main/assets/wallets/sollet.svg',
+    getAdapter: getSolletExtAdaptor,
   },
   {
     name: 'Sollet.io',

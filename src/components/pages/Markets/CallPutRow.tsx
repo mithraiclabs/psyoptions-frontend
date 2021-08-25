@@ -71,6 +71,7 @@ type CallPutRowProps = {
   showVolume: boolean
   showOI: boolean
   showLastPrice: boolean
+  contractSize: number
 }
 
 const CallPutRow = ({
@@ -89,6 +90,7 @@ const CallPutRow = ({
   showVolume,
   showOI,
   showLastPrice,
+  contractSize,
 }: CallPutRowProps) => {
   const { connected } = useWallet()
   const { pushNotification } = useNotifications()
@@ -135,7 +137,7 @@ const CallPutRow = ({
   const strikeAsNumber = row.strike && row.strike.toNumber()
 
   const callBidIV = useImpliedVol({
-    optionPrice: callHighestBid || 0,
+    optionPrice: (callHighestBid || 0) / contractSize,
     strikePrice: strikeAsNumber,
     marketPrice: markPrice,
     timeToExpiry,
@@ -143,7 +145,7 @@ const CallPutRow = ({
   })
 
   const callAskIV = useImpliedVol({
-    optionPrice: callLowestAsk || 0,
+    optionPrice: (callLowestAsk || 0) / contractSize,
     strikePrice: strikeAsNumber,
     marketPrice: markPrice,
     timeToExpiry,
@@ -151,7 +153,7 @@ const CallPutRow = ({
   })
 
   const putBidIV = useImpliedVol({
-    optionPrice: putHighestBid,
+    optionPrice: putHighestBid / contractSize,
     strikePrice: strikeAsNumber,
     marketPrice: markPrice,
     timeToExpiry,
@@ -159,7 +161,7 @@ const CallPutRow = ({
   })
 
   const putAskIV = useImpliedVol({
-    optionPrice: putLowestAsk,
+    optionPrice: putLowestAsk / contractSize,
     strikePrice: strikeAsNumber,
     marketPrice: markPrice,
     timeToExpiry,

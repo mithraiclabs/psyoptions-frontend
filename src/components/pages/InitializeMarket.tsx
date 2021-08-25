@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
 import BigNumber from 'bignumber.js'
 import Box from '@material-ui/core/Box'
 import Paper from '@material-ui/core/Paper'
@@ -50,6 +50,7 @@ const InitializeMarket = () => {
   const [callOrPut, setCallOrPut] = useState('calls')
   const [initializedMarketMeta, setInitializedMarketMeta] =
     useLocalStorageState('initialized-markets', [])
+  const textAreaRef = useRef(null)
 
   const parsedBasePrice = parseFloat(
     basePrice && basePrice.replace(/^\./, '0.'),
@@ -389,7 +390,14 @@ const InitializeMarket = () => {
             </Box>
             <Box p={2}>
               <TextareaAutosize
+                ref={textAreaRef}
+                onClick={() => {
+                  if (textAreaRef?.current?.select) {
+                    textAreaRef.current.select()
+                  }
+                }}
                 value={JSON.stringify(initializedMarketMeta, null, 4)}
+                spellCheck="false"
                 style={{
                   padding: '16px',
                   border: `1px solid ${theme.palette.primary.light}`,

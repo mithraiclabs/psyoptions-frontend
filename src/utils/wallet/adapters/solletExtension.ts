@@ -4,7 +4,7 @@ import { isBrowser } from '../../isNode'
 
 let solletExtAdaptor
 
-if (isBrowser) {
+if (isBrowser && (window as any)?.sollet) {
   solletExtAdaptor = new Wallet((window as any).sollet)
 }
 

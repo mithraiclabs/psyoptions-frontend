@@ -3,6 +3,7 @@ import BigNumber from 'bignumber.js'
 import Box from '@material-ui/core/Box'
 import Paper from '@material-ui/core/Paper'
 import Button from '@material-ui/core/Button'
+import Checkbox from '@material-ui/core/Checkbox'
 import TextField from '@material-ui/core/TextField'
 import FormControlLabel from '@material-ui/core/FormControlLabel'
 import FormControl from '@material-ui/core/FormControl'
@@ -32,6 +33,8 @@ import ConnectButton from '../ConnectButton'
 import { useInitializeMarkets } from '../../hooks/useInitializeMarkets'
 import { convertStrikeToAmountsPer } from '../../utils/strikeConversions'
 import useConnection from '../../hooks/useConnection'
+import { useInitializeSerumMarket } from '../../hooks/Serum/useInitializeSerumMarket'
+import BN from 'bn.js'
 
 const darkBorder = `1px solid ${theme.palette.background.main}`
 
@@ -40,9 +43,11 @@ const InitializeMarket = () => {
   const { connected } = useWallet()
   const initializeMarkets = useInitializeMarkets()
   const { endpoint } = useConnection()
+  const initializeSerumMarket = useInitializeSerumMarket()
   const [basePrice, setBasePrice] = useState('0')
   const [selectorDate, setSelectorDate] = useState(moment.utc().endOf('day'))
   const { uAsset, qAsset, setUAsset } = useAssetList()
+  const [initSerumMarket, setInitSerumMarket] = useState(false)
   const [size, setSize] = useState('1')
   const [loading, setLoading] = useState(false)
   const [callOrPut, setCallOrPut] = useState('calls')
@@ -128,6 +133,26 @@ const InitializeMarket = () => {
         qAssetDecimals: qa.decimals,
         expiration: selectorDate.unix(),
       })
+
+      if (initSerumMarket) {
+        let tickSize = 0.0001
+        if (
+          (callOrPut === 'calls' && qa.tokenSymbol.match(/^USD/)) ||
+          (callOrPut === 'puts' && ua.tokenSymbol.match(/^USD/))
+        ) {
+          tickSize = 0.01
+        }
+
+        // This will likely be USDC or USDT but could be other things in some cases
+        const quoteLotSize = new BN(
+          tickSize * 10 ** (callOrPut === 'calls' ? qa.decimals : ua.decimals),
+        )
+        // TODO init serum markets
+        // initializeSerumMarket({
+        //   baseMintKey,
+        // })
+      }
+
       setLoading(false)
       setInitializedMarketMeta((prevMarketsMetaArr) => {
         const marketsMetaArr = markets.map((_market) => ({
@@ -277,8 +302,6 @@ const InitializeMarket = () => {
             <Box width="50%" p={2}>
               <FormControl component="fieldset">
                 <RadioGroup
-                  aria-label="gender"
-                  name="gender1"
                   value={callOrPut}
                   onChange={handleChangeCallPut}
                   row
@@ -300,6 +323,21 @@ const InitializeMarket = () => {
               {callOrPut === 'calls'
                 ? 'Initialize calls for market'
                 : 'Initialize puts for market'}
+            </Box>
+          </Box>
+
+          <Box display="flex" alignItems="center" borderBottom={darkBorder}>
+            <Box width="50%" p={2}>
+              Initalize Serum Market
+            </Box>
+            <Box width="50%" p={2}>
+              <FormControl component="fieldset">
+                <Checkbox
+                  color="primary"
+                  checked={initSerumMarket}
+                  onChange={(e) => setInitSerumMarket(e.target.checked)}
+                />
+              </FormControl>
             </Box>
           </Box>
 

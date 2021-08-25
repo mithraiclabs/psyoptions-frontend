@@ -14,7 +14,6 @@ import moment from 'moment'
 import BigNumber from 'bignumber.js'
 
 import theme from '../../../utils/theme'
-import { getStrikePrices, intervals } from '../../../utils/getStrikePrices'
 import { getPriceFromSerumOrderbook } from '../../../utils/orderbook'
 
 import { useBonfidaMarkPrice } from '../../../hooks/useBonfidaMarkPrice'
@@ -95,11 +94,6 @@ const rowTemplate = {
 
 const USE_BONFIDA_MARK_PRICE = true
 
-const defaultContractSizes = {
-  BTC: 0.1,
-  other: 100,
-}
-
 const Markets = () => {
   const { uAsset, qAsset, setUAsset, assetListLoading } = useAssetList()
   const { selectedDate: date, setSelectedDate, dates } = useExpirationDate()
@@ -110,7 +104,6 @@ const Markets = () => {
   const [round, setRound] = useState(true)
   const [buySellDialogOpen, setBuySellDialogOpen] = useState(false)
   const [callPutData, setCallPutData] = useState({ type: 'call' } as CallOrPut)
-  const [showAllStrikes] = useState(true) // TODO: let user configure this
   const [page, setPage] = useState(0)
   const [initialMarkPrice, setInitialMarkPrice] = useState(null)
   const [sizeOptions, setSizeOptions] = useState(defaultSizeOptions)

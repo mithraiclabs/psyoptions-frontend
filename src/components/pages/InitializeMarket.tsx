@@ -3,6 +3,7 @@ import BigNumber from 'bignumber.js'
 import Box from '@material-ui/core/Box'
 import Paper from '@material-ui/core/Paper'
 import Button from '@material-ui/core/Button'
+import Checkbox from '@material-ui/core/Checkbox'
 import TextField from '@material-ui/core/TextField'
 import FormControlLabel from '@material-ui/core/FormControlLabel'
 import FormControl from '@material-ui/core/FormControl'
@@ -17,6 +18,7 @@ import {
 import DateFnsUtils from '@date-io/date-fns'
 import 'date-fns'
 import moment from 'moment'
+import BN from 'bn.js'
 import useLocalStorageState from 'use-local-storage-state'
 import Page from './Page'
 import SelectAsset from '../SelectAsset'
@@ -32,20 +34,23 @@ import ConnectButton from '../ConnectButton'
 import { useInitializeMarkets } from '../../hooks/useInitializeMarkets'
 import { convertStrikeToAmountsPer } from '../../utils/strikeConversions'
 import useConnection from '../../hooks/useConnection'
+import { useInitializeSerumMarket } from '../../hooks/Serum/useInitializeSerumMarket'
 
 const darkBorder = `1px solid ${theme.palette.background.main}`
 
-const InitializeMarket = () => {
+const InitializeMarket: React.VFC = () => {
   const { pushNotification } = useNotifications()
   const { connected } = useWallet()
   const initializeMarkets = useInitializeMarkets()
-  const { endpoint } = useConnection()
+  const { dexProgramId, endpoint } = useConnection()
+  const initializeSerumMarket = useInitializeSerumMarket()
   const [basePrice, setBasePrice] = useState('0')
   const [selectorDate, setSelectorDate] = useState(moment.utc().endOf('day'))
   const { uAsset, qAsset, setUAsset } = useAssetList()
+  const [initSerumMarket, setInitSerumMarket] = useState(false)
   const [size, setSize] = useState('1')
   const [loading, setLoading] = useState(false)
-  const [callOrPut, setCallOrPut] = useState('calls')
+  const [callOrPut, setCallOrPut] = useState<'calls' | 'puts'>('calls')
   const [initializedMarketMeta, setInitializedMarketMeta] =
     useLocalStorageState('initialized-markets', [])
 
@@ -128,6 +133,38 @@ const InitializeMarket = () => {
         qAssetDecimals: qa.decimals,
         expiration: selectorDate.unix(),
       })
+
+      const serumMarkets: Record<string, string> = {}
+      if (initSerumMarket) {
+        let tickSize = 0.0001
+        if (
+          (callOrPut === 'calls' && qa.tokenSymbol.match(/^USD/)) ||
+          (callOrPut === 'puts' && ua.tokenSymbol.match(/^USD/))
+        ) {
+          tickSize = 0.01
+        }
+
+        // This will likely be USDC or USDT but could be other things in some cases
+        const quoteLotSize = new BN(
+          tickSize * 10 ** (callOrPut === 'calls' ? qa.decimals : ua.decimals),
+        )
+
+        await Promise.all(
+          markets.map(async (_market) => {
+            const initResp = await initializeSerumMarket({
+              baseMintKey: _market.optionMintKey,
+              quoteMintKey: _market.quoteAssetMintKey,
+              quoteLotSize,
+            })
+            if (initResp) {
+              const [serumMarketKey] = initResp
+              serumMarkets[_market.optionMarketKey.toString()] =
+                serumMarketKey.toString()
+            }
+          }),
+        )
+      }
+
       setLoading(false)
       setInitializedMarketMeta((prevMarketsMetaArr) => {
         const marketsMetaArr = markets.map((_market) => ({
@@ -145,8 +182,13 @@ const InitializeMarket = () => {
           quoteAssetPerContract: _market.quoteAmountPerContract
             .multipliedBy(new BigNumber(10).pow(qa.decimals))
             .toString(),
-          // TODO serumMarketAddress:
-          // TODO serumProgramId:
+          ...(initSerumMarket
+            ? {
+                serumMarketAddress:
+                  serumMarkets[_market.optionMarketKey.toString()],
+                serumProgramId: dexProgramId.toString(),
+              }
+            : {}),
           psyOptionsProgramId: endpoint.programId,
         }))
         return [...prevMarketsMetaArr, ...marketsMetaArr]
@@ -277,8 +319,6 @@ const InitializeMarket = () => {
             <Box width="50%" p={2}>
               <FormControl component="fieldset">
                 <RadioGroup
-                  aria-label="gender"
-                  name="gender1"
                   value={callOrPut}
                   onChange={handleChangeCallPut}
                   row
@@ -300,6 +340,21 @@ const InitializeMarket = () => {
               {callOrPut === 'calls'
                 ? 'Initialize calls for market'
                 : 'Initialize puts for market'}
+            </Box>
+          </Box>
+
+          <Box display="flex" alignItems="center" borderBottom={darkBorder}>
+            <Box width="50%" p={2}>
+              Initalize Serum Market
+            </Box>
+            <Box width="50%" p={2}>
+              <FormControl component="fieldset">
+                <Checkbox
+                  color="primary"
+                  checked={initSerumMarket}
+                  onChange={(e) => setInitSerumMarket(e.target.checked)}
+                />
+              </FormControl>
             </Box>
           </Box>
 

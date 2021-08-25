@@ -18,6 +18,7 @@ import {
 import DateFnsUtils from '@date-io/date-fns'
 import 'date-fns'
 import moment from 'moment'
+import BN from 'bn.js'
 import useLocalStorageState from 'use-local-storage-state'
 import Page from './Page'
 import SelectAsset from '../SelectAsset'
@@ -34,15 +35,14 @@ import { useInitializeMarkets } from '../../hooks/useInitializeMarkets'
 import { convertStrikeToAmountsPer } from '../../utils/strikeConversions'
 import useConnection from '../../hooks/useConnection'
 import { useInitializeSerumMarket } from '../../hooks/Serum/useInitializeSerumMarket'
-import BN from 'bn.js'
 
 const darkBorder = `1px solid ${theme.palette.background.main}`
 
-const InitializeMarket = () => {
+const InitializeMarket: React.VFC = () => {
   const { pushNotification } = useNotifications()
   const { connected } = useWallet()
   const initializeMarkets = useInitializeMarkets()
-  const { endpoint } = useConnection()
+  const { dexProgramId, endpoint } = useConnection()
   const initializeSerumMarket = useInitializeSerumMarket()
   const [basePrice, setBasePrice] = useState('0')
   const [selectorDate, setSelectorDate] = useState(moment.utc().endOf('day'))
@@ -50,7 +50,7 @@ const InitializeMarket = () => {
   const [initSerumMarket, setInitSerumMarket] = useState(false)
   const [size, setSize] = useState('1')
   const [loading, setLoading] = useState(false)
-  const [callOrPut, setCallOrPut] = useState('calls')
+  const [callOrPut, setCallOrPut] = useState<'calls' | 'puts'>('calls')
   const [initializedMarketMeta, setInitializedMarketMeta] =
     useLocalStorageState('initialized-markets', [])
 
@@ -134,6 +134,7 @@ const InitializeMarket = () => {
         expiration: selectorDate.unix(),
       })
 
+      const serumMarkets: Record<string, string> = {}
       if (initSerumMarket) {
         let tickSize = 0.0001
         if (
@@ -147,10 +148,21 @@ const InitializeMarket = () => {
         const quoteLotSize = new BN(
           tickSize * 10 ** (callOrPut === 'calls' ? qa.decimals : ua.decimals),
         )
-        // TODO init serum markets
-        // initializeSerumMarket({
-        //   baseMintKey,
-        // })
+
+        await Promise.all(
+          markets.map(async (_market) => {
+            const initResp = await initializeSerumMarket({
+              baseMintKey: _market.optionMintKey,
+              quoteMintKey: _market.quoteAssetMintKey,
+              quoteLotSize,
+            })
+            if (initResp) {
+              const [serumMarketKey] = initResp
+              serumMarkets[_market.optionMarketKey.toString()] =
+                serumMarketKey.toString()
+            }
+          }),
+        )
       }
 
       setLoading(false)
@@ -170,8 +182,13 @@ const InitializeMarket = () => {
           quoteAssetPerContract: _market.quoteAmountPerContract
             .multipliedBy(new BigNumber(10).pow(qa.decimals))
             .toString(),
-          // TODO serumMarketAddress:
-          // TODO serumProgramId:
+          ...(initSerumMarket
+            ? {
+                serumMarketAddress:
+                  serumMarkets[_market.optionMarketKey.toString()],
+                serumProgramId: dexProgramId.toString(),
+              }
+            : {}),
           psyOptionsProgramId: endpoint.programId,
         }))
         return [...prevMarketsMetaArr, ...marketsMetaArr]

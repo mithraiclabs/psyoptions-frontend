@@ -7,22 +7,26 @@ import useNotifications from '../useNotifications'
 import useSendTransaction from '../useSendTransaction'
 import useWallet from '../useWallet'
 
-type InitSerumArgs = {
+export const useInitializeSerumMarket = (): ((options: {
   baseMintKey: PublicKey
   quoteMintKey: PublicKey
-  quoteLotSize: number
-}
-
-export const useInitializeSerumMarket = (): ((
-  options: InitSerumArgs,
-) => Promise<PublicKey | null>) => {
+  quoteLotSize: BN
+}) => Promise<[PublicKey, PublicKey] | null>) => {
   const { connection, dexProgramId } = useConnection()
   const { wallet, pubKey } = useWallet()
   const { sendSignedTransaction } = useSendTransaction()
   const { pushErrorNotification } = useNotifications()
 
   return useCallback(
-    async ({ baseMintKey, quoteMintKey, quoteLotSize }: InitSerumArgs) => {
+    async ({
+      baseMintKey,
+      quoteMintKey,
+      quoteLotSize,
+    }: {
+      baseMintKey: PublicKey
+      quoteMintKey: PublicKey
+      quoteLotSize: BN
+    }) => {
       try {
         // baseLotSize should be 1 -- the options market token doesn't have decimals
         const baseLotSize = new BN('1')
@@ -52,7 +56,7 @@ export const useInitializeSerumMarket = (): ((
           sendingMessage: 'Sending: Init Serum market TX 2',
           successMessage: 'Confirmed: Init Serum market TX 2',
         })
-        return market.publicKey
+        return [market.publicKey, dexProgramId]
       } catch (error) {
         pushErrorNotification(error)
       }

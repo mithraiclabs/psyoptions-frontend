@@ -144,6 +144,8 @@ Resources:
               Value: !Ref ContainerPort
             - Name: APP_ENABLED
               Value: true
+            - Name: INITIALIZE_PAGE_ENABLED
+              Value: true
             - Name: DEVNET_PROGRAM_ID
               Value: GDvqQy3FkDB2wyNwgZGp5YkmRMUmWbhNNWDMYKbLSZ5N
             - Name: MAINNET_PROGRAM_ID

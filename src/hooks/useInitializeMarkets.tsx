@@ -32,7 +32,7 @@ export const useInitializeMarkets = (): ((
   const { wallet, pubKey } = useWallet()
   const { connection, endpoint, dexProgramId } = useConnection()
   const { setMarkets } = useContext(OptionsMarketsContext)
-  const { sendTransaction, sendSignedTransaction } = useSendTransaction()
+  const { sendSignedTransaction } = useSendTransaction()
 
   return useCallback(
     async ({

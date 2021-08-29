@@ -153,7 +153,11 @@ const InitializeMarket: React.VFC = () => {
           markets.map(async (_market) => {
             const initResp = await initializeSerumMarket({
               baseMintKey: _market.optionMintKey,
-              quoteMintKey: _market.quoteAssetMintKey,
+              // This needs to be the USDC, so flip the quote asset vs underlying asset
+              quoteMintKey:
+                callOrPut === 'calls'
+                  ? _market.quoteAssetMintKey
+                  : _market.underlyingAssetMintKey,
               quoteLotSize,
             })
             if (initResp) {

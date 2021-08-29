@@ -1,20 +1,20 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react';
 
 export const useCountry = () => {
-  const [countryCode, setCountryCode] = useState(null)
+  const [countryCode, setCountryCode] = useState(null);
 
   useEffect(() => {
-    ;(async () => {
-      const URL = 'https://countrycode.bonfida.workers.dev/'
-      const response = await fetch(URL)
-      const data = await response.json()
-      console.log('Country Code', data?.countryCode)
-      setCountryCode(data?.countryCode)
-    })()
-  }, [])
+    (async () => {
+      const URL = 'https://countrycode.bonfida.workers.dev/';
+      const response = await fetch(URL);
+      const data = await response.json();
+      console.log('Country Code', data?.countryCode);
+      setCountryCode(data?.countryCode);
+    })();
+  }, []);
 
-  return countryCode
-}
+  return countryCode;
+};
 
 export const DISALLOWED_COUNTRIES = [
   'AF', // Afghanistan
@@ -47,4 +47,4 @@ export const DISALLOWED_COUNTRIES = [
   'YD', // Yemen
   'GB', // United Kingdom
   'TH', // Thailand
-]
+];

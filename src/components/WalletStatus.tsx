@@ -1,15 +1,15 @@
-import React from 'react'
-import Brightness1 from '@material-ui/icons/Brightness1'
-import Box from '@material-ui/core/Box'
+import React from 'react';
+import Brightness1 from '@material-ui/icons/Brightness1';
+import Box from '@material-ui/core/Box';
 
-import useWallet from '../hooks/useWallet'
-import theme from '../utils/theme'
+import useWallet from '../hooks/useWallet';
+import theme from '../utils/theme';
 
-import ConnectButton from './ConnectButton'
+import ConnectButton from './ConnectButton';
 
 const WalletStatus: React.FC = () => {
-  const { pubKey, connected } = useWallet()
-  const pubKeyB58 = pubKey && pubKey.toBase58 && pubKey.toBase58().slice(0, 5)
+  const { pubKey, connected } = useWallet();
+  const pubKeyB58 = pubKey && pubKey.toBase58 && pubKey.toBase58().slice(0, 5);
 
   return (
     <ConnectButton>
@@ -25,7 +25,7 @@ const WalletStatus: React.FC = () => {
       </Box>
       {connected ? `Connected ${pubKeyB58}...` : 'Connect Wallet'}
     </ConnectButton>
-  )
-}
+  );
+};
 
-export default WalletStatus
+export default WalletStatus;

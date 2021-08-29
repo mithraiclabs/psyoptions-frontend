@@ -1,52 +1,48 @@
-import React from 'react'
-import Box from '@material-ui/core/Box'
-import Table from '@material-ui/core/Table'
-import TableHead from '@material-ui/core/TableHead'
-import TableRow from '@material-ui/core/TableRow'
-import TableBody from '@material-ui/core/TableBody'
-import TableContainer from '@material-ui/core/TableContainer'
+import React from 'react';
+import Box from '@material-ui/core/Box';
+import Table from '@material-ui/core/Table';
+import TableHead from '@material-ui/core/TableHead';
+import TableRow from '@material-ui/core/TableRow';
+import TableBody from '@material-ui/core/TableBody';
+import TableContainer from '@material-ui/core/TableContainer';
 
-import useWallet from '../../hooks/useWallet'
-import {
-  useSerumOpenOrders,
-} from '../../context/SerumOpenOrdersContext'
+import useWallet from '../../hooks/useWallet';
+import { useSerumOpenOrders } from '../../context/SerumOpenOrdersContext';
 
-import ConnectButton from '../ConnectButton'
-import UnsettledBalancesRow from './UnsettledBalancesRow'
-import { TCell, THeadCell } from './UnsettledBalancesStyles'
-import { CallOrPut } from '../../types'
+import ConnectButton from '../ConnectButton';
+import UnsettledBalancesRow from './UnsettledBalancesRow';
+import { TCell, THeadCell } from './UnsettledBalancesStyles';
+import { CallOrPut } from '../../types';
 
 const UnsettledBalancesTable: React.FC<{
-  optionMarkets: CallOrPut[]
-  uAssetDecimals: number
-  qAssetDecimals: number
-}> = ({ 
-  optionMarkets,
-  uAssetDecimals,
-  qAssetDecimals,
- }) => {
-  const { connected } = useWallet()
-  const [serumOpenOrders] = useSerumOpenOrders()
+  optionMarkets: CallOrPut[];
+  uAssetDecimals: number;
+  qAssetDecimals: number;
+}> = ({ optionMarkets, uAssetDecimals, qAssetDecimals }) => {
+  const { connected } = useWallet();
+  const [serumOpenOrders] = useSerumOpenOrders();
 
-  const hasUnsettled = Object.values(serumOpenOrders).map(serumMarketAddress => {
-    return !!serumMarketAddress?.hasUnsettled
-  }).includes(true)
-  
+  const hasUnsettled = Object.values(serumOpenOrders)
+    .map((serumMarketAddress) => {
+      return !!serumMarketAddress?.hasUnsettled;
+    })
+    .includes(true);
+
   // Don't show if not connected or has no unsettled
   if (!connected || !hasUnsettled) {
-    return null
+    return null;
   }
-  
+
   // filters out non-initialized serum markets
   const existingMarketsArray = optionMarkets
     .map((optionMarket) => {
       if (optionMarket?.serumMarketKey) {
-        return optionMarket
+        return optionMarket;
       }
-      return undefined
+      return undefined;
     })
-    .filter((item) => !!item)
-    
+    .filter((item) => !!item);
+
   return (
     <Box mt={'20px'}>
       <TableContainer>
@@ -95,7 +91,7 @@ const UnsettledBalancesTable: React.FC<{
         </Table>
       </TableContainer>
     </Box>
-  )
-}
+  );
+};
 
-export default React.memo(UnsettledBalancesTable)
+export default React.memo(UnsettledBalancesTable);

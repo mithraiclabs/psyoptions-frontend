@@ -1,78 +1,78 @@
-import React, { useState, useCallback, useMemo } from 'react'
+import React, { useState, useCallback, useMemo } from 'react';
 
-import { styled } from '@material-ui/core'
-import CircularProgress from '@material-ui/core/CircularProgress'
-import Button from '@material-ui/core/Button'
-import Box from '@material-ui/core/Box'
-import moment, { Moment } from 'moment'
-import BigNumber from 'bignumber.js'
+import { styled } from '@material-ui/core';
+import CircularProgress from '@material-ui/core/CircularProgress';
+import Button from '@material-ui/core/Button';
+import Box from '@material-ui/core/Box';
+import moment, { Moment } from 'moment';
+import BigNumber from 'bignumber.js';
 
-import theme from '../../../utils/theme'
-import useSerum from '../../../hooks/useSerum'
-import useWallet from '../../../hooks/useWallet'
-import useNotifications from '../../../hooks/useNotifications'
-import { useImpliedVol } from '../../../hooks/useImpliedVol'
+import theme from '../../../utils/theme';
+import useSerum from '../../../hooks/useSerum';
+import useWallet from '../../../hooks/useWallet';
+import useNotifications from '../../../hooks/useNotifications';
+import { useImpliedVol } from '../../../hooks/useImpliedVol';
 
-import Loading from '../../Loading'
-import { useSubscribeSerumOrderbook } from '../../../hooks/Serum'
-import { useSubscribeSPLTokenMint } from '../../../hooks/SPLToken'
-import { useOptionMarket } from '../../../hooks/useOptionMarket'
-import { useSerumOrderbooks } from '../../../context/SerumOrderbookContext'
+import Loading from '../../Loading';
+import { useSubscribeSerumOrderbook } from '../../../hooks/Serum';
+import { useSubscribeSPLTokenMint } from '../../../hooks/SPLToken';
+import { useOptionMarket } from '../../../hooks/useOptionMarket';
+import { useSerumOrderbooks } from '../../../context/SerumOrderbookContext';
 
-import ConnectButton from '../../ConnectButton'
-import { useInitializeMarkets } from '../../../hooks/useInitializeMarkets'
+import ConnectButton from '../../ConnectButton';
+import { useInitializeMarkets } from '../../../hooks/useInitializeMarkets';
 
-import { TCell, TCellLoading, TCellStrike, TRow } from './styles'
-import { useMarketData } from '../../../context/MarketDataContext'
-import { Asset, CallOrPut, OptionType } from '../../../types'
-import { useSPLTokenMints } from '../../../context/SPLTokenMintsContext'
+import { TCell, TCellLoading, TCellStrike, TRow } from './styles';
+import { useMarketData } from '../../../context/MarketDataContext';
+import { Asset, CallOrPut, OptionType } from '../../../types';
+import { useSPLTokenMints } from '../../../context/SPLTokenMintsContext';
 
 const Empty = ({ children }) => (
   <span style={{ opacity: '0.3' }}>{children}</span>
-)
+);
 
 const Bid = ({ children }) => (
   <span style={{ color: theme.palette.success.main }}>{children}</span>
-)
+);
 
 const Ask = ({ children }) => (
   <span style={{ color: theme.palette.error.light }}>{children}</span>
-)
+);
 
 const ChangeCell = styled(TCell)(({ change }: { change: number }) => {
   if (change > 0) {
-    return { color: theme.palette.success.main }
+    return { color: theme.palette.success.main };
   }
   if (change < 0) {
-    return { color: theme.palette.error.light }
+    return { color: theme.palette.error.light };
   }
-  return {}
-})
+  return {};
+});
 
 type CallPutRowProps = {
   row: {
-    strike: BigNumber
-    call: CallOrPut
-    put: CallOrPut
-  }
-  uAsset: Asset
-  qAsset: Asset
-  date: Moment
+    strike: BigNumber;
+    call: CallOrPut;
+    put: CallOrPut;
+  };
+  uAsset: Asset;
+  qAsset: Asset;
+  date: Moment;
   // Precision for strike price rounding with .toFixed
-  precision: number
-  round: boolean
+  precision: number;
+  round: boolean;
   // Current market price of the underlying asset on serum
-  markPrice: number
-  onClickBuySellCall: (callOrPut: any) => void
-  onClickBuySellPut: (callOrPut: any) => void
-  setLimitPrice: (callOrPut: any) => void
-  showIV: boolean
-  showPriceChange: boolean
-  showVolume: boolean
-  showOI: boolean
-  showLastPrice: boolean
-  contractSize: number
-}
+  markPrice: number;
+  onClickBuySellCall: (callOrPut: any) => void;
+  onClickBuySellPut: (callOrPut: any) => void;
+  setLimitPrice: (callOrPut: any) => void;
+  showIV: boolean;
+  showPriceChange: boolean;
+  showVolume: boolean;
+  showOI: boolean;
+  showLastPrice: boolean;
+  contractSize: number;
+};
 
 const CallPutRow = ({
   row,
@@ -92,20 +92,20 @@ const CallPutRow = ({
   showLastPrice,
   contractSize,
 }: CallPutRowProps) => {
-  const { connected } = useWallet()
-  const { pushNotification } = useNotifications()
-  const { serumMarkets } = useSerum()
-  const initializeMarkets = useInitializeMarkets()
-  const [orderbooks] = useSerumOrderbooks()
-  const callOrderbook = orderbooks[row.call?.serumMarketKey?.toString()]
-  const putOrderbook = orderbooks[row.put?.serumMarketKey?.toString()]
-  useSubscribeSerumOrderbook(row.call?.serumMarketKey?.toString())
-  useSubscribeSerumOrderbook(row.put?.serumMarketKey?.toString())
+  const { connected } = useWallet();
+  const { pushNotification } = useNotifications();
+  const { serumMarkets } = useSerum();
+  const initializeMarkets = useInitializeMarkets();
+  const [orderbooks] = useSerumOrderbooks();
+  const callOrderbook = orderbooks[row.call?.serumMarketKey?.toString()];
+  const putOrderbook = orderbooks[row.put?.serumMarketKey?.toString()];
+  useSubscribeSerumOrderbook(row.call?.serumMarketKey?.toString());
+  useSubscribeSerumOrderbook(row.put?.serumMarketKey?.toString());
 
-  const callHighestBid = callOrderbook?.bids[0]?.price
-  const callLowestAsk = callOrderbook?.asks[0]?.price
-  const putHighestBid = putOrderbook?.bids[0]?.price
-  const putLowestAsk = putOrderbook?.asks[0]?.price
+  const callHighestBid = callOrderbook?.bids[0]?.price;
+  const callLowestAsk = callOrderbook?.asks[0]?.price;
+  const putHighestBid = putOrderbook?.bids[0]?.price;
+  const putLowestAsk = putOrderbook?.asks[0]?.price;
   const callMarket = useOptionMarket({
     date: date.unix(),
     uAssetSymbol: uAsset?.tokenSymbol,
@@ -113,7 +113,7 @@ const CallPutRow = ({
     size: row.call?.size,
     amountPerContract: row.call?.amountPerContract,
     quoteAmountPerContract: row.call?.quoteAmountPerContract,
-  })
+  });
   const putMarket = useOptionMarket({
     date: date.unix(),
     uAssetSymbol: qAsset?.tokenSymbol,
@@ -121,20 +121,21 @@ const CallPutRow = ({
     size: row.put?.size,
     amountPerContract: row.put?.amountPerContract,
     quoteAmountPerContract: row.put?.quoteAmountPerContract,
-  })
-  const [splTokenMints, _] = useSPLTokenMints()
-  const callOptionMintInfo = splTokenMints[callMarket?.optionMintKey.toString()]
-  const putOptionMintInfo = splTokenMints[putMarket?.optionMintKey.toString()]
-  useSubscribeSPLTokenMint(callMarket?.optionMintKey)
-  useSubscribeSPLTokenMint(putMarket?.optionMintKey)
-  const marketTrackerData = useMarketData()
+  });
+  const [splTokenMints, _] = useSPLTokenMints();
+  const callOptionMintInfo =
+    splTokenMints[callMarket?.optionMintKey.toString()];
+  const putOptionMintInfo = splTokenMints[putMarket?.optionMintKey.toString()];
+  useSubscribeSPLTokenMint(callMarket?.optionMintKey);
+  useSubscribeSPLTokenMint(putMarket?.optionMintKey);
+  const marketTrackerData = useMarketData();
 
   // Further optimization here would be doing this in the markets page itself
   const timeToExpiry = useMemo(() => {
-    return Math.max(date.diff(moment.utc(), 'years', true), 0)
-  }, [date])
+    return Math.max(date.diff(moment.utc(), 'years', true), 0);
+  }, [date]);
 
-  const strikeAsNumber = row.strike && row.strike.toNumber()
+  const strikeAsNumber = row.strike && row.strike.toNumber();
 
   const callBidIV = useImpliedVol({
     optionPrice: (callHighestBid || 0) / contractSize,
@@ -142,7 +143,7 @@ const CallPutRow = ({
     marketPrice: markPrice,
     timeToExpiry,
     type: OptionType.CALL,
-  })
+  });
 
   const callAskIV = useImpliedVol({
     optionPrice: (callLowestAsk || 0) / contractSize,
@@ -150,7 +151,7 @@ const CallPutRow = ({
     marketPrice: markPrice,
     timeToExpiry,
     type: OptionType.CALL,
-  })
+  });
 
   const putBidIV = useImpliedVol({
     optionPrice: putHighestBid / contractSize,
@@ -158,7 +159,7 @@ const CallPutRow = ({
     marketPrice: markPrice,
     timeToExpiry,
     type: OptionType.PUT,
-  })
+  });
 
   const putAskIV = useImpliedVol({
     optionPrice: putLowestAsk / contractSize,
@@ -166,32 +167,32 @@ const CallPutRow = ({
     marketPrice: markPrice,
     timeToExpiry,
     type: OptionType.PUT,
-  })
+  });
 
-  const [loading, setLoading] = useState({ call: false, put: false })
+  const [loading, setLoading] = useState({ call: false, put: false });
 
   const formatStrike = (sp) => {
-    if (!sp) return <Empty>{'—'}</Empty>
-    return <span>{round ? sp.toFixed(precision) : sp.toString(10)}</span>
-  }
+    if (!sp) return <Empty>{'—'}</Empty>;
+    return <span>{round ? sp.toFixed(precision) : sp.toString(10)}</span>;
+  };
 
   const handleInitialize = useCallback(
     async ({ type }) => {
-      setLoading((prevState) => ({ ...prevState, [type]: true }))
+      setLoading((prevState) => ({ ...prevState, [type]: true }));
       try {
-        const ua = type === 'call' ? uAsset : qAsset
-        const qa = type === 'call' ? qAsset : uAsset
-        const { call, put } = row
+        const ua = type === 'call' ? uAsset : qAsset;
+        const qa = type === 'call' ? qAsset : uAsset;
+        const { call, put } = row;
 
-        let quoteAmountPerContract
-        let amountPerContract
+        let quoteAmountPerContract;
+        let amountPerContract;
 
         if (type === 'call') {
-          quoteAmountPerContract = put.amountPerContract
-          amountPerContract = put.quoteAmountPerContract
+          quoteAmountPerContract = put.amountPerContract;
+          amountPerContract = put.quoteAmountPerContract;
         } else {
-          quoteAmountPerContract = call.amountPerContract
-          amountPerContract = call.quoteAmountPerContract
+          quoteAmountPerContract = call.amountPerContract;
+          amountPerContract = call.quoteAmountPerContract;
         }
 
         await initializeMarkets({
@@ -204,26 +205,26 @@ const CallPutRow = ({
           uAssetDecimals: ua.decimals,
           qAssetDecimals: qa.decimals,
           expiration: date.unix(),
-        })
+        });
       } catch (err) {
-        console.log(err)
+        console.log(err);
         pushNotification({
           severity: 'error',
           message: `${err}`,
-        })
+        });
       } finally {
-        setLoading((prevState) => ({ ...prevState, [type]: false }))
+        setLoading((prevState) => ({ ...prevState, [type]: false }));
       }
     },
     [uAsset, qAsset, initializeMarkets, date, row, pushNotification],
-  )
+  );
 
   const callCellStyle = row.strike?.lte(markPrice)
     ? { backgroundColor: theme.palette.background.tableHighlight }
-    : { backgroundColor: theme.palette.background.marketsCallPutRow }
+    : { backgroundColor: theme.palette.background.marketsCallPutRow };
   const putCellStyle = row.strike?.gte(markPrice)
     ? { backgroundColor: theme.palette.background.tableHighlight }
-    : { backgroundColor: theme.palette.background.marketsCallPutRow }
+    : { backgroundColor: theme.palette.background.marketsCallPutRow };
 
   const openBuySellModal = (callOrPut, price = '0') => {
     // only allow full row clicking open for initialized markets
@@ -232,23 +233,23 @@ const CallPutRow = ({
         type: 'call',
         ...row.call,
         strike: row.strike,
-      })
-      setLimitPrice(price)
+      });
+      setLimitPrice(price);
     }
     if (callOrPut === 'put' && row.put?.initialized) {
       onClickBuySellPut({
         type: 'put',
         ...row.put,
         strike: row.strike,
-      })
-      setLimitPrice(price)
+      });
+      setLimitPrice(price);
     }
-  }
+  };
 
   const putChange =
-    marketTrackerData?.[row.put?.serumMarketKey?.toString()]?.change
+    marketTrackerData?.[row.put?.serumMarketKey?.toString()]?.change;
   const callChange =
-    marketTrackerData?.[row.call?.serumMarketKey?.toString()]?.change
+    marketTrackerData?.[row.call?.serumMarketKey?.toString()]?.change;
 
   return (
     <TRow hover role="checkbox" tabIndex={-1}>
@@ -518,7 +519,7 @@ const CallPutRow = ({
         )}
       </TCell>
     </TRow>
-  )
-}
+  );
+};
 
-export default CallPutRow
+export default CallPutRow;

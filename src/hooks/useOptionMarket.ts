@@ -1,8 +1,8 @@
-import type BigNumber from 'bignumber.js'
+import type BigNumber from 'bignumber.js';
 
-import { useMemo } from 'react'
-import { OptionMarket } from '../types'
-import useOptionsMarkets from './useOptionsMarkets'
+import { useMemo } from 'react';
+import { OptionMarket } from '../types';
+import useOptionsMarkets from './useOptionsMarkets';
 
 export const useOptionMarket = ({
   uAssetSymbol,
@@ -12,14 +12,14 @@ export const useOptionMarket = ({
   amountPerContract,
   quoteAmountPerContract,
 }: {
-  uAssetSymbol: string
-  qAssetSymbol: string
-  date: number
-  size: string
-  amountPerContract: BigNumber
-  quoteAmountPerContract: BigNumber
+  uAssetSymbol: string;
+  qAssetSymbol: string;
+  date: number;
+  size: string;
+  amountPerContract: BigNumber;
+  quoteAmountPerContract: BigNumber;
 }): OptionMarket | undefined => {
-  const { markets } = useOptionsMarkets()
+  const { markets } = useOptionsMarkets();
 
   return useMemo(
     () =>
@@ -39,5 +39,5 @@ export const useOptionMarket = ({
       amountPerContract,
       quoteAmountPerContract,
     ],
-  )
-}
+  );
+};

@@ -1,19 +1,19 @@
-import React, { useState } from 'react'
-import Button from '@material-ui/core/Button'
+import React, { useState } from 'react';
+import Button from '@material-ui/core/Button';
 
-import WalletAdapter from '../utils/wallet/walletAdapter'
-import useWallet from '../hooks/useWallet'
-import WalletSelect from './WalletSelect'
+import WalletAdapter from '../utils/wallet/walletAdapter';
+import useWallet from '../hooks/useWallet';
+import WalletSelect from './WalletSelect';
 
 const ConnectButton = (props) => {
-  const [isSelectOpen, setIsSelectOpen] = useState(false)
-  const { connect, connected } = useWallet()
-  const { children } = props
+  const [isSelectOpen, setIsSelectOpen] = useState(false);
+  const { connect, connected } = useWallet();
+  const { children } = props;
 
   const handleConnect = async (adapter: WalletAdapter) => {
-    await connect(adapter, {})
-    setIsSelectOpen(false)
-  }
+    await connect(adapter, {});
+    setIsSelectOpen(false);
+  };
 
   return (
     <>
@@ -32,7 +32,7 @@ const ConnectButton = (props) => {
         {children}
       </Button>
     </>
-  )
-}
+  );
+};
 
-export default ConnectButton
+export default ConnectButton;

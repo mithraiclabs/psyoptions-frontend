@@ -1,51 +1,51 @@
-import React, { useEffect, useState, useMemo } from 'react'
-import Done from '@material-ui/icons/Done'
-import Box from '@material-ui/core/Box'
-import Paper from '@material-ui/core/Paper'
-import Button from '@material-ui/core/Button'
-import Chip from '@material-ui/core/Chip'
-import CircularProgress from '@material-ui/core/CircularProgress'
-import * as Sentry from '@sentry/react'
+import React, { useEffect, useState, useMemo } from 'react';
+import Done from '@material-ui/icons/Done';
+import Box from '@material-ui/core/Box';
+import Paper from '@material-ui/core/Paper';
+import Button from '@material-ui/core/Button';
+import Chip from '@material-ui/core/Chip';
+import CircularProgress from '@material-ui/core/CircularProgress';
+import * as Sentry from '@sentry/react';
 
-import SelectAsset from '../SelectAsset'
-import Page from './Page'
-import Select from '../Select'
+import SelectAsset from '../SelectAsset';
+import Page from './Page';
+import Select from '../Select';
 
-import theme from '../../utils/theme'
-import { truncatePublicKey } from '../../utils/format'
-import { getLastFridayOfMonths } from '../../utils/dates'
+import theme from '../../utils/theme';
+import { truncatePublicKey } from '../../utils/format';
+import { getLastFridayOfMonths } from '../../utils/dates';
 
-import useWallet from '../../hooks/useWallet'
-import useOptionsMarkets from '../../hooks/useOptionsMarkets'
-import useOwnedTokenAccounts from '../../hooks/useOwnedTokenAccounts'
-import useNotifications from '../../hooks/useNotifications'
-import useAssetList from '../../hooks/useAssetList'
-import { WRAPPED_SOL_ADDRESS } from '../../utils/token'
-import { useOptionMarket } from '../../hooks/useOptionMarket'
+import useWallet from '../../hooks/useWallet';
+import useOptionsMarkets from '../../hooks/useOptionsMarkets';
+import useOwnedTokenAccounts from '../../hooks/useOwnedTokenAccounts';
+import useNotifications from '../../hooks/useNotifications';
+import useAssetList from '../../hooks/useAssetList';
+import { WRAPPED_SOL_ADDRESS } from '../../utils/token';
+import { useOptionMarket } from '../../hooks/useOptionMarket';
 
-import ConnectButton from '../ConnectButton'
+import ConnectButton from '../ConnectButton';
 
-const darkBorder = `1px solid ${theme.palette.background.main}`
+const darkBorder = `1px solid ${theme.palette.background.main}`;
 
-const expirations = getLastFridayOfMonths(10)
+const expirations = getLastFridayOfMonths(10);
 
 const Mint = () => {
-  const { pushNotification } = useNotifications()
-  const { connected } = useWallet()
+  const { pushNotification } = useNotifications();
+  const { connected } = useWallet();
   const { getStrikePrices, getSizesWithDate, createAccountsAndMint } =
-    useOptionsMarkets()
-  const { ownedTokenAccounts } = useOwnedTokenAccounts()
+    useOptionsMarkets();
+  const { ownedTokenAccounts } = useOwnedTokenAccounts();
 
-  const dates = expirations
+  const dates = expirations;
 
-  const [date, setDate] = useState(dates[0])
-  const { uAsset, qAsset, setUAsset } = useAssetList()
-  const [size, setSize] = useState('')
-  const [price, setPrice] = useState('')
-  const [uAssetAccount, setUAssetAccount] = useState('')
-  const [mintedOptionAccount, setMintedOptionAccount] = useState('')
-  const [mintedWriterTokenDestKey, setMintedWriterTokenDestKey] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [date, setDate] = useState(dates[0]);
+  const { uAsset, qAsset, setUAsset } = useAssetList();
+  const [size, setSize] = useState('');
+  const [price, setPrice] = useState('');
+  const [uAssetAccount, setUAssetAccount] = useState('');
+  const [mintedOptionAccount, setMintedOptionAccount] = useState('');
+  const [mintedWriterTokenDestKey, setMintedWriterTokenDestKey] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const allParams = {
     date: date.unix(),
@@ -53,42 +53,42 @@ const Mint = () => {
     qAssetSymbol: qAsset?.tokenSymbol,
     size,
     price,
-  }
-  const marketData = useOptionMarket(allParams)
+  };
+  const marketData = useOptionMarket(allParams);
 
-  const contractSizes = getSizesWithDate(allParams)
-  const strikePrices = getStrikePrices(allParams).sort((a, b) => a - b)
+  const contractSizes = getSizesWithDate(allParams);
+  const strikePrices = getStrikePrices(allParams).sort((a, b) => a - b);
 
   const ownedUAssetAccounts = useMemo(
     () => (uAsset && ownedTokenAccounts[uAsset.mintAddress]) || [],
     [uAsset, ownedTokenAccounts],
-  )
+  );
   const ownedMintedOptionAccounts = useMemo(
     () =>
       (marketData && ownedTokenAccounts[marketData.optionMintKey.toString()]) ||
       [],
     [marketData, ownedTokenAccounts],
-  )
+  );
   const ownedWriterTokenMintAccounts = useMemo(
     () =>
       (marketData && ownedTokenAccounts[marketData.writerTokenMintKey]) || [],
     [marketData, ownedTokenAccounts],
-  )
+  );
 
   useEffect(() => {
-    setUAssetAccount(ownedUAssetAccounts[0]?.pubKey)
-  }, [ownedUAssetAccounts])
+    setUAssetAccount(ownedUAssetAccounts[0]?.pubKey);
+  }, [ownedUAssetAccounts]);
 
   useEffect(() => {
-    setMintedOptionAccount(ownedMintedOptionAccounts[0]?.pubKey)
-  }, [ownedMintedOptionAccounts])
+    setMintedOptionAccount(ownedMintedOptionAccounts[0]?.pubKey);
+  }, [ownedMintedOptionAccounts]);
 
   useEffect(() => {
-    setMintedWriterTokenDestKey(ownedWriterTokenMintAccounts[0]?.pubKey)
-  }, [ownedWriterTokenMintAccounts])
+    setMintedWriterTokenDestKey(ownedWriterTokenMintAccounts[0]?.pubKey);
+  }, [ownedWriterTokenMintAccounts]);
 
   const handleMint = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
       await createAccountsAndMint({
         date: date.unix(),
@@ -102,18 +102,18 @@ const Mint = () => {
         ownedMintedOptionAccounts,
         mintedWriterTokenDestKey,
         numberOfContracts: 1,
-      })
-      setLoading(false)
+      });
+      setLoading(false);
     } catch (err) {
-      setLoading(false)
-      console.error(err)
-      Sentry.captureException(err)
+      setLoading(false);
+      console.error(err);
+      Sentry.captureException(err);
       pushNotification({
         severity: 'error',
         message: `${err}`,
-      })
+      });
     }
-  }
+  };
 
   return (
     <Page>
@@ -140,12 +140,12 @@ const Mint = () => {
               Expires On:
               <Box display="flex" flexWrap="wrap">
                 {expirations.map((moment) => {
-                  const label = `${moment.format('ll')}`
-                  const selected = moment === date
+                  const label = `${moment.format('ll')}`;
+                  const selected = moment === date;
                   const onClick = () => {
-                    setDate(moment)
-                    setPrice('')
-                  }
+                    setDate(moment);
+                    setPrice('');
+                  };
                   return (
                     <Chip
                       key={label}
@@ -162,7 +162,7 @@ const Mint = () => {
                         marginRight: theme.spacing(2),
                       }}
                     />
-                  )
+                  );
                 })}
               </Box>
             </Box>
@@ -174,8 +174,8 @@ const Mint = () => {
                   <SelectAsset
                     selectedAsset={uAsset}
                     onSelectAsset={(asset) => {
-                      setUAsset(asset)
-                      setPrice('')
+                      setUAsset(asset);
+                      setPrice('');
                     }}
                   />
                 </Box>
@@ -214,8 +214,8 @@ const Mint = () => {
                   label="Contract Size"
                   value={contractSizes.length ? size : ''}
                   onChange={(e) => {
-                    setPrice('')
-                    setSize(e.target.value)
+                    setPrice('');
+                    setSize(e.target.value);
                   }}
                   disabled={contractSizes.length === 0}
                   options={contractSizes.map((s) => ({
@@ -291,7 +291,7 @@ const Mint = () => {
         </Paper>
       </Box>
     </Page>
-  )
-}
+  );
+};
 
-export default Mint
+export default Mint;

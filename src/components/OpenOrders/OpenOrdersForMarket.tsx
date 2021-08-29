@@ -1,25 +1,25 @@
-import React, { useState } from 'react'
-import TableRow from '@material-ui/core/TableRow'
-import moment from 'moment'
-import { PublicKey } from '@solana/web3.js'
+import React, { useState } from 'react';
+import TableRow from '@material-ui/core/TableRow';
+import moment from 'moment';
+import { PublicKey } from '@solana/web3.js';
 
-import useSerum from '../../hooks/useSerum'
-import { useSerumOpenOrders } from '../../context/SerumOpenOrdersContext'
-import { useSerumOrderbooks } from '../../context/SerumOrderbookContext'
-import { useSubscribeOpenOrders, useCancelOrder } from '../../hooks/Serum'
+import useSerum from '../../hooks/useSerum';
+import { useSerumOpenOrders } from '../../context/SerumOpenOrdersContext';
+import { useSerumOrderbooks } from '../../context/SerumOrderbookContext';
+import { useSubscribeOpenOrders, useCancelOrder } from '../../hooks/Serum';
 
-import theme from '../../utils/theme'
+import theme from '../../utils/theme';
 
-import { TCell } from './OpenOrderStyles'
-import { CallOrPut } from '../../types'
-import TxButton from '../TxButton'
+import { TCell } from './OpenOrderStyles';
+import { CallOrPut } from '../../types';
+import TxButton from '../TxButton';
 
 type SerumBidOrAsk = {
-  side: string
-  price: number
-  size: number
-  openOrdersAddress: PublicKey
-}
+  side: string;
+  price: number;
+  size: number;
+  openOrdersAddress: PublicKey;
+};
 
 const OrderRow = ({
   order,
@@ -31,13 +31,13 @@ const OrderRow = ({
   contractSize,
   handleCancelOrder,
 }) => {
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(false);
 
   const cancelOrder = async () => {
-    setLoading(true)
-    await handleCancelOrder(order)
-    setLoading(false)
-  }
+    setLoading(true);
+    await handleCancelOrder(order);
+    setLoading(false);
+  };
 
   return (
     <TableRow hover>
@@ -81,8 +81,8 @@ const OrderRow = ({
         </TxButton>
       </TCell>
     </TableRow>
-  )
-}
+  );
+};
 
 // Render all open orders for a given market as table rows
 const OpenOrdersForMarket: React.FC<CallOrPut> = ({
@@ -94,31 +94,32 @@ const OpenOrdersForMarket: React.FC<CallOrPut> = ({
   serumMarketKey,
   strikePrice,
 }) => {
-  const { serumMarkets } = useSerum()
-  const [orderbooks] = useSerumOrderbooks()
-  const [openOrders] = useSerumOpenOrders()
-  const serumMarketAddress = serumMarketKey.toString()
-  const { serumMarket, serumProgramId } = serumMarkets[serumMarketAddress] || {}
+  const { serumMarkets } = useSerum();
+  const [orderbooks] = useSerumOrderbooks();
+  const [openOrders] = useSerumOpenOrders();
+  const serumMarketAddress = serumMarketKey.toString();
+  const { serumMarket, serumProgramId } =
+    serumMarkets[serumMarketAddress] || {};
 
-  const handleCancelOrder = useCancelOrder(serumMarketAddress)
+  const handleCancelOrder = useCancelOrder(serumMarketAddress);
 
-  useSubscribeOpenOrders(serumMarketAddress, serumProgramId)
+  useSubscribeOpenOrders(serumMarketAddress, serumProgramId);
 
   if (
     !serumMarket ||
     !openOrders[serumMarketAddress]?.orders ||
     !orderbooks[serumMarketAddress]
   ) {
-    return null
+    return null;
   }
 
-  const { bidOrderbook, askOrderbook } = orderbooks[serumMarketAddress]
+  const { bidOrderbook, askOrderbook } = orderbooks[serumMarketAddress];
 
-  const bids = [...(bidOrderbook || [])] as SerumBidOrAsk[]
-  const asks = [...(askOrderbook || [])] as SerumBidOrAsk[]
-  const openOrderAccounts = openOrders[serumMarketAddress]?.orders || []
-  const bidPrices = {}
-  const askPrices = {}
+  const bids = [...(bidOrderbook || [])] as SerumBidOrAsk[];
+  const asks = [...(askOrderbook || [])] as SerumBidOrAsk[];
+  const openOrderAccounts = openOrders[serumMarketAddress]?.orders || [];
+  const bidPrices = {};
+  const askPrices = {};
 
   // Some manual bugfixing:
   // If this wallet has multiple open orders of same price
@@ -130,37 +131,37 @@ const OpenOrdersForMarket: React.FC<CallOrPut> = ({
     if (
       openOrderAccounts.some((a) => order.openOrdersAddress.equals(a.address))
     ) {
-      const askPricesArr = askPrices[`${order.price}`]
+      const askPricesArr = askPrices[`${order.price}`];
       if (askPricesArr?.length > 0) {
-        askPricesArr[0].size -= order.size
-        askPricesArr.push(order)
+        askPricesArr[0].size -= order.size;
+        askPricesArr.push(order);
       } else {
-        askPrices[`${order.price}`] = [order]
+        askPrices[`${order.price}`] = [order];
       }
     }
-  })
+  });
 
   // We can modify the bid order sizes in-place if we reverse them first
   // The order with "incorrect size" will be at the end for bids, when reversed it will be at the beginning
-  bids.reverse()
+  bids.reverse();
   bids.forEach((order) => {
     if (
       openOrderAccounts.some((a) => order.openOrdersAddress.equals(a.address))
     ) {
-      const bidPricesArr = bidPrices[`${order.price}`]
+      const bidPricesArr = bidPrices[`${order.price}`];
       if (bidPricesArr?.length > 0) {
-        bidPricesArr[0].size -= order.size
-        bidPricesArr.push(order)
+        bidPricesArr[0].size -= order.size;
+        bidPricesArr.push(order);
       } else {
-        bidPrices[`${order.price}`] = [order]
+        bidPrices[`${order.price}`] = [order];
       }
     }
-  })
+  });
 
   const actualOpenOrders = [
     ...Object.values(bidPrices),
     ...Object.values(askPrices),
-  ].flat() as SerumBidOrAsk[]
+  ].flat() as SerumBidOrAsk[];
 
   return (
     <>
@@ -178,10 +179,10 @@ const OpenOrdersForMarket: React.FC<CallOrPut> = ({
               handleCancelOrder={handleCancelOrder}
               key={JSON.stringify(order)}
             />
-          )
+          );
         })}
     </>
-  )
-}
+  );
+};
 
-export default React.memo(OpenOrdersForMarket)
+export default React.memo(OpenOrdersForMarket);

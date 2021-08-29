@@ -1,15 +1,15 @@
-import Wallet from '@project-serum/sol-wallet-adapter'
+import Wallet from '@project-serum/sol-wallet-adapter';
 
-import { isBrowser } from '../../isNode'
+import { isBrowser } from '../../isNode';
 
-let solletExtAdaptor
+let solletExtAdaptor;
 
 if (isBrowser && (window as any)?.sollet) {
-  solletExtAdaptor = new Wallet((window as any).sollet)
+  solletExtAdaptor = new Wallet((window as any).sollet);
 }
 
 const getAdapter = () => {
-  return solletExtAdaptor
-}
+  return solletExtAdaptor;
+};
 
-export default getAdapter
+export default getAdapter;

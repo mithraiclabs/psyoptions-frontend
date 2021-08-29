@@ -1,64 +1,64 @@
-import React, { useState } from 'react'
-import Dialog from '@material-ui/core/Dialog'
-import Chip from '@material-ui/core/Chip'
-import Box from '@material-ui/core/Box'
-import TextField from '@material-ui/core/TextField'
-import ListItem from '@material-ui/core/ListItem'
-import ListItemAvatar from '@material-ui/core/ListItemAvatar'
-import Avatar from '@material-ui/core/Avatar'
-import ListItemText from '@material-ui/core/ListItemText'
-import { useTheme, withStyles } from '@material-ui/core/styles'
-import KeyboardArrowDown from '@material-ui/icons/KeyboardArrowDown'
-import { debounce } from 'throttle-debounce'
+import React, { useState } from 'react';
+import Dialog from '@material-ui/core/Dialog';
+import Chip from '@material-ui/core/Chip';
+import Box from '@material-ui/core/Box';
+import TextField from '@material-ui/core/TextField';
+import ListItem from '@material-ui/core/ListItem';
+import ListItemAvatar from '@material-ui/core/ListItemAvatar';
+import Avatar from '@material-ui/core/Avatar';
+import ListItemText from '@material-ui/core/ListItemText';
+import { useTheme, withStyles } from '@material-ui/core/styles';
+import KeyboardArrowDown from '@material-ui/icons/KeyboardArrowDown';
+import { debounce } from 'throttle-debounce';
 
-import { Token } from '@mithraic-labs/market-meta/dist/types'
-import useAssetList from '../hooks/useAssetList'
+import { Token } from '@mithraic-labs/market-meta/dist/types';
+import useAssetList from '../hooks/useAssetList';
 
 const CustomChip = withStyles({
   disabled: {
     border: '1px solid transparent',
     opacity: '1 !important',
   },
-})(Chip)
+})(Chip);
 
 const SelectAsset: React.FC<{
-  label?: string
-  selectedAsset: Token
-  onSelectAsset?: (asset: Token) => void
-  disabled?: boolean
+  label?: string;
+  selectedAsset: Token;
+  onSelectAsset?: (asset: Token) => void;
+  disabled?: boolean;
 }> = ({
   label = 'Select Asset',
   selectedAsset,
   onSelectAsset,
   disabled = false,
 }) => {
-  const theme = useTheme()
-  const { supportedAssets, assetListLoading } = useAssetList()
+  const theme = useTheme();
+  const { supportedAssets, assetListLoading } = useAssetList();
 
-  const [open, setOpen] = useState(false)
-  const [filterInput, setFilterInput] = useState('')
+  const [open, setOpen] = useState(false);
+  const [filterInput, setFilterInput] = useState('');
 
   const filteredAssetList = supportedAssets.filter((item) => {
-    const match = filterInput.toLowerCase()
+    const match = filterInput.toLowerCase();
     const shouldAppear =
       (item.tokenName.toLowerCase().match(match) ||
         item.tokenSymbol.toLowerCase().match(match)) &&
-      !item.tokenSymbol.toLowerCase().match('usdc')
-    return shouldAppear
-  })
+      !item.tokenSymbol.toLowerCase().match('usdc');
+    return shouldAppear;
+  });
 
   const handleChangeFilterInput = debounce(200, false, (e) => {
-    setFilterInput(e.target.value)
-  })
+    setFilterInput(e.target.value);
+  });
 
   const handleOpen = () => {
-    setFilterInput('')
-    setOpen(true)
-  }
+    setFilterInput('');
+    setOpen(true);
+  };
 
   const chipLabel = assetListLoading
     ? 'Loading...'
-    : selectedAsset?.tokenSymbol || 'Choose Asset'
+    : selectedAsset?.tokenSymbol || 'Choose Asset';
 
   return (
     <>
@@ -90,8 +90,8 @@ const SelectAsset: React.FC<{
                 <ListItem
                   button
                   onClick={() => {
-                    setOpen(false)
-                    onSelectAsset(asset)
+                    setOpen(false);
+                    onSelectAsset(asset);
                   }}
                   key={asset.mintAddress}
                 >
@@ -131,7 +131,7 @@ const SelectAsset: React.FC<{
         deleteIcon={disabled ? null : <KeyboardArrowDown />}
       />
     </>
-  )
-}
+  );
+};
 
-export default SelectAsset
+export default SelectAsset;

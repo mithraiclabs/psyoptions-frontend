@@ -34,7 +34,6 @@
       1,
       { "extensions": [".js", ".jsx", ".tsx"] }
     ],
-    "semi": "off",
     "global-require": "off",
     "react/no-array-index-key": "warn",
     "no-nested-ternary": "off",

@@ -1,16 +1,16 @@
-import React from 'react'
-import Dialog from '@material-ui/core/Dialog'
-import Box from '@material-ui/core/Box'
-import Button from '@material-ui/core/Button'
-import useLocalStorageState from 'use-local-storage-state'
+import React from 'react';
+import Dialog from '@material-ui/core/Dialog';
+import Box from '@material-ui/core/Box';
+import Button from '@material-ui/core/Button';
+import useLocalStorageState from 'use-local-storage-state';
 
 const Disclaimer = () => {
   const [hasAcceptedDisclaimer, setHasAcceptedDisclaimer] =
-    useLocalStorageState('hasAcceptedDisclaimer', false)
+    useLocalStorageState('hasAcceptedDisclaimer', false);
 
   const dismissDisclaimer = () => {
-    setHasAcceptedDisclaimer(true)
-  }
+    setHasAcceptedDisclaimer(true);
+  };
 
   return (
     <Dialog open={!hasAcceptedDisclaimer} maxWidth={'lg'}>
@@ -56,7 +56,7 @@ const Disclaimer = () => {
         </Box>
       </Box>
     </Dialog>
-  )
-}
+  );
+};
 
-export default Disclaimer
+export default Disclaimer;

@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-import React from 'react'
-import Box from '@material-ui/core/Box'
-import { makeStyles } from '@material-ui/core/styles'
+import React from 'react';
+import Box from '@material-ui/core/Box';
+import { makeStyles } from '@material-ui/core/styles';
 
-import Page from '../Page'
+import Page from '../Page';
 // @ts-ignore
-import logo from '../../../../assets/psyoptions-logo-light.png'
-import theme from '../../../utils/theme'
+import logo from '../../../../assets/psyoptions-logo-light.png';
+import theme from '../../../utils/theme';
 
 const useStyles = makeStyles({
   logoH1: {
@@ -18,13 +18,13 @@ const useStyles = makeStyles({
     WebkitTextFillColor: 'transparent',
     fontSize: 'inherit',
   },
-})
+});
 
 const pageBg =
-  'linear-gradient(0deg, rgba(66, 32, 59, 1) 0%, rgba(27, 26, 45, 1) 35%, rgba(16, 16, 23, 1) 70%)'
+  'linear-gradient(0deg, rgba(66, 32, 59, 1) 0%, rgba(27, 26, 45, 1) 35%, rgba(16, 16, 23, 1) 70%)';
 
 const ProhibitedJurisdiction = () => {
-  const { logoH1 } = useStyles()
+  const { logoH1 } = useStyles();
 
   return (
     <Page background={pageBg} hideNavbar>
@@ -74,7 +74,7 @@ const ProhibitedJurisdiction = () => {
         </Box>
       </Box>
     </Page>
-  )
-}
+  );
+};
 
-export default ProhibitedJurisdiction
+export default ProhibitedJurisdiction;

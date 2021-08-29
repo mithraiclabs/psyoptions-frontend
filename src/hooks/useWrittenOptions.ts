@@ -1,7 +1,7 @@
-import { useMemo } from 'react'
-import { TokenAccount } from '../types'
-import useOptionsMarkets from './useOptionsMarkets'
-import useOwnedTokenAccounts from './useOwnedTokenAccounts'
+import { useMemo } from 'react';
+import { TokenAccount } from '../types';
+import useOptionsMarkets from './useOptionsMarkets';
+import useOwnedTokenAccounts from './useOwnedTokenAccounts';
 
 /**
  * Check the owned tokens for tokens that match the writer mint
@@ -18,22 +18,21 @@ import useOwnedTokenAccounts from './useOwnedTokenAccounts'
  * }
  */
 export const useWrittenOptions = (): Record<string, TokenAccount[]> => {
-  const { markets } = useOptionsMarkets()
-  const { ownedTokenAccounts } = useOwnedTokenAccounts()
+  const { markets } = useOptionsMarkets();
+  const { ownedTokenAccounts } = useOwnedTokenAccounts();
 
   return useMemo(() => {
     const positions = Object.keys(markets).reduce((acc, marketKey) => {
-      const writerTokenMintAddress = markets[
-        marketKey
-      ].writerTokenMintKey.toString()
+      const writerTokenMintAddress =
+        markets[marketKey].writerTokenMintKey.toString();
       const accountsWithHoldings = ownedTokenAccounts[
         writerTokenMintAddress
-      ]?.filter((writerTokenAcct) => writerTokenAcct.amount > 0)
+      ]?.filter((writerTokenAcct) => writerTokenAcct.amount > 0);
       if (accountsWithHoldings?.length) {
-        acc[marketKey] = accountsWithHoldings
+        acc[marketKey] = accountsWithHoldings;
       }
-      return acc
-    }, {})
-    return positions
-  }, [markets, ownedTokenAccounts])
-}
+      return acc;
+    }, {});
+    return positions;
+  }, [markets, ownedTokenAccounts]);
+};

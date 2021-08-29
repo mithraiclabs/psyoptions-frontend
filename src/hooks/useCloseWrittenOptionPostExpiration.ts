@@ -1,19 +1,19 @@
-import { useCallback } from 'react'
-import { PublicKey, Transaction } from '@solana/web3.js'
-import { closePostExpirationCoveredCallInstruction } from '@mithraic-labs/psyoptions'
-import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import useConnection from './useConnection'
-import useWallet from './useWallet'
-import useNotifications from './useNotifications'
-import useSendTransaction from './useSendTransaction'
-import { initializeTokenAccountTx, WRAPPED_SOL_ADDRESS } from '../utils/token'
-import { useSolanaMeta } from '../context/SolanaMetaContext'
+import { useCallback } from 'react';
+import { PublicKey, Transaction } from '@solana/web3.js';
+import { closePostExpirationCoveredCallInstruction } from '@mithraic-labs/psyoptions';
+import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import useConnection from './useConnection';
+import useWallet from './useWallet';
+import useNotifications from './useNotifications';
+import useSendTransaction from './useSendTransaction';
+import { initializeTokenAccountTx, WRAPPED_SOL_ADDRESS } from '../utils/token';
+import { useSolanaMeta } from '../context/SolanaMetaContext';
 
 // Solana has a maximum packet size when sending a transaction.
 // As of writing 25 mints is a good round number that won't
 // breach that limit when OptionToken and WriterToken accounts
 // are included in TX.
-const maxClosesPerTx = 25
+const maxClosesPerTx = 25;
 
 /**
  * Close the Option the wallet has written in order to return the
@@ -29,22 +29,22 @@ export const useCloseWrittenOptionPostExpiration = (
   underlyingAssetDestKey,
   writerTokenSourceKey,
 ) => {
-  const { connection, endpoint } = useConnection()
-  const { pushErrorNotification } = useNotifications()
-  const { pubKey, wallet } = useWallet()
-  const { splTokenAccountRentBalance } = useSolanaMeta()
-  const { sendSignedTransaction } = useSendTransaction()
+  const { connection, endpoint } = useConnection();
+  const { pushErrorNotification } = useNotifications();
+  const { pubKey, wallet } = useWallet();
+  const { splTokenAccountRentBalance } = useSolanaMeta();
+  const { sendSignedTransaction } = useSendTransaction();
 
   const closeOptionPostExpiration = useCallback(
     async (contractsToClose = 1) => {
       try {
-        let remaining = contractsToClose
-        const closeTxs = []
+        let remaining = contractsToClose;
+        const closeTxs = [];
 
         while (remaining > 0) {
-          const transaction = new Transaction()
-          const signers = []
-          let _underlyingAssetDestKey = underlyingAssetDestKey
+          const transaction = new Transaction();
+          const signers = [];
+          let _underlyingAssetDestKey = underlyingAssetDestKey;
           if (market.uAssetMint === WRAPPED_SOL_ADDRESS) {
             // need to create a sol account
             const {
@@ -57,10 +57,10 @@ export const useCloseWrittenOptionPostExpiration = (
               mintPublicKey: new PublicKey(WRAPPED_SOL_ADDRESS),
               owner: pubKey,
               rentBalance: splTokenAccountRentBalance,
-            })
-            transaction.add(initWrappedSolAcctIx)
-            signers.push(wrappedSolAccount)
-            _underlyingAssetDestKey = wrappedSolAccount.publicKey
+            });
+            transaction.add(initWrappedSolAcctIx);
+            signers.push(wrappedSolAccount);
+            _underlyingAssetDestKey = wrappedSolAccount.publicKey;
           }
           const ix = await closePostExpirationCoveredCallInstruction({
             programId: new PublicKey(market.psyOptionsProgramId),
@@ -70,17 +70,17 @@ export const useCloseWrittenOptionPostExpiration = (
             writerTokenMintKey: market.writerTokenMintKey,
             writerTokenSourceKey,
             writerTokenSourceAuthorityKey: pubKey,
-          })
+          });
 
           // loop this by # of times given by parameter
-          const loopRemaining = remaining
+          const loopRemaining = remaining;
           for (
             let i = 1;
             i <= Math.min(maxClosesPerTx, loopRemaining);
             i += 1
           ) {
-            transaction.add(ix)
-            remaining -= 1
+            transaction.add(ix);
+            remaining -= 1;
           }
 
           // Close out the wrapped SOL account so it feels native
@@ -93,20 +93,20 @@ export const useCloseWrittenOptionPostExpiration = (
                 pubKey,
                 [],
               ),
-            )
+            );
           }
-          transaction.feePayer = pubKey
-          const { blockhash } = await connection.getRecentBlockhash() // eslint-disable-line
-          transaction.recentBlockhash = blockhash
+          transaction.feePayer = pubKey;
+          const { blockhash } = await connection.getRecentBlockhash(); // eslint-disable-line
+          transaction.recentBlockhash = blockhash;
 
           if (signers.length) {
-            transaction.partialSign(...signers)
+            transaction.partialSign(...signers);
           }
 
-          closeTxs.push(transaction)
+          closeTxs.push(transaction);
         }
 
-        const signed = await wallet.signAllTransactions(closeTxs)
+        const signed = await wallet.signAllTransactions(closeTxs);
 
         await Promise.all(
           signed.map(async (signedTx) => {
@@ -115,11 +115,11 @@ export const useCloseWrittenOptionPostExpiration = (
               connection,
               sendingMessage: 'Sending Transaction: Close Option',
               successMessage: 'Transaction Confirmed: Close Option',
-            })
+            });
           }),
-        )
+        );
       } catch (err) {
-        pushErrorNotification(err)
+        pushErrorNotification(err);
       }
     },
     [
@@ -137,9 +137,9 @@ export const useCloseWrittenOptionPostExpiration = (
       sendSignedTransaction,
       splTokenAccountRentBalance,
     ],
-  )
+  );
 
   return {
     closeOptionPostExpiration,
-  }
-}
+  };
+};

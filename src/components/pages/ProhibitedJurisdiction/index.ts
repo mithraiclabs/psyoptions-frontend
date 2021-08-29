@@ -1,3 +1,3 @@
-import ProhibitedJurisdiction from './ProhibitedJurisdiction'
+import ProhibitedJurisdiction from './ProhibitedJurisdiction';
 
-export default ProhibitedJurisdiction
+export default ProhibitedJurisdiction;

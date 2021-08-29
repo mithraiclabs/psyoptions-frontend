@@ -1,29 +1,29 @@
-import Box from '@material-ui/core/Box'
-import React, { useState, useMemo } from 'react'
-import CreateIcon from '@material-ui/icons/Create'
-import BarChartIcon from '@material-ui/icons/BarChart'
-import { useTheme } from '@material-ui/core/styles'
-import Page from '../Page'
-import TabCustom from '../../Tab'
+import Box from '@material-ui/core/Box';
+import React, { useState, useMemo } from 'react';
+import CreateIcon from '@material-ui/icons/Create';
+import BarChartIcon from '@material-ui/icons/BarChart';
+import { useTheme } from '@material-ui/core/styles';
+import Page from '../Page';
+import TabCustom from '../../Tab';
 
-import PositionRow from './PositionRow'
-import useOpenPositions from '../../../hooks/useOpenPositions'
-import useOptionsMarkets from '../../../hooks/useOptionsMarkets'
-import { Heading } from './Heading'
-import { WrittenOptionsTable } from './WrittenOptionsTable'
-import EmptySvg from './EmptySvg'
-import useWallet from '../../../hooks/useWallet'
-import { useWrittenOptions } from '../../../hooks/useWrittenOptions'
+import PositionRow from './PositionRow';
+import useOpenPositions from '../../../hooks/useOpenPositions';
+import useOptionsMarkets from '../../../hooks/useOptionsMarkets';
+import { Heading } from './Heading';
+import { WrittenOptionsTable } from './WrittenOptionsTable';
+import EmptySvg from './EmptySvg';
+import useWallet from '../../../hooks/useWallet';
+import { useWrittenOptions } from '../../../hooks/useWrittenOptions';
 
 const OpenPositions = () => {
-  const { connected } = useWallet()
-  const theme = useTheme()
-  const [page] = useState(0)
-  const [rowsPerPage] = useState(10)
-  const positions = useOpenPositions()
-  const { markets } = useOptionsMarkets()
-  const [selectedTab, setSelectedTab] = useState(0)
-  const writtenOptions = useWrittenOptions()
+  const { connected } = useWallet();
+  const theme = useTheme();
+  const [page] = useState(0);
+  const [rowsPerPage] = useState(10);
+  const positions = useOpenPositions();
+  const { markets } = useOptionsMarkets();
+  const [selectedTab, setSelectedTab] = useState(0);
+  const writtenOptions = useWrittenOptions();
 
   const positionRows = useMemo(
     () =>
@@ -47,17 +47,17 @@ const OpenPositions = () => {
           quoteAmountPerContract: markets[key]?.quoteAmountPerContract,
         }))
         .sort((rowA, rowB) => {
-          return rowB?.expiration - rowA?.expiration
+          return rowB?.expiration - rowA?.expiration;
         }),
     [positions, markets],
-  )
+  );
 
-  const hasOpenPositions = positionRows.length > 0
+  const hasOpenPositions = positionRows.length > 0;
 
   const writtenOptionKeys = useMemo(
     () => Object.keys(writtenOptions),
     [writtenOptions],
-  )
+  );
 
   return (
     <Page>
@@ -201,7 +201,7 @@ const OpenPositions = () => {
         )}
       </Box>
     </Page>
-  )
-}
+  );
+};
 
-export default OpenPositions
+export default OpenPositions;

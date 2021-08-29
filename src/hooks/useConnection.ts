@@ -1,5 +1,5 @@
-import { useContext } from 'react'
-import { ConnectionContext } from '../context/ConnectionContext'
+import { useContext } from 'react';
+import { ConnectionContext } from '../context/ConnectionContext';
 
 const useConnection = () => {
   const {
@@ -9,7 +9,7 @@ const useConnection = () => {
     graphQLUrl,
     setEndpoint,
     dexProgramId,
-  } = useContext(ConnectionContext)
+  } = useContext(ConnectionContext);
 
   return {
     networks,
@@ -18,7 +18,7 @@ const useConnection = () => {
     setEndpoint,
     dexProgramId,
     graphQLUrl,
-  }
-}
+  };
+};
 
-export default useConnection
+export default useConnection;

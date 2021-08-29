@@ -1,18 +1,18 @@
-import type WalletAdapter from './walletAdapter'
+import type WalletAdapter from './walletAdapter';
 
-import getSolletAdapter from './adapters/sollet'
-import getPhantomAdapter from './adapters/phantom'
-import getMathAdapter from './adapters/math'
-import getSolongAdapter from './adapters/solong'
-import getSolflareAdapter from './adapters/solflare'
-import getSolletExtAdaptor from './adapters/solletExtension'
+import getSolletAdapter from './adapters/sollet';
+import getPhantomAdapter from './adapters/phantom';
+import getMathAdapter from './adapters/math';
+import getSolongAdapter from './adapters/solong';
+import getSolflareAdapter from './adapters/solflare';
+import getSolletExtAdaptor from './adapters/solletExtension';
 
-type GetAdapterFunction = () => WalletAdapter | undefined
+type GetAdapterFunction = () => WalletAdapter | undefined;
 
 interface Wallet {
-  name: string
-  icon: string
-  getAdapter: GetAdapterFunction
+  name: string;
+  icon: string;
+  getAdapter: GetAdapterFunction;
 }
 
 const wallets: Wallet[] = [
@@ -46,6 +46,6 @@ const wallets: Wallet[] = [
     icon: 'https://cdn.jsdelivr.net/gh/solana-labs/oyster@main/assets/wallets/mathwallet.svg',
     getAdapter: getMathAdapter,
   },
-]
+];
 
-export default wallets
+export default wallets;

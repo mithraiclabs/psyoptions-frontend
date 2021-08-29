@@ -1,1 +1,1 @@
-export * from './useChainMarketData'
+export * from './useChainMarketData';

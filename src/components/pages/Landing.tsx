@@ -1,17 +1,17 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-import React from 'react'
-import { useHistory } from 'react-router-dom'
-import Box from '@material-ui/core/Box'
-import Button from '@material-ui/core/Button'
-import { makeStyles } from '@material-ui/core/styles'
+import React from 'react';
+import { useHistory } from 'react-router-dom';
+import Box from '@material-ui/core/Box';
+import Button from '@material-ui/core/Button';
+import { makeStyles } from '@material-ui/core/styles';
 
-import Page from './Page'
+import Page from './Page';
 // @ts-ignore
-import logo from '../../../assets/psyoptions-logo-light.png'
-import theme from '../../utils/theme'
-import useOptionsMarkets from '../../hooks/useOptionsMarkets'
-import useOpenPositions from '../../hooks/useOpenPositions'
-import WalletStatus from '../WalletStatus'
+import logo from '../../../assets/psyoptions-logo-light.png';
+import theme from '../../utils/theme';
+import useOptionsMarkets from '../../hooks/useOptionsMarkets';
+import useOpenPositions from '../../hooks/useOpenPositions';
+import WalletStatus from '../WalletStatus';
 
 const useStyles = makeStyles({
   logoH1: {
@@ -27,22 +27,22 @@ const useStyles = makeStyles({
     borderRadius: '4px',
     border: `1px solid ${theme.palette.primary.main}`,
   },
-})
+});
 
 const pageBg =
-  'linear-gradient(0deg, rgba(66, 32, 59, 1) 0%, rgba(27, 26, 45, 1) 35%, rgba(16, 16, 23, 1) 70%)'
+  'linear-gradient(0deg, rgba(66, 32, 59, 1) 0%, rgba(27, 26, 45, 1) 35%, rgba(16, 16, 23, 1) 70%)';
 
 type LandingCardProps = {
-  title: string
-  text: string
-  button: JSX.Element
-}
+  title: string;
+  text: string;
+  button: JSX.Element;
+};
 const LandingCard = ({
   title = '',
   text = '',
   button = null,
 }: LandingCardProps) => {
-  const { landingCard } = useStyles()
+  const { landingCard } = useStyles();
 
   return (
     <Box
@@ -73,15 +73,15 @@ const LandingCard = ({
       </Box>
       {button}
     </Box>
-  )
-}
+  );
+};
 
 const Landing = () => {
-  const history = useHistory()
-  const { markets } = useOptionsMarkets()
-  const positions = useOpenPositions()
-  const { logoH1 } = useStyles()
-  const { landingCard } = useStyles()
+  const history = useHistory();
+  const { markets } = useOptionsMarkets();
+  const positions = useOpenPositions();
+  const { logoH1 } = useStyles();
+  const { landingCard } = useStyles();
 
   return (
     <Page background={pageBg}>
@@ -125,8 +125,8 @@ const Landing = () => {
                   style={{ whiteSpace: 'nowrap' }}
                   href="/markets"
                   onClick={(e) => {
-                    e.preventDefault()
-                    history.push('/markets')
+                    e.preventDefault();
+                    history.push('/markets');
                   }}
                 >
                   View Markets
@@ -185,7 +185,7 @@ const Landing = () => {
         </Box>
       </Box>
     </Page>
-  )
-}
+  );
+};
 
-export default Landing
+export default Landing;

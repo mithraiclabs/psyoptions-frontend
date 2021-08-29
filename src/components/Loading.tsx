@@ -1,6 +1,6 @@
-import React from 'react'
-import { makeStyles } from '@material-ui/core/styles'
-import Box from '@material-ui/core/Box'
+import React from 'react';
+import { makeStyles } from '@material-ui/core/styles';
+import Box from '@material-ui/core/Box';
 
 const useStyles = makeStyles(() => ({
   loading: {
@@ -26,15 +26,15 @@ const useStyles = makeStyles(() => ({
       transform: 'translateX(0%)',
     },
   },
-}))
+}));
 
 const Loading = () => {
-  const styles = useStyles()
+  const styles = useStyles();
   return (
     <Box borderRadius={'20px'} className={styles.loading}>
       <Box className={styles.loadingInnerBar} />
     </Box>
-  )
-}
+  );
+};
 
-export default Loading
+export default Loading;

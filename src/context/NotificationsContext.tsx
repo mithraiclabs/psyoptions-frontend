@@ -1,10 +1,10 @@
-import React, { useState, useCallback, useMemo, createContext } from 'react'
-import { PsyOptionError } from '@mithraic-labs/psyoptions'
-import TransactionError from '../utils/transactionErrors/TransactionError'
-import { NotificationSeverity } from '../types'
-import useConnection from '../hooks/useConnection'
+import React, { useState, useCallback, useMemo, createContext } from 'react';
+import { PsyOptionError } from '@mithraic-labs/psyoptions';
+import TransactionError from '../utils/transactionErrors/TransactionError';
+import { NotificationSeverity } from '../types';
+import useConnection from '../hooks/useConnection';
 
-const NotificationsContext = createContext(undefined)
+const NotificationsContext = createContext(undefined);
 
 const NotificationsProvider: React.FC = ({ children }) => {
   const [notifications, setNotifications] = useState([
@@ -25,8 +25,8 @@ const NotificationsProvider: React.FC = ({ children }) => {
     //   severity: 'warning',
     //   message: 'Warning',
     // },
-  ])
-  const { endpoint } = useConnection()
+  ]);
+  const { endpoint } = useConnection();
 
   /**
    * Parse an instruction error and decode errors from known programs
@@ -35,33 +35,34 @@ const NotificationsProvider: React.FC = ({ children }) => {
     (
       transactionError: TransactionError,
     ): {
-      parsedError?: string
-      errorMessage: string
+      parsedError?: string;
+      errorMessage: string;
     } => {
-      const { transaction, instructionError } = transactionError
+      const { transaction, instructionError } = transactionError;
       if (!instructionError) {
         return {
           errorMessage: `Unknown program error: ${instructionError}`,
-        }
+        };
       }
-      const [failedInstructionIndex, customError] = instructionError
-      const failedInstruction = transaction.instructions[failedInstructionIndex]
+      const [failedInstructionIndex, customError] = instructionError;
+      const failedInstruction =
+        transaction.instructions[failedInstructionIndex];
       // use the programId of the failed instruction to determine which program errored
       if (
         failedInstruction.programId.toString() === endpoint.programId.toString()
       ) {
-        const parsedError = PsyOptionError[customError.Custom]
+        const parsedError = PsyOptionError[customError.Custom];
         return {
           parsedError,
           errorMessage: `PsyOptionsError: ${parsedError}`,
-        }
+        };
       }
       return {
         errorMessage: `Other program error: ${instructionError}`,
-      }
+      };
     },
     [endpoint],
-  )
+  );
 
   // useCallback() and useMemo() to prevent whole page re-renders
   const pushNotification = useCallback(
@@ -70,11 +71,11 @@ const NotificationsProvider: React.FC = ({ children }) => {
         // remove processing tx's with same txids, i.e. after success
         const notifs = _notifications.filter(
           (notif) => notif.txid !== content.txid,
-        )
-        return [content, ...notifs]
+        );
+        return [content, ...notifs];
       }),
     [],
-  )
+  );
 
   /**
    * Special case for error notifications. We check if the error is a TransactionError
@@ -83,31 +84,31 @@ const NotificationsProvider: React.FC = ({ children }) => {
    */
   const pushErrorNotification = useCallback(
     (error: Error) => {
-      let content
+      let content;
       // Log the error for dev debugging purposes
-      console.error(error)
+      console.error(error);
       if (error instanceof TransactionError) {
-        const { errorMessage } = parseInstructionError(error)
+        const { errorMessage } = parseInstructionError(error);
         content = {
           severity: NotificationSeverity.ERROR,
           message: errorMessage,
-        }
+        };
       } else {
         content = {
           severity: NotificationSeverity.ERROR,
           message: `${error}`,
-        }
+        };
       }
-      setNotifications((_notifications) => [content, ..._notifications])
+      setNotifications((_notifications) => [content, ..._notifications]);
     },
     [parseInstructionError],
-  )
+  );
 
   const closeNotification = useCallback((index) => {
     setNotifications((_notifications) =>
       _notifications.filter((_, i) => i !== index),
-    )
-  }, [])
+    );
+  }, []);
 
   const value = useMemo(
     () => ({
@@ -117,13 +118,13 @@ const NotificationsProvider: React.FC = ({ children }) => {
       notifications,
     }),
     [pushErrorNotification, pushNotification, closeNotification, notifications],
-  )
+  );
 
   return (
     <NotificationsContext.Provider value={value}>
       {children}
     </NotificationsContext.Provider>
-  )
-}
+  );
+};
 
-export { NotificationsContext, NotificationsProvider }
+export { NotificationsContext, NotificationsProvider };

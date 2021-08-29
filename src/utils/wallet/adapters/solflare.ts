@@ -1,14 +1,14 @@
-import Wallet from '@project-serum/sol-wallet-adapter'
-import { isBrowser } from '../../isNode'
+import Wallet from '@project-serum/sol-wallet-adapter';
+import { isBrowser } from '../../isNode';
 
-let solflare
+let solflare;
 
 if (isBrowser) {
-  solflare = new Wallet('https://solflare.com/provider')
+  solflare = new Wallet('https://solflare.com/provider');
 }
 
 const getAdapter = () => {
-  return solflare
-}
+  return solflare;
+};
 
-export default getAdapter
+export default getAdapter;

@@ -1,28 +1,28 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-import React, { useState } from 'react'
-import Box from '@material-ui/core/Box'
-import { useHistory } from 'react-router-dom'
-import Button from '@material-ui/core/Button'
-import Hidden from '@material-ui/core/Hidden'
-import IconButton from '@material-ui/core/IconButton'
-import Menu from '@material-ui/icons/Menu'
-import SwipeableDrawer from '@material-ui/core/SwipeableDrawer'
-import NoSsr from '@material-ui/core/NoSsr'
+import React, { useState } from 'react';
+import Box from '@material-ui/core/Box';
+import { useHistory } from 'react-router-dom';
+import Button from '@material-ui/core/Button';
+import Hidden from '@material-ui/core/Hidden';
+import IconButton from '@material-ui/core/IconButton';
+import Menu from '@material-ui/icons/Menu';
+import SwipeableDrawer from '@material-ui/core/SwipeableDrawer';
+import NoSsr from '@material-ui/core/NoSsr';
 
-import WalletStatus from './WalletStatus'
-import NetworkMenu from './NetworkMenu'
+import WalletStatus from './WalletStatus';
+import NetworkMenu from './NetworkMenu';
 
-import theme from '../utils/theme'
+import theme from '../utils/theme';
 // @ts-ignore: asset import
-import logo from '../../assets/psyoptions-logo-light.png'
+import logo from '../../assets/psyoptions-logo-light.png';
 
-import useConnection from '../hooks/useConnection'
+import useConnection from '../hooks/useConnection';
 
-const { INITIALIZE_PAGE_ENABLED } = process.env
+const { INITIALIZE_PAGE_ENABLED } = process.env;
 
 const NavOptions = React.memo(() => {
-  const history = useHistory()
-  const { endpoint } = useConnection()
+  const history = useHistory();
+  const { endpoint } = useConnection();
 
   return (
     <>
@@ -30,8 +30,8 @@ const NavOptions = React.memo(() => {
         <Button
           href="/"
           onClick={(e) => {
-            e.preventDefault()
-            history.push('/')
+            e.preventDefault();
+            history.push('/');
           }}
           style={{ minWidth: 0, padding: 0 }}
         >
@@ -44,8 +44,8 @@ const NavOptions = React.memo(() => {
         <Button
           href="/markets"
           onClick={(e) => {
-            e.preventDefault()
-            history.push('/markets')
+            e.preventDefault();
+            history.push('/markets');
           }}
         >
           Markets
@@ -56,8 +56,8 @@ const NavOptions = React.memo(() => {
           <Button
             href="/initialize-market"
             onClick={(e) => {
-              e.preventDefault()
-              history.push('/initialize-market')
+              e.preventDefault();
+              history.push('/initialize-market');
             }}
           >
             Initialize
@@ -68,8 +68,8 @@ const NavOptions = React.memo(() => {
         <Button
           href="/portfolio"
           onClick={(e) => {
-            e.preventDefault()
-            history.push('/portfolio')
+            e.preventDefault();
+            history.push('/portfolio');
           }}
         >
           Portfolio
@@ -80,8 +80,8 @@ const NavOptions = React.memo(() => {
           <Button
             href="/faucets"
             onClick={(e) => {
-              e.preventDefault()
-              history.push('/faucets')
+              e.preventDefault();
+              history.push('/faucets');
             }}
           >
             Faucets
@@ -100,11 +100,11 @@ const NavOptions = React.memo(() => {
         </Button>
       </Box>
     </>
-  )
-})
+  );
+});
 
 const StatusBar = React.memo(() => {
-  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   return (
     <>
@@ -154,7 +154,7 @@ const StatusBar = React.memo(() => {
         </Box>
       </Box>
     </>
-  )
-})
+  );
+});
 
-export default StatusBar
+export default StatusBar;

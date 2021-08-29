@@ -1,99 +1,99 @@
-import EventEmitter from 'eventemitter3'
-import { PublicKey, Transaction } from '@solana/web3.js'
-import type WalletAdapter from '../walletAdapter'
-import { isNode } from '../../isNode'
+import EventEmitter from 'eventemitter3';
+import { PublicKey, Transaction } from '@solana/web3.js';
+import type WalletAdapter from '../walletAdapter';
+import { isNode } from '../../isNode';
 
 class SolongWalletAdapter extends EventEmitter implements WalletAdapter {
-  _publicKey?: PublicKey
+  _publicKey?: PublicKey;
 
-  _onProcess: boolean
+  _onProcess: boolean;
 
-  _connected: boolean
+  _connected: boolean;
 
   constructor() {
-    super()
-    this._onProcess = false
-    this._connected = false
-    this.connect = this.connect.bind(this)
+    super();
+    this._onProcess = false;
+    this._connected = false;
+    this.connect = this.connect.bind(this);
   }
 
   get connected(): boolean {
-    return this._connected
+    return this._connected;
   }
 
   // eslint-disable-next-line
   get autoApprove(): boolean {
-    return false
+    return false;
   }
 
   // eslint-disable-next-line
   public async signAllTransactions(
     transactions: Transaction[],
   ): Promise<Transaction[]> {
-    const { solong } = window
+    const { solong } = window;
     if (solong.signAllTransactions) {
-      return solong.signAllTransactions(transactions)
+      return solong.signAllTransactions(transactions);
     }
-    const result: Transaction[] = []
+    const result: Transaction[] = [];
     // eslint-disable-next-line
     for (let i = 0; i < transactions.length; i++) {
-      const transaction = transactions[i]
+      const transaction = transactions[i];
       // eslint-disable-next-line
-      const signed = await solong.signTransaction(transaction)
-      result.push(signed)
+      const signed = await solong.signTransaction(transaction);
+      result.push(signed);
     }
 
-    return result
+    return result;
   }
 
   get publicKey(): PublicKey | undefined {
-    return this._publicKey
+    return this._publicKey;
   }
 
   // eslint-disable-next-line
   async signTransaction(transaction: Transaction) {
-    return window.solong.signTransaction(transaction)
+    return window.solong.signTransaction(transaction);
   }
 
   async connect(): Promise<void> {
     if (this._onProcess || typeof window === 'undefined') {
-      return
+      return;
     }
 
     if (window.solong === undefined) {
-      window.open('https://solongwallet.com/', '_blank')
-      return
+      window.open('https://solongwallet.com/', '_blank');
+      return;
     }
 
-    this._onProcess = true
+    this._onProcess = true;
     window.solong
       .selectAccount()
       .then((account: any) => {
-        this._publicKey = new PublicKey(account)
-        this._connected = true
-        this.emit('connect', this._publicKey)
+        this._publicKey = new PublicKey(account);
+        this._connected = true;
+        this.emit('connect', this._publicKey);
       })
       .catch(() => {
-        this.disconnect()
+        this.disconnect();
       })
       .finally(() => {
-        this._onProcess = false
-      })
+        this._onProcess = false;
+      });
   }
 
   async disconnect(): Promise<void> {
     if (this._publicKey) {
-      this._publicKey = undefined
-      this._connected = false
-      this.emit('disconnect')
+      this._publicKey = undefined;
+      this._connected = false;
+      this.emit('disconnect');
     }
   }
 }
 
-const adapter = new SolongWalletAdapter()
+const adapter = new SolongWalletAdapter();
 
 const getAdapter = (): WalletAdapter | undefined => {
-  return adapter
-}
+  return adapter;
+};
 
-export default getAdapter
+export default getAdapter;

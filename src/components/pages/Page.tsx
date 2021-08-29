@@ -1,15 +1,15 @@
-import React from 'react'
-import Box from '@material-ui/core/Box'
-import StatusBar from '../StatusBar'
-import Notifications from '../Notifications'
-import Footer from '../Footer'
-import Disclaimer from '../Disclaimer'
+import React from 'react';
+import Box from '@material-ui/core/Box';
+import StatusBar from '../StatusBar';
+import Notifications from '../Notifications';
+import Footer from '../Footer';
+import Disclaimer from '../Disclaimer';
 
 // Default page template
 const Page: React.FC<{
-  children: React.ReactNode
-  background?: string
-  hideNavbar?: boolean
+  children: React.ReactNode;
+  background?: string;
+  hideNavbar?: boolean;
 }> = ({ children, background, hideNavbar }) => (
   <>
     <Notifications />
@@ -34,6 +34,6 @@ const Page: React.FC<{
       <Footer />
     </Box>
   </>
-)
+);
 
-export default React.memo(Page)
+export default React.memo(Page);

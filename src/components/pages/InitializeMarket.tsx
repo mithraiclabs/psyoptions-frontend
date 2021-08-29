@@ -1,84 +1,84 @@
-import React, { useState, useRef } from 'react'
-import BigNumber from 'bignumber.js'
-import Box from '@material-ui/core/Box'
-import Paper from '@material-ui/core/Paper'
-import Button from '@material-ui/core/Button'
-import Checkbox from '@material-ui/core/Checkbox'
-import TextField from '@material-ui/core/TextField'
-import FormControlLabel from '@material-ui/core/FormControlLabel'
-import FormControl from '@material-ui/core/FormControl'
-import Link from '@material-ui/core/Link'
-import Radio from '@material-ui/core/Radio'
-import TextareaAutosize from '@material-ui/core/TextareaAutosize'
-import RadioGroup from '@material-ui/core/RadioGroup'
-import CircularProgress from '@material-ui/core/CircularProgress'
-import HelpOutlineIcon from '@material-ui/icons/HelpOutline'
+import React, { useState, useRef } from 'react';
+import BigNumber from 'bignumber.js';
+import Box from '@material-ui/core/Box';
+import Paper from '@material-ui/core/Paper';
+import Button from '@material-ui/core/Button';
+import Checkbox from '@material-ui/core/Checkbox';
+import TextField from '@material-ui/core/TextField';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
+import FormControl from '@material-ui/core/FormControl';
+import Link from '@material-ui/core/Link';
+import Radio from '@material-ui/core/Radio';
+import TextareaAutosize from '@material-ui/core/TextareaAutosize';
+import RadioGroup from '@material-ui/core/RadioGroup';
+import CircularProgress from '@material-ui/core/CircularProgress';
+import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import {
   KeyboardDatePicker,
   MuiPickersUtilsProvider,
-} from '@material-ui/pickers'
-import DateFnsUtils from '@date-io/date-fns'
-import 'date-fns'
-import moment from 'moment'
-import BN from 'bn.js'
-import useLocalStorageState from 'use-local-storage-state'
-import Page from './Page'
-import SelectAsset from '../SelectAsset'
-import theme from '../../utils/theme'
-import { StyledTooltip } from './Markets/styles'
+} from '@material-ui/pickers';
+import DateFnsUtils from '@date-io/date-fns';
+import 'date-fns';
+import moment from 'moment';
+import BN from 'bn.js';
+import useLocalStorageState from 'use-local-storage-state';
+import Page from './Page';
+import SelectAsset from '../SelectAsset';
+import theme from '../../utils/theme';
+import { StyledTooltip } from './Markets/styles';
 
-import useNotifications from '../../hooks/useNotifications'
-import useWallet from '../../hooks/useWallet'
-import useAssetList from '../../hooks/useAssetList'
-import { useOptionMarket } from '../../hooks/useOptionMarket'
+import useNotifications from '../../hooks/useNotifications';
+import useWallet from '../../hooks/useWallet';
+import useAssetList from '../../hooks/useAssetList';
+import { useOptionMarket } from '../../hooks/useOptionMarket';
 
-import ConnectButton from '../ConnectButton'
-import { useInitializeMarkets } from '../../hooks/useInitializeMarkets'
-import { convertStrikeToAmountsPer } from '../../utils/strikeConversions'
-import useConnection from '../../hooks/useConnection'
-import { useInitializeSerumMarket } from '../../hooks/Serum/useInitializeSerumMarket'
+import ConnectButton from '../ConnectButton';
+import { useInitializeMarkets } from '../../hooks/useInitializeMarkets';
+import { convertStrikeToAmountsPer } from '../../utils/strikeConversions';
+import useConnection from '../../hooks/useConnection';
+import { useInitializeSerumMarket } from '../../hooks/Serum/useInitializeSerumMarket';
 
-const darkBorder = `1px solid ${theme.palette.background.main}`
+const darkBorder = `1px solid ${theme.palette.background.main}`;
 
 const InitializeMarket: React.VFC = () => {
-  const { pushNotification } = useNotifications()
-  const { connected } = useWallet()
-  const initializeMarkets = useInitializeMarkets()
-  const { dexProgramId, endpoint } = useConnection()
-  const initializeSerumMarket = useInitializeSerumMarket()
-  const [basePrice, setBasePrice] = useState('0')
-  const [selectorDate, setSelectorDate] = useState(moment.utc().endOf('day'))
-  const { uAsset, qAsset, setUAsset } = useAssetList()
-  const [initSerumMarket, setInitSerumMarket] = useState(false)
-  const [size, setSize] = useState('1')
-  const [loading, setLoading] = useState(false)
-  const [callOrPut, setCallOrPut] = useState<'calls' | 'puts'>('calls')
+  const { pushNotification } = useNotifications();
+  const { connected } = useWallet();
+  const initializeMarkets = useInitializeMarkets();
+  const { dexProgramId, endpoint } = useConnection();
+  const initializeSerumMarket = useInitializeSerumMarket();
+  const [basePrice, setBasePrice] = useState('0');
+  const [selectorDate, setSelectorDate] = useState(moment.utc().endOf('day'));
+  const { uAsset, qAsset, setUAsset } = useAssetList();
+  const [initSerumMarket, setInitSerumMarket] = useState(false);
+  const [size, setSize] = useState('1');
+  const [loading, setLoading] = useState(false);
+  const [callOrPut, setCallOrPut] = useState<'calls' | 'puts'>('calls');
   const [initializedMarketMeta, setInitializedMarketMeta] =
-    useLocalStorageState('initialized-markets', [])
-  const textAreaRef = useRef(null)
+    useLocalStorageState('initialized-markets', []);
+  const textAreaRef = useRef(null);
 
   const parsedBasePrice = parseFloat(
     basePrice && basePrice.replace(/^\./, '0.'),
-  )
-  let strikePrices = []
+  );
+  let strikePrices = [];
   if (parsedBasePrice) {
-    strikePrices = [new BigNumber(parsedBasePrice)]
+    strikePrices = [new BigNumber(parsedBasePrice)];
   }
 
   const underlyingDecimalFactor = new BigNumber(10).pow(
     new BigNumber(uAsset?.decimals),
-  )
+  );
   const amountPerContract = new BigNumber(size).multipliedBy(
     underlyingDecimalFactor,
-  )
-  let quoteAmountPerContract
+  );
+  let quoteAmountPerContract;
   if (strikePrices[0]) {
     quoteAmountPerContract = convertStrikeToAmountsPer(
       strikePrices[0],
       amountPerContract,
       uAsset,
       qAsset,
-    )
+    );
   }
   const market = useOptionMarket({
     date: selectorDate.unix(),
@@ -87,42 +87,43 @@ const InitializeMarket: React.VFC = () => {
     size,
     amountPerContract,
     quoteAmountPerContract,
-  })
-  const canInitialize = !market
+  });
+  const canInitialize = !market;
 
-  const assetsSelected = uAsset && qAsset
-  const parametersValid = size && !Number.isNaN(size) && strikePrices.length > 0
+  const assetsSelected = uAsset && qAsset;
+  const parametersValid =
+    size && !Number.isNaN(size) && strikePrices.length > 0;
 
   const handleChangeBasePrice = (e) => {
-    const input = e.target.value || ''
-    setBasePrice(input)
-  }
+    const input = e.target.value || '';
+    setBasePrice(input);
+  };
 
   const handleSelectedDateChange = (date: Date | null) => {
-    setSelectorDate(moment.utc(date).endOf('day'))
-  }
+    setSelectorDate(moment.utc(date).endOf('day'));
+  };
 
   const handleChangeCallPut = (e) => {
-    setCallOrPut(e.target.value)
-  }
+    setCallOrPut(e.target.value);
+  };
 
   const handleInitialize = async () => {
     try {
-      setLoading(true)
-      const ua = callOrPut === 'calls' ? uAsset : qAsset
-      const qa = callOrPut === 'calls' ? qAsset : uAsset
+      setLoading(true);
+      const ua = callOrPut === 'calls' ? uAsset : qAsset;
+      const qa = callOrPut === 'calls' ? qAsset : uAsset;
 
-      let amountsPerContract
-      let quoteAmountsPerContract
+      let amountsPerContract;
+      let quoteAmountsPerContract;
 
       if (callOrPut === 'calls') {
-        amountsPerContract = new BigNumber(size)
+        amountsPerContract = new BigNumber(size);
         quoteAmountsPerContract = strikePrices.map((sp) =>
           sp.multipliedBy(size),
-        )
+        );
       } else {
-        amountsPerContract = strikePrices[0].multipliedBy(size)
-        quoteAmountsPerContract = [new BigNumber(size)]
+        amountsPerContract = strikePrices[0].multipliedBy(size);
+        quoteAmountsPerContract = [new BigNumber(size)];
       }
 
       const markets = await initializeMarkets({
@@ -135,22 +136,22 @@ const InitializeMarket: React.VFC = () => {
         uAssetDecimals: ua.decimals,
         qAssetDecimals: qa.decimals,
         expiration: selectorDate.unix(),
-      })
+      });
 
-      const serumMarkets: Record<string, string> = {}
+      const serumMarkets: Record<string, string> = {};
       if (initSerumMarket) {
-        let tickSize = 0.0001
+        let tickSize = 0.0001;
         if (
           (callOrPut === 'calls' && qa.tokenSymbol.match(/^USD/)) ||
           (callOrPut === 'puts' && ua.tokenSymbol.match(/^USD/))
         ) {
-          tickSize = 0.01
+          tickSize = 0.01;
         }
 
         // This will likely be USDC or USDT but could be other things in some cases
         const quoteLotSize = new BN(
           tickSize * 10 ** (callOrPut === 'calls' ? qa.decimals : ua.decimals),
-        )
+        );
 
         await Promise.all(
           markets.map(async (_market) => {
@@ -162,17 +163,17 @@ const InitializeMarket: React.VFC = () => {
                   ? _market.quoteAssetMintKey
                   : _market.underlyingAssetMintKey,
               quoteLotSize,
-            })
+            });
             if (initResp) {
-              const [serumMarketKey] = initResp
+              const [serumMarketKey] = initResp;
               serumMarkets[_market.optionMarketKey.toString()] =
-                serumMarketKey.toString()
+                serumMarketKey.toString();
             }
           }),
-        )
+        );
       }
 
-      setLoading(false)
+      setLoading(false);
       setInitializedMarketMeta((prevMarketsMetaArr) => {
         const marketsMetaArr = markets.map((_market) => ({
           expiration: _market.expiration,
@@ -197,19 +198,19 @@ const InitializeMarket: React.VFC = () => {
               }
             : {}),
           psyOptionsProgramId: endpoint.programId,
-        }))
-        return [...prevMarketsMetaArr, ...marketsMetaArr]
-      })
+        }));
+        return [...prevMarketsMetaArr, ...marketsMetaArr];
+      });
     } catch (err) {
-      setLoading(false)
+      setLoading(false);
       // TODO: display some meaningful error state to user
-      console.error(err)
+      console.error(err);
       pushNotification({
         severity: 'error',
         message: `${err}`,
-      })
+      });
     }
-  }
+  };
 
   return (
     <Page>
@@ -282,7 +283,7 @@ const InitializeMarket: React.VFC = () => {
                 <SelectAsset
                   selectedAsset={uAsset}
                   onSelectAsset={(asset) => {
-                    setUAsset(asset)
+                    setUAsset(asset);
                   }}
                 />
               </Box>
@@ -452,7 +453,7 @@ const InitializeMarket: React.VFC = () => {
                 ref={textAreaRef}
                 onClick={() => {
                   if (textAreaRef?.current?.select) {
-                    textAreaRef.current.select()
+                    textAreaRef.current.select();
                   }
                 }}
                 value={JSON.stringify(initializedMarketMeta, null, 4)}
@@ -470,7 +471,7 @@ const InitializeMarket: React.VFC = () => {
         </Box>
       )}
     </Page>
-  )
-}
+  );
+};
 
-export default InitializeMarket
+export default InitializeMarket;

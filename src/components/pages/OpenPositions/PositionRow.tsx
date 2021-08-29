@@ -1,20 +1,20 @@
-import React, { useCallback, useState } from 'react'
-import Box from '@material-ui/core/Box'
-import Collapse from '@material-ui/core/Collapse'
-import Tooltip from '@material-ui/core/Tooltip'
-import Avatar from '@material-ui/core/Avatar'
-import KeyboardArrowDown from '@material-ui/icons/KeyboardArrowDown'
-import { makeStyles, withStyles, useTheme } from '@material-ui/core/styles'
-import * as Sentry from '@sentry/react'
-import BigNumber from 'bignumber.js'
+import React, { useCallback, useState } from 'react';
+import Box from '@material-ui/core/Box';
+import Collapse from '@material-ui/core/Collapse';
+import Tooltip from '@material-ui/core/Tooltip';
+import Avatar from '@material-ui/core/Avatar';
+import KeyboardArrowDown from '@material-ui/icons/KeyboardArrowDown';
+import { makeStyles, withStyles, useTheme } from '@material-ui/core/styles';
+import * as Sentry from '@sentry/react';
+import BigNumber from 'bignumber.js';
 
-import useExerciseOpenPosition from '../../../hooks/useExerciseOpenPosition'
-import useOwnedTokenAccounts from '../../../hooks/useOwnedTokenAccounts'
-import useNotifications from '../../../hooks/useNotifications'
-import useAssetList from '../../../hooks/useAssetList'
-import { formatExpirationTimestamp } from '../../../utils/format'
-import { OptionMarket, OptionType, TokenAccount } from '../../../types'
-import TxButton from '../../TxButton'
+import useExerciseOpenPosition from '../../../hooks/useExerciseOpenPosition';
+import useOwnedTokenAccounts from '../../../hooks/useOwnedTokenAccounts';
+import useNotifications from '../../../hooks/useNotifications';
+import useAssetList from '../../../hooks/useAssetList';
+import { formatExpirationTimestamp } from '../../../utils/format';
+import { OptionMarket, OptionType, TokenAccount } from '../../../types';
+import TxButton from '../../TxButton';
 
 const useStyles = makeStyles({
   dropdownOpen: {
@@ -23,7 +23,7 @@ const useStyles = makeStyles({
   dropdownClosed: {
     transform: 'rotate(0)',
   },
-})
+});
 
 const StyledTooltip = withStyles((theme) => ({
   tooltip: {
@@ -32,65 +32,65 @@ const StyledTooltip = withStyles((theme) => ({
     fontSize: '14px',
     lineHeight: '18px',
   },
-}))(Tooltip)
+}))(Tooltip);
 
 const PositionRow: React.VFC<{
   row: {
-    accounts: TokenAccount[]
-    assetPair: string
-    expiration: number
-    market: OptionMarket
-    size: number
-    strikePrice: string
-    qAssetSymbol: string
-    qAssetMintAddress: string
-    uAssetSymbol: string
-    uAssetMintAddress: string
-    amountPerContract: BigNumber
-    quoteAmountPerContract: BigNumber
-  }
+    accounts: TokenAccount[];
+    assetPair: string;
+    expiration: number;
+    market: OptionMarket;
+    size: number;
+    strikePrice: string;
+    qAssetSymbol: string;
+    qAssetMintAddress: string;
+    uAssetSymbol: string;
+    uAssetMintAddress: string;
+    amountPerContract: BigNumber;
+    quoteAmountPerContract: BigNumber;
+  };
 }> = ({ row }) => {
-  const classes = useStyles()
-  const [loading, setLoading] = useState(false)
-  const [visible, setVisible] = useState(false)
-  const { supportedAssets } = useAssetList()
-  const { ownedTokenAccounts } = useOwnedTokenAccounts()
-  const { pushNotification } = useNotifications()
-  const nowInSeconds = Date.now() / 1000
-  const expired = row.expiration <= nowInSeconds
+  const classes = useStyles();
+  const [loading, setLoading] = useState(false);
+  const [visible, setVisible] = useState(false);
+  const { supportedAssets } = useAssetList();
+  const { ownedTokenAccounts } = useOwnedTokenAccounts();
+  const { pushNotification } = useNotifications();
+  const nowInSeconds = Date.now() / 1000;
+  const expired = row.expiration <= nowInSeconds;
 
-  const theme = useTheme()
+  const theme = useTheme();
 
   // TODO -- The way we were getting market price was incorrect because it was pulling in the price of the options themselves, not the underlying asset. We should be pulling in the price of the underlying asset so we can calculate how much profit would be made from exercising. I left the above code in so that when we fix it later we don't have to start over.
-  const price = null
+  const price = null;
 
-  let optionType: OptionType
+  let optionType: OptionType;
   if (row?.uAssetSymbol) {
     optionType = row?.uAssetSymbol?.match(/^USD/)
       ? OptionType.PUT
-      : OptionType.CALL
+      : OptionType.CALL;
   }
 
   const strike =
     optionType === OptionType.PUT
       ? row.amountPerContract.dividedBy(row.quoteAmountPerContract).toString()
-      : row.market.strike.toString(10)
+      : row.market.strike.toString(10);
 
   const contractSize =
     optionType === OptionType.CALL
       ? row.amountPerContract.toString()
-      : row.quoteAmountPerContract.toString()
+      : row.quoteAmountPerContract.toString();
 
   const onRowClick = () => {
     if (row.accounts.length > 1) {
-      setVisible((vis) => !vis)
+      setVisible((vis) => !vis);
     }
-  }
+  };
 
-  const ownedQAssetKey = ownedTokenAccounts[row.qAssetMintAddress]?.[0]?.pubKey
-  const ownedUAssetKey = ownedTokenAccounts[row.uAssetMintAddress]?.[0]?.pubKey
+  const ownedQAssetKey = ownedTokenAccounts[row.qAssetMintAddress]?.[0]?.pubKey;
+  const ownedUAssetKey = ownedTokenAccounts[row.uAssetMintAddress]?.[0]?.pubKey;
   const ownedOAssetKey =
-    ownedTokenAccounts[row.market.optionMintKey.toString()]?.[0]?.pubKey
+    ownedTokenAccounts[row.market.optionMintKey.toString()]?.[0]?.pubKey;
 
   const { exercise } = useExerciseOpenPosition(
     row.market,
@@ -98,31 +98,31 @@ const PositionRow: React.VFC<{
     ownedQAssetKey && ownedQAssetKey,
     ownedUAssetKey && ownedUAssetKey,
     ownedOAssetKey && ownedOAssetKey,
-  )
+  );
 
   const handleExercisePosition = useCallback(async () => {
     try {
-      setLoading(true)
-      await exercise()
-      setLoading(false)
+      setLoading(true);
+      await exercise();
+      setLoading(false);
     } catch (err) {
-      Sentry.captureException(err)
+      Sentry.captureException(err);
       pushNotification({
         severity: 'error',
         message: `${err}`,
-      })
-      setLoading(false)
+      });
+      setLoading(false);
     }
-  }, [exercise, pushNotification])
+  }, [exercise, pushNotification]);
 
   const uAssetSymbol =
-    optionType === 'put' ? row?.qAssetSymbol : row?.uAssetSymbol
+    optionType === 'put' ? row?.qAssetSymbol : row?.uAssetSymbol;
 
   const uAssetImage = supportedAssets.find(
     (asset) =>
       asset?.mintAddress ===
       (optionType === 'put' ? row?.qAssetMintAddress : row?.uAssetMintAddress),
-  )?.icon
+  )?.icon;
 
   const exerciseTooltipLabel = `${
     optionType === 'put' ? 'Sell' : 'Purchase'
@@ -132,7 +132,7 @@ const PositionRow: React.VFC<{
   } for ${strike} ${
     (optionType === 'put' ? row?.uAssetSymbol : row?.qAssetSymbol) ||
     'quote asset'
-  }`
+  }`;
 
   return (
     <>
@@ -252,7 +252,7 @@ const PositionRow: React.VFC<{
         </Collapse>
       </Box>
     </>
-  )
-}
+  );
+};
 
-export default React.memo(PositionRow)
+export default React.memo(PositionRow);

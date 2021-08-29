@@ -4,7 +4,7 @@
  * fetch and update data in their own manner.
  */
 
-import { AccountLayout, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import { AccountLayout, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import {
   Account,
   PublicKey,
@@ -12,12 +12,12 @@ import {
   SYSVAR_RENT_PUBKEY,
   Transaction,
   TransactionInstruction,
-} from '@solana/web3.js'
-import { CreateNewTokenAccountResponse } from 'src/types'
+} from '@solana/web3.js';
+import { CreateNewTokenAccountResponse } from 'src/types';
 
 const SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID = new PublicKey(
   'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL',
-)
+);
 
 /**
  * Create and initialize a new SPL Token account for the provided owner. Initial
@@ -30,14 +30,14 @@ export const createNewTokenAccount = ({
   splTokenAccountRentBalance,
   extraLamports = 0,
 }: {
-  fromPubkey: PublicKey
-  owner: PublicKey
-  mintPublicKey: PublicKey
-  splTokenAccountRentBalance: number
-  extraLamports?: number
+  fromPubkey: PublicKey;
+  owner: PublicKey;
+  mintPublicKey: PublicKey;
+  splTokenAccountRentBalance: number;
+  extraLamports?: number;
 }): CreateNewTokenAccountResponse => {
-  const newAccount = new Account()
-  const transaction = new Transaction()
+  const newAccount = new Account();
+  const transaction = new Transaction();
 
   transaction.add(
     SystemProgram.createAccount({
@@ -47,7 +47,7 @@ export const createNewTokenAccount = ({
       space: AccountLayout.span,
       programId: TOKEN_PROGRAM_ID,
     }),
-  )
+  );
 
   transaction.add(
     Token.createInitAccountInstruction(
@@ -56,12 +56,12 @@ export const createNewTokenAccount = ({
       newAccount.publicKey,
       owner,
     ),
-  )
+  );
 
-  const signers = [newAccount]
+  const signers = [newAccount];
 
-  return { transaction, signers, newTokenAccount: newAccount }
-}
+  return { transaction, signers, newTokenAccount: newAccount };
+};
 
 /**
  * Create and initialize a Associated SPL Token account for the provided owner.
@@ -73,14 +73,14 @@ export const createAssociatedTokenAccountInstruction = async ({
   owner,
   mintPublicKey,
 }: {
-  payer: PublicKey
-  owner: PublicKey
-  mintPublicKey: PublicKey
+  payer: PublicKey;
+  owner: PublicKey;
+  mintPublicKey: PublicKey;
 }): Promise<[TransactionInstruction, PublicKey]> => {
   const [associatedTokenPublicKey] = await PublicKey.findProgramAddress(
     [owner.toBuffer(), TOKEN_PROGRAM_ID.toBuffer(), mintPublicKey.toBuffer()],
     SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID,
-  )
+  );
   const ix = new TransactionInstruction({
     keys: [
       { pubkey: payer, isSigner: true, isWritable: true },
@@ -92,7 +92,7 @@ export const createAssociatedTokenAccountInstruction = async ({
       { pubkey: SYSVAR_RENT_PUBKEY, isSigner: false, isWritable: false },
     ],
     programId: SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID,
-  })
+  });
 
-  return [ix, associatedTokenPublicKey]
-}
+  return [ix, associatedTokenPublicKey];
+};

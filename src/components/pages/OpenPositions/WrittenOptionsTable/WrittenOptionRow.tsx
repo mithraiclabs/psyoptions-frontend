@@ -1,24 +1,24 @@
-import React, { useEffect, useState } from 'react'
-import { PublicKey } from '@solana/web3.js'
-import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import Avatar from '@material-ui/core/Avatar'
-import Button from '@material-ui/core/Button'
-import Tooltip from '@material-ui/core/Tooltip'
-import Box from '@material-ui/core/Box'
-import { withStyles, useTheme } from '@material-ui/core/styles'
+import React, { useEffect, useState } from 'react';
+import { PublicKey } from '@solana/web3.js';
+import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import Avatar from '@material-ui/core/Avatar';
+import Button from '@material-ui/core/Button';
+import Tooltip from '@material-ui/core/Tooltip';
+import Box from '@material-ui/core/Box';
+import { withStyles, useTheme } from '@material-ui/core/styles';
 
-import BN from 'bn.js'
-import { OptionType, TokenAccount } from '../../../../types'
-import { formatExpirationTimestamp } from '../../../../utils/format'
-import useOptionsMarkets from '../../../../hooks/useOptionsMarkets'
-import { useCloseWrittenOptionPostExpiration } from '../../../../hooks/useCloseWrittenOptionPostExpiration'
-import { useClosePosition } from '../../../../hooks/useClosePosition'
-import useOwnedTokenAccounts from '../../../../hooks/useOwnedTokenAccounts'
-import useConnection from '../../../../hooks/useConnection'
-import { useExchangeWriterTokenForQuote } from '../../../../hooks/useExchangeWriterTokenForQuote'
-import useNotifications from '../../../../hooks/useNotifications'
-import useAssetList from '../../../../hooks/useAssetList'
-import TxButton from '../../../TxButton'
+import BN from 'bn.js';
+import { OptionType, TokenAccount } from '../../../../types';
+import { formatExpirationTimestamp } from '../../../../utils/format';
+import useOptionsMarkets from '../../../../hooks/useOptionsMarkets';
+import { useCloseWrittenOptionPostExpiration } from '../../../../hooks/useCloseWrittenOptionPostExpiration';
+import { useClosePosition } from '../../../../hooks/useClosePosition';
+import useOwnedTokenAccounts from '../../../../hooks/useOwnedTokenAccounts';
+import useConnection from '../../../../hooks/useConnection';
+import { useExchangeWriterTokenForQuote } from '../../../../hooks/useExchangeWriterTokenForQuote';
+import useNotifications from '../../../../hooks/useNotifications';
+import useAssetList from '../../../../hooks/useAssetList';
+import TxButton from '../../../TxButton';
 
 const StyledTooltip = withStyles((theme) => ({
   tooltip: {
@@ -27,14 +27,14 @@ const StyledTooltip = withStyles((theme) => ({
     fontSize: '14px',
     lineHeight: '18px',
   },
-}))(Tooltip)
+}))(Tooltip);
 
 type WrittenOptionRowProps = {
-  expired: boolean
-  marketKey: string
-  writerTokenAccounts: TokenAccount[]
-  heldContracts: TokenAccount[]
-}
+  expired: boolean;
+  marketKey: string;
+  writerTokenAccounts: TokenAccount[];
+  heldContracts: TokenAccount[];
+};
 
 /**
  * Row to display the wallet's minted options
@@ -48,73 +48,73 @@ export const WrittenOptionRow = React.memo(
     writerTokenAccounts,
     heldContracts,
   }: WrittenOptionRowProps) => {
-    const theme = useTheme()
-    const [closeOneLoading, setCloseOneLoading] = useState(false)
-    const [closeAllLoading, setCloseAllLoading] = useState(false)
-    const [claimQuoteLoading, setClaimQuoteLoading] = useState(false)
-    const { supportedAssets } = useAssetList()
-    const { pushNotification } = useNotifications()
-    const { connection } = useConnection()
-    const { ownedTokenAccounts } = useOwnedTokenAccounts()
-    const { markets } = useOptionsMarkets()
-    const [quotePoolNotEmpty, setQuoteAssetPoolNotEmpty] = useState(false)
-    const market = markets[marketKey]
+    const theme = useTheme();
+    const [closeOneLoading, setCloseOneLoading] = useState(false);
+    const [closeAllLoading, setCloseAllLoading] = useState(false);
+    const [claimQuoteLoading, setClaimQuoteLoading] = useState(false);
+    const { supportedAssets } = useAssetList();
+    const { pushNotification } = useNotifications();
+    const { connection } = useConnection();
+    const { ownedTokenAccounts } = useOwnedTokenAccounts();
+    const { markets } = useOptionsMarkets();
+    const [quotePoolNotEmpty, setQuoteAssetPoolNotEmpty] = useState(false);
+    const market = markets[marketKey];
     // TODO handle multiple wallets for the same Writer Token
-    const initialWriterTokenAccount = writerTokenAccounts[0]
-    const ownedUAssetKey = ownedTokenAccounts[market.uAssetMint]?.[0]?.pubKey
-    const ownedQAssetKey = ownedTokenAccounts[market.qAssetMint]?.[0]?.pubKey
+    const initialWriterTokenAccount = writerTokenAccounts[0];
+    const ownedUAssetKey = ownedTokenAccounts[market.uAssetMint]?.[0]?.pubKey;
+    const ownedQAssetKey = ownedTokenAccounts[market.qAssetMint]?.[0]?.pubKey;
     const ownedOptionTokenAccounts =
-      ownedTokenAccounts[market.optionMintKey.toString()]
+      ownedTokenAccounts[market.optionMintKey.toString()];
     const { closeOptionPostExpiration } = useCloseWrittenOptionPostExpiration(
       market,
       ownedUAssetKey,
       initialWriterTokenAccount.pubKey,
-    )
+    );
     const { exchangeWriterTokenForQuote } = useExchangeWriterTokenForQuote(
       market,
       initialWriterTokenAccount.pubKey,
       ownedQAssetKey,
-    )
-    const holdsContracts = !!heldContracts.length
+    );
+    const holdsContracts = !!heldContracts.length;
     // TODO handle multiple wallets for same Option Token
-    const initialOptionTokenAccount = heldContracts[0]
+    const initialOptionTokenAccount = heldContracts[0];
     const { closePosition } = useClosePosition(
       market,
       // initialOptionTokenAccount can be undefined if there are no held contracts
       initialOptionTokenAccount?.pubKey,
       ownedUAssetKey,
       initialWriterTokenAccount.pubKey,
-    )
+    );
 
     const handleCloseOne = async () => {
-      setCloseOneLoading(true)
-      await closePosition()
-      setCloseOneLoading(false)
-    }
+      setCloseOneLoading(true);
+      await closePosition();
+      setCloseOneLoading(false);
+    };
 
     const handleCloseAll = async (numContracts) => {
-      setCloseAllLoading(true)
-      await closePosition(numContracts)
-      setCloseAllLoading(false)
-    }
+      setCloseAllLoading(true);
+      await closePosition(numContracts);
+      setCloseAllLoading(false);
+    };
 
     const handleCloseOnePostExpiration = async () => {
-      setCloseOneLoading(true)
-      await closeOptionPostExpiration(initialWriterTokenAccount.amount)
-      setCloseOneLoading(false)
-    }
+      setCloseOneLoading(true);
+      await closeOptionPostExpiration(initialWriterTokenAccount.amount);
+      setCloseOneLoading(false);
+    };
 
     const handleClaimQuote = async () => {
-      setClaimQuoteLoading(true)
-      await exchangeWriterTokenForQuote()
-      setClaimQuoteLoading(false)
-    }
+      setClaimQuoteLoading(true);
+      await exchangeWriterTokenForQuote();
+      setClaimQuoteLoading(false);
+    };
 
-    let optionType: OptionType
+    let optionType: OptionType;
     if (market?.uAssetSymbol) {
       optionType = market?.uAssetSymbol?.match(/^USD/)
         ? OptionType.PUT
-        : OptionType.CALL
+        : OptionType.CALL;
     }
 
     const strike =
@@ -123,12 +123,12 @@ export const WrittenOptionRow = React.memo(
           market.amountPerContract
             .dividedBy(market?.quoteAmountPerContract)
             .toString()
-        : market?.strike.toString(10)
+        : market?.strike.toString(10);
 
     const uAssetSymbol =
       optionType === OptionType.CALL
         ? market?.uAssetSymbol
-        : market?.qAssetSymbol
+        : market?.qAssetSymbol;
 
     const uAssetImage = supportedAssets.find(
       (asset) =>
@@ -136,46 +136,46 @@ export const WrittenOptionRow = React.memo(
         (optionType === OptionType.PUT
           ? market?.qAssetSymbol
           : market?.uAssetSymbol),
-    )?.icon
+    )?.icon;
 
     const lockedAmount =
-      initialWriterTokenAccount.amount * parseFloat(market.size)
+      initialWriterTokenAccount.amount * parseFloat(market.size);
     const lockedAmountDisplay = `${lockedAmount}`.match(/\.(.{4,})$/)
       ? `≈${lockedAmount.toFixed(3)}`
-      : lockedAmount
+      : lockedAmount;
 
     useEffect(() => {
-      ;(async () => {
+      (async () => {
         try {
           const quoteToken = new Token(
             connection,
             new PublicKey(market.qAssetMint),
             TOKEN_PROGRAM_ID,
             null,
-          )
+          );
           const quoteAssetPoolAccount = await quoteToken.getAccountInfo(
             market.quoteAssetPoolKey,
-          )
+          );
           if (!(quoteAssetPoolAccount.amount as BN).isZero()) {
-            setQuoteAssetPoolNotEmpty(true)
+            setQuoteAssetPoolNotEmpty(true);
           }
         } catch (err) {
           pushNotification({
             severity: 'error',
             message: `${err}`,
-          })
+          });
         }
-      })()
+      })();
     }, [
       connection,
       market.qAssetMint,
       market.quoteAssetPoolKey,
       pushNotification,
-    ])
+    ]);
 
-    const canClose = (ownedOptionTokenAccounts?.[0]?.amount || 0) > 0
+    const canClose = (ownedOptionTokenAccounts?.[0]?.amount || 0) > 0;
 
-    let ActionFragment = null
+    let ActionFragment = null;
     if (expired) {
       ActionFragment = (
         <Box>
@@ -206,7 +206,7 @@ export const WrittenOptionRow = React.memo(
             </Box>
           </StyledTooltip>
         </Box>
-      )
+      );
     } else {
       ActionFragment = (
         <Box>
@@ -246,7 +246,7 @@ export const WrittenOptionRow = React.memo(
                           ownedOptionTokenAccounts?.[0]?.amount,
                           initialWriterTokenAccount.amount,
                         ),
-                      )
+                      );
                     }}
                     disabled={!canClose}
                     loading={closeAllLoading}
@@ -286,7 +286,7 @@ export const WrittenOptionRow = React.memo(
             </StyledTooltip>
           )}
         </Box>
-      )
+      );
     }
 
     return (
@@ -339,6 +339,6 @@ export const WrittenOptionRow = React.memo(
         </Box>
         <Box width="15%">{ActionFragment}</Box>
       </Box>
-    )
+    );
   },
-)
+);

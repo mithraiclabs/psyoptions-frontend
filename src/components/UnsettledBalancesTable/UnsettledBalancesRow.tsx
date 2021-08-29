@@ -1,22 +1,22 @@
-import React, { useState, useCallback } from 'react'
-import TableRow from '@material-ui/core/TableRow'
-import moment from 'moment'
-import BigNumber from 'bignumber.js'
+import React, { useState, useCallback } from 'react';
+import TableRow from '@material-ui/core/TableRow';
+import moment from 'moment';
+import BigNumber from 'bignumber.js';
 
-import useSerum from '../../hooks/useSerum'
+import useSerum from '../../hooks/useSerum';
 import {
   useSubscribeOpenOrders,
   useSettleFunds,
   useUnsettledFundsForMarket,
-} from '../../hooks/Serum'
+} from '../../hooks/Serum';
 
-import { TCell } from './UnsettledBalancesStyles'
-import { UnsettledRow } from '../../types'
-import TxButton from '../TxButton'
+import { TCell } from './UnsettledBalancesStyles';
+import { UnsettledRow } from '../../types';
+import TxButton from '../TxButton';
 
 const Empty = ({ children }) => (
   <span style={{ opacity: '0.3' }}>{children}</span>
-)
+);
 
 const UnsettledRow = ({
   serumMarketKey,
@@ -30,25 +30,23 @@ const UnsettledRow = ({
   settleFunds,
   qAssetDecimals,
 }) => {
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(false);
 
   const handleSettleFunds = useCallback(async () => {
-    setLoading(true)
-    await settleFunds()
-    setLoading(false)
-  }, [settleFunds])
+    setLoading(true);
+    await settleFunds();
+    setLoading(false);
+  }, [settleFunds]);
 
-  const tokensUnsettled = new BigNumber(unsettledFunds.quoteFree.toString())
+  const tokensUnsettled = new BigNumber(unsettledFunds.quoteFree.toString());
 
   const unsettledAssets = () => {
     if (tokensUnsettled.dividedBy(10 ** qAssetDecimals).toString() === '0') {
-      return <Empty>{'-'}</Empty>
+      return <Empty>{'-'}</Empty>;
     }
-    return (
-      `${tokensUnsettled.dividedBy(10 ** qAssetDecimals).toString()}
-      ${' '}${type === 'put'? uAssetSymbol : qAssetSymbol}`
-    )
-  }
+    return `${tokensUnsettled.dividedBy(10 ** qAssetDecimals).toString()}
+      ${' '}${type === 'put' ? uAssetSymbol : qAssetSymbol}`;
+  };
 
   return (
     <TableRow hover key={`tr-unsettled-${serumMarketKey}`}>
@@ -60,9 +58,7 @@ const UnsettledRow = ({
       <TCell>{strikePrice}</TCell>
       <TCell>{`${contractSize} ${uAssetSymbol}`}</TCell>
       <TCell>{unsettledFunds.baseFree.toString()}</TCell>
-      <TCell>
-        {unsettledAssets()}
-      </TCell>
+      <TCell>{unsettledAssets()}</TCell>
       <TCell align="right">
         <TxButton
           variant="outlined"
@@ -74,8 +70,8 @@ const UnsettledRow = ({
         </TxButton>
       </TCell>
     </TableRow>
-  )
-}
+  );
+};
 
 // Render all unsettled balances for a given market as table rows
 const UnsettledBalancesRow: React.FC<UnsettledRow> = ({
@@ -88,20 +84,20 @@ const UnsettledBalancesRow: React.FC<UnsettledRow> = ({
   strikePrice,
   qAssetDecimals,
 }) => {
-  const { serumMarkets } = useSerum()
-  const serumMarketAddress = serumMarketKey.toString()
-  const { serumMarket } = serumMarkets[serumMarketAddress] || {}
-  const { settleFunds } = useSettleFunds(serumMarketAddress)
-  const unsettledFunds = useUnsettledFundsForMarket(serumMarketAddress)
+  const { serumMarkets } = useSerum();
+  const serumMarketAddress = serumMarketKey.toString();
+  const { serumMarket } = serumMarkets[serumMarketAddress] || {};
+  const { settleFunds } = useSettleFunds(serumMarketAddress);
+  const unsettledFunds = useUnsettledFundsForMarket(serumMarketAddress);
 
-  useSubscribeOpenOrders(serumMarketAddress)
+  useSubscribeOpenOrders(serumMarketAddress);
 
   if (
     !serumMarket ||
-    unsettledFunds.baseFree.toNumber() <= 0 &&
-    unsettledFunds.quoteFree.toNumber() <= 0
+    (unsettledFunds.baseFree.toNumber() <= 0 &&
+      unsettledFunds.quoteFree.toNumber() <= 0)
   ) {
-    return null
+    return null;
   }
 
   return (
@@ -117,7 +113,7 @@ const UnsettledBalancesRow: React.FC<UnsettledRow> = ({
       settleFunds={settleFunds}
       qAssetDecimals={qAssetDecimals}
     />
-  )
-}
+  );
+};
 
-export default React.memo(UnsettledBalancesRow)
+export default React.memo(UnsettledBalancesRow);

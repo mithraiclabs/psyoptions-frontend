@@ -1,38 +1,38 @@
-import { useCallback, useContext } from 'react'
-import { PublicKey, Transaction } from '@solana/web3.js'
-import BigNumber from 'bignumber.js'
+import { useCallback, useContext } from 'react';
+import { PublicKey, Transaction } from '@solana/web3.js';
+import BigNumber from 'bignumber.js';
 import {
   initializeAccountsForMarket,
   initializeMarketInstruction,
   Market,
-} from '@mithraic-labs/psyoptions'
-import useConnection from './useConnection'
-import useNotifications from './useNotifications'
-import useWallet from './useWallet'
-import { OptionsMarketsContext } from '../context/OptionsMarketsContext'
-import useSendTransaction from './useSendTransaction'
+} from '@mithraic-labs/psyoptions';
+import useConnection from './useConnection';
+import useNotifications from './useNotifications';
+import useWallet from './useWallet';
+import { OptionsMarketsContext } from '../context/OptionsMarketsContext';
+import useSendTransaction from './useSendTransaction';
 
-import { OptionMarket } from '../types'
+import { OptionMarket } from '../types';
 
 type InitMarketParams = {
-  amountPerContract: BigNumber
-  quoteAmountsPerContract: BigNumber[]
-  uAssetSymbol: string
-  qAssetSymbol: string
-  uAssetMint: string
-  qAssetMint: string
-  expiration: number
-  uAssetDecimals: number
-  qAssetDecimals: number
-}
+  amountPerContract: BigNumber;
+  quoteAmountsPerContract: BigNumber[];
+  uAssetSymbol: string;
+  qAssetSymbol: string;
+  uAssetMint: string;
+  qAssetMint: string;
+  expiration: number;
+  uAssetDecimals: number;
+  qAssetDecimals: number;
+};
 export const useInitializeMarkets = (): ((
   obj: InitMarketParams,
 ) => Promise<OptionMarket[]>) => {
-  const { pushErrorNotification } = useNotifications()
-  const { wallet, pubKey } = useWallet()
-  const { connection, endpoint, dexProgramId } = useConnection()
-  const { setMarkets } = useContext(OptionsMarketsContext)
-  const { sendSignedTransaction } = useSendTransaction()
+  const { pushErrorNotification } = useNotifications();
+  const { wallet, pubKey } = useWallet();
+  const { connection, endpoint, dexProgramId } = useConnection();
+  const { setMarkets } = useContext(OptionsMarketsContext);
+  const { sendSignedTransaction } = useSendTransaction();
 
   return useCallback(
     async ({
@@ -47,7 +47,7 @@ export const useInitializeMarkets = (): ((
       qAssetDecimals,
     }: InitMarketParams) => {
       try {
-        const programId = new PublicKey(endpoint.programId)
+        const programId = new PublicKey(endpoint.programId);
         const results = await Promise.all(
           quoteAmountsPerContract.map(async (qAmount) => {
             // Create and send transaction for creating/initializing accounts needed
@@ -63,18 +63,18 @@ export const useInitializeMarkets = (): ((
               connection,
               payerKey: pubKey,
               programId,
-            })
+            });
 
             // TODO -- can we encode these to the buffer without converting back to the built-in number type?
             const amountPerContractU64 = amountPerContract
               .multipliedBy(new BigNumber(10).pow(uAssetDecimals))
-              .toNumber()
+              .toNumber();
             const quoteAmountPerContractU64 = qAmount
               .multipliedBy(new BigNumber(10).pow(qAssetDecimals))
-              .toNumber()
+              .toNumber();
 
-            const underlyingAssetMintKey = new PublicKey(uAssetMint)
-            const quoteAssetMintKey = new PublicKey(qAssetMint)
+            const underlyingAssetMintKey = new PublicKey(uAssetMint);
+            const quoteAssetMintKey = new PublicKey(qAssetMint);
 
             // create and send transaction for initializing the option market
             const initializeMarketIx = await initializeMarketInstruction({
@@ -89,36 +89,36 @@ export const useInitializeMarkets = (): ((
               underlyingAmountPerContract: amountPerContractU64,
               quoteAmountPerContract: quoteAmountPerContractU64,
               expirationUnixTimestamp: expiration,
-            })
+            });
 
-            const initializeTransaction = new Transaction()
-            initializeTransaction.add(initializeMarketIx)
+            const initializeTransaction = new Transaction();
+            initializeTransaction.add(initializeMarketIx);
 
             // Sign and approve both create accunts and initialize txes
-            const { blockhash } = await connection.getRecentBlockhash()
-            createAccountsTx.recentBlockhash = blockhash
-            createAccountsTx.feePayer = pubKey
-            createAccountsTx.partialSign(...signers)
-            initializeTransaction.feePayer = pubKey
-            initializeTransaction.recentBlockhash = blockhash
+            const { blockhash } = await connection.getRecentBlockhash();
+            createAccountsTx.recentBlockhash = blockhash;
+            createAccountsTx.feePayer = pubKey;
+            createAccountsTx.partialSign(...signers);
+            initializeTransaction.feePayer = pubKey;
+            initializeTransaction.recentBlockhash = blockhash;
             const [signedCreateTx, signedSettleTx] =
               await wallet.signAllTransactions([
                 createAccountsTx,
                 initializeTransaction,
-              ])
+              ]);
 
             await sendSignedTransaction({
               signedTransaction: signedCreateTx,
               connection,
               sendingMessage: 'Processing: Create Market Accounts',
               successMessage: 'Confirmed: Create Market Accounts',
-            })
+            });
             await sendSignedTransaction({
               signedTransaction: signedSettleTx,
               connection,
               sendingMessage: 'Processing: Initialize Market',
               successMessage: 'Confirmed: Initialize Market',
-            })
+            });
 
             const [optionMarketKey] = await Market.getDerivedAddressFromParams({
               programId,
@@ -127,8 +127,8 @@ export const useInitializeMarkets = (): ((
               underlyingAmountPerContract: amountPerContractU64,
               quoteAmountPerContract: quoteAmountPerContractU64,
               expirationUnixTimestamp: expiration,
-            })
-            const strike = qAmount.div(amountPerContract)
+            });
+            const strike = qAmount.div(amountPerContract);
 
             const marketData: OptionMarket = {
               key: `${expiration}-${uAssetSymbol}-${qAssetSymbol}-${amountPerContract.toString()}-${amountPerContract.toString()}/${qAmount.toString()}`,
@@ -151,28 +151,28 @@ export const useInitializeMarkets = (): ((
               quoteAssetMintKey,
               psyOptionsProgramId: programId.toString(),
               serumProgramId: dexProgramId.toString(),
-            }
+            };
 
-            return marketData
+            return marketData;
           }),
-        )
+        );
 
-        const newMarkets = {}
+        const newMarkets = {};
         // TODO use right type
         results.forEach((market: any) => {
-          const m = market
-          m.size = `${market.size}`
-          m.strikePrice = `${market.strikePrice}`
-          newMarkets[market.key] = m
-          return m
-        })
-        setMarkets((markets) => ({ ...markets, ...newMarkets }))
+          const m = market;
+          m.size = `${market.size}`;
+          m.strikePrice = `${market.strikePrice}`;
+          newMarkets[market.key] = m;
+          return m;
+        });
+        setMarkets((markets) => ({ ...markets, ...newMarkets }));
 
-        return results
+        return results;
       } catch (err) {
-        pushErrorNotification(err)
+        pushErrorNotification(err);
       }
-      return []
+      return [];
     },
     [
       connection,
@@ -184,5 +184,5 @@ export const useInitializeMarkets = (): ((
       dexProgramId,
       sendSignedTransaction,
     ],
-  )
-}
+  );
+};

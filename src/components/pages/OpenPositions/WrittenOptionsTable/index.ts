@@ -1,1 +1,1 @@
-export * from './WrittenOptionsTable'
+export * from './WrittenOptionsTable';

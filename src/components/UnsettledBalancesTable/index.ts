@@ -1,3 +1,3 @@
-import UnsettledBalancesTable from './UnsettledBalancesTable'
+import UnsettledBalancesTable from './UnsettledBalancesTable';
 
-export default UnsettledBalancesTable
+export default UnsettledBalancesTable;

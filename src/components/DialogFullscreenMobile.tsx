@@ -1,6 +1,6 @@
-import React from 'react'
-import Hidden from '@material-ui/core/Hidden'
-import Dialog from '@material-ui/core/Dialog'
+import React from 'react';
+import Hidden from '@material-ui/core/Hidden';
+import Dialog from '@material-ui/core/Dialog';
 
 const DialogFullscreenMobile = ({ open, onClose, maxWidth, children }) => (
   <>
@@ -15,6 +15,6 @@ const DialogFullscreenMobile = ({ open, onClose, maxWidth, children }) => (
       </Dialog>
     </Hidden>
   </>
-)
+);
 
-export default DialogFullscreenMobile
+export default DialogFullscreenMobile;

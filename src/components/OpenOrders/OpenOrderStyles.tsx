@@ -1,8 +1,8 @@
-import TableCell from '@material-ui/core/TableCell'
-import { withStyles } from '@material-ui/core/styles'
-import theme from '../../utils/theme'
+import TableCell from '@material-ui/core/TableCell';
+import { withStyles } from '@material-ui/core/styles';
+import theme from '../../utils/theme';
 
-const borderLight = `1px solid ${theme.palette.background.paper}`
+const borderLight = `1px solid ${theme.palette.background.paper}`;
 
 export const TCell = withStyles({
   root: {
@@ -13,7 +13,7 @@ export const TCell = withStyles({
     height: '52px',
     background: (theme.palette.background as any).medium, // Todo fix this type
   },
-})(TableCell)
+})(TableCell);
 
 export const THeadCell = withStyles({
   root: {
@@ -26,4 +26,4 @@ export const THeadCell = withStyles({
     borderBottom: borderLight,
     background: (theme.palette.background as any).medium,
   },
-})(TableCell)
+})(TableCell);

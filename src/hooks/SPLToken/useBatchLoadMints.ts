@@ -1,9 +1,9 @@
-import { MintInfo, MintLayout, u64 } from '@solana/spl-token'
-import { PublicKey } from '@solana/web3.js'
-import { useEffect } from 'react'
-import * as Sentry from '@sentry/react'
-import { useSPLTokenMints } from '../../context/SPLTokenMintsContext'
-import useConnection from '../useConnection'
+import { MintInfo, MintLayout, u64 } from '@solana/spl-token';
+import { PublicKey } from '@solana/web3.js';
+import { useEffect } from 'react';
+import * as Sentry from '@sentry/react';
+import { useSPLTokenMints } from '../../context/SPLTokenMintsContext';
+import useConnection from '../useConnection';
 
 /**
  * Fetch and update global context state with SPL Token mint info.
@@ -12,43 +12,43 @@ import useConnection from '../useConnection'
  * @returns
  */
 export const useBatchLoadMints = (mints: PublicKey[]) => {
-  const { connection } = useConnection()
-  const [splTokenMints, setSPLTokenMints] = useSPLTokenMints()
+  const { connection } = useConnection();
+  const [splTokenMints, setSPLTokenMints] = useSPLTokenMints();
 
   useEffect(() => {
-    if (!mints.length) return
-    ;(async () => {
+    if (!mints.length) return;
+    (async () => {
       try {
-        const infos = await connection.getMultipleAccountsInfo(mints)
-        const mintInfos: Record<string, MintInfo> = {}
+        const infos = await connection.getMultipleAccountsInfo(mints);
+        const mintInfos: Record<string, MintInfo> = {};
         infos.forEach((info, index) => {
-          const mintInfo = MintLayout.decode(info.data)
+          const mintInfo = MintLayout.decode(info.data);
           if (mintInfo.mintAuthorityOption === 0) {
-            mintInfo.mintAuthority = null
+            mintInfo.mintAuthority = null;
           } else {
-            mintInfo.mintAuthority = new PublicKey(mintInfo.mintAuthority)
+            mintInfo.mintAuthority = new PublicKey(mintInfo.mintAuthority);
           }
 
-          mintInfo.supply = u64.fromBuffer(mintInfo.supply)
-          mintInfo.isInitialized = mintInfo.isInitialized !== 0
+          mintInfo.supply = u64.fromBuffer(mintInfo.supply);
+          mintInfo.isInitialized = mintInfo.isInitialized !== 0;
 
           if (mintInfo.freezeAuthorityOption === 0) {
-            mintInfo.freezeAuthority = null
+            mintInfo.freezeAuthority = null;
           } else {
-            mintInfo.freezeAuthority = new PublicKey(mintInfo.freezeAuthority)
+            mintInfo.freezeAuthority = new PublicKey(mintInfo.freezeAuthority);
           }
-          mintInfos[mints[index].toString()] = mintInfo
-        })
+          mintInfos[mints[index].toString()] = mintInfo;
+        });
         setSPLTokenMints((_mintInfos) => ({
           ..._mintInfos,
           ...mintInfos,
-        }))
+        }));
       } catch (err) {
-        console.error(err)
-        Sentry.captureException(err)
+        console.error(err);
+        Sentry.captureException(err);
       }
-    })()
-  }, [connection, mints, setSPLTokenMints])
+    })();
+  }, [connection, mints, setSPLTokenMints]);
 
-  return splTokenMints
-}
+  return splTokenMints;
+};

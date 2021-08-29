@@ -1,37 +1,37 @@
-import { MarketMeta } from '@mithraic-labs/market-meta'
-import type { Moment } from 'moment'
-import moment from 'moment'
-import React, { createContext, useContext, useEffect, useState } from 'react'
-import useLocalStorageState from 'use-local-storage-state'
-import useAssetList from '../hooks/useAssetList'
-import useConnection from '../hooks/useConnection'
+import { MarketMeta } from '@mithraic-labs/market-meta';
+import type { Moment } from 'moment';
+import moment from 'moment';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import useLocalStorageState from 'use-local-storage-state';
+import useAssetList from '../hooks/useAssetList';
+import useConnection from '../hooks/useConnection';
 
 type DateContextValue = {
-  selectedDate: Moment | undefined
-  dates: Moment[]
-  setSelectedDate: (date: Moment) => void
-}
+  selectedDate: Moment | undefined;
+  dates: Moment[];
+  setSelectedDate: (date: Moment) => void;
+};
 
 const ExpirationDateContext = createContext<DateContextValue>({
   selectedDate: undefined,
   dates: [],
   setSelectedDate: () => {},
-})
+});
 
 const ExpirationDateProvider: React.FC = ({ children }) => {
-  const { endpoint } = useConnection()
-  const { uAsset, qAsset, assetListLoading } = useAssetList()
-  const [dates, setDates] = useState([])
+  const { endpoint } = useConnection();
+  const { uAsset, qAsset, assetListLoading } = useAssetList();
+  const [dates, setDates] = useState([]);
   const [_selectedDatesByAsset, _setSelectedDatesByAsset] =
-    useLocalStorageState('selectedDates', {})
+    useLocalStorageState('selectedDates', {});
 
-  const _selectedDate = _selectedDatesByAsset[uAsset?.tokenSymbol]
-  const parsedDate = moment.utc(_selectedDate)
+  const _selectedDate = _selectedDatesByAsset[uAsset?.tokenSymbol];
+  const parsedDate = moment.utc(_selectedDate);
 
   useEffect(() => {
     if (!assetListLoading && uAsset?.mintAddress && qAsset?.mintAddress) {
       const markets =
-        MarketMeta[endpoint.name.toLowerCase()]?.optionMarkets || []
+        MarketMeta[endpoint.name.toLowerCase()]?.optionMarkets || [];
 
       const expirationsForAssetPair = [
         ...new Set(
@@ -43,24 +43,24 @@ const ExpirationDateProvider: React.FC = ({ children }) => {
             )
             .map((market) => market.expiration),
         ),
-      ] as number[]
+      ] as number[];
 
       const newDates = expirationsForAssetPair
         .sort((a, b) => a - b)
         .map((timestamp) => moment.utc(timestamp * 1000))
         .filter((date) => {
           // TODO - do we want a way to show recently expired dates instead of just dropping them?
-          return date.isAfter(moment.utc())
-        })
+          return date.isAfter(moment.utc());
+        });
 
-      setDates(newDates)
+      setDates(newDates);
     }
   }, [
     assetListLoading,
     endpoint.name,
     uAsset?.mintAddress,
     qAsset?.mintAddress,
-  ])
+  ]);
 
   useEffect(() => {
     // Set default date or load user's stored date for current asset
@@ -72,7 +72,7 @@ const ExpirationDateProvider: React.FC = ({ children }) => {
       _setSelectedDatesByAsset((prevValue) => ({
         ...prevValue,
         [uAsset?.tokenSymbol]: dates[0].toISOString(),
-      }))
+      }));
     }
   }, [
     dates,
@@ -80,7 +80,7 @@ const ExpirationDateProvider: React.FC = ({ children }) => {
     _selectedDate,
     _setSelectedDatesByAsset,
     uAsset?.tokenSymbol,
-  ])
+  ]);
 
   const value = {
     setDates,
@@ -90,15 +90,15 @@ const ExpirationDateProvider: React.FC = ({ children }) => {
       _setSelectedDatesByAsset((prevValue) => ({
         ...prevValue,
         [uAsset?.tokenSymbol]: date.toISOString(),
-      }))
+      }));
     },
-  }
+  };
 
   return (
     <ExpirationDateContext.Provider value={value}>
       {children}
     </ExpirationDateContext.Provider>
-  )
-}
+  );
+};
 
-export { ExpirationDateContext, ExpirationDateProvider }
+export { ExpirationDateContext, ExpirationDateProvider };

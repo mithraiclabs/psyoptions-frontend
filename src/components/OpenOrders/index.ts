@@ -1,3 +1,3 @@
-import OpenOrders from './OpenOrders'
+import OpenOrders from './OpenOrders';
 
-export default OpenOrders
+export default OpenOrders;

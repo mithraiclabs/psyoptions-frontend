@@ -1,15 +1,15 @@
-import React from 'react'
-import Box from '@material-ui/core/Box'
-import Button, { ButtonProps } from '@material-ui/core/Button'
-import CircularProgress from '@material-ui/core/CircularProgress'
+import React from 'react';
+import Box from '@material-ui/core/Box';
+import Button, { ButtonProps } from '@material-ui/core/Button';
+import CircularProgress from '@material-ui/core/CircularProgress';
 
 type TxButtonProps = {
-  loading: boolean
-  children: React.ReactNode
-} & ButtonProps
+  loading: boolean;
+  children: React.ReactNode;
+} & ButtonProps;
 
 const TxButton = (props: TxButtonProps) => {
-  const { disabled, loading, onClick, children } = props
+  const { disabled, loading, onClick, children } = props;
 
   return (
     <Button
@@ -31,7 +31,7 @@ const TxButton = (props: TxButtonProps) => {
         )}
       </Box>
     </Button>
-  )
-}
+  );
+};
 
-export default TxButton
+export default TxButton;

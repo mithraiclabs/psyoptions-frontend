@@ -1,1 +1,1 @@
-export { default } from './BuySellDialog'
+export { default } from './BuySellDialog';

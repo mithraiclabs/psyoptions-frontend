@@ -1,11 +1,11 @@
-import TableCell from '@material-ui/core/TableCell'
-import TableRow from '@material-ui/core/TableRow'
-import Button from '@material-ui/core/Button'
-import Tooltip from '@material-ui/core/Tooltip'
-import { withStyles } from '@material-ui/core/styles'
-import theme from '../../../utils/theme'
+import TableCell from '@material-ui/core/TableCell';
+import TableRow from '@material-ui/core/TableRow';
+import Button from '@material-ui/core/Button';
+import Tooltip from '@material-ui/core/Tooltip';
+import { withStyles } from '@material-ui/core/styles';
+import theme from '../../../utils/theme';
 
-const borderLight = `1px solid ${theme.palette.background.paper}`
+const borderLight = `1px solid ${theme.palette.background.paper}`;
 
 export const StyledTooltip = withStyles(() => ({
   tooltip: {
@@ -14,7 +14,7 @@ export const StyledTooltip = withStyles(() => ({
     fontSize: '13px',
     lineHeight: '18px',
   },
-}))(Tooltip)
+}))(Tooltip);
 
 export const PageButton = withStyles({
   root: {
@@ -26,7 +26,7 @@ export const PageButton = withStyles({
     height: '40px',
     margin: '0 4px',
   },
-})(Button)
+})(Button);
 
 export const TCell = withStyles({
   root: {
@@ -37,7 +37,7 @@ export const TCell = withStyles({
     height: '48px',
     background: theme.palette.background.marketsCallPutRow,
   },
-})(TableCell)
+})(TableCell);
 
 export const TCellLoading = withStyles({
   root: {
@@ -48,7 +48,7 @@ export const TCellLoading = withStyles({
     border: 'none',
     background: 'transparent',
   },
-})(TableCell)
+})(TableCell);
 
 export const THeadCell = withStyles({
   root: {
@@ -61,7 +61,7 @@ export const THeadCell = withStyles({
     borderBottom: borderLight,
     background: theme.palette.background.medium,
   },
-})(TableCell)
+})(TableCell);
 
 export const THeadCellStrike = withStyles({
   root: {
@@ -75,7 +75,7 @@ export const THeadCellStrike = withStyles({
     width: '130px',
     background: theme.palette.background.medium,
   },
-})(TableCell)
+})(TableCell);
 
 export const TCellStrike = withStyles({
   root: {
@@ -87,7 +87,7 @@ export const TCellStrike = withStyles({
     width: '130px',
     background: theme.palette.background.paper,
   },
-})(TableCell)
+})(TableCell);
 
 export const TRow = withStyles({
   hover: {
@@ -96,4 +96,4 @@ export const TRow = withStyles({
       backgroundColor: `${theme.palette.background.lighter} !important`,
     },
   },
-})(TableRow)
+})(TableRow);

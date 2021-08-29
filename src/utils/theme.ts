@@ -1,52 +1,52 @@
-import { createMuiTheme } from '@material-ui/core/styles'
+import { createMuiTheme } from '@material-ui/core/styles';
 
 type Gradients = {
-  secondary: string
-  secondaryPrimary: string
-  warning: string
-  error: string
-  success: string
-  info: string
-}
+  secondary: string;
+  secondaryPrimary: string;
+  warning: string;
+  error: string;
+  success: string;
+  info: string;
+};
 
 declare module '@material-ui/core/styles/createMuiTheme' {
   interface Theme {
-    gradients?: Gradients
+    gradients?: Gradients;
   }
   interface ThemeOptions {
-    themeName?: string // optional
-    gradients?: Gradients
-    glow?: string
+    themeName?: string; // optional
+    gradients?: Gradients;
+    glow?: string;
   }
 }
 declare module '@material-ui/core/styles/createPalette' {
   interface Palette {
     border: {
-      main: string
-    }
+      main: string;
+    };
     disabled: {
-      main: string
-    }
+      main: string;
+    };
   }
   interface PaletteOptions {
     border: {
-      main: string
-    }
+      main: string;
+    };
     disabled: {
-      main: string
-    }
+      main: string;
+    };
   }
   interface SimplePaletteColorOptions {
-    darker?: string
+    darker?: string;
   }
   interface TypeBackground {
-    lighter?: string
-    light?: string
-    tableHighlight?: string
-    tabHighlight?: string
-    medium?: string
-    main?: string
-    marketsCallPutRow?: string
+    lighter?: string;
+    light?: string;
+    tableHighlight?: string;
+    tabHighlight?: string;
+    medium?: string;
+    main?: string;
+    marketsCallPutRow?: string;
   }
 }
 
@@ -128,6 +128,6 @@ const theme = createMuiTheme({
     // E.g., shift from Red 500 to Red 300 or Red 700.
     tonalOffset: 0.2,
   },
-})
+});
 
-export default theme
+export default theme;

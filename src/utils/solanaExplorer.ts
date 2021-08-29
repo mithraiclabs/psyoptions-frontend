@@ -4,4 +4,4 @@
 export const buildSolanaExplorerUrl = (txid: string, endpoint?: string) =>
   `https://explorer.solana.com/tx/${txid}${
     endpoint ? `?cluster=custom&customUrl=${endpoint}` : ''
-  }`
+  }`;

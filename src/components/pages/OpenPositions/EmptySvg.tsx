@@ -1,4 +1,4 @@
-import React from 'react'
+import React from 'react';
 
 export default () => (
   <svg
@@ -193,4 +193,4 @@ export default () => (
       </filter>
     </defs>
   </svg>
-)
+);

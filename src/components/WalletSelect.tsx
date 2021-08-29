@@ -1,27 +1,27 @@
-import React from 'react'
-import Dialog, { DialogProps } from '@material-ui/core/Dialog'
-import Box from '@material-ui/core/Box'
-import Button from '@material-ui/core/Button'
-import { makeStyles } from '@material-ui/core/styles'
+import React from 'react';
+import Dialog, { DialogProps } from '@material-ui/core/Dialog';
+import Box from '@material-ui/core/Box';
+import Button from '@material-ui/core/Button';
+import { makeStyles } from '@material-ui/core/styles';
 
-import wallets from '../utils/wallet/wallets'
-import useWallet from '../hooks/useWallet'
-import WalletAdapter from '../utils/wallet/walletAdapter'
+import wallets from '../utils/wallet/wallets';
+import useWallet from '../hooks/useWallet';
+import WalletAdapter from '../utils/wallet/walletAdapter';
 
 const useStyles = makeStyles({
   icon: {
     width: '32px',
     height: '32px',
   },
-})
+});
 
 const WalletSelect: React.FC<{
-  open: boolean
-  onClose?: DialogProps['onClose']
-  handleConnect: (adapter: WalletAdapter) => void
+  open: boolean;
+  onClose?: DialogProps['onClose'];
+  handleConnect: (adapter: WalletAdapter) => void;
 }> = ({ open, onClose, handleConnect }) => {
-  const classes = useStyles()
-  const { pubKey, connected, disconnect } = useWallet()
+  const classes = useStyles();
+  const { pubKey, connected, disconnect } = useWallet();
 
   return (
     <Dialog open={open} onClose={onClose} aria-labelledby={'Choose Wallet'}>
@@ -50,8 +50,8 @@ const WalletSelect: React.FC<{
             ) : (
               <>
                 {wallets.map((wallet) => {
-                  const adapter = wallet.getAdapter()
-                  const isAvailable = !!adapter
+                  const adapter = wallet.getAdapter();
+                  const isAvailable = !!adapter;
 
                   return (
                     <Box my={2} key={wallet.name}>
@@ -82,7 +82,7 @@ const WalletSelect: React.FC<{
                         </Box>
                       </Button>
                     </Box>
-                  )
+                  );
                 })}
               </>
             )}
@@ -90,7 +90,7 @@ const WalletSelect: React.FC<{
         </Box>
       </Box>
     </Dialog>
-  )
-}
+  );
+};
 
-export default WalletSelect
+export default WalletSelect;

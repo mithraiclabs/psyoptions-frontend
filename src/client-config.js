@@ -1,1 +1,1 @@
-process.env = window.process.env
+process.env = window.process.env;

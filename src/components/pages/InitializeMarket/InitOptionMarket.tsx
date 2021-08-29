@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useState } from 'react';
+import { OptionMarket } from '@mithraic-labs/psyoptions';
 import { PublicKey } from '@solana/web3.js';
 import DateFnsUtils from '@date-io/date-fns';
 import Box from '@material-ui/core/Box';
@@ -22,15 +23,14 @@ import useAssetList from '../../../hooks/useAssetList';
 import useConnection from '../../../hooks/useConnection';
 import { useInitializeMarket } from '../../../hooks/useInitializeMarkets';
 import useNotifications from '../../../hooks/useNotifications';
-import { useOptionMarket } from '../../../hooks/useOptionMarket';
 import useWallet from '../../../hooks/useWallet';
-import { convertStrikeToAmountsPer } from '../../../utils/strikeConversions';
 import ConnectButton from '../../ConnectButton';
 import SelectAsset from '../../SelectAsset';
 import { StyledTooltip } from '../Markets/styles';
 import theme from '../../../utils/theme';
 import { useInitializedMarkets } from '../../../hooks/LocalStorage';
 import { useCheckIfMarketExists } from '../../../hooks/PsyOptionsAPI/useCheckIfMarketExists';
+import { MarketExistsDialog } from './MarketExistsDialog';
 
 const darkBorder = `1px solid ${theme.palette.background.main}`;
 
@@ -49,6 +49,13 @@ export const InitOptionMarket: React.VFC = () => {
   const [callOrPut, setCallOrPut] = useState<'calls' | 'puts'>('calls');
   const [, setInitializedMarketMeta] = useInitializedMarkets();
   const checkIfMarketExists = useCheckIfMarketExists();
+  const [existingMarket, setExistingMarket] =
+    useState<OptionMarket | null>(null);
+
+  const dismissExistingMarketDialog = useCallback(
+    () => setExistingMarket(null),
+    [],
+  );
 
   const parsedBasePrice = parseFloat(
     basePrice && basePrice.replace(/^\./, '0.'),
@@ -57,27 +64,6 @@ export const InitOptionMarket: React.VFC = () => {
   if (parsedBasePrice) {
     strikePrice = new BigNumber(parsedBasePrice);
   }
-
-  const _amountPerContract = new BigNumber(size).multipliedBy(
-    new BigNumber(10).pow(new BigNumber(uAsset?.decimals)),
-  );
-  let _quoteAmountPerContract;
-  if (strikePrice) {
-    _quoteAmountPerContract = convertStrikeToAmountsPer(
-      strikePrice,
-      _amountPerContract,
-      uAsset,
-      qAsset,
-    );
-  }
-  const canInitialize = !!useOptionMarket({
-    date: selectorDate.unix(),
-    uAssetSymbol: uAsset?.tokenSymbol,
-    qAssetSymbol: qAsset?.tokenSymbol,
-    size,
-    amountPerContract: _amountPerContract,
-    quoteAmountPerContract: _quoteAmountPerContract,
-  });
 
   const assetsSelected = uAsset && qAsset;
   const parametersValid = size && !Number.isNaN(size) && !!strikePrice;
@@ -120,8 +106,7 @@ export const InitOptionMarket: React.VFC = () => {
         .multipliedBy(new BigNumber(10).pow(qa.decimals))
         .toNumber();
 
-      // TODO check if option market already exists
-      const exists = await checkIfMarketExists({
+      const _existingMarket = await checkIfMarketExists({
         expirationUnixTimestamp: expiration,
         quoteAmountPerContract: quoteAmountPerContractU64,
         quoteAssetMintKey: new PublicKey(qa.mintAddress),
@@ -129,7 +114,8 @@ export const InitOptionMarket: React.VFC = () => {
         underlyingAssetMintKey: new PublicKey(ua.mintAddress),
       });
 
-      if (exists) {
+      if (_existingMarket) {
+        setExistingMarket(_existingMarket);
         setLoading(false);
         return;
       }
@@ -146,9 +132,8 @@ export const InitOptionMarket: React.VFC = () => {
         expiration,
       });
 
-      const serumMarkets: Record<string, string> = {};
+      let serumMarketAddress: string;
       if (initSerumMarket) {
-        // TODO check if serum market already exists
         let tickSize = 0.0001;
         if (
           (callOrPut === 'calls' && qa.tokenSymbol.match(/^USD/)) ||
@@ -173,8 +158,7 @@ export const InitOptionMarket: React.VFC = () => {
         });
         if (initSerumResp) {
           const [serumMarketKey] = initSerumResp;
-          serumMarkets[initializedMarket.optionMarketKey.toString()] =
-            serumMarketKey.toString();
+          serumMarketAddress = serumMarketKey.toString();
         }
       }
 
@@ -200,8 +184,7 @@ export const InitOptionMarket: React.VFC = () => {
             .toString(),
           ...(initSerumMarket
             ? {
-                serumMarketAddress:
-                  serumMarkets[initializedMarket.optionMarketKey.toString()],
+                serumMarketAddress,
                 serumProgramId: dexProgramId.toString(),
               }
             : {}),
@@ -221,168 +204,174 @@ export const InitOptionMarket: React.VFC = () => {
   };
 
   return (
-    <Paper
-      style={{
-        width: '100%',
-        maxWidth: '500px',
-      }}
-    >
-      <Box p={2} textAlign="center">
-        <h2 style={{ margin: '10px 0 0' }}>Initialize New Market</h2>
-      </Box>
+    <>
+      <Paper
+        style={{
+          width: '100%',
+          maxWidth: '500px',
+        }}
+      >
+        <Box p={2} textAlign="center">
+          <h2 style={{ margin: '10px 0 0' }}>Initialize New Market</h2>
+        </Box>
 
-      <Box p={2} borderBottom={darkBorder} display="flex" alignItems="center">
-        Expires On:
-        <Box
-          display="flex"
-          flexWrap="wrap"
-          flexDirection="row"
-          alignItems="center"
-        >
-          <MuiPickersUtilsProvider utils={DateFnsUtils}>
-            <KeyboardDatePicker
-              autoOk
-              disablePast
-              variant="inline"
-              format="MM/dd/yyyy"
-              inputVariant="filled"
-              id="date-picker-inline"
-              label="MM/DD/YYYY"
-              value={selectorDate}
-              onChange={handleSelectedDateChange}
-              KeyboardButtonProps={{
-                'aria-label': 'change date',
-              }}
-              style={{ marginLeft: theme.spacing(4) }}
-            />
-          </MuiPickersUtilsProvider>
-          <StyledTooltip
-            title={
-              <Box p={1}>
-                All expirations occur at 23:59:59 UTC on any selected date.
-              </Box>
-            }
+        <Box p={2} borderBottom={darkBorder} display="flex" alignItems="center">
+          Expires On:
+          <Box
+            display="flex"
+            flexWrap="wrap"
+            flexDirection="row"
+            alignItems="center"
           >
-            <Box p={2}>
-              <HelpOutlineIcon />
-            </Box>
-          </StyledTooltip>
-        </Box>
-      </Box>
-
-      <Box display="flex" borderBottom={darkBorder}>
-        <Box width="50%" p={2} borderRight={darkBorder}>
-          Underlying Asset:
-          <Box mt={2}>
-            <SelectAsset
-              selectedAsset={uAsset}
-              onSelectAsset={(asset) => {
-                setUAsset(asset);
-              }}
-            />
-          </Box>
-        </Box>
-
-        <Box width="50%" p={2}>
-          Quote Asset:
-          <Box mt={2}>
-            <SelectAsset selectedAsset={qAsset} disabled />
-          </Box>
-        </Box>
-      </Box>
-
-      <Box display="flex" borderBottom={darkBorder}>
-        <Box width="50%" p={2} borderRight={darkBorder}>
-          <TextField
-            value={size}
-            label="Contract Size"
-            variant="filled"
-            onChange={(e) => setSize(e.target.value)}
-            helperText={Number.isNaN(size) ? 'Must be a number' : null}
-          />
-        </Box>
-        <Box width="50%" p={2}>
-          <Box pb={2}>
-            <TextField
-              value={basePrice}
-              label="Strike Price"
-              variant="filled"
-              onChange={handleChangeBasePrice}
-              helperText={
-                Number.isNaN(parsedBasePrice) ? 'Must be a number' : null
-              }
-            />
-          </Box>
-        </Box>
-      </Box>
-
-      <Box display="flex" alignItems="center" borderBottom={darkBorder}>
-        <Box width="50%" p={2}>
-          <FormControl component="fieldset">
-            <RadioGroup value={callOrPut} onChange={handleChangeCallPut} row>
-              <FormControlLabel
-                value="calls"
-                control={<Radio />}
-                label="Calls"
+            <MuiPickersUtilsProvider utils={DateFnsUtils}>
+              <KeyboardDatePicker
+                autoOk
+                disablePast
+                variant="inline"
+                format="MM/dd/yyyy"
+                inputVariant="filled"
+                id="date-picker-inline"
+                label="MM/DD/YYYY"
+                value={selectorDate}
+                onChange={handleSelectedDateChange}
+                KeyboardButtonProps={{
+                  'aria-label': 'change date',
+                }}
+                style={{ marginLeft: theme.spacing(4) }}
               />
-              <FormControlLabel value="puts" control={<Radio />} label="Puts" />
-            </RadioGroup>
-          </FormControl>
-        </Box>
-        <Box width="50%" p={2}>
-          {callOrPut === 'calls'
-            ? 'Initialize calls for market'
-            : 'Initialize puts for market'}
-        </Box>
-      </Box>
-
-      <Box display="flex" alignItems="center" borderBottom={darkBorder}>
-        <Box width="50%" p={2}>
-          Initalize Serum Market
-        </Box>
-        <Box width="50%" p={2}>
-          <FormControl component="fieldset">
-            <Checkbox
-              color="primary"
-              checked={initSerumMarket}
-              onChange={(e) => setInitSerumMarket(e.target.checked)}
-            />
-          </FormControl>
-        </Box>
-      </Box>
-
-      <Box p={2}>
-        {loading ? (
-          <Box display="flex" justifyContent="center" p={1}>
-            <CircularProgress />
+            </MuiPickersUtilsProvider>
+            <StyledTooltip
+              title={
+                <Box p={1}>
+                  All expirations occur at 23:59:59 UTC on any selected date.
+                </Box>
+              }
+            >
+              <Box p={2}>
+                <HelpOutlineIcon />
+              </Box>
+            </StyledTooltip>
           </Box>
-        ) : canInitialize && assetsSelected && parametersValid ? (
-          <>
-            {!connected ? (
-              <ConnectButton fullWidth>
-                <Box py={1}>Connect Wallet To Initialize</Box>
-              </ConnectButton>
-            ) : (
-              <Button
-                fullWidth
-                variant="outlined"
-                color="primary"
-                onClick={handleInitialize}
-              >
-                <Box py={1}>Initialize Market</Box>
-              </Button>
-            )}
-          </>
-        ) : (
-          <Button fullWidth variant="outlined" color="primary" disabled>
-            <Box py={1}>
-              {assetsSelected && parametersValid
-                ? `Market Already Exists`
-                : 'Enter Valid Parameters to Initialize Market'}
+        </Box>
+
+        <Box display="flex" borderBottom={darkBorder}>
+          <Box width="50%" p={2} borderRight={darkBorder}>
+            Underlying Asset:
+            <Box mt={2}>
+              <SelectAsset
+                selectedAsset={uAsset}
+                onSelectAsset={(asset) => {
+                  setUAsset(asset);
+                }}
+              />
             </Box>
-          </Button>
-        )}
-      </Box>
-    </Paper>
+          </Box>
+
+          <Box width="50%" p={2}>
+            Quote Asset:
+            <Box mt={2}>
+              <SelectAsset selectedAsset={qAsset} disabled />
+            </Box>
+          </Box>
+        </Box>
+
+        <Box display="flex" borderBottom={darkBorder}>
+          <Box width="50%" p={2} borderRight={darkBorder}>
+            <TextField
+              value={size}
+              label="Contract Size"
+              variant="filled"
+              onChange={(e) => setSize(e.target.value)}
+              helperText={Number.isNaN(size) ? 'Must be a number' : null}
+            />
+          </Box>
+          <Box width="50%" p={2}>
+            <Box pb={2}>
+              <TextField
+                value={basePrice}
+                label="Strike Price"
+                variant="filled"
+                onChange={handleChangeBasePrice}
+                helperText={
+                  Number.isNaN(parsedBasePrice) ? 'Must be a number' : null
+                }
+              />
+            </Box>
+          </Box>
+        </Box>
+
+        <Box display="flex" alignItems="center" borderBottom={darkBorder}>
+          <Box width="50%" p={2}>
+            <FormControl component="fieldset">
+              <RadioGroup value={callOrPut} onChange={handleChangeCallPut} row>
+                <FormControlLabel
+                  value="calls"
+                  control={<Radio />}
+                  label="Calls"
+                />
+                <FormControlLabel
+                  value="puts"
+                  control={<Radio />}
+                  label="Puts"
+                />
+              </RadioGroup>
+            </FormControl>
+          </Box>
+          <Box width="50%" p={2}>
+            {callOrPut === 'calls'
+              ? 'Initialize calls for market'
+              : 'Initialize puts for market'}
+          </Box>
+        </Box>
+
+        <Box display="flex" alignItems="center" borderBottom={darkBorder}>
+          <Box width="50%" p={2}>
+            Initalize Serum Market
+          </Box>
+          <Box width="50%" p={2}>
+            <FormControl component="fieldset">
+              <Checkbox
+                color="primary"
+                checked={initSerumMarket}
+                onChange={(e) => setInitSerumMarket(e.target.checked)}
+              />
+            </FormControl>
+          </Box>
+        </Box>
+
+        <Box p={2}>
+          {loading ? (
+            <Box display="flex" justifyContent="center" p={1}>
+              <CircularProgress />
+            </Box>
+          ) : assetsSelected && parametersValid ? (
+            <>
+              {!connected ? (
+                <ConnectButton fullWidth>
+                  <Box py={1}>Connect Wallet To Initialize</Box>
+                </ConnectButton>
+              ) : (
+                <Button
+                  fullWidth
+                  variant="outlined"
+                  color="primary"
+                  onClick={handleInitialize}
+                >
+                  <Box py={1}>Initialize Market</Box>
+                </Button>
+              )}
+            </>
+          ) : (
+            <Button fullWidth variant="outlined" color="primary" disabled>
+              <Box py={1}>Enter Valid Parameters to Initialize Market</Box>
+            </Button>
+          )}
+        </Box>
+      </Paper>
+      <MarketExistsDialog
+        dismiss={dismissExistingMarketDialog}
+        optionMarket={existingMarket}
+      />
+    </>
   );
 };

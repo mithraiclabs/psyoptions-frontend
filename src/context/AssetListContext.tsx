@@ -12,6 +12,7 @@ type TickerPair = {
 type AssetListContext = {
   srmPublicKey: PublicKey | null;
   USDCPublicKey: PublicKey | null;
+  USDCToken: Token | null;
   supportedAssets: Token[];
   setSupportedAssets: React.Dispatch<React.SetStateAction<Token[]>>;
   uAsset: Token | null;
@@ -43,6 +44,7 @@ const defaultAssetPairsByNetworkName: Record<string, TickerPair> = {
 const AssetListContext = createContext<AssetListContext>({
   srmPublicKey: null,
   USDCPublicKey: null,
+  USDCToken: null,
   supportedAssets: [],
   setSupportedAssets: () => {},
   uAsset: null,
@@ -62,9 +64,9 @@ const AssetListProvider: React.FC = ({ children }) => {
     const srm = supportedAssets.find((asset) => asset.tokenSymbol === 'SRM');
     return srm ? new PublicKey(srm.mintAddress) : null;
   }, [supportedAssets]);
-  const USDCPublicKey = useMemo(() => {
+  const [USDCPublicKey, USDCToken] = useMemo(() => {
     const usdc = supportedAssets.find((asset) => asset.tokenSymbol === 'USDC');
-    return usdc ? new PublicKey(usdc.mintAddress) : null;
+    return usdc ? [new PublicKey(usdc.mintAddress), usdc] : [null, null];
   }, [supportedAssets]);
 
   useEffect(() => {
@@ -103,6 +105,7 @@ const AssetListProvider: React.FC = ({ children }) => {
     setSupportedAssets,
     srmPublicKey,
     USDCPublicKey,
+    USDCToken,
     uAsset,
     qAsset,
     setUAsset,

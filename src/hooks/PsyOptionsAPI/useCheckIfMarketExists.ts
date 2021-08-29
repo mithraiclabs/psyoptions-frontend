@@ -1,4 +1,8 @@
-import { Market } from '@mithraic-labs/psyoptions';
+import {
+  Market,
+  OptionMarket,
+  OPTION_MARKET_LAYOUT,
+} from '@mithraic-labs/psyoptions';
 import { PublicKey } from '@solana/web3.js';
 import { useCallback } from 'react';
 import useConnection from '../useConnection';
@@ -9,7 +13,7 @@ export const useCheckIfMarketExists = (): ((obj: {
   quoteAssetMintKey: PublicKey;
   underlyingAmountPerContract: number;
   underlyingAssetMintKey: PublicKey;
-}) => Promise<boolean>) => {
+}) => Promise<OptionMarket | null>) => {
   const { connection, endpoint } = useConnection();
 
   return useCallback(
@@ -34,7 +38,17 @@ export const useCheckIfMarketExists = (): ((obj: {
         'recent',
       );
 
-      return !!accountInfo;
+      if (!accountInfo) {
+        return null;
+      }
+
+      const optionMarketFromBuffer = OPTION_MARKET_LAYOUT.decode(
+        accountInfo.data,
+      );
+      return {
+        ...optionMarketFromBuffer,
+        optionMarketKey,
+      } as OptionMarket;
     },
     [connection, endpoint.programId],
   );

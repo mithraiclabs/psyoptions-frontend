@@ -93,7 +93,7 @@ const DEX_PROGRAM_ID = new PublicKey(
           market.marketData.amountPerContract.toString(),
         quoteAssetPerContract:
           market.marketData.quoteAmountPerContract.toString(),
-        serumMarketAddress: serumMarketMeta[0].publicKey.toString(),
+        serumMarketAddress: serumMarketMeta[0]?.publicKey?.toString(),
         serumProgramId: DEX_PROGRAM_ID.toString(),
         psyOptionsProgramId: OPTION_PROGRAM_ID.toString(),
       })

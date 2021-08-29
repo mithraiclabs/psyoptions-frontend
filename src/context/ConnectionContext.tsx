@@ -13,7 +13,7 @@ const DEFAULT_NETWORK = networks.find(
   (network) => network.programId !== undefined,
 );
 
-type ConnectionContextType = {
+export type ConnectionContextType = {
   networks: Network[];
   connection?: Connection;
   setConnection?: React.Dispatch<React.SetStateAction<Connection>>;

@@ -9,7 +9,6 @@ import BigNumber from 'bignumber.js';
 
 import theme from '../../../utils/theme';
 import useSerum from '../../../hooks/useSerum';
-import useWallet from '../../../hooks/useWallet';
 import useNotifications from '../../../hooks/useNotifications';
 import { useImpliedVol } from '../../../hooks/useImpliedVol';
 
@@ -19,8 +18,7 @@ import { useSubscribeSPLTokenMint } from '../../../hooks/SPLToken';
 import { useOptionMarket } from '../../../hooks/useOptionMarket';
 import { useSerumOrderbooks } from '../../../context/SerumOrderbookContext';
 
-import ConnectButton from '../../ConnectButton';
-import { useInitializeMarkets } from '../../../hooks/useInitializeMarkets';
+import { useInitializeMarket } from '../../../hooks/useInitializeMarkets';
 
 import { TCell, TCellLoading, TCellStrike, TRow } from './styles';
 import { useMarketData } from '../../../context/MarketDataContext';
@@ -74,7 +72,7 @@ type CallPutRowProps = {
   contractSize: number;
 };
 
-const CallPutRow = ({
+const CallPutRow: React.VFC<CallPutRowProps> = ({
   row,
   round = false,
   precision = 2,
@@ -91,11 +89,10 @@ const CallPutRow = ({
   showOI,
   showLastPrice,
   contractSize,
-}: CallPutRowProps) => {
-  const { connected } = useWallet();
+}) => {
   const { pushNotification } = useNotifications();
   const { serumMarkets } = useSerum();
-  const initializeMarkets = useInitializeMarkets();
+  const initializeMarkets = useInitializeMarket();
   const [orderbooks] = useSerumOrderbooks();
   const callOrderbook = orderbooks[row.call?.serumMarketKey?.toString()];
   const putOrderbook = orderbooks[row.put?.serumMarketKey?.toString()];
@@ -122,7 +119,7 @@ const CallPutRow = ({
     amountPerContract: row.put?.amountPerContract,
     quoteAmountPerContract: row.put?.quoteAmountPerContract,
   });
-  const [splTokenMints, _] = useSPLTokenMints();
+  const [splTokenMints] = useSPLTokenMints();
   const callOptionMintInfo =
     splTokenMints[callMarket?.optionMintKey.toString()];
   const putOptionMintInfo = splTokenMints[putMarket?.optionMintKey.toString()];
@@ -197,7 +194,7 @@ const CallPutRow = ({
 
         await initializeMarkets({
           amountPerContract,
-          quoteAmountsPerContract: [quoteAmountPerContract],
+          quoteAmountPerContract,
           uAssetSymbol: ua.tokenSymbol,
           qAssetSymbol: qa.tokenSymbol,
           uAssetMint: ua.mintAddress,

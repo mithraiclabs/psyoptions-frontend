@@ -1,13 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import React from 'react';
-import {
-  Switch,
-  Route,
-  BrowserRouter,
-  StaticRouter,
-  BrowserRouterProps,
-  StaticRouterProps,
-} from 'react-router-dom';
+import { Switch, Route, BrowserRouter, StaticRouter } from 'react-router-dom';
 import crypto from 'crypto';
 
 import { isBrowser } from '../utils/isNode';

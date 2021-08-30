@@ -18,7 +18,7 @@ Parameters:
     Type: String
   ShowInitializationPage:
     AllowedValues: ['true', 'false']
-    Default: false,
+    Default: false
     Description: Should the initialization page be show
     Type: String
 

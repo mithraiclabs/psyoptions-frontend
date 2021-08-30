@@ -132,6 +132,12 @@ export const InitOptionMarket: React.VFC = () => {
         expiration,
       });
 
+      if (!initializedMarket) {
+        // user cancelled transaction
+        setLoading(false);
+        return;
+      }
+
       let serumMarketAddress: string;
       if (initSerumMarket) {
         let tickSize = 0.0001;

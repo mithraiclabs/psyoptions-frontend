@@ -22,6 +22,9 @@ Parameters:
     Description: Should the initialization page be show
     Type: String
 
+Conditions:
+  ShowInitPage: !Equals [!Ref ShowInitializationPage, 'true']
+
 Resources:
   # Create CloudWatch LogGroup for the task logs
   ContainerLogGroup:
@@ -150,7 +153,7 @@ Resources:
             - Name: APP_ENABLED
               Value: true
             - Name: INITIALIZE_PAGE_ENABLED
-              Value: !Ref ShowInitializationPage
+              Value: !If [ShowInitPage, true, false]
             - Name: DEVNET_PROGRAM_ID
               Value: GDvqQy3FkDB2wyNwgZGp5YkmRMUmWbhNNWDMYKbLSZ5N
             - Name: MAINNET_PROGRAM_ID

@@ -10,7 +10,7 @@ import Dialog from '@material-ui/core/Dialog';
 import { OptionMarket } from '@mithraic-labs/psyoptions';
 import BN from 'bn.js';
 import React, { useCallback, useState } from 'react';
-import { useInitializedMarkets } from '../../../hooks/LocalStorage';
+import { useInitializedMarkets } from '../../../context/LocalStorage';
 import { useInitializeSerumMarket } from '../../../hooks/Serum/useInitializeSerumMarket';
 import useAssetList from '../../../hooks/useAssetList';
 import useConnection from '../../../hooks/useConnection';

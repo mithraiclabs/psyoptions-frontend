@@ -28,7 +28,7 @@ import ConnectButton from '../../ConnectButton';
 import SelectAsset from '../../SelectAsset';
 import { StyledTooltip } from '../Markets/styles';
 import theme from '../../../utils/theme';
-import { useInitializedMarkets } from '../../../hooks/LocalStorage';
+import { useInitializedMarkets } from '../../../context/LocalStorage';
 import { useCheckIfMarketExists } from '../../../hooks/PsyOptionsAPI/useCheckIfMarketExists';
 import { MarketExistsDialog } from './MarketExistsDialog';
 

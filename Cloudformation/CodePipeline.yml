@@ -312,7 +312,8 @@ Resources:
                     "HostedZoneId": "${HostedZoneId}",
                     "DomainName": "staging-${DomainName}",
                     "DomainCertificateArn": "${DomainCertificate}",
-                    "Environment": "staging"
+                    "Environment": "staging",
+                    "ShowInitializationPage": "true"
                   }
                 RoleArn:
                   Fn::GetAtt: [CloudformationExecutionRole, Arn]
@@ -411,7 +412,8 @@ Resources:
                     "HostedZoneId": "${HostedZoneId}",
                     "DomainName": "${DomainName}",
                     "DomainCertificateArn": "${DomainCertificate}",
-                    "Environment": "production"
+                    "Environment": "production",
+                    "ShowInitializationPage": "false"
                   }
                 RoleArn:
                   Fn::GetAtt: [CloudformationExecutionRole, Arn]

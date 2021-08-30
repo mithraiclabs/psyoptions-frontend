@@ -16,6 +16,11 @@ Parameters:
   DomainCertificateArn:
     Description: The ARN of the SSL/TLS certificate to use for the secure load balancer listener
     Type: String
+  ShowInitializationPage:
+    AllowedValues: ['true', 'false']
+    Default: false,
+    Description: Should the initialization page be show
+    Type: String
 
 Resources:
   # Create CloudWatch LogGroup for the task logs
@@ -145,7 +150,7 @@ Resources:
             - Name: APP_ENABLED
               Value: true
             - Name: INITIALIZE_PAGE_ENABLED
-              Value: true
+              Value: !Ref ShowInitializationPage
             - Name: DEVNET_PROGRAM_ID
               Value: GDvqQy3FkDB2wyNwgZGp5YkmRMUmWbhNNWDMYKbLSZ5N
             - Name: MAINNET_PROGRAM_ID

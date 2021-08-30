@@ -10,7 +10,7 @@ export const convertStrikeToAmountsPer = (
   underlyingAmountPerContract: BigNumber,
   underlyingAsset: Asset,
   quoteAsset: Asset,
-) => {
+): BigNumber => {
   const quoteDecimals = new BigNumber(quoteAsset.decimals);
   const quoteDecimalFactor = new BigNumber(10).pow(quoteDecimals);
   const quotePerUnderlying = strikePice.multipliedBy(quoteDecimalFactor);
@@ -35,7 +35,7 @@ export const convertAmountsPerToStrike = (
   quoteAmountPerContract: BigNumber,
   quoteAsset: Asset,
   underlyingAsset: Asset,
-) => {
+): BigNumber => {
   const quoteDecimals = new BigNumber(quoteAsset.decimals);
   const quoteDecimalFactor = new BigNumber(10).pow(quoteDecimals);
   const wholeQuotePerContract = quoteAmountPerContract.div(quoteDecimalFactor);

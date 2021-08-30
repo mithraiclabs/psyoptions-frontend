@@ -17,6 +17,7 @@ import theme from '../utils/theme';
 import logo from '../../assets/psyoptions-logo-light.png';
 
 import useConnection from '../hooks/useConnection';
+import { isTrue } from '../utils/general';
 
 const { INITIALIZE_PAGE_ENABLED } = process.env;
 
@@ -51,7 +52,7 @@ const NavOptions = React.memo(() => {
           Markets
         </Button>
       </Box>
-      {INITIALIZE_PAGE_ENABLED && (
+      {isTrue(INITIALIZE_PAGE_ENABLED) && (
         <Box mx={2}>
           <Button
             href="/initialize-market"

@@ -14,6 +14,7 @@ import { WrittenOptionsTable } from './WrittenOptionsTable';
 import EmptySvg from './EmptySvg';
 import useWallet from '../../../hooks/useWallet';
 import { useWrittenOptions } from '../../../hooks/useWrittenOptions';
+import SupportedAssetBalances from '../../SupportedAssetBalances';
 
 const OpenPositions = () => {
   const { connected } = useWallet();
@@ -70,6 +71,9 @@ const OpenPositions = () => {
         pt={2}
         pb={4}
       >
+        <Box pb={2}>
+          <SupportedAssetBalances />
+        </Box>
         <Box
           display="flex"
           flexDirection="row"

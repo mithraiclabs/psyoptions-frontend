@@ -25,7 +25,6 @@ const SupportedAssetBalances: React.FC = () => {
   });
 
   const balances = supportedAssetAccounts.map(({ asset, accounts }) => {
-    // if (asset.mintAddress)
     let assetBalance =
       (getHighestAccount(accounts)?.amount || 0) / 10 ** asset?.decimals;
     if (asset?.mintAddress === WRAPPED_SOL_ADDRESS) {

@@ -19,8 +19,8 @@ export type Network = {
 const networks: Network[] = [
   {
     name: ClusterName.mainnet,
-    url: 'https://psyihvlpdrvouxwqbu.main.genesysgo.net:8899',
-    wsEndpoint: 'wss://psyihvlpdrvouxwqbu.main.genesysgo.net:8900',
+    url: 'https://lokidfxnwlabdq.main.genesysgo.net:8899',
+    wsEndpoint: 'wss://lokidfxnWLaBDQ.main.genesysgo.net:8900',
     programId: process.env.MAINNET_PROGRAM_ID,
     serumReferrerId: 'CzuipkNnvG4JaTQPjgAseWLNhLZFYxMcYpd2G8hDLHco',
   },

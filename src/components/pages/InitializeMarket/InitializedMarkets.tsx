@@ -65,11 +65,6 @@ export const InitializedMarkets: React.VFC = () => {
         <Box p={2}>
           <TextareaAutosize
             ref={textAreaRef}
-            onClick={() => {
-              if (textAreaRef?.current?.select) {
-                textAreaRef.current.select();
-              }
-            }}
             value={JSON.stringify(initializedMarketMeta, null, 4)}
             spellCheck="false"
             style={{

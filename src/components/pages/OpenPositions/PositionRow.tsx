@@ -124,12 +124,18 @@ const PositionRow: React.VFC<{
       (optionType === 'put' ? row?.qAssetMintAddress : row?.uAssetMintAddress),
   )?.icon;
 
+  const exerciseCost = parseFloat(strike) * parseFloat(contractSize);
+  let exerciseCostString = exerciseCost.toString(10);
+  if (exerciseCostString.match(/\..{3,}/)) {
+    exerciseCostString = exerciseCost.toFixed(2);
+  }
+
   const exerciseTooltipLabel = `${
     optionType === 'put' ? 'Sell' : 'Purchase'
   } ${contractSize} ${
     (optionType === 'put' ? row?.qAssetSymbol : row?.uAssetSymbol) ||
     'underlying asset'
-  } for ${strike} ${
+  } for ${exerciseCostString} ${
     (optionType === 'put' ? row?.uAssetSymbol : row?.qAssetSymbol) ||
     'quote asset'
   }`;
@@ -182,14 +188,16 @@ const PositionRow: React.VFC<{
           {expired && <Box color={theme.palette.error.main}>Expired</Box>}
           {!expired && (
             <StyledTooltip title={<Box p={2}>{exerciseTooltipLabel}</Box>}>
-              <TxButton
-                color="primary"
-                variant="outlined"
-                onClick={handleExercisePosition}
-                loading={loading}
-              >
-                {loading ? 'Exercising' : 'Exercise'}
-              </TxButton>
+              <Box>
+                <TxButton
+                  color="primary"
+                  variant="outlined"
+                  onClick={handleExercisePosition}
+                  loading={loading}
+                >
+                  {loading ? 'Exercising' : 'Exercise'}
+                </TxButton>
+              </Box>
             </StyledTooltip>
           )}
         </Box>
@@ -234,14 +242,16 @@ const PositionRow: React.VFC<{
                     <StyledTooltip
                       title={<Box p={2}>{exerciseTooltipLabel}</Box>}
                     >
-                      <TxButton
-                        color="primary"
-                        variant="outlined"
-                        onClick={handleExercisePosition}
-                        loading={loading}
-                      >
-                        {loading ? 'Exercising' : 'Exercise'}
-                      </TxButton>
+                      <Box>
+                        <TxButton
+                          color="primary"
+                          variant="outlined"
+                          onClick={handleExercisePosition}
+                          loading={loading}
+                        >
+                          {loading ? 'Exercising' : 'Exercise'}
+                        </TxButton>
+                      </Box>
                     </StyledTooltip>
                   )}
                 </Box>

@@ -48,14 +48,17 @@ export const InitializedMarkets: React.VFC = () => {
           </Box>
         </Box>
         <Box display="flex">
-          <Box fontSize={'12px'}>
-            <Box p={1}>
+          <Box px={1}>
+            <Box py={1} fontSize={'14px'}>
               Data from markets previously initialized by your browser in JSON
               format appears here.
             </Box>
-            <Box p={1} pt={0} display="block">
+            <Box py={1} px={0} display="block" fontSize={'14px'}>
               After initializing a market, you may submit a pull request to our{' '}
-              <Link href="https://github.com/mithraiclabs/psyoptions-ts/tree/master/packages/market-meta">
+              <Link
+                href="https://github.com/mithraiclabs/psyoptions-ts/tree/master/packages/market-meta"
+                style={{ textDecoration: 'underline' }}
+              >
                 market meta package
               </Link>{' '}
               for UI support.
@@ -65,11 +68,6 @@ export const InitializedMarkets: React.VFC = () => {
         <Box p={2}>
           <TextareaAutosize
             ref={textAreaRef}
-            onClick={() => {
-              if (textAreaRef?.current?.select) {
-                textAreaRef.current.select();
-              }
-            }}
             value={JSON.stringify(initializedMarketMeta, null, 4)}
             spellCheck="false"
             style={{

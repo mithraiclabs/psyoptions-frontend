@@ -69,6 +69,7 @@ const SupportedAssetBalances: React.FC = () => {
               alignItems="center"
               mr={2}
               pb={1}
+              key={asset?.tokenSymbol}
             >
               <Avatar
                 style={{ width: '24px', height: '24px', marginRight: '8px' }}

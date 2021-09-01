@@ -15,6 +15,7 @@ import useAssetList from '../../../hooks/useAssetList';
 import { formatExpirationTimestamp } from '../../../utils/format';
 import { OptionMarket, OptionType, TokenAccount } from '../../../types';
 import TxButton from '../../TxButton';
+import { usePrices } from '../../../context/PricesContext';
 
 const useStyles = makeStyles({
   dropdownOpen: {
@@ -56,13 +57,11 @@ const PositionRow: React.VFC<{
   const { supportedAssets } = useAssetList();
   const { ownedTokenAccounts } = useOwnedTokenAccounts();
   const { pushNotification } = useNotifications();
+  const theme = useTheme();
+  const { prices } = usePrices();
+
   const nowInSeconds = Date.now() / 1000;
   const expired = row.expiration <= nowInSeconds;
-
-  const theme = useTheme();
-
-  // TODO -- The way we were getting market price was incorrect because it was pulling in the price of the options themselves, not the underlying asset. We should be pulling in the price of the underlying asset so we can calculate how much profit would be made from exercising. I left the above code in so that when we fix it later we don't have to start over.
-  const price = null;
 
   let optionType: OptionType;
   if (row?.uAssetSymbol) {
@@ -70,6 +69,11 @@ const PositionRow: React.VFC<{
       ? OptionType.PUT
       : OptionType.CALL;
   }
+
+  const price =
+    optionType === OptionType.CALL
+      ? prices[row?.uAssetSymbol]
+      : prices[row?.qAssetSymbol];
 
   const strike =
     optionType === OptionType.PUT
@@ -124,11 +128,20 @@ const PositionRow: React.VFC<{
       (optionType === 'put' ? row?.qAssetMintAddress : row?.uAssetMintAddress),
   )?.icon;
 
-  const exerciseCost = parseFloat(strike) * parseFloat(contractSize);
+  const strikeNumber = parseFloat(strike);
+  const exerciseCost = strikeNumber * parseFloat(contractSize);
   let exerciseCostString = exerciseCost.toString(10);
   if (exerciseCostString.match(/\..{3,}/)) {
     exerciseCostString = exerciseCost.toFixed(2);
   }
+
+  const priceDiff = price - strikeNumber;
+  const priceDiffPercentage =
+    (priceDiff / strikeNumber) * (optionType === 'put' ? -100 : 100);
+  const betterOrWorse = priceDiffPercentage > 0;
+  const priceDiffHelperText = `${
+    betterOrWorse ? 'better' : 'worse'
+  } than spot market`;
 
   const exerciseTooltipLabel = `${
     optionType === 'put' ? 'Sell' : 'Purchase'
@@ -139,6 +152,25 @@ const PositionRow: React.VFC<{
     (optionType === 'put' ? row?.uAssetSymbol : row?.qAssetSymbol) ||
     'quote asset'
   }`;
+
+  const exerciseTooltipJsx = (
+    <Box p={1} textAlign="center">
+      <Box pb={1} style={{ fontWeight: 700, fontSize: '16px' }}>
+        {exerciseTooltipLabel}
+      </Box>
+      <Box style={{ fontSize: '13px' }}>
+        (
+        <span
+          style={{
+            color: betterOrWorse
+              ? theme.palette.success.light
+              : theme.palette.error.light,
+          }}
+        >{`${priceDiffPercentage.toFixed(2)}%`}</span>{' '}
+        {priceDiffHelperText})
+      </Box>
+    </Box>
+  );
 
   return (
     <>
@@ -187,7 +219,7 @@ const PositionRow: React.VFC<{
         <Box p={1} width="10%">
           {expired && <Box color={theme.palette.error.main}>Expired</Box>}
           {!expired && (
-            <StyledTooltip title={<Box p={2}>{exerciseTooltipLabel}</Box>}>
+            <StyledTooltip title={exerciseTooltipJsx}>
               <Box>
                 <TxButton
                   color="primary"
@@ -239,9 +271,7 @@ const PositionRow: React.VFC<{
                     <Box color={theme.palette.error.main}>Expired</Box>
                   )}
                   {!expired && (
-                    <StyledTooltip
-                      title={<Box p={2}>{exerciseTooltipLabel}</Box>}
-                    >
+                    <StyledTooltip title={exerciseTooltipJsx}>
                       <Box>
                         <TxButton
                           color="primary"

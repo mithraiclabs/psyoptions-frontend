@@ -16,6 +16,7 @@ import { formatExpirationTimestamp } from '../../../utils/format';
 import { OptionMarket, OptionType, TokenAccount } from '../../../types';
 import TxButton from '../../TxButton';
 import { usePrices } from '../../../context/PricesContext';
+import { useTradeHistory } from '../../../hooks/PsyOptionsAPI/useTradeHistory';
 
 const useStyles = makeStyles({
   dropdownOpen: {
@@ -59,6 +60,7 @@ const PositionRow: React.VFC<{
   const { pushNotification } = useNotifications();
   const theme = useTheme();
   const { prices } = usePrices();
+  const trades = useTradeHistory(row.market?.serumMarketKey);
 
   const nowInSeconds = Date.now() / 1000;
   const expired = row.expiration <= nowInSeconds;

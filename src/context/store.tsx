@@ -17,6 +17,7 @@ import { SPLTokenMintsProvider } from './SPLTokenMintsContext';
 import { SerumOpenOrdersProvider } from './SerumOpenOrdersContext';
 import { ExpirationDateProvider } from './ExpirationDateContext';
 import { GraphQLProvider } from './GraphQLProvider';
+import { TradeHistoryProvider } from './TradeHistoryContext';
 
 const _providers = [
   // eslint-disable-next-line react/no-children-prop
@@ -36,6 +37,7 @@ const _providers = [
   <SerumOpenOrdersProvider />,
   <PasswordProvider />,
   <ExpirationDateProvider />,
+  <TradeHistoryProvider />,
 ];
 
 // flatten context providers for simpler app component tree

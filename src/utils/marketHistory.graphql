@@ -1,0 +1,23 @@
+query serumMarketHistory($walletAddress: String, $serumMarketAddress: String) {
+  serum_events(
+    where: {
+      open_order_account: { owner: { _eq: $walletAddress } }
+      type: { _eq: fill }
+      serum_market_address: { _eq: $serumMarketAddress }
+    }
+  ) {
+    account
+    maker
+    fee_tier
+    fee_cost
+    client_id
+    order_id
+    price
+    serum_market_address
+    side
+    size
+    timestamp
+    total_value
+    type
+  }
+}

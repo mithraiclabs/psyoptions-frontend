@@ -27,7 +27,7 @@ const query = `
 `;
 
 // TODO type the trades array
-type TradeInfo = {
+export type TradeInfo = {
   account: string;
   clientId: string;
   feeCost: number;

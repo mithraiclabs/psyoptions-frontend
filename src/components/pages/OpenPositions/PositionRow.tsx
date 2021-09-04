@@ -17,6 +17,7 @@ import { OptionMarket, OptionType, TokenAccount } from '../../../types';
 import TxButton from '../../TxButton';
 import { usePrices } from '../../../context/PricesContext';
 import { useTradeHistory } from '../../../hooks/PsyOptionsAPI/useTradeHistory';
+import type { TradeInfo } from '../../../context/TradeHistoryContext';
 
 const useStyles = makeStyles({
   dropdownOpen: {
@@ -60,10 +61,40 @@ const PositionRow: React.VFC<{
   const { pushNotification } = useNotifications();
   const theme = useTheme();
   const { prices } = usePrices();
-  const trades = useTradeHistory(row.market?.serumMarketKey);
+  const { buys } = useTradeHistory(row.market?.serumMarketKey);
+
+  // Market price of the option, we should get this from serum
+  const currentMarketPrice = 100;
+  const positionSize = row.size;
+
+  console.log(buys);
+
+  // TODO memoize this:
+  let sizeCounted = 0;
+  let priceSum = 0;
+  for (let i = 0; i < buys.length; i += 1) {
+    const fill = buys[i] as TradeInfo;
+    if (sizeCounted + fill.size <= positionSize) {
+      sizeCounted += fill.size;
+      priceSum += fill.price * fill.size + fill.feeCost;
+    } else {
+      const sizeMissing = sizeCounted - positionSize;
+      if (sizeMissing > 0) {
+        sizeCounted += sizeMissing;
+        priceSum +=
+          fill.price * sizeMissing + fill.feeCost * (sizeMissing / fill.size);
+      }
+      break;
+    }
+  }
+  const avgBuyPrice = sizeCounted === 0 ? 0 : priceSum / sizeCounted;
 
   const nowInSeconds = Date.now() / 1000;
   const expired = row.expiration <= nowInSeconds;
+
+  const unrealizedPnL = expired
+    ? -priceSum
+    : currentMarketPrice * sizeCounted - priceSum;
 
   let optionType: OptionType;
   if (row?.uAssetSymbol) {
@@ -212,7 +243,28 @@ const PositionRow: React.VFC<{
           {contractSize}
         </Box>
         <Box p={1} width="10%">
-          {row.size}
+          {positionSize}
+          <Box py={1} fontSize={'12px'}>
+            {/* Fills:
+            <Box>
+              {buys.map((fill) => (
+                <Box key={fill.orderId}>
+                  price: {fill.price}
+                  <br />
+                  size: {fill.size}
+                  <br />
+                </Box>
+              ))}
+            </Box> */}
+            <Box py={1} fontSize={'12px'}>
+              Avg Cost: {avgBuyPrice}
+              <br />
+              Market Price: {!expired ? currentMarketPrice : '-'}
+              <br />
+              Unrealized PnL:{' '}
+              {avgBuyPrice !== 0 ? unrealizedPnL.toFixed(2) : '-'}
+            </Box>
+          </Box>
         </Box>
         <Box p={1} width="16%">
           {formatExpirationTimestamp(row.expiration)}

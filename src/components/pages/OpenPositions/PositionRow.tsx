@@ -17,6 +17,7 @@ import { OptionMarket, OptionType, TokenAccount } from '../../../types';
 import TxButton from '../../TxButton';
 import { usePrices } from '../../../context/PricesContext';
 import { useTradeHistory } from '../../../hooks/PsyOptionsAPI/useTradeHistory';
+import { useSerumOrderbooks } from '../../../context/SerumOrderbookContext';
 import type { TradeInfo } from '../../../context/TradeHistoryContext';
 
 const useStyles = makeStyles({
@@ -62,12 +63,14 @@ const PositionRow: React.VFC<{
   const theme = useTheme();
   const { prices } = usePrices();
   const { buys } = useTradeHistory(row.market?.serumMarketKey);
+  const [orderbooks] = useSerumOrderbooks();
+  const orderbook =
+    orderbooks[
+      row.market?.serumMarketKey && row.market?.serumMarketKey.toString()
+    ];
+  const highestBid = orderbook?.bids[0]?.price;
 
-  // Market price of the option, we should get this from serum
-  const currentMarketPrice = 100;
   const positionSize = row.size;
-
-  console.log(buys);
 
   // TODO memoize this:
   let sizeCounted = 0;
@@ -88,13 +91,11 @@ const PositionRow: React.VFC<{
     }
   }
   const avgBuyPrice = sizeCounted === 0 ? 0 : priceSum / sizeCounted;
-
   const nowInSeconds = Date.now() / 1000;
   const expired = row.expiration <= nowInSeconds;
-
   const unrealizedPnL = expired
     ? -priceSum
-    : currentMarketPrice * sizeCounted - priceSum;
+    : highestBid * sizeCounted - priceSum;
 
   let optionType: OptionType;
   if (row?.uAssetSymbol) {
@@ -220,7 +221,7 @@ const PositionRow: React.VFC<{
         <Box
           p={1}
           pl={2}
-          width="12%"
+          width="9%"
           display="flex"
           flexDirection="row"
           alignItems="center"
@@ -233,43 +234,40 @@ const PositionRow: React.VFC<{
         <Box p={1} width="8%">
           {optionType}
         </Box>
-        <Box p={1} width="10%">
+        <Box p={1} width="9%">
           {strike}
         </Box>
         <Box p={1} width="10%">
           {price ? `$${price.toFixed(2)}` : '-'}
         </Box>
-        <Box p={1} width="10%">
+        <Box p={1} width="7%">
           {contractSize}
         </Box>
-        <Box p={1} width="10%">
+        <Box p={1} width="7%">
           {positionSize}
-          <Box py={1} fontSize={'12px'}>
-            {/* Fills:
-            <Box>
-              {buys.map((fill) => (
-                <Box key={fill.orderId}>
-                  price: {fill.price}
-                  <br />
-                  size: {fill.size}
-                  <br />
-                </Box>
-              ))}
-            </Box> */}
-            <Box py={1} fontSize={'12px'}>
-              Avg Cost: {avgBuyPrice}
-              <br />
-              Market Price: {!expired ? currentMarketPrice : '-'}
-              <br />
-              Unrealized PnL:{' '}
-              {avgBuyPrice !== 0 ? unrealizedPnL.toFixed(2) : '-'}
-            </Box>
-          </Box>
         </Box>
-        <Box p={1} width="16%">
+        <Box p={1} width="7%">
+          {(avgBuyPrice && avgBuyPrice.toFixed(2)) || '-'}
+        </Box>
+        <Box p={1} width="7%">
+          {(expired ? '-' : highestBid && highestBid.toFixed(2)) || '-'}
+        </Box>
+        <Box p={1} width="12%">
           {formatExpirationTimestamp(row.expiration)}
         </Box>
-        <Box p={1} width="9%">{`+$0.00`}</Box>
+        <Box
+          p={1}
+          width="9%"
+          color={
+            unrealizedPnL >= 0
+              ? theme.palette.success.light
+              : theme.palette.error.light
+          }
+        >
+          {!Number.isNaN(unrealizedPnL)
+            ? `${unrealizedPnL >= 0 ? '+' : ''}${unrealizedPnL.toFixed(2)}`
+            : ''}
+        </Box>
         <Box p={1} width="10%">
           {expired && <Box color={theme.palette.error.main}>Expired</Box>}
           {!expired && (
@@ -319,7 +317,7 @@ const PositionRow: React.VFC<{
                   {account.amount}
                 </Box>
                 <Box p={1} width="16%" />
-                <Box p={1} width="9%">{`+$0.00`}</Box>
+                <Box p={1} width="9%" />
                 <Box p={1} width="10%">
                   {expired && (
                     <Box color={theme.palette.error.main}>Expired</Box>

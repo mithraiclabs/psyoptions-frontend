@@ -1,5 +1,5 @@
 import Box from '@material-ui/core/Box';
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import CreateIcon from '@material-ui/icons/Create';
 import BarChartIcon from '@material-ui/icons/BarChart';
 import { useTheme } from '@material-ui/core/styles';
@@ -16,6 +16,8 @@ import useWallet from '../../../hooks/useWallet';
 import { useWrittenOptions } from '../../../hooks/useWrittenOptions';
 import SupportedAssetBalances from '../../SupportedAssetBalances';
 import { PricesProvider } from '../../../context/PricesContext';
+import useSerum from '../../../hooks/useSerum';
+import { SerumMarketAndProgramId } from '../../../types';
 
 const OpenPositions = () => {
   const { connected } = useWallet();
@@ -26,6 +28,7 @@ const OpenPositions = () => {
   const { markets } = useOptionsMarkets();
   const [selectedTab, setSelectedTab] = useState(0);
   const writtenOptions = useWrittenOptions();
+  const { serumMarkets, fetchMultipleSerumMarkets } = useSerum();
 
   const positionRows = useMemo(
     () =>
@@ -53,6 +56,26 @@ const OpenPositions = () => {
         }),
     [positions, markets],
   );
+
+  useEffect(() => {
+    // Load serum markets for each position row
+    // Needed to show PNL and market price of the options in the portfolio
+    const serumKeys: SerumMarketAndProgramId[] = [];
+    positionRows.forEach(({ market }) => {
+      if (
+        market?.serumMarketKey &&
+        !serumMarkets[market.serumMarketKey.toString()]
+      ) {
+        serumKeys.push({
+          serumMarketKey: market.serumMarketKey,
+          serumProgramId: market.serumProgramId,
+        });
+      }
+    });
+    if (serumKeys.length) {
+      fetchMultipleSerumMarkets(serumKeys);
+    }
+  }, [positionRows, fetchMultipleSerumMarkets, serumMarkets]);
 
   const hasOpenPositions = positionRows.length > 0;
 
@@ -142,29 +165,35 @@ const OpenPositions = () => {
                   p={1}
                   fontSize={'14px'}
                 >
-                  <Box p={1} pl={2} width="12%">
+                  <Box p={1} pl={2} width="9%">
                     Asset
                   </Box>
                   <Box p={1} width="8%">
                     Type
                   </Box>
-                  <Box p={1} width="10%">
+                  <Box p={1} width="9%">
                     Strike ($)
                   </Box>
                   <Box p={1} width="10%">
                     Spot Price ($)
                   </Box>
-                  <Box p={1} width="10%">
+                  <Box p={1} width="7%">
                     Contract Size
                   </Box>
-                  <Box p={1} width="10%">
+                  <Box p={1} width="7%">
                     Position Size
                   </Box>
-                  <Box p={1} width="16%">
+                  <Box p={1} width="7%">
+                    Avg Cost
+                  </Box>
+                  <Box p={1} width="7%">
+                    Current Bid
+                  </Box>
+                  <Box p={1} width="12%">
                     Expiration
                   </Box>
                   <Box p={1} width="9%">
-                    PNL
+                    PNL ($)
                   </Box>
                   <Box p={1} width="10%" textAlign="left">
                     Action

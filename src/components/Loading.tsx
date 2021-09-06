@@ -28,7 +28,7 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-const Loading = () => {
+const Loading: React.VFC = () => {
   const styles = useStyles();
   return (
     <Box borderRadius={'20px'} className={styles.loading}>

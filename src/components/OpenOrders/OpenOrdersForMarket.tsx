@@ -74,7 +74,7 @@ const OrderRow = ({
         <TxButton
           variant="outlined"
           color="primary"
-          onClick={() => cancelOrder()}
+          onClick={cancelOrder}
           loading={loading}
         >
           {loading ? 'Canceling' : 'Cancel'}
@@ -85,7 +85,7 @@ const OrderRow = ({
 };
 
 // Render all open orders for a given market as table rows
-const OpenOrdersForMarket: React.FC<CallOrPut> = ({
+const OpenOrdersForMarket: React.VFC<CallOrPut> = ({
   expiration,
   size: contractSize,
   type,

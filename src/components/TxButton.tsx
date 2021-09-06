@@ -8,7 +8,7 @@ type TxButtonProps = {
   children: React.ReactNode;
 } & ButtonProps;
 
-const TxButton = (props: TxButtonProps) => {
+const TxButton: React.VFC<TxButtonProps> = (props) => {
   const { disabled, loading, onClick, children } = props;
 
   return (

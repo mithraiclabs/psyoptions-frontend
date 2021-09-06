@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { PublicKey } from '@solana/web3.js';
 import Box from '@material-ui/core/Box';
 import Table from '@material-ui/core/Table';
@@ -30,19 +30,12 @@ const OpenOrders: React.FC<{
   const { wallet, pubKey, connected } = useWallet();
   const { serumMarkets } = useSerum();
   const [openOrders, setOpenOrders] = useSerumOpenOrders();
-  const [openOrdersLoaded, setOpenOrdersLoaded] = useState(false);
 
   /**
-   * Load open orders for each serum market if we haven't already done so
+   * Load open orders for each serum market
    */
   useEffect(() => {
-    if (
-      connection &&
-      serumMarkets &&
-      pubKey &&
-      openOrders &&
-      !openOrdersLoaded
-    ) {
+    if (connection && serumMarkets && pubKey && openOrders) {
       const serumProgramIds = Array.from(
         new Set(
           Object.values(serumMarkets)
@@ -81,27 +74,22 @@ const OpenOrders: React.FC<{
           ...prevOpenOrders,
           ...newOpenOrders,
         }));
-        setOpenOrdersLoaded(true);
       })();
     }
-  }, [
-    connection,
-    serumMarkets,
-    wallet,
-    pubKey,
-    openOrders,
-    setOpenOrders,
-    openOrdersLoaded,
-  ]);
+  }, [connection, serumMarkets, wallet, pubKey, openOrders, setOpenOrders]);
 
-  const openOrdersArray = optionMarkets
-    .map((optionMarket) => {
-      if (optionMarket?.serumMarketKey) {
-        return optionMarket;
-      }
-      return undefined;
-    })
-    .filter((item) => !!item);
+  const optionMarketsArray = useMemo(
+    () =>
+      optionMarkets
+        .map((optionMarket) => {
+          if (optionMarket?.serumMarketKey) {
+            return optionMarket;
+          }
+          return undefined;
+        })
+        .filter((item) => !!item),
+    [optionMarkets],
+  );
 
   return (
     <Box mt={'20px'}>
@@ -139,7 +127,7 @@ const OpenOrders: React.FC<{
                 </TCell>
               </TableRow>
             ) : (
-              openOrdersArray.map((optionMarket) => (
+              optionMarketsArray.map((optionMarket) => (
                 <OpenOrdersForMarket
                   {...optionMarket}
                   key={optionMarket.serumMarketKey.toString()}

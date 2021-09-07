@@ -8,21 +8,25 @@ import useWallet from './useWallet';
 import useSendTransaction from './useSendTransaction';
 import { initializeTokenAccountTx, WRAPPED_SOL_ADDRESS } from '../utils/token';
 import { useSolanaMeta } from '../context/SolanaMetaContext';
+import { OptionMarket } from '../types';
+import { createAssociatedTokenAccountInstruction } from '../utils/instructions';
+import useOwnedTokenAccounts from './useOwnedTokenAccounts';
 
 /**
  * Allow user to burn a Writer Token in exchange for Quote Asset in the
  * Quote Asset Pool
  *
- * @param {*} market
- * @param {*} writerTokenSourceKey
- * @param {*} _quoteAssetDestKey
+ * @param market
+ * @param writerTokenSourceKey
+ * @param quoteAssetDestKey
  * @returns
  */
 export const useExchangeWriterTokenForQuote = (
-  market,
-  writerTokenSourceKey,
-  quoteAssetDestKey,
+  market: OptionMarket,
+  writerTokenSourceKey: PublicKey,
+  quoteAssetDestKey: PublicKey,
 ) => {
+  const { subscribeToTokenAccount } = useOwnedTokenAccounts();
   const { connection, endpoint } = useConnection();
   const { pubKey, wallet } = useWallet();
   const { splTokenAccountRentBalance } = useSolanaMeta();
@@ -34,7 +38,8 @@ export const useExchangeWriterTokenForQuote = (
       const transaction = new Transaction();
       const signers = [];
       let _quoteAssetDestKey = quoteAssetDestKey;
-      if (market.qAssetMint === WRAPPED_SOL_ADDRESS) {
+
+      if (market.quoteAssetMintKey.toString() === WRAPPED_SOL_ADDRESS) {
         // quote is wrapped sol, must create account to transfer and close
         const {
           transaction: initWrappedSolAcctIx,
@@ -50,6 +55,18 @@ export const useExchangeWriterTokenForQuote = (
         signers.push(wrappedSolAccount);
         _quoteAssetDestKey = wrappedSolAccount.publicKey;
       }
+      if (!_quoteAssetDestKey) {
+        // Create a SPL Token account for this base account if the wallet doesn't have one
+        const [createOptAccountTx, newTokenAccountKey] =
+          await createAssociatedTokenAccountInstruction({
+            payer: pubKey,
+            owner: pubKey,
+            mintPublicKey: market.quoteAssetMintKey,
+          });
+        transaction.add(createOptAccountTx);
+        subscribeToTokenAccount(newTokenAccountKey);
+        _quoteAssetDestKey = newTokenAccountKey;
+      }
       const ix = await exchangeWriterTokenForQuoteInstruction({
         programId: new PublicKey(market.psyOptionsProgramId),
         optionMarketKey: market.optionMarketKey,
@@ -62,7 +79,7 @@ export const useExchangeWriterTokenForQuote = (
       transaction.add(ix);
 
       // Close out the wrapped SOL account so it feels native
-      if (market.qAssetMint === WRAPPED_SOL_ADDRESS) {
+      if (market.quoteAssetMintKey.toString() === WRAPPED_SOL_ADDRESS) {
         transaction.add(
           Token.createCloseAccountInstruction(
             TOKEN_PROGRAM_ID,
@@ -87,7 +104,7 @@ export const useExchangeWriterTokenForQuote = (
     }
   }, [
     quoteAssetDestKey,
-    market.qAssetMint,
+    market.quoteAssetMintKey,
     market.optionMarketKey,
     market.writerTokenMintKey,
     market.quoteAssetPoolKey,
@@ -96,6 +113,7 @@ export const useExchangeWriterTokenForQuote = (
     writerTokenSourceKey,
     connection,
     wallet,
+    subscribeToTokenAccount,
     pushErrorNotification,
     sendTransaction,
     splTokenAccountRentBalance,

@@ -7,7 +7,6 @@ import Box from '@material-ui/core/Box';
 import Paper from '@material-ui/core/Paper';
 import Button from '@material-ui/core/Button';
 import Avatar from '@material-ui/core/Avatar';
-import Link from '@material-ui/core/Link';
 
 import theme from '../../utils/theme';
 import Page from './Page';
@@ -39,17 +38,14 @@ const LoadingAirdrop = () => (
   </Box>
 );
 
-const Faucets = () => {
+const Faucets: React.VFC = () => {
   const { pushErrorNotification } = useNotifications();
   const { balance: solBalance, connected, wallet, pubKey } = useWallet();
   const { connection, endpoint } = useConnection();
   const { supportedAssets: assets } = useAssetList();
   const { sendTransaction } = useSendTransaction();
-  const {
-    ownedTokenAccounts: accounts,
-    subscribeToTokenAccount,
-    refreshTokenAccounts,
-  } = useOwnedTokenAccounts();
+  const { ownedTokenAccounts: accounts, subscribeToTokenAccount } =
+    useOwnedTokenAccounts();
 
   const [loadingBTC, setLoadingBTC] = useState(false);
   const [loadingPSY, setLoadingPSY] = useState(false);
@@ -80,7 +76,11 @@ const Faucets = () => {
 
   const handleClaimSOL = async () => {
     setLoadingSOL(true);
-    await connection.requestAirdrop(pubKey, 10 * LAMPORTS_PER_SOL);
+    try {
+      await connection.requestAirdrop(pubKey, 10 * LAMPORTS_PER_SOL);
+    } catch (err) {
+      pushErrorNotification(err);
+    }
     setLoadingSOL(false);
   };
 

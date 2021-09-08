@@ -65,12 +65,12 @@ export const WrittenOptionRow = React.memo(
     const ownedQAssetKey = ownedTokenAccounts[market.qAssetMint]?.[0]?.pubKey;
     const ownedOptionTokenAccounts =
       ownedTokenAccounts[market.optionMintKey.toString()];
-    const { closeOptionPostExpiration } = useCloseWrittenOptionPostExpiration(
+    const closeOptionPostExpiration = useCloseWrittenOptionPostExpiration(
       market,
       ownedUAssetKey,
       initialWriterTokenAccount.pubKey,
     );
-    const { exchangeWriterTokenForQuote } = useExchangeWriterTokenForQuote(
+    const exchangeWriterTokenForQuote = useExchangeWriterTokenForQuote(
       market,
       initialWriterTokenAccount.pubKey,
       ownedQAssetKey,
@@ -78,7 +78,7 @@ export const WrittenOptionRow = React.memo(
     const holdsContracts = !!heldContracts.length;
     // TODO handle multiple wallets for same Option Token
     const initialOptionTokenAccount = heldContracts[0];
-    const { closePosition } = useClosePosition(
+    const closePosition = useClosePosition(
       market,
       // initialOptionTokenAccount can be undefined if there are no held contracts
       initialOptionTokenAccount?.pubKey,

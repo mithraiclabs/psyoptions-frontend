@@ -25,15 +25,15 @@ export const useExchangeWriterTokenForQuote = (
   market: OptionMarket,
   writerTokenSourceKey: PublicKey,
   quoteAssetDestKey: PublicKey,
-) => {
+): (() => Promise<void>) => {
   const { subscribeToTokenAccount } = useOwnedTokenAccounts();
-  const { connection, endpoint } = useConnection();
+  const { connection } = useConnection();
   const { pubKey, wallet } = useWallet();
   const { splTokenAccountRentBalance } = useSolanaMeta();
   const { pushErrorNotification } = useNotifications();
   const { sendTransaction } = useSendTransaction();
 
-  const _exchangeWriterTokenFoQuote = useCallback(async () => {
+  return useCallback(async () => {
     try {
       const transaction = new Transaction();
       const signers = [];
@@ -118,8 +118,4 @@ export const useExchangeWriterTokenForQuote = (
     sendTransaction,
     splTokenAccountRentBalance,
   ]);
-
-  return {
-    exchangeWriterTokenForQuote: _exchangeWriterTokenFoQuote,
-  };
 };

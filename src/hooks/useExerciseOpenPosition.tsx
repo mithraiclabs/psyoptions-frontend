@@ -9,19 +9,20 @@ import { OptionMarket } from '../types';
 import { createAssociatedTokenAccountInstruction } from '../utils/instructions';
 import useOwnedTokenAccounts from './useOwnedTokenAccounts';
 
+// TODO add support for wrapped solana as quote asset???
 const useExerciseOpenPosition = (
   market: OptionMarket,
   exerciserQuoteAssetKey: PublicKey | null,
   exerciserUnderlyingAssetKey: PublicKey | null,
   exerciserContractTokenKey: PublicKey | null,
-) => {
+): (() => Promise<void>) => {
   const { subscribeToTokenAccount } = useOwnedTokenAccounts();
   const { pushErrorNotification } = useNotifications();
-  const { connection, endpoint } = useConnection();
+  const { connection } = useConnection();
   const { sendTransaction } = useSendTransaction();
   const { wallet, pubKey } = useWallet();
 
-  const exercise = useCallback(async () => {
+  return useCallback(async () => {
     try {
       const transaction = new Transaction();
 
@@ -80,10 +81,6 @@ const useExerciseOpenPosition = (
     sendTransaction,
     subscribeToTokenAccount,
   ]);
-
-  return {
-    exercise,
-  };
 };
 
 export default useExerciseOpenPosition;

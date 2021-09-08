@@ -96,7 +96,7 @@ const PositionRow: React.VFC<{
   const ownedOAssetKey =
     ownedTokenAccounts[row.market.optionMintKey.toString()]?.[0]?.pubKey;
 
-  const { exercise } = useExerciseOpenPosition(
+  const exercise = useExerciseOpenPosition(
     row.market,
     // TODO remove `toString` when useExerciseOpenPosition is refactored
     ownedQAssetKey && ownedQAssetKey,

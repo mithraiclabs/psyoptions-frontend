@@ -1,4 +1,4 @@
-import { Market, Orderbook } from '@mithraic-labs/serum';
+import { Orderbook } from '@mithraic-labs/serum';
 import { useEffect } from 'react';
 import {
   DEFAULT_DEPTH,

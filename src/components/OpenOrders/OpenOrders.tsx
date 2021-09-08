@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { PublicKey } from '@solana/web3.js';
 import Box from '@material-ui/core/Box';
 import Table from '@material-ui/core/Table';
@@ -21,6 +21,7 @@ import ConnectButton from '../ConnectButton';
 import OpenOrdersForMarket from './OpenOrdersForMarket';
 import { TCell, THeadCell } from './OpenOrderStyles';
 import { CallOrPut } from '../../types';
+import Loading from '../Loading';
 
 // Render all open orders for all optionMarkets specified in props
 const OpenOrders: React.FC<{
@@ -29,20 +30,14 @@ const OpenOrders: React.FC<{
   const { connection } = useConnection();
   const { wallet, pubKey, connected } = useWallet();
   const { serumMarkets } = useSerum();
-  const [openOrders, setOpenOrders] = useSerumOpenOrders();
-  const [openOrdersLoaded, setOpenOrdersLoaded] = useState(false);
+  const [, setOpenOrders] = useSerumOpenOrders();
+  const [loading, setLoading] = useState(false);
 
   /**
-   * Load open orders for each serum market if we haven't already done so
+   * Load open orders for each serum market
    */
   useEffect(() => {
-    if (
-      connection &&
-      serumMarkets &&
-      pubKey &&
-      openOrders &&
-      !openOrdersLoaded
-    ) {
+    if (connection && serumMarkets && pubKey) {
       const serumProgramIds = Array.from(
         new Set(
           Object.values(serumMarkets)
@@ -52,6 +47,7 @@ const OpenOrders: React.FC<{
       );
 
       (async () => {
+        setLoading(true);
         const newOpenOrders: SerumOpenOrders = {};
         await Promise.all(
           serumProgramIds.map(async (programId) => {
@@ -81,27 +77,23 @@ const OpenOrders: React.FC<{
           ...prevOpenOrders,
           ...newOpenOrders,
         }));
-        setOpenOrdersLoaded(true);
+        setLoading(false);
       })();
     }
-  }, [
-    connection,
-    serumMarkets,
-    wallet,
-    pubKey,
-    openOrders,
-    setOpenOrders,
-    openOrdersLoaded,
-  ]);
+  }, [connection, serumMarkets, wallet, pubKey, setOpenOrders]);
 
-  const openOrdersArray = optionMarkets
-    .map((optionMarket) => {
-      if (optionMarket?.serumMarketKey) {
-        return optionMarket;
-      }
-      return undefined;
-    })
-    .filter((item) => !!item);
+  const optionMarketsArray = useMemo(
+    () =>
+      optionMarkets
+        .map((optionMarket) => {
+          if (optionMarket?.serumMarketKey) {
+            return optionMarket;
+          }
+          return undefined;
+        })
+        .filter((item) => !!item),
+    [optionMarkets],
+  );
 
   return (
     <Box mt={'20px'}>
@@ -138,8 +130,12 @@ const OpenOrders: React.FC<{
                   </Box>
                 </TCell>
               </TableRow>
+            ) : loading ? (
+              <TCell colSpan={9}>
+                <Loading />
+              </TCell>
             ) : (
-              openOrdersArray.map((optionMarket) => (
+              optionMarketsArray.map((optionMarket) => (
                 <OpenOrdersForMarket
                   {...optionMarket}
                   key={optionMarket.serumMarketKey.toString()}

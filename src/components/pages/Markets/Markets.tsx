@@ -94,7 +94,7 @@ const rowTemplate = {
 
 const USE_BONFIDA_MARK_PRICE = true;
 
-const Markets = () => {
+const Markets: React.VFC = () => {
   const { uAsset, qAsset, setUAsset, assetListLoading } = useAssetList();
   const { selectedDate: date, setSelectedDate, dates } = useExpirationDate();
   const [contractSize, setContractSize] = useState(100);
@@ -214,25 +214,29 @@ const Markets = () => {
   useBatchLoadMints(optionMints);
 
   // Flat markets object for open orders component
-  const marketsFlat = filteredChain
-    .map((row) => [
-      {
-        ...row.call,
-        type: OptionType.CALL,
-        strikePrice: round
-          ? row.strike.toFixed(precision)
-          : row.strike.toString(10),
-      },
-      {
-        ...row.put,
-        type: OptionType.PUT,
-        strikePrice: round
-          ? row.strike.toFixed(precision)
-          : row.strike.toString(10),
-      },
-    ])
-    .reduce((a, b) => [...a, ...b], [])
-    .filter((callOrPut) => !!callOrPut);
+  const marketsFlat = useMemo(
+    () =>
+      filteredChain
+        .map((row) => [
+          {
+            ...row.call,
+            type: OptionType.CALL,
+            strikePrice: round
+              ? row.strike.toFixed(precision)
+              : row.strike.toString(10),
+          },
+          {
+            ...row.put,
+            type: OptionType.PUT,
+            strikePrice: round
+              ? row.strike.toFixed(precision)
+              : row.strike.toString(10),
+          },
+        ])
+        .reduce((a, b) => [...a, ...b], [])
+        .filter((callOrPut) => !!callOrPut),
+    [filteredChain, precision, round],
+  );
 
   useEffect(() => {
     buildOptionsChain(date.unix(), contractSize);

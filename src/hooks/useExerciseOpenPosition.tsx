@@ -1,6 +1,8 @@
 import { useCallback } from 'react';
 import { PublicKey, Transaction } from '@solana/web3.js';
 import { exerciseCoveredCall } from '@mithraic-labs/psyoptions';
+import BN from 'bn.js';
+
 import useConnection from './useConnection';
 import useWallet from './useWallet';
 import useNotifications from './useNotifications';
@@ -15,14 +17,14 @@ const useExerciseOpenPosition = (
   exerciserQuoteAssetKey: PublicKey | null,
   exerciserUnderlyingAssetKey: PublicKey | null,
   exerciserContractTokenKey: PublicKey | null,
-): (() => Promise<void>) => {
+): ((size: number) => Promise<void>) => {
   const { subscribeToTokenAccount } = useOwnedTokenAccounts();
   const { pushErrorNotification } = useNotifications();
   const { connection } = useConnection();
   const { sendTransaction } = useSendTransaction();
   const { wallet, pubKey } = useWallet();
 
-  return useCallback(async () => {
+  return useCallback(async (size) => {
     try {
       const transaction = new Transaction();
 
@@ -54,6 +56,7 @@ const useExerciseOpenPosition = (
         optionTokenKey: exerciserContractTokenKey,
         optionTokenAuthorityKey: pubKey,
         quoteAssetMintKey: market.quoteAssetMintKey,
+        size: new BN(size),
       });
       transaction.add(tx);
 

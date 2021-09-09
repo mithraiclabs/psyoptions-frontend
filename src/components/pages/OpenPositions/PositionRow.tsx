@@ -1,20 +1,19 @@
 import React, { useCallback, useState } from 'react';
 import Box from '@material-ui/core/Box';
 import Collapse from '@material-ui/core/Collapse';
-import Tooltip from '@material-ui/core/Tooltip';
+import Button from '@material-ui/core/Button';
 import Avatar from '@material-ui/core/Avatar';
 import KeyboardArrowDown from '@material-ui/icons/KeyboardArrowDown';
-import { makeStyles, withStyles, useTheme } from '@material-ui/core/styles';
-import * as Sentry from '@sentry/react';
+import { makeStyles, useTheme } from '@material-ui/core/styles';
 import BigNumber from 'bignumber.js';
 
-import useExerciseOpenPosition from '../../../hooks/useExerciseOpenPosition';
-import useOwnedTokenAccounts from '../../../hooks/useOwnedTokenAccounts';
-import useNotifications from '../../../hooks/useNotifications';
+import ExerciseDialog from './ExerciseDialog';
 import useAssetList from '../../../hooks/useAssetList';
-import { formatExpirationTimestamp } from '../../../utils/format';
+import {
+  formatExpirationTimestamp,
+  formatExpirationTimestampDate,
+} from '../../../utils/format';
 import { OptionMarket, OptionType, TokenAccount } from '../../../types';
-import TxButton from '../../TxButton';
 import { usePrices } from '../../../context/PricesContext';
 
 const useStyles = makeStyles({
@@ -25,15 +24,6 @@ const useStyles = makeStyles({
     transform: 'rotate(0)',
   },
 });
-
-const StyledTooltip = withStyles((theme) => ({
-  tooltip: {
-    backgroundColor: (theme.palette.background as any).lighter,
-    maxWidth: 370,
-    fontSize: '14px',
-    lineHeight: '18px',
-  },
-}))(Tooltip);
 
 const PositionRow: React.VFC<{
   row: {
@@ -52,13 +42,11 @@ const PositionRow: React.VFC<{
   };
 }> = ({ row }) => {
   const classes = useStyles();
-  const [loading, setLoading] = useState(false);
   const [visible, setVisible] = useState(false);
   const { supportedAssets } = useAssetList();
-  const { ownedTokenAccounts } = useOwnedTokenAccounts();
-  const { pushNotification } = useNotifications();
   const theme = useTheme();
   const { prices } = usePrices();
+  const [exerciseDialogOpen, setExerciseDialogOpen] = useState(false);
 
   const nowInSeconds = Date.now() / 1000;
   const expired = row.expiration <= nowInSeconds;
@@ -91,36 +79,15 @@ const PositionRow: React.VFC<{
     }
   };
 
-  const ownedQAssetKey = ownedTokenAccounts[row.qAssetMintAddress]?.[0]?.pubKey;
-  const ownedUAssetKey = ownedTokenAccounts[row.uAssetMintAddress]?.[0]?.pubKey;
-  const ownedOAssetKey =
-    ownedTokenAccounts[row.market.optionMintKey.toString()]?.[0]?.pubKey;
-
-  const exercise = useExerciseOpenPosition(
-    row.market,
-    // TODO remove `toString` when useExerciseOpenPosition is refactored
-    ownedQAssetKey && ownedQAssetKey,
-    ownedUAssetKey && ownedUAssetKey,
-    ownedOAssetKey && ownedOAssetKey,
-  );
-
-  const handleExercisePosition = useCallback(async () => {
-    try {
-      setLoading(true);
-      await exercise();
-      setLoading(false);
-    } catch (err) {
-      Sentry.captureException(err);
-      pushNotification({
-        severity: 'error',
-        message: `${err}`,
-      });
-      setLoading(false);
-    }
-  }, [exercise, pushNotification]);
+  const openExerciseDialog = useCallback(() => {
+    setExerciseDialogOpen(true)
+  }, [])
 
   const uAssetSymbol =
     optionType === 'put' ? row?.qAssetSymbol : row?.uAssetSymbol;
+
+  const qAssetSymbol =
+    optionType === 'put' ? row?.uAssetSymbol : row?.qAssetSymbol;
 
   const uAssetImage = supportedAssets.find(
     (asset) =>
@@ -128,52 +95,23 @@ const PositionRow: React.VFC<{
       (optionType === 'put' ? row?.qAssetMintAddress : row?.uAssetMintAddress),
   )?.icon;
 
-  const strikeNumber = parseFloat(strike);
-  const exerciseCost = strikeNumber * parseFloat(contractSize);
-  let exerciseCostString = exerciseCost.toString(10);
-  if (exerciseCostString.match(/\..{3,}/)) {
-    exerciseCostString = exerciseCost.toFixed(2);
-  }
-
-  const priceDiff = price - strikeNumber;
-  const priceDiffPercentage =
-    (priceDiff / strikeNumber) * (optionType === 'put' ? -100 : 100);
-  const betterOrWorse = priceDiffPercentage > 0;
-  const priceDiffHelperText = `${
-    betterOrWorse ? 'better' : 'worse'
-  } than spot market`;
-
-  const exerciseTooltipLabel = `${
-    optionType === 'put' ? 'Sell' : 'Purchase'
-  } ${contractSize} ${
-    (optionType === 'put' ? row?.qAssetSymbol : row?.uAssetSymbol) ||
-    'underlying asset'
-  } for ${exerciseCostString} ${
-    (optionType === 'put' ? row?.uAssetSymbol : row?.qAssetSymbol) ||
-    'quote asset'
-  }`;
-
-  const exerciseTooltipJsx = (
-    <Box p={1} textAlign="center">
-      <Box pb={1} style={{ fontWeight: 700, fontSize: '16px' }}>
-        {exerciseTooltipLabel}
-      </Box>
-      <Box style={{ fontSize: '13px' }}>
-        (
-        <span
-          style={{
-            color: betterOrWorse
-              ? theme.palette.success.light
-              : theme.palette.error.light,
-          }}
-        >{`${priceDiffPercentage.toFixed(2)}%`}</span>{' '}
-        {priceDiffHelperText})
-      </Box>
-    </Box>
-  );
-
   return (
     <>
+      <ExerciseDialog
+        open={exerciseDialogOpen}
+        onClose={() => setExerciseDialogOpen(false)}
+        positionSize={row.size}
+        uAssetSymbol={uAssetSymbol}
+        uAssetMintAddress={row?.uAssetMintAddress}
+        qAssetSymbol={qAssetSymbol}
+        qAssetMintAddress={row?.qAssetMintAddress}
+        optionType={optionType}
+        contractSize={contractSize}
+        strike={strike}
+        expiration={formatExpirationTimestampDate(row.expiration)}
+        price={price}
+        market={row.market}
+      />
       <Box
         onClick={onRowClick}
         role="checkbox"
@@ -219,18 +157,15 @@ const PositionRow: React.VFC<{
         <Box p={1} width="10%">
           {expired && <Box color={theme.palette.error.main}>Expired</Box>}
           {!expired && (
-            <StyledTooltip title={exerciseTooltipJsx}>
-              <Box>
-                <TxButton
-                  color="primary"
-                  variant="outlined"
-                  onClick={handleExercisePosition}
-                  loading={loading}
-                >
-                  {loading ? 'Exercising' : 'Exercise'}
-                </TxButton>
-              </Box>
-            </StyledTooltip>
+            <Box>
+              <Button
+                color="primary"
+                variant="outlined"
+                onClick={openExerciseDialog}
+              >
+                Exercise
+              </Button>
+            </Box>
           )}
         </Box>
         <Box width="5%" p={1} pr={2}>
@@ -271,18 +206,15 @@ const PositionRow: React.VFC<{
                     <Box color={theme.palette.error.main}>Expired</Box>
                   )}
                   {!expired && (
-                    <StyledTooltip title={exerciseTooltipJsx}>
-                      <Box>
-                        <TxButton
-                          color="primary"
-                          variant="outlined"
-                          onClick={handleExercisePosition}
-                          loading={loading}
-                        >
-                          {loading ? 'Exercising' : 'Exercise'}
-                        </TxButton>
-                      </Box>
-                    </StyledTooltip>
+                    <Box>
+                      <Button
+                        color="primary"
+                        variant="outlined"
+                        onClick={openExerciseDialog}
+                      >
+                        Exercise
+                      </Button>
+                    </Box>
                   )}
                 </Box>
                 <Box width="5%" p={1} pr={2} />

@@ -9,6 +9,7 @@ import { Token } from '@mithraic-labs/market-meta/dist/types';
 export type Network = {
   name: ClusterName;
   url: string;
+  fallbackUrl: string;
   programId: string;
   wsEndpoint?: string;
   serumReferrerId?: string;
@@ -20,6 +21,7 @@ const networks: Network[] = [
   {
     name: ClusterName.mainnet,
     url: 'https://lokidfxnwlabdq.main.genesysgo.net:8899',
+    fallbackUrl: clusterApiUrl('mainnet-beta'),
     wsEndpoint: 'wss://lokidfxnWLaBDQ.main.genesysgo.net:8900',
     programId: process.env.MAINNET_PROGRAM_ID,
     serumReferrerId: 'CzuipkNnvG4JaTQPjgAseWLNhLZFYxMcYpd2G8hDLHco',
@@ -27,6 +29,7 @@ const networks: Network[] = [
   {
     name: ClusterName.devnet,
     url: 'https://psytrbhymqlkfrhudd.dev.genesysgo.net:8899',
+    fallbackUrl: clusterApiUrl('devnet'),
     wsEndpoint: 'wss://psytrbhymqlkfrhudd.dev.genesysgo.net:8900',
     programId: process.env.DEVNET_PROGRAM_ID,
     serumReferrerId: '4wpxNqqAqLtZscg1VZWnnBTQnzJSc42HtSitjpLfm3jz',
@@ -34,11 +37,13 @@ const networks: Network[] = [
   {
     name: ClusterName.testnet,
     url: clusterApiUrl('testnet'),
+    fallbackUrl: clusterApiUrl('testnet'),
     programId: process.env.TESTNET_PROGRAM_ID,
   },
   {
     name: ClusterName.localhost,
     url: 'http://127.0.0.1:8899',
+    fallbackUrl: 'http://127.0.0.1:8899',
     programId: process.env.LOCAL_PROGRAM_ID,
   },
 ];

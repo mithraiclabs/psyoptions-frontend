@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { PublicKey } from '@solana/web3.js';
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import Avatar from '@material-ui/core/Avatar';
-import Button from '@material-ui/core/Button';
 import Tooltip from '@material-ui/core/Tooltip';
 import Box from '@material-ui/core/Box';
 import { withStyles, useTheme } from '@material-ui/core/styles';

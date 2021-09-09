@@ -24,7 +24,6 @@ const StyledTooltip = withStyles((theme) => ({
 }))(Tooltip);
 
 const ExerciseDialog: React.VFC<{
-  // param types
   open: boolean;
   onClose: () => void;
   positionSize: number;
@@ -38,9 +37,7 @@ const ExerciseDialog: React.VFC<{
   expiration: string;
   price: number;
   market: OptionMarket;
-
 }> = ({
-  // params
   open,
   onClose,
   positionSize,
@@ -54,7 +51,6 @@ const ExerciseDialog: React.VFC<{
   expiration,
   price,
   market,
-
 }) => {
   const [numContractsToExercise, setNumContractsToExercise] = useState(positionSize.toString());
   const [loading, setLoading] = useState(false);

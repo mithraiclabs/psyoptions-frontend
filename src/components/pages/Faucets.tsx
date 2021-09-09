@@ -1,7 +1,12 @@
 import React, { useState } from 'react';
 import BN from 'bn.js';
 import { Redirect } from 'react-router-dom';
-import { PublicKey, Transaction, LAMPORTS_PER_SOL } from '@solana/web3.js';
+import {
+  PublicKey,
+  Transaction,
+  LAMPORTS_PER_SOL,
+  Connection,
+} from '@solana/web3.js';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import Box from '@material-ui/core/Box';
 import Paper from '@material-ui/core/Paper';
@@ -77,7 +82,10 @@ const Faucets: React.VFC = () => {
   const handleClaimSOL = async () => {
     setLoadingSOL(true);
     try {
-      await connection.requestAirdrop(pubKey, 10 * LAMPORTS_PER_SOL);
+      const conn = new Connection(endpoint.fallbackUrl, {
+        commitment: 'confirmed',
+      });
+      await conn.requestAirdrop(pubKey, 10 * LAMPORTS_PER_SOL);
     } catch (err) {
       pushErrorNotification(err);
     }

@@ -35,6 +35,7 @@ import { StyledFilledInput, PlusMinusButton } from './styles';
 import ConnectButton from '../ConnectButton';
 
 import DialogFullscreenMobile from '../DialogFullscreenMobile';
+import { calculatePriceWithSlippage } from '../../utils/calculatePriceWithSlippage';
 
 const bgLighterColor = (theme.palette.background as any).lighter;
 
@@ -255,7 +256,7 @@ const BuySellDialog: React.VFC<{
           //  `maket.priceNumberToLots` function
           price:
             orderType === 'market'
-              ? orderbook?.bids?.[0]?.price
+              ? calculatePriceWithSlippage(parsedOrderSize, orderbook?.bids)
               : parsedLimitPrice.toNumber(),
           // Serum-ts handles adding the SPL Token decimals via their
           //  `maket.priceNumberToLots` function
@@ -307,6 +308,7 @@ const BuySellDialog: React.VFC<{
         serumQuoteTokenAccounts,
       )?.pubKey;
       const optionTokenKey = getHighestAccount(optionAccounts)?.pubKey;
+
       await placeBuyOrder({
         optionMarket,
         serumMarket: serum,
@@ -320,7 +322,7 @@ const BuySellDialog: React.VFC<{
           //  `maket.priceNumberToLots` function
           price:
             orderType === 'market'
-              ? orderbook?.asks?.[0]?.price
+              ? calculatePriceWithSlippage(parsedOrderSize, orderbook?.asks)
               : parsedLimitPrice.toNumber(),
           // Serum-ts handles adding the SPL Token decimals via their
           //  `maket.priceNumberToLots` function

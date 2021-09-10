@@ -68,9 +68,9 @@ const ExerciseDialog: React.VFC<{
   const exercise = useExerciseOpenPosition(
     market,
     // TODO remove `toString` when useExerciseOpenPosition is refactored
-    ownedQAssetKey && ownedQAssetKey,
-    ownedUAssetKey && ownedUAssetKey,
-    ownedOAssetKey && ownedOAssetKey,
+    ownedQAssetKey,
+    ownedUAssetKey,
+    ownedOAssetKey,
   );
 
   const handleExercisePosition = useCallback(async (size) => {
@@ -108,9 +108,8 @@ const ExerciseDialog: React.VFC<{
   const priceDiffPercentage =
     (priceDiff / strikeNumber) * (optionType === 'put' ? -100 : 100);
   const betterOrWorse = priceDiffPercentage > 0;
-  const priceDiffHelperText = `${
-    betterOrWorse ? 'better' : 'worse'
-  } than spot market`;
+  const priceDiffHelperText = 
+    betterOrWorse ? 'In the money' : 'Out of the money';
 
 
   const exerciseTooltipLabel = `${

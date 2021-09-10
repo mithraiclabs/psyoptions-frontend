@@ -1,3 +1,4 @@
+import moment from 'moment';
 /**
  * Truncate a solana PublicKey string
  */
@@ -10,4 +11,14 @@ const truncatePublicKey = (pk: string) =>
 const formatExpirationTimestamp = (value: number) =>
   new Date(value * 1000).toUTCString();
 
-export { formatExpirationTimestamp, truncatePublicKey };
+/**
+ * Take in unix seconds timestamp and return just the date
+ */
+const formatExpirationTimestampDate = (value: number) =>
+  moment.utc(new Date(value * 1000)).format('D MMM YYYY')
+
+export {
+  truncatePublicKey,
+  formatExpirationTimestamp,
+  formatExpirationTimestampDate,
+};

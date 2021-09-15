@@ -1,4 +1,3 @@
-import { Market } from '@mithraic-labs/serum';
 import { useEffect, useState } from 'react';
 import { getOrderbook } from '../../utils/serum';
 import {
@@ -13,7 +12,7 @@ import useSerum from '../useSerum';
  * Fetch and return serum orderbook for specific market
  */
 export const useSerumOrderbook = (
-  serumMarketAddress: string,
+  serumMarketAddress: string | null,
 ): {
   orderbook: OrderbookData | undefined;
   loading: boolean;
@@ -34,7 +33,6 @@ export const useSerumOrderbook = (
           // We now batch load orderbooks, so there's likely no need to fetch again
           // if we successfully load and subscribe
           if (!orderbooks[serumMarketAddress]) {
-            console.log('*** loading individual orderbook');
             const {
               asks: _asks,
               bids: _bids,

@@ -19,7 +19,7 @@ export const useSerumOpenOrderAccounts = (
   const serumMarket = serumMarkets[serumMarketAddress]?.serumMarket;
 
   useEffect(() => {
-    if (serumMarket && !skipFetch) {
+    if (serumMarket && !skipFetch && pubKey) {
       (async () => {
         const openOrders = await serumMarket.findOpenOrdersAccountsForOwner(
           connection,

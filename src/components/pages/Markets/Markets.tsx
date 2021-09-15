@@ -14,17 +14,11 @@ import moment from 'moment';
 import BigNumber from 'bignumber.js';
 
 import theme from '../../../utils/theme';
-import { getPriceFromSerumOrderbook } from '../../../utils/orderbook';
 
-import { useBonfidaMarkPrice } from '../../../hooks/useBonfidaMarkPrice';
 import useAssetList from '../../../hooks/useAssetList';
 import useOptionsMarkets from '../../../hooks/useOptionsMarkets';
 import useOptionsChain from '../../../hooks/useOptionsChain';
 import useSerum from '../../../hooks/useSerum';
-import {
-  useSerumOrderbook,
-  useSubscribeSerumOrderbook,
-} from '../../../hooks/Serum';
 import useExpirationDate from '../../../hooks/useExpirationDate';
 
 import { MarketDataProvider } from '../../../context/MarketDataContext';
@@ -45,6 +39,7 @@ import MarketsUnsettledBalances from './MarketsUnsettledBalances';
 import { MarketsTableHeader } from './MarketsTableHeader';
 import { CallOrPut, OptionType, SerumMarketAndProgramId } from '../../../types';
 import { useBatchLoadMints } from '../../../hooks/SPLToken';
+import { useSerumPriceByAssets } from '../../../hooks/Serum/useSerumPriceByAssets';
 
 const dblsp = `${'\u00A0'}${'\u00A0'}`;
 
@@ -92,8 +87,6 @@ const rowTemplate = {
   },
 };
 
-const USE_BONFIDA_MARK_PRICE = true;
-
 const Markets: React.VFC = () => {
   const { uAsset, qAsset, setUAsset, assetListLoading } = useAssetList();
   const { selectedDate: date, setSelectedDate, dates } = useExpirationDate();
@@ -137,21 +130,10 @@ const Markets: React.VFC = () => {
     }
   }, [uAsset?.defaultContractSize, sizeOptions]);
 
-  // mainnet mark price from bonfida
-  const bonfidaMarkPrice = useBonfidaMarkPrice({
-    uAssetSymbol: uAsset?.tokenSymbol,
-    qAssetSymbol: qAsset?.tokenSymbol,
-  });
-
-  const underlyingSerumMarketKey = `${uAsset?.mintAddress}-${qAsset?.mintAddress}`;
-  const { orderbook: underlyingOrderbook } = useSerumOrderbook(
-    underlyingSerumMarketKey,
+  const markPrice = useSerumPriceByAssets(
+    uAsset?.mintAddress,
+    qAsset?.mintAddress,
   );
-  useSubscribeSerumOrderbook(underlyingSerumMarketKey);
-
-  const markPrice = USE_BONFIDA_MARK_PRICE
-    ? bonfidaMarkPrice
-    : getPriceFromSerumOrderbook(underlyingOrderbook);
 
   // We have to use this `initialMarkPrice` to filter the chains, otherwise many components will
   // re-render every time a new price is received from a websocket. This triggers unnecessary batch

@@ -133,11 +133,11 @@ export const batchSerumMarkets = async (
  * @param {PublicKey} dexProgramKey
  */
 export const findMarketByAssets = async (
-  connection,
-  baseMintAddress,
-  quoteMintAddress,
-  dexProgramKey,
-) => {
+  connection: Connection,
+  baseMintAddress: PublicKey,
+  quoteMintAddress: PublicKey,
+  dexProgramKey: PublicKey,
+): Promise<Market | null> => {
   const availableMarkets = await Market.findAccountsByMints(
     connection,
     baseMintAddress,

@@ -8,7 +8,7 @@ describe('calculatePriceWithSlippage', () => {
         { price: 100, size: 1 },
         { price: 110, size: 1 },
       ]),
-    ).toEqual(105);
+    ).toEqual(110);
 
     expect(
       calculatePriceWithSlippage(4, [
@@ -16,7 +16,7 @@ describe('calculatePriceWithSlippage', () => {
         { price: 110, size: 2 },
         { price: 200, size: 3 },
       ]),
-    ).toEqual(130);
+    ).toEqual(200);
 
     expect(
       calculatePriceWithSlippage(4, [
@@ -24,7 +24,7 @@ describe('calculatePriceWithSlippage', () => {
         { price: 110, size: 2 },
         { price: 100, size: 1 },
       ]),
-    ).toEqual(177.5);
+    ).toEqual(110);
   });
 
   it('should gracefully handle ripping through whole book', () => {
@@ -33,6 +33,6 @@ describe('calculatePriceWithSlippage', () => {
       { price: 110, size: 1 },
     ];
 
-    expect(calculatePriceWithSlippage(3, orders)).toEqual(105);
+    expect(calculatePriceWithSlippage(3, orders)).toEqual(110);
   });
 });

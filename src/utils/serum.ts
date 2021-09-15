@@ -4,87 +4,125 @@ import {
   Transaction,
   SystemProgram,
   Connection,
-} from '@solana/web3.js'
+} from '@solana/web3.js';
 
-import { DexInstructions, Market } from '@mithraic-labs/serum'
-import BN from 'bn.js'
-import { MintLayout, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { Buffer } from 'buffer'
+import { DexInstructions, Market } from '@mithraic-labs/serum';
+import BN from 'bn.js';
+import { MintLayout, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { Buffer } from 'buffer';
 
-import { MarketOptions, Orderbook } from '@mithraic-labs/serum/lib/market'
-import * as Sentry from '@sentry/react'
+import { MarketOptions, Orderbook } from '@mithraic-labs/serum/lib/market';
+import * as Sentry from '@sentry/react';
+
+import type { SerumMarketAndProgramId } from '../types';
 
 export const getKeyForMarket = (market: Market) => {
-  return market.address.toString()
-}
+  return market.address.toString();
+};
 
 /**
  * Loads multiple Serum markets with minimal RPC requests
  */
 export const batchSerumMarkets = async (
   connection: Connection,
-  addresses: PublicKey[],
+  serumMarketAndProgramIds: SerumMarketAndProgramId[],
   options: MarketOptions = {},
-  programId: PublicKey,
   depth = 10,
 ) => {
-  // Load all of the MarketState data
-  const marketInfos = await connection.getMultipleAccountsInfo(addresses)
-  if (!marketInfos || !marketInfos.length) {
-    throw new Error('Markets not found')
-  }
-  // decode all of the markets
-  const decoded = marketInfos.map((accountInfo) =>
-    Market.getLayout(programId).decode(accountInfo.data),
-  )
+  const serumPrograms = {};
 
-  // Load all of the SPL Token Mint data and orderbook data for the markets
-  const mintKeys: PublicKey[] = []
-  const orderbookKeys: PublicKey[] = []
-  decoded.forEach((d) => {
-    mintKeys.push(d.baseMint)
-    mintKeys.push(d.quoteMint)
-    orderbookKeys.push(d.bids)
-    orderbookKeys.push(d.asks)
-  })
-  const [mintInfos, orderBookInfos] = await Promise.all([
-    connection.getMultipleAccountsInfo(mintKeys),
-    connection.getMultipleAccountsInfo(orderbookKeys),
-  ])
-  const mints = mintInfos?.map((mintInfo) => MintLayout.decode(mintInfo.data))
-
-  // instantiate the many markets
-  const serumMarketsInfo = decoded.map((d, index) => {
-    const { decimals: baseMintDecimals } = mints?.[index * 2]
-    const { decimals: quoteMintDecimals } = mints?.[index * 2 + 1]
-    const bidsAccountInfo = orderBookInfos[index * 2]
-    const asksAccountInfo = orderBookInfos[index * 2 + 1]
-    const market = new Market(
-      d,
-      baseMintDecimals,
-      quoteMintDecimals,
-      options,
-      programId,
-    )
-    const bidOrderbook = Orderbook.decode(market, bidsAccountInfo.data)
-    const askOrderbook = Orderbook.decode(market, asksAccountInfo.data)
-    return {
-      market,
-      orderbookData: {
-        asks: askOrderbook
-          .getL2(depth)
-          .map(([price, size]) => ({ price, size })),
-        bids: bidOrderbook
-          .getL2(depth)
-          .map(([price, size]) => ({ price, size })),
-        bidOrderbook,
-        askOrderbook,
-      },
+  serumMarketAndProgramIds.forEach(({ serumMarketKey, serumProgramId }) => {
+    if (serumPrograms[serumProgramId]?.addresses) {
+      serumPrograms[serumProgramId].addresses.push(serumMarketKey);
+    } else {
+      serumPrograms[serumProgramId] = {
+        addresses: [serumMarketKey],
+      };
     }
-  })
+  });
 
-  return { serumMarketsInfo, orderbookKeys }
-}
+  // All orderbook keys and serum infos across diff serum programs
+  // For now I am going to return them all combined
+  // but the ideal architecture later might be to return a key/value map of the seurm program id
+  // with the orderobok keys and the info separated by program id
+  const allOrderbookKeys: PublicKey[] = [];
+  const allSerumMarketsInfo = [];
+
+  // This is not 100% optimal still, because it's now broken down into multiple batches by serum program
+  // However, I doubt there will ever be more than 2-3 serum program ids max
+  // so this should not affect perf too much
+  await Promise.all(
+    Object.keys(serumPrograms).map(async (key) => {
+      const { addresses } = serumPrograms[key];
+      const programId = new PublicKey(key);
+      // Load all of the MarketState data
+      const marketInfos = await connection.getMultipleAccountsInfo(addresses);
+      if (!marketInfos || !marketInfos.length) {
+        throw new Error('Markets not found');
+      }
+      // decode all of the markets
+      const decoded = marketInfos.map((accountInfo) =>
+        Market.getLayout(programId).decode(accountInfo.data),
+      );
+
+      // Load all of the SPL Token Mint data and orderbook data for the markets
+      const mintKeys: PublicKey[] = [];
+      const orderbookKeys: PublicKey[] = [];
+      decoded.forEach((d) => {
+        mintKeys.push(d.baseMint);
+        mintKeys.push(d.quoteMint);
+        orderbookKeys.push(d.bids);
+        orderbookKeys.push(d.asks);
+      });
+      const [mintInfos, orderBookInfos] = await Promise.all([
+        connection.getMultipleAccountsInfo(mintKeys),
+        connection.getMultipleAccountsInfo(orderbookKeys),
+      ]);
+      const mints = mintInfos?.map((mintInfo) =>
+        MintLayout.decode(mintInfo.data),
+      );
+
+      // instantiate the many markets
+      const serumMarketsInfo = decoded.map((d, index) => {
+        const { decimals: baseMintDecimals } = mints?.[index * 2];
+        const { decimals: quoteMintDecimals } = mints?.[index * 2 + 1];
+        const bidsAccountInfo = orderBookInfos[index * 2];
+        const asksAccountInfo = orderBookInfos[index * 2 + 1];
+        const market = new Market(
+          d,
+          baseMintDecimals,
+          quoteMintDecimals,
+          options,
+          programId,
+        );
+        const bidOrderbook = Orderbook.decode(market, bidsAccountInfo.data);
+        const askOrderbook = Orderbook.decode(market, asksAccountInfo.data);
+        return {
+          market,
+          orderbookData: {
+            asks: askOrderbook
+              .getL2(depth)
+              .map(([price, size]) => ({ price, size })),
+            bids: bidOrderbook
+              .getL2(depth)
+              .map(([price, size]) => ({ price, size })),
+            bidOrderbook,
+            askOrderbook,
+          },
+          serumProgramId: key,
+        };
+      });
+
+      allOrderbookKeys.push(...orderbookKeys);
+      allSerumMarketsInfo.push(...serumMarketsInfo);
+    }),
+  );
+
+  return {
+    serumMarketsInfo: allSerumMarketsInfo,
+    orderbookKeys: allOrderbookKeys,
+  };
+};
 
 /**
  * Returns the first available SerumMarket for specified assets
@@ -95,27 +133,27 @@ export const batchSerumMarkets = async (
  * @param {PublicKey} dexProgramKey
  */
 export const findMarketByAssets = async (
-  connection,
-  baseMintAddress,
-  quoteMintAddress,
-  dexProgramKey,
-) => {
+  connection: Connection,
+  baseMintAddress: PublicKey,
+  quoteMintAddress: PublicKey,
+  dexProgramKey: PublicKey,
+): Promise<Market | null> => {
   const availableMarkets = await Market.findAccountsByMints(
     connection,
     baseMintAddress,
     quoteMintAddress,
     dexProgramKey,
-  )
+  );
   if (availableMarkets.length) {
     return Market.load(
       connection,
       availableMarkets[0].publicKey,
       {},
       dexProgramKey,
-    )
+    );
   }
-  return null
-}
+  return null;
+};
 
 /**
  * Returns full orderbook up to specified depth
@@ -132,7 +170,7 @@ export const getOrderbook = async (
     const [bidOrderbook, askOrderbook] = await Promise.all([
       market.loadBids(connection),
       market.loadAsks(connection),
-    ])
+    ]);
 
     return {
       bidOrderbook,
@@ -143,18 +181,18 @@ export const getOrderbook = async (
       asks: !askOrderbook
         ? []
         : askOrderbook.getL2(depth).map(([price, size]) => ({ price, size })),
-    }
+    };
   } catch (err) {
-    console.error(err)
-    Sentry.captureException(err)
+    console.error(err);
+    Sentry.captureException(err);
   }
   return {
     bidOrderbook: null,
     askOrderbook: null,
     bids: [],
     asks: [],
-  }
-}
+  };
+};
 
 /**
  * Generate the TX to initialize a new market.
@@ -177,19 +215,19 @@ export const createInitializeMarketTx = async ({
   quoteLotSize,
   dexProgramId,
 }) => {
-  const tokenProgramId = TOKEN_PROGRAM_ID
-  const market = new Keypair()
-  const requestQueue = new Keypair()
-  const eventQueue = new Keypair()
-  const bids = new Keypair()
-  const asks = new Keypair()
-  const baseVault = new Keypair()
-  const quoteVault = new Keypair()
-  const feeRateBps = 0
-  const quoteDustThreshold = new BN(100)
+  const tokenProgramId = TOKEN_PROGRAM_ID;
+  const market = new Keypair();
+  const requestQueue = new Keypair();
+  const eventQueue = new Keypair();
+  const bids = new Keypair();
+  const asks = new Keypair();
+  const baseVault = new Keypair();
+  const quoteVault = new Keypair();
+  const feeRateBps = 0;
+  const quoteDustThreshold = new BN(100);
 
   async function getVaultOwnerAndNonce(): Promise<[PublicKey, BN]> {
-    const nonce = new BN(0)
+    const nonce = new BN(0);
     // eslint-disable-next-line no-constant-condition
     while (true) {
       try {
@@ -197,21 +235,21 @@ export const createInitializeMarketTx = async ({
         const vaultOwner = await PublicKey.createProgramAddress(
           [market.publicKey.toBuffer(), nonce.toArrayLike(Buffer, 'le', 8)],
           dexProgramId,
-        )
-        return [vaultOwner, nonce]
+        );
+        return [vaultOwner, nonce];
       } catch (e) {
-        nonce.iaddn(1)
+        nonce.iaddn(1);
       }
     }
   }
-  const [vaultOwner, vaultSignerNonce] = await getVaultOwnerAndNonce()
+  const [vaultOwner, vaultSignerNonce] = await getVaultOwnerAndNonce();
 
-  const tx1 = new Transaction()
+  const tx1 = new Transaction();
   // Create an initialize the pool accounts to hold the base and the quote assess
-  const poolSize = 165
+  const poolSize = 165;
   const poolCostLamports = await connection.getMinimumBalanceForRentExemption(
     poolSize,
-  )
+  );
 
   tx1.add(
     SystemProgram.createAccount({
@@ -240,9 +278,9 @@ export const createInitializeMarketTx = async ({
       quoteVault.publicKey,
       vaultOwner,
     ),
-  )
+  );
 
-  const tx2 = new Transaction()
+  const tx2 = new Transaction();
   tx2.add(
     SystemProgram.createAccount({
       fromPubkey: payer,
@@ -298,34 +336,34 @@ export const createInitializeMarketTx = async ({
       quoteDustThreshold,
       programId: dexProgramId,
     }),
-  )
+  );
 
-  const { blockhash } = await connection.getRecentBlockhash()
-  const signers1 = [baseVault, quoteVault]
-  tx1.feePayer = payer
-  tx1.recentBlockhash = blockhash
-  tx1.partialSign(...signers1)
-  const signers2 = [market, requestQueue, eventQueue, bids, asks]
-  tx2.feePayer = payer
-  tx2.recentBlockhash = blockhash
-  tx2.partialSign(...signers2)
+  const { blockhash } = await connection.getRecentBlockhash();
+  const signers1 = [baseVault, quoteVault];
+  tx1.feePayer = payer;
+  tx1.recentBlockhash = blockhash;
+  tx1.partialSign(...signers1);
+  const signers2 = [market, requestQueue, eventQueue, bids, asks];
+  tx2.feePayer = payer;
+  tx2.recentBlockhash = blockhash;
+  tx2.partialSign(...signers2);
   return {
     tx1,
     signers1,
     tx2,
     signers2,
     market,
-  }
-}
+  };
+};
 
 export class SerumMarket {
-  connection: Connection
+  connection: Connection;
 
-  marketAddress: PublicKey
+  marketAddress: PublicKey;
 
-  dexProgramKey: PublicKey
+  dexProgramKey: PublicKey;
 
-  market?: Market
+  market?: Market;
 
   constructor(
     connection: Connection,
@@ -333,14 +371,14 @@ export class SerumMarket {
     dexProgramKey: PublicKey,
     market?: Market,
   ) {
-    this.connection = connection
-    this.marketAddress = marketAddress
-    this.dexProgramKey = dexProgramKey
-    this.market = market
+    this.connection = connection;
+    this.marketAddress = marketAddress;
+    this.dexProgramKey = dexProgramKey;
+    this.market = market;
   }
 
   async initMarket() {
-    this.market = await this.getMarket()
+    this.market = await this.getMarket();
   }
 
   /**
@@ -368,7 +406,7 @@ export class SerumMarket {
           bytes: quoteMintAddress.toBase58(),
         },
       },
-    ]
+    ];
     const resp = await connection._rpcRequest('getProgramAccounts', [
       dexProgramId.toBase58(),
       {
@@ -376,9 +414,9 @@ export class SerumMarket {
         filters,
         encoding: 'base64',
       },
-    ])
+    ]);
     if (resp.error) {
-      throw new Error(resp.error.message)
+      throw new Error(resp.error.message);
     }
     return resp.result.map(
       ({ pubkey, account: { data, executable, owner, lamports } }) => ({
@@ -390,7 +428,7 @@ export class SerumMarket {
           lamports,
         },
       }),
-    )
+    );
   }
 
   /**
@@ -404,7 +442,7 @@ export class SerumMarket {
       this.marketAddress,
       {},
       this.dexProgramKey,
-    )
+    );
   }
 
   /**
@@ -412,13 +450,13 @@ export class SerumMarket {
    */
   async getBidAskSpread() {
     if (!this.market) {
-      return { bid: null, ask: null }
+      return { bid: null, ask: null };
     }
-    const bidOrderbook = await this.market.loadBids(this.connection)
-    const askOrderbook = await this.market.loadAsks(this.connection)
+    const bidOrderbook = await this.market.loadBids(this.connection);
+    const askOrderbook = await this.market.loadAsks(this.connection);
 
-    const highestbid = bidOrderbook.getL2(1)[0]
-    const lowestAsk = askOrderbook.getL2(1)[0]
-    return { bid: highestbid[0], ask: lowestAsk[0] }
+    const highestbid = bidOrderbook.getL2(1)[0];
+    const lowestAsk = askOrderbook.getL2(1)[0];
+    return { bid: highestbid[0], ask: lowestAsk[0] };
   }
 }

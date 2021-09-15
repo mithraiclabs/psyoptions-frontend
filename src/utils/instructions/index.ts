@@ -1,2 +1,2 @@
-export * from './mint'
-export * from './token'
+export * from './mint';
+export * from './token';

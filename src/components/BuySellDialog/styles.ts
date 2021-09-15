@@ -1,7 +1,7 @@
-import { withStyles } from '@material-ui/core/styles'
-import Button, { ButtonProps } from '@material-ui/core/Button'
-import FilledInput from '@material-ui/core/FilledInput'
-import theme from '../../utils/theme'
+import { withStyles } from '@material-ui/core/styles';
+import Button, { ButtonProps } from '@material-ui/core/Button';
+import FilledInput from '@material-ui/core/FilledInput';
+import theme from '../../utils/theme';
 
 export const StyledFilledInput = withStyles({
   root: {
@@ -12,7 +12,7 @@ export const StyledFilledInput = withStyles({
   input: {
     padding: '8px 12px !important',
   },
-})(FilledInput)
+})(FilledInput);
 
 export const PlusMinusButton = withStyles({
   root: {
@@ -27,11 +27,11 @@ export const PlusMinusButton = withStyles({
       backgroundColor: 'rgba(255, 255, 255, 0.18)',
     },
   },
-})(Button)
+})(Button);
 
 type FakeButtonProps = ButtonProps & {
-  fakeDisabled: boolean
-}
+  fakeDisabled: boolean;
+};
 
 export const StyledSellButton = withStyles({
   // The fakeDisabled prop is a hack/workaround
@@ -52,7 +52,7 @@ export const StyledSellButton = withStyles({
             backgroundColor: theme.palette.error.light,
           },
         },
-})(Button)
+})(Button);
 
 export const StyledBuyButton = withStyles({
   // The fakeDisabled prop is a hack/workaround
@@ -74,4 +74,4 @@ export const StyledBuyButton = withStyles({
           },
           color: theme.palette.background.main,
         },
-})(Button)
+})(Button);

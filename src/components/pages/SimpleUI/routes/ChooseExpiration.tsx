@@ -1,18 +1,18 @@
-import React, { memo, useEffect, useState } from 'react'
-import { useHistory } from 'react-router-dom'
-import Box from '@material-ui/core/Box'
-import Button from '@material-ui/core/Button'
-import { useTheme } from '@material-ui/core/styles'
+import React, { memo, useEffect, useState } from 'react';
+import { useHistory } from 'react-router-dom';
+import Box from '@material-ui/core/Box';
+import Button from '@material-ui/core/Button';
+import { useTheme } from '@material-ui/core/styles';
 import {
   useUpdateForm,
   useFormState,
-} from '../../../../context/SimpleUIContext'
-import useExpirationDate from '../../../../hooks/useExpirationDate'
+} from '../../../../context/SimpleUIContext';
+import useExpirationDate from '../../../../hooks/useExpirationDate';
 
-import { SimpleUIPage } from '../SimpeUIPage'
+import { SimpleUIPage } from '../SimpeUIPage';
 
 const ChooseDateButton = ({ date, selected, onClick }) => {
-  const theme = useTheme()
+  const theme = useTheme();
 
   return (
     <Button
@@ -40,35 +40,35 @@ const ChooseDateButton = ({ date, selected, onClick }) => {
         <Box p={1}>{`${date.format('MMMM Do YYYY, HH:mm:ss')} GMT`}</Box>
       </Box>
     </Button>
-  )
-}
+  );
+};
 
 const ChooseExpiration = () => {
-  const { setSelectedDate, dates } = useExpirationDate()
-  const { tokenSymbol, direction } = useFormState()
-  const updateForm = useUpdateForm()
-  const history = useHistory()
-  const [selectedExpiration, setSelectedExpiration] = useState(0)
+  const { setSelectedDate, dates } = useExpirationDate();
+  const { tokenSymbol, direction } = useFormState();
+  const updateForm = useUpdateForm();
+  const history = useHistory();
+  const [selectedExpiration, setSelectedExpiration] = useState(0);
 
   // If previous form state didn't exist, send user back to first page (choose asset)
   useEffect(() => {
     if (!tokenSymbol || !direction) {
-      history.replace('/simple/choose-asset')
+      history.replace('/simple/choose-asset');
     }
-  }, [tokenSymbol, direction, history])
+  }, [tokenSymbol, direction, history]);
 
   const handleMakeSelection = (d) => {
     if (!selectedExpiration) {
-      setSelectedDate(d)
-      setSelectedExpiration(d.unix())
-      updateForm('expirationUnixTimestamp', d.unix())
+      setSelectedDate(d);
+      setSelectedExpiration(d.unix());
+      updateForm('expirationUnixTimestamp', d.unix());
 
       // TODO: animated transition between pages instead of a timeout
       setTimeout(() => {
-        history.push('/simple/choose-strike')
-      }, 500)
+        history.push('/simple/choose-strike');
+      }, 500);
     }
-  }
+  };
 
   return (
     <SimpleUIPage title={`On or before this date`}>
@@ -91,7 +91,7 @@ const ChooseExpiration = () => {
         ))}
       </Box>
     </SimpleUIPage>
-  )
-}
+  );
+};
 
-export default memo(ChooseExpiration)
+export default memo(ChooseExpiration);

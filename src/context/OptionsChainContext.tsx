@@ -1,22 +1,22 @@
-import React, { useState, createContext } from 'react'
-import { ChainRow } from '../types'
+import React, { useState, createContext } from 'react';
+import { ChainRow } from '../types';
 
 const OptionsChainContext = createContext<{
-  chains: ChainRow[]
-  setChains: React.Dispatch<React.SetStateAction<ChainRow[]>>
+  chains: ChainRow[];
+  setChains: React.Dispatch<React.SetStateAction<ChainRow[]>>;
 }>({
   chains: [],
   setChains: () => null,
-})
+});
 
 const OptionsChainProvider: React.FC = ({ children }) => {
-  const [chains, setChains] = useState<ChainRow[]>([])
+  const [chains, setChains] = useState<ChainRow[]>([]);
 
   return (
     <OptionsChainContext.Provider value={{ chains, setChains }}>
       {children}
     </OptionsChainContext.Provider>
-  )
-}
+  );
+};
 
-export { OptionsChainContext, OptionsChainProvider }
+export { OptionsChainContext, OptionsChainProvider };

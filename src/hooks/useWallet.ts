@@ -1,6 +1,6 @@
-import { useContext } from 'react'
-import WalletAdapter from 'src/utils/wallet/walletAdapter'
-import { WalletContext } from '../context/WalletContext'
+import { useContext } from 'react';
+import WalletAdapter from 'src/utils/wallet/walletAdapter';
+import { WalletContext } from '../context/WalletContext';
 
 const useWallet = () => {
   const {
@@ -13,37 +13,37 @@ const useWallet = () => {
     setConnected,
     pubKey,
     setPubKey,
-  } = useContext(WalletContext)
+  } = useContext(WalletContext);
 
   // Reset state in case user is changing wallets
   const connect = async (walletAdapter: WalletAdapter, args: any) => {
-    setPubKey(null)
-    setConnected(false)
-    setLoading(true)
+    setPubKey(null);
+    setConnected(false);
+    setLoading(true);
 
-    setWallet(walletAdapter)
+    setWallet(walletAdapter);
 
     walletAdapter.on('disconnect', () => {
-      setConnected(false)
-      setPubKey(null)
-      console.log('Disconnected')
-    })
+      setConnected(false);
+      setPubKey(null);
+      console.log('Disconnected');
+    });
 
     walletAdapter.on('connect', (key) => {
-      setLoading(false)
-      setConnected(true)
-      setPubKey(key)
-      console.log('connected')
-    })
+      setLoading(false);
+      setConnected(true);
+      setPubKey(key);
+      console.log('connected');
+    });
 
-    await walletAdapter.connect(args)
-  }
+    await walletAdapter.connect(args);
+  };
 
   const disconnect = () => {
-    wallet.disconnect()
-    setPubKey(null)
-    setConnected(false)
-  }
+    wallet.disconnect();
+    setPubKey(null);
+    setConnected(false);
+  };
 
   return {
     balance,
@@ -53,7 +53,7 @@ const useWallet = () => {
     connected,
     loading,
     pubKey,
-  }
-}
+  };
+};
 
-export default useWallet
+export default useWallet;

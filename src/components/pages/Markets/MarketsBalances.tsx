@@ -1,29 +1,29 @@
-import React from 'react'
-import Box from '@material-ui/core/Box'
-import Avatar from '@material-ui/core/Avatar'
-import { LAMPORTS_PER_SOL } from '@solana/web3.js'
+import React from 'react';
+import Box from '@material-ui/core/Box';
+import Avatar from '@material-ui/core/Avatar';
+import { LAMPORTS_PER_SOL } from '@solana/web3.js';
 
-import useWallet from '../../../hooks/useWallet'
-import useAssetList from '../../../hooks/useAssetList'
-import useOwnedTokenAccounts from '../../../hooks/useOwnedTokenAccounts'
+import useWallet from '../../../hooks/useWallet';
+import useAssetList from '../../../hooks/useAssetList';
+import useOwnedTokenAccounts from '../../../hooks/useOwnedTokenAccounts';
 
-import { WRAPPED_SOL_ADDRESS, getHighestAccount } from '../../../utils/token'
+import { WRAPPED_SOL_ADDRESS, getHighestAccount } from '../../../utils/token';
 
 const Balances: React.FC = () => {
-  const { balance, connected } = useWallet()
-  const { uAsset, qAsset, assetListLoading } = useAssetList()
+  const { balance, connected } = useWallet();
+  const { uAsset, qAsset, assetListLoading } = useAssetList();
   const { ownedTokenAccounts, loadingOwnedTokenAccounts } =
-    useOwnedTokenAccounts()
-  const uAssetAccounts = ownedTokenAccounts[uAsset?.mintAddress] || []
-  const qAssetAccounts = ownedTokenAccounts[qAsset?.mintAddress] || []
+    useOwnedTokenAccounts();
+  const uAssetAccounts = ownedTokenAccounts[uAsset?.mintAddress] || [];
+  const qAssetAccounts = ownedTokenAccounts[qAsset?.mintAddress] || [];
 
   const qAssetBalance =
-    (getHighestAccount(qAssetAccounts)?.amount || 0) / 10 ** qAsset?.decimals
+    (getHighestAccount(qAssetAccounts)?.amount || 0) / 10 ** qAsset?.decimals;
   let uAssetBalance =
-    (getHighestAccount(uAssetAccounts)?.amount || 0) / 10 ** uAsset?.decimals
+    (getHighestAccount(uAssetAccounts)?.amount || 0) / 10 ** uAsset?.decimals;
   if (uAsset?.mintAddress === WRAPPED_SOL_ADDRESS) {
     // if asset is wrapped Sol, use balance of wallet account
-    uAssetBalance = balance / LAMPORTS_PER_SOL
+    uAssetBalance = balance / LAMPORTS_PER_SOL;
   }
 
   if (!loadingOwnedTokenAccounts && !assetListLoading && connected) {
@@ -53,10 +53,10 @@ const Balances: React.FC = () => {
           </Box>
         </Box>
       </Box>
-    )
+    );
   }
 
-  return null
-}
+  return null;
+};
 
-export default Balances
+export default Balances;

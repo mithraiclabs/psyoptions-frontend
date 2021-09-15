@@ -1,24 +1,10 @@
-import { useContext } from 'react'
-import { ConnectionContext } from '../context/ConnectionContext'
+import { useContext } from 'react';
+import {
+  ConnectionContext,
+  ConnectionContextType,
+} from '../context/ConnectionContext';
 
-const useConnection = () => {
-  const {
-    networks,
-    connection,
-    endpoint,
-    graphQLUrl,
-    setEndpoint,
-    dexProgramId,
-  } = useContext(ConnectionContext)
+const useConnection = (): ConnectionContextType =>
+  useContext(ConnectionContext);
 
-  return {
-    networks,
-    connection,
-    endpoint,
-    setEndpoint,
-    dexProgramId,
-    graphQLUrl,
-  }
-}
-
-export default useConnection
+export default useConnection;

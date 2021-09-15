@@ -1,15 +1,15 @@
-import { PublicKey, Transaction } from '@solana/web3.js'
-import { useCallback } from 'react'
-import { createAssociatedTokenAccountInstruction } from '../../utils/instructions'
-import { getHighestAccount } from '../../utils/token'
-import useConnection from '../useConnection'
-import useNotifications from '../useNotifications'
-import useOwnedTokenAccounts from '../useOwnedTokenAccounts'
-import useSerum from '../useSerum'
-import useWallet from '../useWallet'
-import useSendTransaction from '../useSendTransaction'
-import { useSerumOpenOrderAccounts } from './useSerumOpenOrderAccounts'
-import useAssetList from '../useAssetList'
+import { PublicKey, Transaction } from '@solana/web3.js';
+import { useCallback } from 'react';
+import { createAssociatedTokenAccountInstruction } from '../../utils/instructions';
+import { getHighestAccount } from '../../utils/token';
+import useConnection from '../useConnection';
+import useNotifications from '../useNotifications';
+import useOwnedTokenAccounts from '../useOwnedTokenAccounts';
+import useSerum from '../useSerum';
+import useWallet from '../useWallet';
+import useSendTransaction from '../useSendTransaction';
+import { useSerumOpenOrderAccounts } from './useSerumOpenOrderAccounts';
+import useAssetList from '../useAssetList';
 
 /**
  * Returns function for settling the funds of a specific market
@@ -17,36 +17,37 @@ import useAssetList from '../useAssetList'
 export const useSettleFunds = (
   serumMarketAddress: string,
 ): {
-  makeSettleFundsTx: () => Promise<Transaction>
-  settleFunds: () => Promise<void>
+  makeSettleFundsTx: () => Promise<Transaction>;
+  settleFunds: () => Promise<void>;
 } => {
-  const { pushErrorNotification } = useNotifications()
-  const { connection } = useConnection()
-  const { serumMarkets } = useSerum()
-  const { wallet, pubKey } = useWallet()
-  const { sendTransaction } = useSendTransaction()
-  const { USDCPublicKey } = useAssetList()
+  const { pushErrorNotification } = useNotifications();
+  const { connection, endpoint } = useConnection();
+  const { serumMarkets } = useSerum();
+  const { wallet, pubKey } = useWallet();
+  const { sendTransaction } = useSendTransaction();
+  const { USDCPublicKey } = useAssetList();
   const { ownedTokenAccounts, subscribeToTokenAccount } =
-    useOwnedTokenAccounts()
-  const openOrders = useSerumOpenOrderAccounts(serumMarketAddress, true)
-  const serumMarket = serumMarkets[serumMarketAddress]?.serumMarket
+    useOwnedTokenAccounts();
+  const openOrders = useSerumOpenOrderAccounts(serumMarketAddress, true);
+  const serumMarket = serumMarkets[serumMarketAddress]?.serumMarket;
   const baseMintAddress =
-    serumMarket?.baseMintAddress && serumMarket.baseMintAddress.toString()
+    serumMarket?.baseMintAddress && serumMarket.baseMintAddress.toString();
   const quoteMintAddress =
-    serumMarket?.quoteMintAddress && serumMarket.quoteMintAddress.toString()
-  const baseTokenAccounts = ownedTokenAccounts[baseMintAddress] ?? []
-  const quoteTokenAccounts = ownedTokenAccounts[quoteMintAddress] ?? []
-  const { pubKey: baseTokenAccountKey } = getHighestAccount(baseTokenAccounts)
-  const { pubKey: quoteTokenAccountKey } = getHighestAccount(quoteTokenAccounts)
+    serumMarket?.quoteMintAddress && serumMarket.quoteMintAddress.toString();
+  const baseTokenAccounts = ownedTokenAccounts[baseMintAddress] ?? [];
+  const quoteTokenAccounts = ownedTokenAccounts[quoteMintAddress] ?? [];
+  const { pubKey: baseTokenAccountKey } = getHighestAccount(baseTokenAccounts);
+  const { pubKey: quoteTokenAccountKey } =
+    getHighestAccount(quoteTokenAccounts);
 
   const makeSettleFundsTx = useCallback(async (): Promise<
     Transaction | undefined
   > => {
     if (openOrders.length && serumMarket) {
-      const transaction = new Transaction()
-      let signers = []
-      let _baseTokenAccountKey = baseTokenAccountKey
-      let _quoteTokenAccountKey = quoteTokenAccountKey
+      const transaction = new Transaction();
+      let signers = [];
+      let _baseTokenAccountKey = baseTokenAccountKey;
+      let _quoteTokenAccountKey = quoteTokenAccountKey;
 
       if (!_baseTokenAccountKey) {
         // Create a SPL Token account for this base account if the wallet doesn't have one
@@ -55,11 +56,11 @@ export const useSettleFunds = (
             payer: pubKey,
             owner: pubKey,
             mintPublicKey: serumMarket?.baseMintAddress,
-          })
+          });
 
-        transaction.add(createOptAccountTx)
-        _baseTokenAccountKey = newTokenAccountKey
-        subscribeToTokenAccount(newTokenAccountKey)
+        transaction.add(createOptAccountTx);
+        _baseTokenAccountKey = newTokenAccountKey;
+        subscribeToTokenAccount(newTokenAccountKey);
       }
 
       if (!quoteTokenAccountKey) {
@@ -69,11 +70,11 @@ export const useSettleFunds = (
             payer: pubKey,
             owner: pubKey,
             mintPublicKey: serumMarket.quoteMintAddress,
-          })
+          });
 
-        transaction.add(createOptAccountTx)
-        _quoteTokenAccountKey = newTokenAccountKey
-        subscribeToTokenAccount(newTokenAccountKey)
+        transaction.add(createOptAccountTx);
+        _quoteTokenAccountKey = newTokenAccountKey;
+        subscribeToTokenAccount(newTokenAccountKey);
       }
 
       const { transaction: settleTx, signers: settleSigners } =
@@ -83,24 +84,25 @@ export const useSettleFunds = (
           _baseTokenAccountKey,
           _quoteTokenAccountKey,
           serumMarket.quoteMintAddress.equals(USDCPublicKey) &&
-            process.env.USDC_SERUM_REFERRER_ADDRESS
-            ? new PublicKey(process.env.USDC_SERUM_REFERRER_ADDRESS)
+            endpoint.serumReferrerId
+            ? new PublicKey(endpoint.serumReferrerId)
             : undefined,
-        )
-      transaction.add(settleTx)
-      signers = [...signers, ...settleSigners]
+        );
+      transaction.add(settleTx);
+      signers = [...signers, ...settleSigners];
 
-      transaction.feePayer = pubKey
-      const { blockhash } = await connection.getRecentBlockhash()
-      transaction.recentBlockhash = blockhash
+      transaction.feePayer = pubKey;
+      const { blockhash } = await connection.getRecentBlockhash();
+      transaction.recentBlockhash = blockhash;
 
       if (signers.length) {
-        transaction.partialSign(...signers)
+        transaction.partialSign(...signers);
       }
-      return transaction
+      return transaction;
     }
-    return undefined
+    return undefined;
   }, [
+    endpoint.serumReferrerId,
     serumMarket,
     openOrders,
     baseTokenAccountKey,
@@ -109,20 +111,20 @@ export const useSettleFunds = (
     USDCPublicKey,
     pubKey,
     subscribeToTokenAccount,
-  ])
+  ]);
 
   const settleFunds = useCallback(async () => {
     try {
-      const transaction = await makeSettleFundsTx()
-      sendTransaction({
+      const transaction = await makeSettleFundsTx();
+      await sendTransaction({
         transaction,
         wallet,
         connection,
         sendingMessage: 'Processing: Settle funds',
         successMessage: 'Confirmed: Settle funds',
-      })
+      });
     } catch (err) {
-      pushErrorNotification(err)
+      pushErrorNotification(err);
     }
   }, [
     connection,
@@ -130,10 +132,10 @@ export const useSettleFunds = (
     sendTransaction,
     wallet,
     makeSettleFundsTx,
-  ])
+  ]);
 
   return {
     settleFunds,
     makeSettleFundsTx,
-  }
-}
+  };
+};

@@ -1,18 +1,18 @@
-import Box from '@material-ui/core/Box'
-import { withStyles } from '@material-ui/core/styles'
-import Table from '@material-ui/core/Table'
-import TableHead from '@material-ui/core/TableHead'
-import TableRow from '@material-ui/core/TableRow'
-import TableCell from '@material-ui/core/TableCell'
-import TableBody from '@material-ui/core/TableBody'
+import Box from '@material-ui/core/Box';
+import { withStyles } from '@material-ui/core/styles';
+import Table from '@material-ui/core/Table';
+import TableHead from '@material-ui/core/TableHead';
+import TableRow from '@material-ui/core/TableRow';
+import TableCell from '@material-ui/core/TableCell';
+import TableBody from '@material-ui/core/TableBody';
 
-import React, { memo } from 'react'
-import theme from '../utils/theme'
+import React, { memo } from 'react';
+import theme from '../utils/theme';
 
-const successColor = theme.palette.success.main
-const errorColor = theme.palette.error.main
-const primaryColor = theme.palette.primary.main
-const bgLighterColor = theme.palette.background.lighter
+const successColor = theme.palette.success.main;
+const errorColor = theme.palette.error.main;
+const primaryColor = theme.palette.primary.main;
+const bgLighterColor = theme.palette.background.lighter;
 
 const BidAskCell = withStyles({
   root: {
@@ -23,42 +23,42 @@ const BidAskCell = withStyles({
       borderRight: 'none',
     },
   },
-})(TableCell)
+})(TableCell);
 
-const centerBorder = { borderRight: `1px solid ${primaryColor}` }
-const topRowBorder = { borderTop: `1px solid ${bgLighterColor}` }
+const centerBorder = { borderRight: `1px solid ${primaryColor}` };
+const topRowBorder = { borderTop: `1px solid ${bgLighterColor}` };
 
 type BidOrAsk = {
-  size: number
-  price: number
-}
+  size: number;
+  price: number;
+};
 
 const OrderBook: React.FC<{
-  bids: BidOrAsk[]
-  asks: BidOrAsk[]
-  setLimitPrice: (limitPrice: string) => void
-  setOrderSize: (orderSize: string) => void
+  bids: BidOrAsk[];
+  asks: BidOrAsk[];
+  setLimitPrice: (limitPrice: string) => void;
+  setOrderSize: (orderSize: string) => void;
 }> = ({ bids = [], asks = [], setLimitPrice, setOrderSize }) => {
   // Maybe we should do this zipping of the bids/asks elsewhere
   // Doing it here for quick and dirty solution, don't over-engineer right? :)
-  const rows = []
-  const minRows = 4
+  const rows = [];
+  const minRows = 4;
   // We can adjust the max rows as desired later
-  const maxRows = 8
-  let i = 0
+  const maxRows = 8;
+  let i = 0;
   while (
     (rows.length < maxRows && rows.length < bids.length) ||
     rows.length < asks.length ||
     rows.length < minRows
   ) {
-    rows.push({ bid: bids[i] || {}, ask: asks[i] || {}, key: i })
-    i += 1
+    rows.push({ bid: bids[i] || {}, ask: asks[i] || {}, key: i });
+    i += 1;
   }
 
   const setPriceAndSize = (bidAsk: BidOrAsk) => {
-    if (bidAsk?.price) setLimitPrice(bidAsk.price.toString())
-    if (bidAsk?.size) setOrderSize(bidAsk.size.toString())
-  }
+    if (bidAsk?.price) setLimitPrice(bidAsk.price.toString());
+    if (bidAsk?.size) setOrderSize(bidAsk.size.toString());
+  };
 
   return (
     <>
@@ -130,13 +130,13 @@ const OrderBook: React.FC<{
                     {ask?.price || '\u00A0'}
                   </BidAskCell>
                 </TableRow>
-              )
+              );
             })}
           </TableBody>
         </Table>
       </Box>
     </>
-  )
-}
+  );
+};
 
-export default memo(OrderBook)
+export default memo(OrderBook);

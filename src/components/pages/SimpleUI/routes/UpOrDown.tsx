@@ -1,19 +1,19 @@
-import React, { memo, useEffect, useState } from 'react'
-import { useHistory } from 'react-router-dom'
-import Box from '@material-ui/core/Box'
-import Button from '@material-ui/core/Button'
-import ArrowUpward from '@material-ui/icons/ArrowUpward'
-import ArrowDownward from '@material-ui/icons/ArrowDownward'
-import { useTheme } from '@material-ui/core/styles'
+import React, { memo, useEffect, useState } from 'react';
+import { useHistory } from 'react-router-dom';
+import Box from '@material-ui/core/Box';
+import Button from '@material-ui/core/Button';
+import ArrowUpward from '@material-ui/icons/ArrowUpward';
+import ArrowDownward from '@material-ui/icons/ArrowDownward';
+import { useTheme } from '@material-ui/core/styles';
 import {
   useUpdateForm,
   useFormState,
-} from '../../../../context/SimpleUIContext'
+} from '../../../../context/SimpleUIContext';
 
-import { SimpleUIPage } from '../SimpeUIPage'
+import { SimpleUIPage } from '../SimpeUIPage';
 
 const UpOrDownButton = ({ selected, onClick, direction }) => {
-  const theme = useTheme()
+  const theme = useTheme();
 
   return (
     <Button
@@ -47,33 +47,33 @@ const UpOrDownButton = ({ selected, onClick, direction }) => {
         />
       )}
     </Button>
-  )
-}
+  );
+};
 
 const UpOrDown = () => {
-  const { tokenSymbol } = useFormState()
-  const updateForm = useUpdateForm()
-  const history = useHistory()
-  const [selectedDirection, setSelectedDirection] = useState('')
+  const { tokenSymbol } = useFormState();
+  const updateForm = useUpdateForm();
+  const history = useHistory();
+  const [selectedDirection, setSelectedDirection] = useState('');
 
   // If previous form state didn't exist, send user back to first page (choose asset)
   useEffect(() => {
     if (!tokenSymbol) {
-      history.replace('/simple/choose-asset')
+      history.replace('/simple/choose-asset');
     }
-  }, [tokenSymbol, history])
+  }, [tokenSymbol, history]);
 
   const handleMakeSelection = (direction) => {
     if (!selectedDirection) {
-      setSelectedDirection(direction)
-      updateForm('direction', direction === 'up' ? 'up' : 'down')
+      setSelectedDirection(direction);
+      updateForm('direction', direction === 'up' ? 'up' : 'down');
 
       // TODO: animated transition between pages instead of a timeout
       setTimeout(() => {
-        history.push('/simple/choose-expiration')
-      }, 500)
+        history.push('/simple/choose-expiration');
+      }, 500);
     }
-  }
+  };
 
   return (
     <SimpleUIPage title={`I think it's going`}>
@@ -103,7 +103,7 @@ const UpOrDown = () => {
         </Box>
       </Box>
     </SimpleUIPage>
-  )
-}
+  );
+};
 
-export default memo(UpOrDown)
+export default memo(UpOrDown);

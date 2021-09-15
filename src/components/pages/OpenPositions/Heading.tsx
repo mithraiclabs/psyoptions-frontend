@@ -1,10 +1,10 @@
-import React from 'react'
-import Box from '@material-ui/core/Box'
-import PropTypes from 'prop-types'
-import { useTheme } from '@material-ui/core/styles'
+import React from 'react';
+import Box from '@material-ui/core/Box';
+import PropTypes from 'prop-types';
+import { useTheme } from '@material-ui/core/styles';
 
 export const Heading = ({ children }) => {
-  const theme = useTheme()
+  const theme = useTheme();
 
   return (
     <Box p={2} textAlign="left">
@@ -18,9 +18,9 @@ export const Heading = ({ children }) => {
         {children}
       </h2>
     </Box>
-  )
-}
+  );
+};
 
 Heading.propTypes = {
   children: PropTypes.string.isRequired,
-}
+};

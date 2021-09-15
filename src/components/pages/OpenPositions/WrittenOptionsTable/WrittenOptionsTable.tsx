@@ -1,35 +1,35 @@
-import React, { useMemo } from 'react'
-import Box from '@material-ui/core/Box'
-import { useTheme } from '@material-ui/core/styles'
+import React, { useMemo } from 'react';
+import Box from '@material-ui/core/Box';
+import { useTheme } from '@material-ui/core/styles';
 
-import useWallet from '../../../../hooks/useWallet'
-import { useWrittenOptions } from '../../../../hooks/useWrittenOptions'
-import useOpenPositions from '../../../../hooks/useOpenPositions'
-import useOptionsMarkets from '../../../../hooks/useOptionsMarkets'
-import { Heading } from '../Heading'
-import { WrittenOptionRow } from './WrittenOptionRow'
-import EmptySvg from '../EmptySvg'
+import useWallet from '../../../../hooks/useWallet';
+import { useWrittenOptions } from '../../../../hooks/useWrittenOptions';
+import useOpenPositions from '../../../../hooks/useOpenPositions';
+import useOptionsMarkets from '../../../../hooks/useOptionsMarkets';
+import { Heading } from '../Heading';
+import { WrittenOptionRow } from './WrittenOptionRow';
+import EmptySvg from '../EmptySvg';
 
 // TODO handle the case where the writer has multiple underlying asset accounts
 export const WrittenOptionsTable = React.memo(() => {
-  const { connected } = useWallet()
-  const theme = useTheme()
-  const positions = useOpenPositions()
-  const writtenOptions = useWrittenOptions()
-  const { markets } = useOptionsMarkets()
-  const nowInSeconds = Date.now() / 1000
+  const { connected } = useWallet();
+  const theme = useTheme();
+  const positions = useOpenPositions();
+  const writtenOptions = useWrittenOptions();
+  const { markets } = useOptionsMarkets();
+  const nowInSeconds = Date.now() / 1000;
 
   // TODO - Add user-configurable sort order
   // For now just sort by expiration to make sure the expired options are below the active ones
   const writtenOptionKeys = useMemo(
     () =>
       Object.keys(writtenOptions).sort((keyA, keyB) => {
-        const marketA = markets[keyA]
-        const marketB = markets[keyB]
-        return marketB?.expiration - marketA?.expiration
+        const marketA = markets[keyA];
+        const marketB = markets[keyB];
+        return marketB?.expiration - marketA?.expiration;
       }),
     [writtenOptions, markets],
-  )
+  );
 
   return (
     <Box
@@ -101,10 +101,10 @@ export const WrittenOptionsTable = React.memo(() => {
         ) : (
           <Box>
             {writtenOptionKeys.map((marketKey) => {
-              const market = markets[marketKey]
+              const market = markets[marketKey];
               const heldContracts = positions[marketKey]
                 ? positions[marketKey].filter((position) => position.amount > 0)
-                : []
+                : [];
               return (
                 <WrittenOptionRow
                   expired={nowInSeconds > market.expiration}
@@ -113,11 +113,11 @@ export const WrittenOptionsTable = React.memo(() => {
                   writerTokenAccounts={writtenOptions[marketKey]}
                   heldContracts={heldContracts}
                 />
-              )
+              );
             })}
           </Box>
         )}
       </Box>
     </Box>
-  )
-})
+  );
+});

@@ -1,15 +1,15 @@
-import React, { memo, useEffect, useState } from 'react'
-import { useHistory } from 'react-router-dom'
-import Box from '@material-ui/core/Box'
-import Button from '@material-ui/core/Button'
-import { useTheme } from '@material-ui/core/styles'
+import React, { memo, useEffect, useState } from 'react';
+import { useHistory } from 'react-router-dom';
+import Box from '@material-ui/core/Box';
+import Button from '@material-ui/core/Button';
+import { useTheme } from '@material-ui/core/styles';
 import {
   useUpdateForm,
   useFormState,
-} from '../../../../context/SimpleUIContext'
+} from '../../../../context/SimpleUIContext';
 
 const ChooseDateButton = ({ date, selected, onClick }) => {
-  const theme = useTheme()
+  const theme = useTheme();
 
   return (
     <Button
@@ -37,33 +37,33 @@ const ChooseDateButton = ({ date, selected, onClick }) => {
         <Box p={1}>{`${date.format('MMMM Do YYYY, HH:mm:ss')} GMT`}</Box>
       </Box>
     </Button>
-  )
-}
+  );
+};
 
 const ChooseStrike = () => {
-  const { tokenSymbol, direction, expirationUnixTimestamp } = useFormState()
-  const updateForm = useUpdateForm()
-  const history = useHistory()
-  const [selectedExpiration, setSelectedExpiration] = useState(0)
+  const { tokenSymbol, direction, expirationUnixTimestamp } = useFormState();
+  const updateForm = useUpdateForm();
+  const history = useHistory();
+  const [selectedExpiration, setSelectedExpiration] = useState(0);
 
   // If previous form state didn't exist, send user back to first page (choose asset)
   useEffect(() => {
     if (!tokenSymbol || !direction || !expirationUnixTimestamp) {
-      history.replace('/simple/choose-asset')
+      history.replace('/simple/choose-asset');
     }
 
     // If previous form state did exist, we need to load the markets on mount
-  }, [tokenSymbol, direction, history, expirationUnixTimestamp])
+  }, [tokenSymbol, direction, history, expirationUnixTimestamp]);
 
   const handleMakeSelection = (expiration) => {
     if (!selectedExpiration) {
-      setSelectedExpiration(expiration)
-      updateForm('expirationUnixTimestamp', expiration)
+      setSelectedExpiration(expiration);
+      updateForm('expirationUnixTimestamp', expiration);
 
       // TODO: animated transition between pages instead of a timeout
       setTimeout(() => {
-        history.push('/simple/choose-strike')
-      }, 500)
+        history.push('/simple/choose-strike');
+      }, 500);
     }
   }
 
@@ -81,4 +81,4 @@ const ChooseStrike = () => {
   )
 }
 
-export default memo(ChooseStrike)
+export default memo(ChooseStrike);

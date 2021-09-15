@@ -1,86 +1,96 @@
-import React, { useState } from 'react'
-import BN from 'bn.js'
-import { PublicKey, Transaction, LAMPORTS_PER_SOL } from '@solana/web3.js'
-import CircularProgress from '@material-ui/core/CircularProgress'
-import Box from '@material-ui/core/Box'
-import Paper from '@material-ui/core/Paper'
-import Button from '@material-ui/core/Button'
-import Avatar from '@material-ui/core/Avatar'
-import Link from '@material-ui/core/Link'
+import React, { useState } from 'react';
+import BN from 'bn.js';
+import { Redirect } from 'react-router-dom';
+import {
+  PublicKey,
+  Transaction,
+  LAMPORTS_PER_SOL,
+  Connection,
+} from '@solana/web3.js';
+import CircularProgress from '@material-ui/core/CircularProgress';
+import Box from '@material-ui/core/Box';
+import Paper from '@material-ui/core/Paper';
+import Button from '@material-ui/core/Button';
+import Avatar from '@material-ui/core/Avatar';
 
-import theme from '../../utils/theme'
-import Page from './Page'
-import ConnectButton from '../ConnectButton'
+import theme from '../../utils/theme';
+import Page from './Page';
+import ConnectButton from '../ConnectButton';
 
-import useOwnedTokenAccounts from '../../hooks/useOwnedTokenAccounts'
-import useNotifications from '../../hooks/useNotifications'
-import useWallet from '../../hooks/useWallet'
-import useAssetList from '../../hooks/useAssetList'
-import useConnection from '../../hooks/useConnection'
-import useSendTransaction from '../../hooks/useSendTransaction'
-import { buildAirdropTokensIx } from '../../utils/airdropInstructions'
-import { createAssociatedTokenAccountInstruction } from '../../utils/instructions/token'
+import useOwnedTokenAccounts from '../../hooks/useOwnedTokenAccounts';
+import useNotifications from '../../hooks/useNotifications';
+import useWallet from '../../hooks/useWallet';
+import useAssetList from '../../hooks/useAssetList';
+import useConnection from '../../hooks/useConnection';
+import useSendTransaction from '../../hooks/useSendTransaction';
+import { buildAirdropTokensIx } from '../../utils/airdropInstructions';
+import { createAssociatedTokenAccountInstruction } from '../../utils/instructions/token';
 
-const darkBorder = `1px solid ${(theme.palette.background as any).main}`
+const darkBorder = `1px solid ${(theme.palette.background as any).main}`;
 
-const { DEVNET_FAUCET_USDC, DEVNET_FAUCET_BTC, DEVNET_FAUCET_PSY } = process.env
+const { DEVNET_FAUCET_USDC, DEVNET_FAUCET_BTC, DEVNET_FAUCET_PSY } =
+  process.env;
 
 const getHighestAccount = (accounts) => {
-  if (accounts.length === 0) return undefined
-  if (accounts.length === 1) return accounts[0]
-  return accounts.sort((a, b) => b.amount - a.amount)[0]
-}
+  if (accounts.length === 0) return undefined;
+  if (accounts.length === 1) return accounts[0];
+  return accounts.sort((a, b) => b.amount - a.amount)[0];
+};
 
 const LoadingAirdrop = () => (
   <Box width="160px" textAlign="center" padding="6px">
     <CircularProgress size={32} />
   </Box>
-)
+);
 
-const Faucets = () => {
-  const { pushErrorNotification } = useNotifications()
-  const { balance: solBalance, connected, wallet, pubKey } = useWallet()
-  const { connection } = useConnection()
-  const { supportedAssets: assets } = useAssetList()
-  const { sendTransaction } = useSendTransaction()
-  const {
-    ownedTokenAccounts: accounts,
-    subscribeToTokenAccount,
-    refreshTokenAccounts,
-  } = useOwnedTokenAccounts()
+const Faucets: React.VFC = () => {
+  const { pushErrorNotification } = useNotifications();
+  const { balance: solBalance, connected, wallet, pubKey } = useWallet();
+  const { connection, endpoint } = useConnection();
+  const { supportedAssets: assets } = useAssetList();
+  const { sendTransaction } = useSendTransaction();
+  const { ownedTokenAccounts: accounts, subscribeToTokenAccount } =
+    useOwnedTokenAccounts();
 
-  const [loadingBTC, setLoadingBTC] = useState(false)
-  const [loadingPSY, setLoadingPSY] = useState(false)
-  const [loadingUSDC, setLoadingUSDC] = useState(false)
-  const [loadingSOL, setLoadingSOL] = useState(false)
+  const [loadingBTC, setLoadingBTC] = useState(false);
+  const [loadingPSY, setLoadingPSY] = useState(false);
+  const [loadingUSDC, setLoadingUSDC] = useState(false);
+  const [loadingSOL, setLoadingSOL] = useState(false);
 
   const BTC = {
     ...(assets.find((a) => a.tokenSymbol === 'BTC') || {}),
     faucetAddress: DEVNET_FAUCET_BTC,
-  }
+  };
   const PSY = {
     ...(assets.find((a) => a.tokenSymbol === 'PSY') || {}),
     faucetAddress: DEVNET_FAUCET_PSY,
-  }
+  };
   const USDC = {
     ...(assets.find((a) => a.tokenSymbol === 'USDC') || {}),
     faucetAddress: DEVNET_FAUCET_USDC,
-  }
-  const btcAccount = getHighestAccount(accounts[BTC?.mintAddress] || [])
-  const psyAccount = getHighestAccount(accounts[PSY?.mintAddress] || [])
-  const usdcAccount = getHighestAccount(accounts[USDC?.mintAddress] || [])
+  };
+  const btcAccount = getHighestAccount(accounts[BTC?.mintAddress] || []);
+  const psyAccount = getHighestAccount(accounts[PSY?.mintAddress] || []);
+  const usdcAccount = getHighestAccount(accounts[USDC?.mintAddress] || []);
 
-  const btcBalance = btcAccount ? btcAccount.amount * 10 ** -BTC.decimals : 0
-  const psyBalance = psyAccount ? psyAccount.amount * 10 ** -PSY.decimals : 0
+  const btcBalance = btcAccount ? btcAccount.amount * 10 ** -BTC.decimals : 0;
+  const psyBalance = psyAccount ? psyAccount.amount * 10 ** -PSY.decimals : 0;
   const usdcBalance = usdcAccount
     ? usdcAccount.amount * 10 ** -USDC.decimals
-    : 0
+    : 0;
 
   const handleClaimSOL = async () => {
-    setLoadingSOL(true)
-    await connection.requestAirdrop(pubKey, 10 * LAMPORTS_PER_SOL)
-    setLoadingSOL(false)
-  }
+    setLoadingSOL(true);
+    try {
+      const conn = new Connection(endpoint.fallbackUrl, {
+        commitment: 'confirmed',
+      });
+      await conn.requestAirdrop(pubKey, 10 * LAMPORTS_PER_SOL);
+    } catch (err) {
+      pushErrorNotification(err);
+    }
+    setLoadingSOL(false);
+  };
 
   const createAccountsAndAirdrop = async (
     asset,
@@ -89,9 +99,9 @@ const Faucets = () => {
     message,
   ) => {
     try {
-      let receivingAccountPublicKey = existingAccount?.pubKey
-      const tx = new Transaction()
-      const mintPublicKey = new PublicKey(asset.mintAddress)
+      let receivingAccountPublicKey = existingAccount?.pubKey;
+      const tx = new Transaction();
+      const mintPublicKey = new PublicKey(asset.mintAddress);
 
       if (!existingAccount) {
         const [ix, associatedTokenPublicKey] =
@@ -99,15 +109,15 @@ const Faucets = () => {
             payer: pubKey,
             owner: pubKey,
             mintPublicKey,
-          })
-        tx.add(ix)
-        receivingAccountPublicKey = associatedTokenPublicKey
-        subscribeToTokenAccount(receivingAccountPublicKey)
+          });
+        tx.add(ix);
+        receivingAccountPublicKey = associatedTokenPublicKey;
+        subscribeToTokenAccount(receivingAccountPublicKey);
       }
 
       const amountToDrop = new BN(amount).mul(
         new BN(10).pow(new BN(asset.decimals)),
-      )
+      );
 
       const airdropIx = await buildAirdropTokensIx(
         amountToDrop,
@@ -115,8 +125,8 @@ const Faucets = () => {
         mintPublicKey,
         receivingAccountPublicKey,
         new PublicKey(asset.faucetAddress),
-      )
-      tx.add(airdropIx)
+      );
+      tx.add(airdropIx);
 
       await sendTransaction({
         transaction: tx,
@@ -125,33 +135,37 @@ const Faucets = () => {
         connection,
         sendingMessage: `Processing: ${message}`,
         successMessage: `Confirmed: ${message}`,
-      })
+      });
     } catch (err) {
-      pushErrorNotification(err)
+      pushErrorNotification(err);
     }
-  }
+  };
 
   const handleClaimBTC = async () => {
-    setLoadingBTC(true)
-    await createAccountsAndAirdrop(BTC, btcAccount, 10, 'Claim 10 BTC')
-    setLoadingBTC(false)
-  }
+    setLoadingBTC(true);
+    await createAccountsAndAirdrop(BTC, btcAccount, 10, 'Claim 10 BTC');
+    setLoadingBTC(false);
+  };
 
   const handleClaimUSDC = async () => {
-    setLoadingUSDC(true)
+    setLoadingUSDC(true);
     await createAccountsAndAirdrop(
       USDC,
       usdcAccount,
       100_000,
       'Claim 100,000 USDC',
-    )
-    setLoadingUSDC(false)
-  }
+    );
+    setLoadingUSDC(false);
+  };
 
   const handleClaimPSY = async () => {
-    setLoadingPSY(true)
-    await createAccountsAndAirdrop(PSY, psyAccount, 1000, 'Claim 1,000 PSY')
-    setLoadingPSY(false)
+    setLoadingPSY(true);
+    await createAccountsAndAirdrop(PSY, psyAccount, 1000, 'Claim 1,000 PSY');
+    setLoadingPSY(false);
+  };
+
+  if (endpoint?.name !== 'Devnet') {
+    return <Redirect to="/markets" />;
   }
 
   return (
@@ -306,7 +320,7 @@ const Faucets = () => {
         </Paper>
       </Box>
     </Page>
-  )
-}
+  );
+};
 
-export default Faucets
+export default Faucets;

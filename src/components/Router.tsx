@@ -1,59 +1,52 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-import React from 'react'
-import {
-  Switch,
-  Route,
-  BrowserRouter,
-  StaticRouter,
-  BrowserRouterProps,
-  StaticRouterProps,
-} from 'react-router-dom'
-import crypto from 'crypto'
+import React from 'react';
+import { Switch, Route, BrowserRouter, StaticRouter } from 'react-router-dom';
+import crypto from 'crypto';
 
-import { isBrowser } from '../utils/isNode'
+import { isBrowser } from '../utils/isNode';
 
-import usePassword from '../hooks/usePassword'
+import usePassword from '../hooks/usePassword';
 
-import Landing from './pages/Landing'
-import LandingComingSoon from './pages/LandingComingSoon'
-import Mint from './pages/Mint'
-import InitializeMarket from './pages/InitializeMarket'
-import OpenPositions from './pages/OpenPositions'
-import History from './pages/History'
-import Markets from './pages/Markets'
-import Faucets from './pages/Faucets'
-import NotFound from './pages/NotFound'
-import ProhibitedJurisdiction from './pages/ProhibitedJurisdiction'
-import { DISALLOWED_COUNTRIES, useCountry } from '../hooks/useCountry'
-import { SimpleUI } from './pages/SimpleUI'
+import Landing from './pages/Landing';
+import LandingComingSoon from './pages/LandingComingSoon';
+import Mint from './pages/Mint';
+import InitializeMarket from './pages/InitializeMarket';
+import OpenPositions from './pages/OpenPositions';
+import History from './pages/History';
+import Markets from './pages/Markets';
+import Faucets from './pages/Faucets';
+import NotFound from './pages/NotFound';
+import ProhibitedJurisdiction from './pages/ProhibitedJurisdiction';
+import { DISALLOWED_COUNTRIES, useCountry } from '../hooks/useCountry';
+import { SimpleUI } from './pages/SimpleUI';
 
 const { INITIALIZE_PAGE_ENABLED, APP_PASSWORD_PROTECTED, APP_PASSWORD } =
-  process.env
+  process.env;
 
-const Router = isBrowser ? BrowserRouter : StaticRouter
+const Router = isBrowser ? BrowserRouter : StaticRouter;
 
 const RouteWithStatusCode = ({ children, ...props }) => (
   <Route
     {...props}
     render={({ staticContext }) => {
       if (staticContext) {
-        staticContext.statusCode = props.statusCode
+        staticContext.statusCode = props.statusCode;
       }
-      return <>{children}</>
+      return <>{children}</>;
     }}
   />
-)
+);
 
 const Routes: React.FC<any> = (props) => {
-  const [password] = usePassword()
-  const countryCode = useCountry()
+  const [password] = usePassword();
+  const countryCode = useCountry();
 
   // Makes it a little harder for users to "break in" without being told the password
   // This makes it so they can't just paste the hash from the html into the cookie
   const hash = crypto
     .createHash('sha1')
     .update(props.ssrPassword || password) // eslint-disable-line
-    .digest('hex')
+    .digest('hex');
 
   if (APP_PASSWORD_PROTECTED && APP_PASSWORD !== hash) {
     return (
@@ -61,7 +54,7 @@ const Routes: React.FC<any> = (props) => {
       <Router {...props}>
         <LandingComingSoon showPasswordField />
       </Router>
-    )
+    );
   }
 
   // Checks and routes the user based on whether their country is prohited
@@ -71,7 +64,7 @@ const Routes: React.FC<any> = (props) => {
       <Router {...props}>
         <ProhibitedJurisdiction />
       </Router>
-    )
+    );
   }
 
   return (
@@ -109,7 +102,7 @@ const Routes: React.FC<any> = (props) => {
         </RouteWithStatusCode>
       </Switch>
     </Router>
-  )
-}
+  );
+};
 
-export default Routes
+export default Routes;

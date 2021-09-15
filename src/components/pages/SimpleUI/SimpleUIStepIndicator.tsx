@@ -1,11 +1,11 @@
-import React, { memo } from 'react'
-import { useLocation } from 'react-router-dom'
-import Box from '@material-ui/core/Box'
-import { useTheme } from '@material-ui/core/styles'
+import React, { memo } from 'react';
+import { useLocation } from 'react-router-dom';
+import Box from '@material-ui/core/Box';
+import { useTheme } from '@material-ui/core/styles';
 
 const StepBar = ({ on }) => {
-  const theme = useTheme()
-  const { primary, background } = theme?.palette as any
+  const theme = useTheme();
+  const { primary, background } = theme?.palette as any;
 
   return (
     <Box
@@ -14,27 +14,27 @@ const StepBar = ({ on }) => {
       borderRadius={'2px'}
       bgcolor={on ? primary?.main : background?.light}
     />
-  )
-}
+  );
+};
 
 export const StepIndicator: React.FC = () => {
-  const { pathname } = useLocation()
+  const { pathname } = useLocation();
 
-  let step = 1
+  let step = 1;
   if (pathname.match(/^\/simple\/up-or-down/)) {
-    step = 2
+    step = 2;
   }
   if (pathname.match(/^\/simple\/choose-expiration/)) {
-    step = 3
+    step = 3;
   }
   if (pathname.match(/^\/simple\/choose-strike/)) {
-    step = 4
+    step = 4;
   }
   if (pathname.match(/^\/simple\/order-settings/)) {
-    step = 5
+    step = 5;
   }
   if (pathname.match(/^\/simple\/confirm-order/)) {
-    step = 6
+    step = 6;
   }
 
   return (
@@ -55,7 +55,7 @@ export const StepIndicator: React.FC = () => {
       <StepBar on={step > 4} />
       <StepBar on={step > 5} />
     </Box>
-  )
-}
+  );
+};
 
-export default memo(StepIndicator)
+export default memo(StepIndicator);

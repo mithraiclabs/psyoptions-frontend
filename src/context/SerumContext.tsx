@@ -1,24 +1,24 @@
-import React, { useState, createContext, useContext } from 'react'
-import { LocalSerumMarket } from '../types'
+import React, { useState, createContext, useContext } from 'react';
+import { LocalSerumMarket } from '../types';
 
 type ContextProps = {
-  serumMarkets: Record<string, LocalSerumMarket>
+  serumMarkets: Record<string, LocalSerumMarket>;
   setSerumMarkets: React.Dispatch<
     React.SetStateAction<Record<string, LocalSerumMarket>>
-  >
-}
+  >;
+};
 
 const SerumContext = createContext<ContextProps>({
   serumMarkets: {},
   setSerumMarkets: undefined,
-})
+});
 
-export const useSerumContext = () => useContext(SerumContext)
+export const useSerumContext = () => useContext(SerumContext);
 
-const initSerumMarkets: Record<string, LocalSerumMarket> = {}
+const initSerumMarkets: Record<string, LocalSerumMarket> = {};
 
 const SerumProvider: React.FC = ({ children }) => {
-  const [serumMarkets, setSerumMarkets] = useState(initSerumMarkets)
+  const [serumMarkets, setSerumMarkets] = useState(initSerumMarkets);
 
   return (
     <SerumContext.Provider
@@ -29,7 +29,7 @@ const SerumProvider: React.FC = ({ children }) => {
     >
       {children}
     </SerumContext.Provider>
-  )
-}
+  );
+};
 
-export { SerumContext, SerumProvider }
+export { SerumContext, SerumProvider };

@@ -1,1 +1,1 @@
-export * from './SimpleUI'
+export * from './SimpleUI';

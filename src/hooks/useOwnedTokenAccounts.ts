@@ -1,10 +1,10 @@
-import { useContext } from 'react'
+import { useContext } from 'react';
 import {
   OwnedTokenAccountsContext,
   OwnedTokenAccountsContextT,
-} from '../context/OwnedTokenAccounts'
+} from '../context/OwnedTokenAccounts';
 
 const useOwnedTokenAccounts = (): OwnedTokenAccountsContextT =>
-  useContext(OwnedTokenAccountsContext)
+  useContext(OwnedTokenAccountsContext);
 
-export default useOwnedTokenAccounts
+export default useOwnedTokenAccounts;

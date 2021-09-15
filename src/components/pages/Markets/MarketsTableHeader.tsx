@@ -1,26 +1,26 @@
-import React from 'react'
-import Box from '@material-ui/core/Box'
-import TableHead from '@material-ui/core/TableHead'
-import TableRow from '@material-ui/core/TableRow'
-import { ColumnDisplaySelector } from './ColumnDisplaySelector'
+import React from 'react';
+import Box from '@material-ui/core/Box';
+import TableHead from '@material-ui/core/TableHead';
+import TableRow from '@material-ui/core/TableRow';
+import { ColumnDisplaySelector } from './ColumnDisplaySelector';
 
-import { THeadCell, TCellStrike, StyledTooltip } from './styles'
+import { THeadCell, TCellStrike, StyledTooltip } from './styles';
 
 export const MarketsTableHeader: React.FC<{
-  uAssetSymbol: string
-  qAssetSymbol: string
-  showIV: boolean
-  showPriceChange: boolean
-  showVolume: boolean
-  showOI: boolean
-  showLastPrice: boolean
-  setShowIV: React.Dispatch<React.SetStateAction<boolean>>
-  setShowPriceChange: React.Dispatch<React.SetStateAction<boolean>>
-  setShowVolume: React.Dispatch<React.SetStateAction<boolean>>
-  setShowOI: React.Dispatch<React.SetStateAction<boolean>>
-  setShowLastPrice: React.Dispatch<React.SetStateAction<boolean>>
-  currentColumnsCount: number
-  setColumnsCount: (num: number) => void
+  uAssetSymbol: string;
+  qAssetSymbol: string;
+  showIV: boolean;
+  showPriceChange: boolean;
+  showVolume: boolean;
+  showOI: boolean;
+  showLastPrice: boolean;
+  setShowIV: React.Dispatch<React.SetStateAction<boolean>>;
+  setShowPriceChange: React.Dispatch<React.SetStateAction<boolean>>;
+  setShowVolume: React.Dispatch<React.SetStateAction<boolean>>;
+  setShowOI: React.Dispatch<React.SetStateAction<boolean>>;
+  setShowLastPrice: React.Dispatch<React.SetStateAction<boolean>>;
+  currentColumnsCount: number;
+  setColumnsCount: (num: number) => void;
 }> = React.memo(
   ({
     uAssetSymbol,
@@ -38,7 +38,7 @@ export const MarketsTableHeader: React.FC<{
     currentColumnsCount,
     setColumnsCount,
   }) => {
-    const colWidth = (1 / currentColumnsCount) * 100
+    const colWidth = (1 / currentColumnsCount) * 100;
 
     return (
       <TableHead>
@@ -80,6 +80,7 @@ export const MarketsTableHeader: React.FC<{
               showPriceChange={showPriceChange}
               showVolume={showVolume}
               showOI={showOI}
+              showLastPrice={showLastPrice}
               setShowIV={setShowIV}
               setShowPriceChange={setShowPriceChange}
               setShowVolume={setShowVolume}
@@ -296,7 +297,7 @@ export const MarketsTableHeader: React.FC<{
             </THeadCell>
           )}
           {showLastPrice && (
-            <THeadCell align="left" width={`${colWidth}%`}>
+            <THeadCell align="right" width={`${colWidth}%`}>
               <StyledTooltip
                 placement="top"
                 title={<Box p={1}>{`The price of the last matched order`}</Box>}
@@ -352,6 +353,6 @@ export const MarketsTableHeader: React.FC<{
           </THeadCell>
         </TableRow>
       </TableHead>
-    )
+    );
   },
-)
+);

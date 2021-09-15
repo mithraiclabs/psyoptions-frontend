@@ -1,7 +1,7 @@
-import React from 'react'
-import { withStyles, withTheme } from '@material-ui/core/styles'
-import Box from '@material-ui/core/Box'
-import Button from '@material-ui/core/Button'
+import React from 'react';
+import { withStyles, withTheme } from '@material-ui/core/styles';
+import Box from '@material-ui/core/Box';
+import Button from '@material-ui/core/Button';
 
 const StyledButton = withStyles(() => ({
   root: {
@@ -10,7 +10,7 @@ const StyledButton = withStyles(() => ({
     width: 'fit-content',
     marginRight: '4px',
   },
-}))(Button)
+}))(Button);
 
 const Tab = ({ children, selected, theme, onClick }) => {
   return (
@@ -26,7 +26,7 @@ const Tab = ({ children, selected, theme, onClick }) => {
         {children}
       </Box>
     </StyledButton>
-  )
-}
+  );
+};
 
-export default withTheme(Tab)
+export default withTheme(Tab);

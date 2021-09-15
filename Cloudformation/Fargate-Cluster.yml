@@ -16,6 +16,14 @@ Parameters:
   DomainCertificateArn:
     Description: The ARN of the SSL/TLS certificate to use for the secure load balancer listener
     Type: String
+  ShowInitializationPage:
+    AllowedValues: ['true', 'false']
+    Default: false
+    Description: Should the initialization page be show
+    Type: String
+
+Conditions:
+  ShowInitPage: !Equals [!Ref ShowInitializationPage, 'true']
 
 Resources:
   # Create CloudWatch LogGroup for the task logs
@@ -144,16 +152,16 @@ Resources:
               Value: !Ref ContainerPort
             - Name: APP_ENABLED
               Value: true
+            - Name: INITIALIZE_PAGE_ENABLED
+              Value: !If [ShowInitPage, true, false]
             - Name: DEVNET_PROGRAM_ID
               Value: GDvqQy3FkDB2wyNwgZGp5YkmRMUmWbhNNWDMYKbLSZ5N
+            - Name: MAINNET_PROGRAM_ID
+              Value: AAcHauRu6eUDePN3hDDAUTbgyRq5xFbRZJCLsUdpBCJb
             - Name: DEVNET_DEX_PROGRAM_ID
               Value: DESVgJVGajEgKGXhb6XmqDHGz3VjdgP7rEVESBgxmroY
             - Name: MAINNET_DEX_PROGRAM_ID
-              Value: EUqojwWA2rd19FZrzeBncJsm38Jm1hEhE3zsmX3bRc2o
-            - Name: APP_PASSWORD
-              Value: 4448579c7dd64a7f824ce8a28fb51376ebf05039
-            - Name: APP_PASSWORD_PROTECTED
-              Value: true
+              Value: 9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin
             - Name: SENTRY_ENVIRONMENT
               Value: !Ref Environment
             - Name: DEVNET_FAUCET_USDC

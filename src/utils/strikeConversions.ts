@@ -1,5 +1,5 @@
-import BigNumber from 'bignumber.js'
-import { Asset } from 'src/types'
+import BigNumber from 'bignumber.js';
+import { Asset } from 'src/types';
 
 /**
  * Given a readable strikePrice and the underlyingAmountPerContract in the U64 (BigNumber)
@@ -10,19 +10,19 @@ export const convertStrikeToAmountsPer = (
   underlyingAmountPerContract: BigNumber,
   underlyingAsset: Asset,
   quoteAsset: Asset,
-) => {
-  const quoteDecimals = new BigNumber(quoteAsset.decimals)
-  const quoteDecimalFactor = new BigNumber(10).pow(quoteDecimals)
-  const quotePerUnderlying = strikePice.multipliedBy(quoteDecimalFactor)
+): BigNumber => {
+  const quoteDecimals = new BigNumber(quoteAsset.decimals);
+  const quoteDecimalFactor = new BigNumber(10).pow(quoteDecimals);
+  const quotePerUnderlying = strikePice.multipliedBy(quoteDecimalFactor);
 
-  const underlyingDecimals = new BigNumber(underlyingAsset.decimals)
-  const underlyingDecimalFactor = new BigNumber(10).pow(underlyingDecimals)
+  const underlyingDecimals = new BigNumber(underlyingAsset.decimals);
+  const underlyingDecimalFactor = new BigNumber(10).pow(underlyingDecimals);
   const wholeUnderlyingPerContract = underlyingAmountPerContract.div(
     underlyingDecimalFactor,
-  )
+  );
 
-  return quotePerUnderlying.multipliedBy(wholeUnderlyingPerContract)
-}
+  return quotePerUnderlying.multipliedBy(wholeUnderlyingPerContract);
+};
 
 /**
  * Given the U64 (BigNumber) representation of the assets for the contract and the asset's meta
@@ -35,14 +35,14 @@ export const convertAmountsPerToStrike = (
   quoteAmountPerContract: BigNumber,
   quoteAsset: Asset,
   underlyingAsset: Asset,
-) => {
-  const quoteDecimals = new BigNumber(quoteAsset.decimals)
-  const quoteDecimalFactor = new BigNumber(10).pow(quoteDecimals)
-  const wholeQuotePerContract = quoteAmountPerContract.div(quoteDecimalFactor)
-  const underlyingDecimals = new BigNumber(underlyingAsset.decimals)
-  const underlyingDecimalFactor = new BigNumber(10).pow(underlyingDecimals)
+): BigNumber => {
+  const quoteDecimals = new BigNumber(quoteAsset.decimals);
+  const quoteDecimalFactor = new BigNumber(10).pow(quoteDecimals);
+  const wholeQuotePerContract = quoteAmountPerContract.div(quoteDecimalFactor);
+  const underlyingDecimals = new BigNumber(underlyingAsset.decimals);
+  const underlyingDecimalFactor = new BigNumber(10).pow(underlyingDecimals);
   const wholeUnderlyingPerContract = underlyingAmountPerContract.div(
     underlyingDecimalFactor,
-  )
-  return wholeQuotePerContract.div(wholeUnderlyingPerContract)
-}
+  );
+  return wholeQuotePerContract.div(wholeUnderlyingPerContract);
+};

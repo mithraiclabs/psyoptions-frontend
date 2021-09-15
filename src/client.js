@@ -1,11 +1,11 @@
-import React from 'react'
-import ReactDOM from 'react-dom'
-import * as Sentry from '@sentry/react'
-import { Integrations } from '@sentry/tracing'
+import React from 'react';
+import ReactDOM from 'react-dom';
+import * as Sentry from '@sentry/react';
+import { Integrations } from '@sentry/tracing';
 
-import './client-config'
+import './client-config';
 
-import App from './components/App'
+import App from './components/App';
 
 // Don't log errors in local development
 if (process.env.NODE_ENV === 'production') {
@@ -20,7 +20,7 @@ if (process.env.NODE_ENV === 'production') {
     // We recommend adjusting this value in production, or using tracesSampler
     // for finer control
     tracesSampleRate: 1.0,
-  })
+  });
 }
 
 const run = async () => {
@@ -28,16 +28,16 @@ const run = async () => {
     if (navigator?.serviceWorker) {
       await navigator.serviceWorker.register(
         `/${window.process.env.SERVICE_WORKER}`,
-      )
+      );
     }
   } catch (err) {
-    Sentry.captureException(err)
+    Sentry.captureException(err);
   }
 
   ReactDOM.hydrate(
     <App suppressHydrationWarning />,
     document.querySelector('#app'),
-  )
-}
+  );
+};
 
-run()
+run();

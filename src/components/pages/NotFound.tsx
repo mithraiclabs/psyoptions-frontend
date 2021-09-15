@@ -1,6 +1,6 @@
-import React from 'react'
-import Box from '@material-ui/core/Box'
-import Page from './Page'
+import React from 'react';
+import Box from '@material-ui/core/Box';
+import Page from './Page';
 
 const NotFound = () => (
   <Page>
@@ -17,6 +17,6 @@ const NotFound = () => (
       <h3>Looks like you&apos;re out of the money</h3>
     </Box>
   </Page>
-)
+);
 
-export default NotFound
+export default NotFound;

@@ -1,12 +1,12 @@
-import React from 'react'
+import React from 'react';
 
-import Snackbar from '@material-ui/core/Snackbar'
-import IconButton from '@material-ui/core/IconButton'
-import CloseIcon from '@material-ui/icons/Close'
+import Snackbar from '@material-ui/core/Snackbar';
+import IconButton from '@material-ui/core/IconButton';
+import CloseIcon from '@material-ui/icons/Close';
 
-import Box from '@material-ui/core/Box'
-import useNotifications from '../hooks/useNotifications'
-import theme from '../utils/theme'
+import Box from '@material-ui/core/Box';
+import useNotifications from '../hooks/useNotifications';
+import theme from '../utils/theme';
 
 const SimpleSnackbar = ({
   message = '',
@@ -19,9 +19,9 @@ const SimpleSnackbar = ({
     autoHideDuration={6000}
     onClose={(event, reason) => {
       if (reason === 'clickaway') {
-        return
+        return;
       }
-      closeNotification() // eslint-disable-line
+      closeNotification(); // eslint-disable-line
     }}
     style={{
       position: 'relative',
@@ -69,10 +69,10 @@ const SimpleSnackbar = ({
       </Box>
     </Box>
   </Snackbar>
-)
+);
 
 const Notifications = () => {
-  const { notifications, closeNotification } = useNotifications()
+  const { notifications, closeNotification } = useNotifications();
 
   return (
     <Box
@@ -93,7 +93,7 @@ const Notifications = () => {
         />
       ))}
     </Box>
-  )
-}
+  );
+};
 
-export default Notifications
+export default Notifications;

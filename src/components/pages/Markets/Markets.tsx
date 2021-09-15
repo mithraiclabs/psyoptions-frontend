@@ -1,51 +1,47 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-import React, { useState, useEffect, useMemo, useCallback } from 'react'
-import Box from '@material-ui/core/Box'
-import FormControlLabel from '@material-ui/core/FormControlLabel'
-import Switch from '@material-ui/core/Switch'
-import Table from '@material-ui/core/Table'
-import TableBody from '@material-ui/core/TableBody'
-import TableContainer from '@material-ui/core/TableContainer'
-import TableRow from '@material-ui/core/TableRow'
-import ChevronLeft from '@material-ui/icons/ChevronLeft'
-import ChevronRight from '@material-ui/icons/ChevronRight'
-import { PublicKey } from '@solana/web3.js'
-import moment from 'moment'
-import BigNumber from 'bignumber.js'
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import Box from '@material-ui/core/Box';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
+import Switch from '@material-ui/core/Switch';
+import Table from '@material-ui/core/Table';
+import TableBody from '@material-ui/core/TableBody';
+import TableContainer from '@material-ui/core/TableContainer';
+import TableRow from '@material-ui/core/TableRow';
+import ChevronLeft from '@material-ui/icons/ChevronLeft';
+import ChevronRight from '@material-ui/icons/ChevronRight';
+import { PublicKey } from '@solana/web3.js';
+import moment from 'moment';
+import BigNumber from 'bignumber.js';
 
-import theme from '../../../utils/theme'
-import { getStrikePrices, intervals } from '../../../utils/getStrikePrices'
-import { getPriceFromSerumOrderbook } from '../../../utils/orderbook'
+import theme from '../../../utils/theme';
 
-import { useBonfidaMarkPrice } from '../../../hooks/useBonfidaMarkPrice'
-import useAssetList from '../../../hooks/useAssetList'
-import useOptionsMarkets from '../../../hooks/useOptionsMarkets'
-import useOptionsChain from '../../../hooks/useOptionsChain'
-import useSerum from '../../../hooks/useSerum'
-import {
-  useSerumOrderbook,
-  useSubscribeSerumOrderbook,
-} from '../../../hooks/Serum'
-import useExpirationDate from '../../../hooks/useExpirationDate'
+import useAssetList from '../../../hooks/useAssetList';
+import useOptionsMarkets from '../../../hooks/useOptionsMarkets';
+import useOptionsChain from '../../../hooks/useOptionsChain';
+import useSerum from '../../../hooks/useSerum';
+import useExpirationDate from '../../../hooks/useExpirationDate';
 
-import { MarketDataProvider } from '../../../context/MarketDataContext'
+import { MarketDataProvider } from '../../../context/MarketDataContext';
 
-import Page from '../Page'
-import Select from '../../Select'
-import SelectAsset from '../../SelectAsset'
-import CallPutRow from './CallPutRow'
-import BuySellDialog from '../../BuySellDialog'
-import Loading from '../../Loading'
-import OpenOrders from '../../OpenOrders'
-import { ContractSizeSelector } from '../../ContractSizeSelector'
+import Page from '../Page';
+import Select from '../../Select';
+import SelectAsset from '../../SelectAsset';
+import CallPutRow from './CallPutRow';
+import BuySellDialog from '../../BuySellDialog';
+import Loading from '../../Loading';
+import OpenOrders from '../../OpenOrders';
+import UnsettledBalancesTable from '../../UnsettledBalancesTable';
+import { ContractSizeSelector } from '../../ContractSizeSelector';
 
-import { TCellLoading, THeadCell, TCellStrike, PageButton } from './styles'
-import Balances from './MarketsBalances'
-import { MarketsTableHeader } from './MarketsTableHeader'
-import { CallOrPut, OptionType } from '../../../types'
-import { useBatchLoadMints } from '../../../hooks/SPLToken'
+import { TCellLoading, THeadCell, TCellStrike, PageButton } from './styles';
+import Balances from './MarketsBalances';
+import MarketsUnsettledBalances from './MarketsUnsettledBalances';
+import { MarketsTableHeader } from './MarketsTableHeader';
+import { CallOrPut, OptionType, SerumMarketAndProgramId } from '../../../types';
+import { useBatchLoadMints } from '../../../hooks/SPLToken';
+import { useSerumPriceByAssets } from '../../../hooks/Serum/useSerumPriceByAssets';
 
-const dblsp = `${'\u00A0'}${'\u00A0'}`
+const dblsp = `${'\u00A0'}${'\u00A0'}`;
 
 const defaultSizeOptions = [
   {
@@ -64,7 +60,7 @@ const defaultSizeOptions = [
     value: 0.1,
     text: '0.1',
   },
-]
+];
 
 const rowTemplate = {
   call: {
@@ -89,118 +85,86 @@ const rowTemplate = {
     emptyRow: true,
     actionInProgress: false,
   },
-}
+};
 
-const USE_BONFIDA_MARK_PRICE = true
-
-const defaultContractSizes = {
-  BTC: 0.1,
-  other: 100,
-}
-
-const Markets = () => {
-  const { uAsset, qAsset, setUAsset, assetListLoading } = useAssetList()
-  const { selectedDate: date, setSelectedDate, dates } = useExpirationDate()
-  const [contractSize, setContractSize] = useState(100)
-  const { chains, buildOptionsChain } = useOptionsChain()
-  const { getSizes, marketsLoading } = useOptionsMarkets()
-  const { serumMarkets, fetchMultipleSerumMarkets } = useSerum()
-  const [round, setRound] = useState(true)
-  const [buySellDialogOpen, setBuySellDialogOpen] = useState(false)
-  const [callPutData, setCallPutData] = useState({ type: 'call' } as CallOrPut)
-  const [showAllStrikes] = useState(true) // TODO: let user configure this
-  const [page, setPage] = useState(0)
-  const [initialMarkPrice, setInitialMarkPrice] = useState(null)
-  const [sizeOptions, setSizeOptions] = useState(defaultSizeOptions)
-  const [limitPrice, setLimitPrice] = useState('0')
-  const rowsPerPage = 7
-  const [showIV, setShowIV] = useState(true)
-  const [showPriceChange, setShowPriceChange] = useState(true)
-  const [showLastPrice, setShowLastPrice] = useState(true)
-  const [showVolume, setShowVolume] = useState(true)
-  const [showOI, setShowOI] = useState(true)
-  const [currentColumnsCount, setColumnsCount] = useState(19) // 19 columns
+const Markets: React.VFC = () => {
+  const { uAsset, qAsset, setUAsset, assetListLoading } = useAssetList();
+  const { selectedDate: date, setSelectedDate, dates } = useExpirationDate();
+  const [contractSize, setContractSize] = useState(100);
+  const { chains, buildOptionsChain } = useOptionsChain();
+  const { getSizes, marketsLoading } = useOptionsMarkets();
+  const { serumMarkets, fetchMultipleSerumMarkets } = useSerum();
+  const [round, setRound] = useState(true);
+  const [buySellDialogOpen, setBuySellDialogOpen] = useState(false);
+  const [callPutData, setCallPutData] = useState({ type: 'call' } as CallOrPut);
+  const [page, setPage] = useState(0);
+  const [initialMarkPrice, setInitialMarkPrice] = useState(null);
+  const [sizeOptions, setSizeOptions] = useState(defaultSizeOptions);
+  const [limitPrice, setLimitPrice] = useState('0');
+  const rowsPerPage = 7;
+  const [showIV, setShowIV] = useState(true);
+  const [showPriceChange, setShowPriceChange] = useState(true);
+  const [showLastPrice, setShowLastPrice] = useState(true);
+  const [showVolume, setShowVolume] = useState(true);
+  const [showOI, setShowOI] = useState(true);
+  const [currentColumnsCount, setColumnsCount] = useState(19); // 19 columns
 
   useEffect(() => {
     const availableSizes = getSizes({
       uAssetSymbol: uAsset?.tokenSymbol,
       qAssetSymbol: qAsset?.tokenSymbol,
-    })
+    });
     setSizeOptions(
       availableSizes.map((s) => ({ text: s.toString(), value: parseFloat(s) })),
-    )
-  }, [getSizes, uAsset?.tokenSymbol, qAsset?.tokenSymbol])
+    );
+  }, [getSizes, uAsset?.tokenSymbol, qAsset?.tokenSymbol]);
 
   // Unfortunately we need to set contract size in a useEffect because uAsset is asynchronously loaded
   useEffect(() => {
     if (sizeOptions.find((s) => s.value === uAsset?.defaultContractSize)) {
-      setContractSize(uAsset.defaultContractSize)
+      setContractSize(uAsset.defaultContractSize);
     } else {
       if (sizeOptions[0]) {
-        setContractSize(sizeOptions[0].value)
+        setContractSize(sizeOptions[0].value);
       }
     }
-  }, [uAsset?.defaultContractSize, sizeOptions])
+  }, [uAsset?.defaultContractSize, sizeOptions]);
 
-  // mainnet mark price from bonfida
-  const bonfidaMarkPrice = useBonfidaMarkPrice({
-    uAssetSymbol: uAsset?.tokenSymbol,
-    qAssetSymbol: qAsset?.tokenSymbol,
-  })
-
-  const underlyingSerumMarketKey = `${uAsset?.mintAddress}-${qAsset?.mintAddress}`
-  const { orderbook: underlyingOrderbook } = useSerumOrderbook(
-    underlyingSerumMarketKey,
-  )
-  useSubscribeSerumOrderbook(underlyingSerumMarketKey)
-
-  const markPrice = USE_BONFIDA_MARK_PRICE
-    ? bonfidaMarkPrice
-    : getPriceFromSerumOrderbook(underlyingOrderbook)
+  const markPrice = useSerumPriceByAssets(
+    uAsset?.mintAddress,
+    qAsset?.mintAddress,
+  );
 
   // We have to use this `initialMarkPrice` to filter the chains, otherwise many components will
   // re-render every time a new price is received from a websocket. This triggers unnecessary batch
   // requests to the chain.
   useEffect(() => {
     if (!initialMarkPrice) {
-      setInitialMarkPrice(markPrice)
+      setInitialMarkPrice(markPrice);
     }
-  }, [initialMarkPrice, markPrice, setInitialMarkPrice])
+  }, [initialMarkPrice, markPrice, setInitialMarkPrice]);
 
-  const supportedStrikePrices = useMemo(() => {
-    if (initialMarkPrice && showAllStrikes === false) {
-      return getStrikePrices(initialMarkPrice).map((price) => price.toNumber())
-    }
-    return intervals.map((price) => price.toNumber())
-  }, [initialMarkPrice, showAllStrikes])
+  const fullPageLoading = assetListLoading || marketsLoading;
 
-  const fullPageLoading = assetListLoading || marketsLoading
-
-  let precision
+  let precision;
   if (round && chains[0]?.strike) {
-    const n = chains[0].strike
+    const n = chains[0].strike;
     if (n >= new BigNumber(1)) {
-      precision = 2
+      precision = 2;
     } else {
-      const s = n.toString(10).replace('.', '')
-      const numZeros = s.match(/^0+/)[0]?.length || 0
-      precision = 3 + numZeros
+      const s = n.toString(10).replace('.', '');
+      const numZeros = s.match(/^0+/)[0]?.length || 0;
+      precision = 3 + numZeros;
     }
   }
 
-  const filteredChain = useMemo(
-    () =>
-      chains.filter((row) => {
-        return supportedStrikePrices.includes(row.strike.toNumber())
-      }),
-    [chains, supportedStrikePrices],
-  )
+  const filteredChain = chains;
 
-  const numberOfPages = Math.ceil(filteredChain.length / rowsPerPage)
+  const numberOfPages = Math.ceil(filteredChain.length / rowsPerPage);
 
   const rowsToDisplay = useMemo(() => {
-    return filteredChain.slice(rowsPerPage * page, rowsPerPage * (page + 1))
-  }, [filteredChain, page])
+    return filteredChain.slice(rowsPerPage * page, rowsPerPage * (page + 1));
+  }, [filteredChain, page]);
 
   // handle pagination and add
   const rows = useMemo(
@@ -214,78 +178,88 @@ const Markets = () => {
         })),
     ],
     [rowsToDisplay],
-  )
+  );
 
   // batch request the option mint information for each row
   const optionMints = useMemo(() => {
-    const tmp: PublicKey[] = []
+    const tmp: PublicKey[] = [];
     rows.forEach((row) => {
       if (row?.call?.optionMintKey) {
-        tmp.push(row?.call?.optionMintKey)
+        tmp.push(row?.call?.optionMintKey);
       }
       if (row?.put?.optionMintKey) {
-        tmp.push(row?.put?.optionMintKey)
+        tmp.push(row?.put?.optionMintKey);
       }
-    })
-    return tmp
-  }, [rows])
-  useBatchLoadMints(optionMints)
+    });
+    return tmp;
+  }, [rows]);
+  useBatchLoadMints(optionMints);
 
   // Flat markets object for open orders component
-  const marketsFlat = filteredChain
-    .map((row) => [
-      {
-        ...row.call,
-        type: OptionType.CALL,
-        strikePrice: round
-          ? row.strike.toFixed(precision)
-          : row.strike.toString(10),
-      },
-      {
-        ...row.put,
-        type: OptionType.PUT,
-        strikePrice: round
-          ? row.strike.toFixed(precision)
-          : row.strike.toString(10),
-      },
-    ])
-    .reduce((a, b) => [...a, ...b], [])
-    .filter((callOrPut) => !!callOrPut)
+  const marketsFlat = useMemo(
+    () =>
+      filteredChain
+        .map((row) => [
+          {
+            ...row.call,
+            type: OptionType.CALL,
+            strikePrice: round
+              ? row.strike.toFixed(precision)
+              : row.strike.toString(10),
+          },
+          {
+            ...row.put,
+            type: OptionType.PUT,
+            strikePrice: round
+              ? row.strike.toFixed(precision)
+              : row.strike.toString(10),
+          },
+        ])
+        .reduce((a, b) => [...a, ...b], [])
+        .filter((callOrPut) => !!callOrPut),
+    [filteredChain, precision, round],
+  );
 
   useEffect(() => {
-    buildOptionsChain(date.unix(), contractSize)
-  }, [buildOptionsChain, contractSize, date])
+    buildOptionsChain(date.unix(), contractSize);
+  }, [buildOptionsChain, contractSize, date]);
 
   useEffect(() => {
     // Load serum markets when the options chain changes
     // Only if they don't already exist for the matching call/put
-    const serumKeys: PublicKey[] = []
+    const serumKeys: SerumMarketAndProgramId[] = [];
     rowsToDisplay.forEach(({ call, put }) => {
       if (
         call?.serumMarketKey &&
         !serumMarkets[call.serumMarketKey.toString()]
       ) {
-        serumKeys.push(call.serumMarketKey)
+        serumKeys.push({
+          serumMarketKey: call.serumMarketKey,
+          serumProgramId: call.serumProgramId,
+        });
       }
       if (put?.serumMarketKey && !serumMarkets[put.serumMarketKey.toString()]) {
-        serumKeys.push(put.serumMarketKey)
+        serumKeys.push({
+          serumMarketKey: put.serumMarketKey,
+          serumProgramId: put.serumProgramId,
+        });
       }
-    })
+    });
     if (serumKeys.length) {
-      fetchMultipleSerumMarkets(serumKeys)
+      fetchMultipleSerumMarkets(serumKeys);
     }
-  }, [chains, rowsToDisplay, fetchMultipleSerumMarkets, serumMarkets])
+  }, [chains, rowsToDisplay, fetchMultipleSerumMarkets, serumMarkets]);
 
   // Open buy/sell/mint modal
   const handleBuySellClick = useCallback((callOrPut) => {
-    setCallPutData(callOrPut)
-    setBuySellDialogOpen(true)
-  }, [])
+    setCallPutData(callOrPut);
+    setBuySellDialogOpen(true);
+  }, []);
 
   const updateContractSize = useCallback(
     (e) => setContractSize(e.target.value),
     [],
-  )
+  );
 
   const buySellDialogHeading = callPutData
     ? `${callPutData.uAssetSymbol}-${
@@ -293,17 +267,17 @@ const Markets = () => {
       }${dblsp}|${dblsp}${date.format(
         'D MMM YYYY',
       )}${dblsp}|${dblsp}${callPutData.type.slice(0, 1).toUpperCase()}`
-    : '--'
+    : '--';
 
-  const currentPageStart = page * rowsPerPage + 1
+  const currentPageStart = page * rowsPerPage + 1;
   const currentPageEnd = Math.min(
     rowsPerPage * (page + 1),
     filteredChain.length,
-  )
+  );
   const currentPageLabel =
     currentPageStart !== currentPageEnd
       ? `${currentPageStart}-${currentPageEnd} of ${filteredChain.length}`
-      : `${currentPageStart} of ${filteredChain.length}`
+      : `${currentPageStart} of ${filteredChain.length}`;
 
   return (
     <MarketDataProvider chain={chains}>
@@ -347,7 +321,7 @@ const Markets = () => {
               alignItems={['left', 'left', 'center']}
               justifyContent="space-between"
             >
-              <Box px={0} py={0} width={['100%', '100%', '300px']}>
+              <Box p={[2, 2, 0]} width={['100%', '100%', '300px']}>
                 <Select
                   formControlOptions={{
                     variant: 'filled',
@@ -364,15 +338,23 @@ const Markets = () => {
                   }))}
                 />
               </Box>
-              <Box px={[0, 0, 2]} py={0} width={['100%', '100%', '200px']}>
+              <Box
+                pt={[0, 0, 2]}
+                pb={[2, 2, 2]}
+                px={2}
+                width={['100%', '100%', '200px']}
+              >
                 <ContractSizeSelector
                   onChange={updateContractSize}
                   value={contractSize}
                   options={sizeOptions}
                 />
               </Box>
-              <Box py={[2, 2, 0]}>
+              <Box px={[0, 0, 2]} py={[2, 2, 0]}>
                 <Balances />
+              </Box>
+              <Box py={[2, 2, 0]}>
+                <MarketsUnsettledBalances />
               </Box>
             </Box>
             <Box px={[1, 1, 0]} py={[2, 2, 1]} width={['100%', '100%', 'auto']}>
@@ -393,7 +375,7 @@ const Markets = () => {
                       disabled={false}
                       selectedAsset={uAsset}
                       onSelectAsset={(asset) => {
-                        setUAsset(asset)
+                        setUAsset(asset);
                       }}
                     />
                   </Box>
@@ -464,8 +446,9 @@ const Markets = () => {
                         showVolume={showVolume}
                         showLastPrice={showLastPrice}
                         showOI={showOI}
+                        contractSize={contractSize}
                       />
-                    )
+                    );
                   })}
                   <TableRow>
                     <THeadCell
@@ -546,11 +529,18 @@ const Markets = () => {
             <Box>
               <OpenOrders optionMarkets={marketsFlat} />
             </Box>
+            <Box id="unsettled-balances-table">
+              <UnsettledBalancesTable
+                uAssetDecimals={uAsset?.decimals}
+                qAssetDecimals={qAsset?.decimals}
+                optionMarkets={marketsFlat}
+              />
+            </Box>
           </Box>
         </Box>
       </Page>
     </MarketDataProvider>
-  )
-}
+  );
+};
 
-export default Markets
+export default Markets;

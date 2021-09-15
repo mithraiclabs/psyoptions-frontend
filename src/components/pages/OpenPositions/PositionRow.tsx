@@ -1,22 +1,20 @@
-import React, { useCallback, useState } from 'react'
-import Box from '@material-ui/core/Box'
-import Collapse from '@material-ui/core/Collapse'
-import Tooltip from '@material-ui/core/Tooltip'
-import Avatar from '@material-ui/core/Avatar'
-import Button from '@material-ui/core/Button'
-import KeyboardArrowDown from '@material-ui/icons/KeyboardArrowDown'
-import { makeStyles, withStyles, useTheme } from '@material-ui/core/styles'
-import * as Sentry from '@sentry/react'
-import BigNumber from 'bignumber.js'
+import React, { useCallback, useState } from 'react';
+import Box from '@material-ui/core/Box';
+import Collapse from '@material-ui/core/Collapse';
+import Button from '@material-ui/core/Button';
+import Avatar from '@material-ui/core/Avatar';
+import KeyboardArrowDown from '@material-ui/icons/KeyboardArrowDown';
+import { makeStyles, useTheme } from '@material-ui/core/styles';
+import BigNumber from 'bignumber.js';
 
-import { PublicKey } from '@solana/web3.js'
-import useExerciseOpenPosition from '../../../hooks/useExerciseOpenPosition'
-import useOwnedTokenAccounts from '../../../hooks/useOwnedTokenAccounts'
-import useNotifications from '../../../hooks/useNotifications'
-import useAssetList from '../../../hooks/useAssetList'
-import { useSerumMarket } from '../../../hooks/Serum'
-import { formatExpirationTimestamp } from '../../../utils/format'
-import { OptionMarket, OptionType, TokenAccount } from '../../../types'
+import ExerciseDialog from './ExerciseDialog';
+import useAssetList from '../../../hooks/useAssetList';
+import {
+  formatExpirationTimestamp,
+  formatExpirationTimestampDate,
+} from '../../../utils/format';
+import { OptionMarket, OptionType, TokenAccount } from '../../../types';
+import { usePrices } from '../../../context/PricesContext';
 
 const useStyles = makeStyles({
   dropdownOpen: {
@@ -25,123 +23,95 @@ const useStyles = makeStyles({
   dropdownClosed: {
     transform: 'rotate(0)',
   },
-})
-
-const StyledTooltip = withStyles((theme) => ({
-  tooltip: {
-    backgroundColor: (theme.palette.background as any).lighter,
-    maxWidth: 370,
-    fontSize: '14px',
-    lineHeight: '18px',
-  },
-}))(Tooltip)
+});
 
 const PositionRow: React.VFC<{
   row: {
-    accounts: TokenAccount[]
-    assetPair: string
-    expiration: number
-    market: OptionMarket
-    size: number
-    strikePrice: string
-    qAssetSymbol: string
-    qAssetMintAddress: string
-    uAssetSymbol: string
-    uAssetMintAddress: string
-    amountPerContract: BigNumber
-    quoteAmountPerContract: BigNumber
-  }
+    accounts: TokenAccount[];
+    assetPair: string;
+    expiration: number;
+    market: OptionMarket;
+    size: number;
+    strikePrice: string;
+    qAssetSymbol: string;
+    qAssetMintAddress: string;
+    uAssetSymbol: string;
+    uAssetMintAddress: string;
+    amountPerContract: BigNumber;
+    quoteAmountPerContract: BigNumber;
+  };
 }> = ({ row }) => {
-  const classes = useStyles()
-  const [visible, setVisible] = useState(false)
-  const { supportedAssets } = useAssetList()
-  const { ownedTokenAccounts } = useOwnedTokenAccounts()
-  const { pushNotification } = useNotifications()
-  useSerumMarket(
-    row.market.serumMarketKey,
-    new PublicKey(row.market.optionMintKey),
-    new PublicKey(row?.qAssetMintAddress),
-  )
-  const nowInSeconds = Date.now() / 1000
-  const expired = row.expiration <= nowInSeconds
+  const classes = useStyles();
+  const [visible, setVisible] = useState(false);
+  const { supportedAssets } = useAssetList();
+  const theme = useTheme();
+  const { prices } = usePrices();
+  const [exerciseDialogOpen, setExerciseDialogOpen] = useState(false);
 
-  const theme = useTheme()
+  const nowInSeconds = Date.now() / 1000;
+  const expired = row.expiration <= nowInSeconds;
 
-  // const { orderbook } = useSerumOrderbook(serumMarketKey)
-  // const price = getPriceFromSerumOrderbook(orderbook)
-
-  // TODO -- The way we were getting market price was incorrect because it was pulling in the price of the options themselves, not the underlying asset. We should be pulling in the price of the underlying asset so we can calculate how much profit would be made from exercising. I left the above code in so that when we fix it later we don't have to start over.
-  const price = null
-
-  let optionType: OptionType
+  let optionType: OptionType;
   if (row?.uAssetSymbol) {
     optionType = row?.uAssetSymbol?.match(/^USD/)
       ? OptionType.PUT
-      : OptionType.CALL
+      : OptionType.CALL;
   }
+
+  const price =
+    optionType === OptionType.CALL
+      ? prices[row?.uAssetSymbol]
+      : prices[row?.qAssetSymbol];
 
   const strike =
     optionType === OptionType.PUT
       ? row.amountPerContract.dividedBy(row.quoteAmountPerContract).toString()
-      : row.market.strike.toString(10)
+      : row.market.strike.toString(10);
 
   const contractSize =
     optionType === OptionType.CALL
       ? row.amountPerContract.toString()
-      : row.quoteAmountPerContract.toString()
+      : row.quoteAmountPerContract.toString();
 
   const onRowClick = () => {
     if (row.accounts.length > 1) {
-      setVisible((vis) => !vis)
+      setVisible((vis) => !vis);
     }
-  }
+  };
 
-  const ownedQAssetKey = ownedTokenAccounts[row.qAssetMintAddress]?.[0]?.pubKey
-  const ownedUAssetKey = ownedTokenAccounts[row.uAssetMintAddress]?.[0]?.pubKey
-  const ownedOAssetKey =
-    ownedTokenAccounts[row.market.optionMintKey.toString()]?.[0]?.pubKey
-
-  const { exercise } = useExerciseOpenPosition(
-    row.market,
-    // TODO remove `toString` when useExerciseOpenPosition is refactored
-    ownedQAssetKey && ownedQAssetKey.toString(),
-    ownedUAssetKey && ownedUAssetKey.toString(),
-    ownedOAssetKey && ownedOAssetKey.toString(),
-  )
-
-  const handleExercisePosition = useCallback(async () => {
-    try {
-      await exercise()
-    } catch (err) {
-      Sentry.captureException(err)
-      pushNotification({
-        severity: 'error',
-        message: `${err}`,
-      })
-    }
-  }, [exercise, pushNotification])
+  const openExerciseDialog = useCallback(() => {
+    setExerciseDialogOpen(true)
+  }, [])
 
   const uAssetSymbol =
-    optionType === 'put' ? row?.qAssetSymbol : row?.uAssetSymbol
+    optionType === 'put' ? row?.qAssetSymbol : row?.uAssetSymbol;
+
+  const qAssetSymbol =
+    optionType === 'put' ? row?.uAssetSymbol : row?.qAssetSymbol;
 
   const uAssetImage = supportedAssets.find(
     (asset) =>
       asset?.mintAddress ===
       (optionType === 'put' ? row?.qAssetMintAddress : row?.uAssetMintAddress),
-  )?.icon
-
-  const exerciseTooltipLabel = `${
-    optionType === 'put' ? 'Sell' : 'Purchase'
-  } ${contractSize} ${
-    (optionType === 'put' ? row?.qAssetSymbol : row?.uAssetSymbol) ||
-    'underlying asset'
-  } for ${strike} ${
-    (optionType === 'put' ? row?.uAssetSymbol : row?.qAssetSymbol) ||
-    'quote asset'
-  }`
+  )?.icon;
 
   return (
     <>
+      <ExerciseDialog
+        open={exerciseDialogOpen}
+        onClose={() => setExerciseDialogOpen(false)}
+        positionSize={row.size}
+        uAssetSymbol={uAssetSymbol}
+        uAssetMintAddress={row?.uAssetMintAddress}
+        qAssetSymbol={qAssetSymbol}
+        qAssetMintAddress={row?.qAssetMintAddress}
+        optionType={optionType}
+        contractSize={contractSize}
+        strike={strike}
+        expiration={formatExpirationTimestampDate(row.expiration)}
+        price={price}
+        market={row.market}
+      />
       <Box
         onClick={onRowClick}
         role="checkbox"
@@ -187,15 +157,15 @@ const PositionRow: React.VFC<{
         <Box p={1} width="10%">
           {expired && <Box color={theme.palette.error.main}>Expired</Box>}
           {!expired && (
-            <StyledTooltip title={<Box p={2}>{exerciseTooltipLabel}</Box>}>
+            <Box>
               <Button
                 color="primary"
                 variant="outlined"
-                onClick={handleExercisePosition}
+                onClick={openExerciseDialog}
               >
                 Exercise
               </Button>
-            </StyledTooltip>
+            </Box>
           )}
         </Box>
         <Box width="5%" p={1} pr={2}>
@@ -236,17 +206,15 @@ const PositionRow: React.VFC<{
                     <Box color={theme.palette.error.main}>Expired</Box>
                   )}
                   {!expired && (
-                    <StyledTooltip
-                      title={<Box p={2}>{exerciseTooltipLabel}</Box>}
-                    >
+                    <Box>
                       <Button
                         color="primary"
                         variant="outlined"
-                        onClick={handleExercisePosition}
+                        onClick={openExerciseDialog}
                       >
                         Exercise
                       </Button>
-                    </StyledTooltip>
+                    </Box>
                   )}
                 </Box>
                 <Box width="5%" p={1} pr={2} />
@@ -256,7 +224,7 @@ const PositionRow: React.VFC<{
         </Collapse>
       </Box>
     </>
-  )
-}
+  );
+};
 
-export default React.memo(PositionRow)
+export default React.memo(PositionRow);

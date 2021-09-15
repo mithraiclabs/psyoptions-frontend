@@ -1,6 +1,6 @@
-import React from 'react'
-import theme from '../../utils/theme'
-import favicon from '../../../assets/psyoptions-logo-small.png'
+import React from 'react';
+import theme from '../../utils/theme';
+import favicon from '../../../assets/psyoptions-logo-small.png';
 
 const baseCss = `
   * {
@@ -66,7 +66,7 @@ const baseCss = `
     border: 1px solid ${theme.palette.background.main};
     border-radius: 12px;
   }
-`
+`;
 
 const Template = ({
   jsBundle,
@@ -122,6 +122,6 @@ const Template = ({
       />
     </body>
   </html>
-)
+);
 
-export default Template
+export default Template;

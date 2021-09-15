@@ -1,38 +1,38 @@
-import { useContext, useCallback, useMemo } from 'react'
-import BigNumber from 'bignumber.js'
-import { Market } from '@mithraic-labs/psyoptions'
-import { Connection, PublicKey } from '@solana/web3.js'
-import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import { useContext, useCallback, useMemo } from 'react';
+import BigNumber from 'bignumber.js';
+import { Market } from '@mithraic-labs/psyoptions';
+import { Connection, PublicKey } from '@solana/web3.js';
+import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 
-import useNotifications from './useNotifications'
-import useWallet from './useWallet'
-import useConnection from './useConnection'
-import useAssetList from './useAssetList'
-import useSendTransaction from './useSendTransaction'
+import useNotifications from './useNotifications';
+import useWallet from './useWallet';
+import useConnection from './useConnection';
+import useAssetList from './useAssetList';
+import useSendTransaction from './useSendTransaction';
 
-import { OptionsMarketsContext } from '../context/OptionsMarketsContext'
-import { useSolanaMeta } from '../context/SolanaMetaContext'
+import { OptionsMarketsContext } from '../context/OptionsMarketsContext';
+import { useSolanaMeta } from '../context/SolanaMetaContext';
 
-import { WRAPPED_SOL_ADDRESS } from '../utils/token'
+import { WRAPPED_SOL_ADDRESS } from '../utils/token';
 import {
   createMissingMintAccounts,
   mintInstructions,
-} from '../utils/instructions/index'
+} from '../utils/instructions/index';
 
-import { ClusterName, OptionMarket } from '../types'
-import { getSupportedMarketsByNetwork } from '../utils/networkInfo'
-import { findMarketByAssets } from '../utils/serum'
+import { ClusterName, OptionMarket } from '../types';
+import { getSupportedMarketsByNetwork } from '../utils/networkInfo';
+import { findMarketByAssets } from '../utils/serum';
 
 const useOptionsMarkets = () => {
-  const { pushErrorNotification, pushNotification } = useNotifications()
-  const { wallet, pubKey } = useWallet()
-  const { connection, dexProgramId, endpoint } = useConnection()
-  const { splTokenAccountRentBalance } = useSolanaMeta()
-  const { sendTransaction } = useSendTransaction()
+  const { pushErrorNotification, pushNotification } = useNotifications();
+  const { wallet, pubKey } = useWallet();
+  const { connection, dexProgramId, endpoint } = useConnection();
+  const { splTokenAccountRentBalance } = useSolanaMeta();
+  const { sendTransaction } = useSendTransaction();
   const { markets, setMarkets, marketsLoading, setMarketsLoading } = useContext(
     OptionsMarketsContext,
-  )
-  const { supportedAssets } = useAssetList()
+  );
+  const { supportedAssets } = useAssetList();
 
   /**
    * fetches PsyOptions market data individually. Should only be used for local development as
@@ -40,48 +40,48 @@ const useOptionsMarkets = () => {
    */
   const fetchMarketData = useCallback(async () => {
     try {
-      if (marketsLoading) return
-      if (!(connection instanceof Connection)) return
-      if (!endpoint.programId) return
-      if (!supportedAssets || supportedAssets.length === 0) return
+      if (marketsLoading) return;
+      if (!(connection instanceof Connection)) return;
+      if (!endpoint.programId) return;
+      if (!supportedAssets || supportedAssets.length === 0) return;
 
-      setMarketsLoading(true)
+      setMarketsLoading(true);
 
       const assets = supportedAssets.map(
         (asset) => new PublicKey(asset.mintAddress),
-      )
+      );
       const res = await Market.getAllMarketsBySplSupport(
         connection,
         new PublicKey(endpoint.programId),
         assets,
-      )
+      );
 
       // Transform the market data to our expectations
-      const newMarkets = {}
+      const newMarkets = {};
       await Promise.all(
         res.map(async (market) => {
-          const uAssetMint = market.marketData.underlyingAssetMintKey
+          const uAssetMint = market.marketData.underlyingAssetMintKey;
           const uAsset = supportedAssets.filter(
             (asset) => asset.mintAddress === uAssetMint.toString(),
-          )[0]
-          const qAssetMint = market.marketData.quoteAssetMintKey
+          )[0];
+          const qAssetMint = market.marketData.quoteAssetMintKey;
           const qAsset = supportedAssets.filter(
             (asset) => asset.mintAddress === qAssetMint.toString(),
-          )[0]
+          )[0];
 
           // BN.js doesn't handle decimals while bignumber.js can handle decimals of arbitrary sizes
           // So convert all BN types to BigNumber
           const amountPerContract = new BigNumber(
             market.marketData.amountPerContract.toString(10),
-          ).div(10 ** uAsset?.decimals)
+          ).div(10 ** uAsset?.decimals);
 
           const quoteAmountPerContract = new BigNumber(
             market.marketData.quoteAmountPerContract.toString(10),
-          ).div(10 ** qAsset?.decimals)
+          ).div(10 ** qAsset?.decimals);
 
           const strike = quoteAmountPerContract.div(
             amountPerContract.toString(10),
-          )
+          );
 
           const {
             expiration,
@@ -92,22 +92,22 @@ const useOptionsMarkets = () => {
             quoteAssetPoolKey,
             quoteAssetMintKey,
             optionMarketKey,
-          } = market.marketData
+          } = market.marketData;
 
           const serumMarket = await findMarketByAssets(
             connection,
             optionMintKey,
             quoteAssetMintKey,
             dexProgramId,
-          )
+          );
           // Short circuit if there is no serumMarket because OptionMarket must have a serumMarketKey
           if (!serumMarket) {
-            return
+            return;
           }
 
           const newMarket: OptionMarket = {
-            key: `${expiration}-${uAsset.tokenSymbol}-${
-              qAsset.tokenSymbol
+            key: `${expiration}-${uAsset?.tokenSymbol}-${
+              qAsset?.tokenSymbol
             }-${amountPerContract.toString()}-${amountPerContract.toString()}/${quoteAmountPerContract.toString()}`,
             amountPerContract,
             quoteAmountPerContract,
@@ -126,70 +126,72 @@ const useOptionsMarkets = () => {
             quoteAssetPoolKey,
             quoteAssetMintKey,
             serumMarketKey: serumMarket.address,
-          }
+            psyOptionsProgramId: endpoint.programId,
+            serumProgramId: dexProgramId.toString(),
+          };
 
           const key = `${newMarket.expiration}-${newMarket.uAssetSymbol}-${
             newMarket.qAssetSymbol
           }-${newMarket.size}-${amountPerContract.toString(
             10,
-          )}/${quoteAmountPerContract.toString(10)}`
+          )}/${quoteAmountPerContract.toString(10)}`;
 
-          newMarkets[key] = newMarket
+          newMarkets[key] = newMarket;
         }),
-      )
+      );
       // Not sure if we should replace the existing markets or merge them
-      setMarkets(newMarkets)
-      setMarketsLoading(false)
-      return
+      setMarkets(newMarkets);
+      setMarketsLoading(false);
+      return;
     } catch (err) {
-      console.error(err)
-      setMarketsLoading(false)
+      console.error(err);
+      setMarketsLoading(false);
     }
-  }, [connection, supportedAssets, endpoint]) // eslint-disable-line
+  }, [connection, supportedAssets, endpoint]); // eslint-disable-line
 
   const packagedMarkets = useCallback(async () => {
     if (endpoint.name === ClusterName.localhost) {
-      return fetchMarketData()
+      return fetchMarketData();
     }
     try {
-      setMarketsLoading(true)
-      const supportedMarkets = getSupportedMarketsByNetwork(endpoint.name)
+      setMarketsLoading(true);
+      const supportedMarkets = getSupportedMarketsByNetwork(endpoint.name);
       // Transform the market data to our expectations
-      const newMarkets = {}
+      const newMarkets = {};
       supportedMarkets.forEach((market) => {
         const uAsset = supportedAssets.filter(
           (asset) => asset.mintAddress === market.underlyingAssetMint,
-        )[0]
+        )[0];
 
         const qAsset = supportedAssets.filter(
           (asset) => asset.mintAddress === market.quoteAssetMint,
-        )[0]
+        )[0];
 
         // BN.js doesn't handle decimals while bignumber.js can handle decimals of arbitrary sizes
         // So convert all BN types to BigNumber
         const amountPerContract = new BigNumber(
           market.underlyingAssetPerContract,
-        ).div(10 ** uAsset.decimals)
+        ).div(10 ** uAsset?.decimals);
 
         const quoteAmountPerContract = new BigNumber(
           market.quoteAssetPerContract,
-        ).div(10 ** qAsset.decimals)
+        ).div(10 ** qAsset?.decimals);
 
         const strike = quoteAmountPerContract.div(
           amountPerContract.toString(10),
-        )
+        );
 
         const newMarket: OptionMarket = {
-          key: `${market.expiration}-${uAsset.tokenSymbol}-${
-            qAsset.tokenSymbol
+          key: `${market.expiration}-${uAsset?.tokenSymbol}-${
+            qAsset?.tokenSymbol
           }-${amountPerContract.toString()}-${amountPerContract.toString()}/${quoteAmountPerContract.toString()}`,
           amountPerContract,
           quoteAmountPerContract,
           size: `${amountPerContract.toString(10)}`,
-          uAssetSymbol: uAsset.tokenSymbol,
-          qAssetSymbol: qAsset.tokenSymbol,
-          uAssetMint: uAsset.mintAddress,
-          qAssetMint: qAsset.mintAddress,
+          uAssetSymbol: uAsset?.tokenSymbol,
+          qAssetSymbol: qAsset?.tokenSymbol,
+          uAssetMint: uAsset?.mintAddress,
+          qAssetMint: qAsset?.mintAddress,
           strike,
           optionMarketKey: new PublicKey(market.optionMarketAddress),
           expiration: market.expiration,
@@ -204,65 +206,67 @@ const useOptionsMarkets = () => {
           quoteAssetPoolKey: new PublicKey(market.quoteAssetPoolAddress),
           quoteAssetMintKey: new PublicKey(market.quoteAssetMint),
           serumMarketKey: new PublicKey(market.serumMarketAddress),
-        }
+          psyOptionsProgramId: market.psyOptionsProgramId,
+          serumProgramId: market.serumProgramId,
+        };
 
         const key = `${newMarket.expiration}-${newMarket.uAssetSymbol}-${
           newMarket.qAssetSymbol
         }-${newMarket.size}-${amountPerContract.toString(
           10,
-        )}/${quoteAmountPerContract.toString(10)}`
+        )}/${quoteAmountPerContract.toString(10)}`;
 
-        newMarkets[key] = newMarket
-      })
+        newMarkets[key] = newMarket;
+      });
       // Not sure if we should replace the existing markets or merge them
-      setMarkets(newMarkets)
-      setMarketsLoading(false)
-      return newMarkets
+      setMarkets(newMarkets);
+      setMarketsLoading(false);
+      return newMarkets;
     } catch (err) {
-      console.error(err)
-      setMarketsLoading(false)
+      console.error(err);
+      setMarketsLoading(false);
     }
-    return {}
-  }, [connection, fetchMarketData, supportedAssets, endpoint]) // eslint-disable-line
+    return {};
+  }, [connection, fetchMarketData, supportedAssets, endpoint]); // eslint-disable-line
 
   const getSizes = useCallback(
     ({ uAssetSymbol, qAssetSymbol }) => {
-      const keyPart = `-${uAssetSymbol}-${qAssetSymbol}-`
+      const keyPart = `-${uAssetSymbol}-${qAssetSymbol}-`;
 
       const sizes = Object.keys(markets)
         .filter((key) => key.match(keyPart))
-        .map((key) => markets[key].size)
+        .map((key) => markets[key].size);
 
-      return [...new Set(sizes)]
+      return [...new Set(sizes)];
     },
     [markets],
-  )
+  );
 
   const getSizesWithDate = useCallback(
     ({ uAssetSymbol, qAssetSymbol, date }) => {
-      const keyPart = `${date}-${uAssetSymbol}-${qAssetSymbol}-`
+      const keyPart = `${date}-${uAssetSymbol}-${qAssetSymbol}-`;
 
       const sizes = Object.keys(markets)
         .filter((key) => key.match(keyPart))
-        .map((key) => markets[key].size)
+        .map((key) => markets[key].size);
 
-      return [...new Set(sizes)]
+      return [...new Set(sizes)];
     },
     [markets],
-  )
+  );
 
   const getStrikePrices = ({ uAssetSymbol, qAssetSymbol, date, size }) => {
-    const keyPart = `${date}-${uAssetSymbol}-${qAssetSymbol}-${size}-`
+    const keyPart = `${date}-${uAssetSymbol}-${qAssetSymbol}-${size}-`;
     return Object.keys(markets)
       .filter((key) => key.match(keyPart))
-      .map((key) => markets[key].strikePrice)
-  }
+      .map((key) => markets[key].strikePrice);
+  };
 
   const getDates = () => {
-    const dates = Object.values(markets).map((m: OptionMarket) => m.expiration)
-    const deduped = [...new Set(dates)]
-    return deduped
-  }
+    const dates = Object.values(markets).map((m: OptionMarket) => m.expiration);
+    const deduped = [...new Set(dates)];
+    return deduped;
+  };
 
   const mint = async ({
     marketData,
@@ -273,19 +277,19 @@ const useOptionsMarkets = () => {
     numberOfContracts,
   }) => {
     try {
-      const tx = transaction
+      const tx = transaction;
 
       const { transaction: mintTx } = await mintInstructions({
         numberOfContractsToMint: numberOfContracts,
         authorityPubkey: pubKey,
-        programId: new PublicKey(endpoint.programId),
+        programId: new PublicKey(marketData.psyOptionsProgramId),
         market: marketData,
         mintedOptionDestKey,
         writerTokenDestKey,
         underlyingAssetSrcKey,
-      })
+      });
 
-      tx.add(mintTx)
+      tx.add(mintTx);
       // Close out the wrapped SOL account so it feels native
       if (marketData.uAssetMint === WRAPPED_SOL_ADDRESS) {
         tx.add(
@@ -296,7 +300,7 @@ const useOptionsMarkets = () => {
             pubKey,
             [],
           ),
-        )
+        );
       }
 
       sendTransaction({
@@ -306,17 +310,17 @@ const useOptionsMarkets = () => {
         connection,
         sendingMessage: 'Processing: Mint Options Token',
         successMessage: 'Confirmed: Mint Options Token',
-      })
+      });
 
       return {
         optionTokenDestKey: mintedOptionDestKey,
         writerTokenDestKey,
-      }
+      };
     } catch (err) {
-      pushErrorNotification(err)
+      pushErrorNotification(err);
     }
-    return {}
-  }
+    return {};
+  };
 
   const createAccountsAndMint = async ({
     date,
@@ -330,17 +334,17 @@ const useOptionsMarkets = () => {
     mintedWriterTokenDestKey,
     numberOfContracts,
   }) => {
-    const uAssetSymbol = uAsset.tokenSymbol
-    const qAssetSymbol = qAsset.tokenSymbol
+    const uAssetSymbol = uAsset.tokenSymbol;
+    const qAssetSymbol = qAsset.tokenSymbol;
 
     const marketData =
-      markets[`${date}-${uAssetSymbol}-${qAssetSymbol}-${size}-${price}`]
+      markets[`${date}-${uAssetSymbol}-${qAssetSymbol}-${size}-${price}`];
 
     // Fallback to first oowned minted option account
     const mintedOptionDestAddress =
-      mintedOptionAccount || ownedMintedOptionAccounts[0]
+      mintedOptionAccount || ownedMintedOptionAccounts[0];
 
-    const writerTokenDestAddress = mintedWriterTokenDestKey
+    const writerTokenDestAddress = mintedWriterTokenDestKey;
 
     const { response, error } = await createMissingMintAccounts({
       owner: pubKey,
@@ -351,10 +355,10 @@ const useOptionsMarkets = () => {
       mintedOptionDestinationKey: mintedOptionDestAddress,
       writerTokenDestinationKey: writerTokenDestAddress,
       numberOfContractsToMint: numberOfContracts,
-    })
+    });
     if (error) {
-      pushNotification(error)
-      return {}
+      pushNotification(error);
+      return {};
     }
     const {
       transaction,
@@ -362,7 +366,7 @@ const useOptionsMarkets = () => {
       mintedOptionDestinationKey,
       writerTokenDestinationKey,
       uAssetTokenAccount,
-    } = response
+    } = response;
 
     return mint({
       marketData,
@@ -371,8 +375,8 @@ const useOptionsMarkets = () => {
       writerTokenDestKey: writerTokenDestinationKey,
       existingTransaction: { transaction, signers },
       numberOfContracts,
-    })
-  }
+    });
+  };
 
   return {
     markets,
@@ -387,7 +391,7 @@ const useOptionsMarkets = () => {
     createAccountsAndMint,
     fetchMarketData,
     packagedMarkets,
-  }
-}
+  };
+};
 
-export default useOptionsMarkets
+export default useOptionsMarkets;

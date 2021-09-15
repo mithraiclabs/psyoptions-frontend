@@ -1,19 +1,19 @@
-import React from 'react'
-import Box from '@material-ui/core/Box'
+import React from 'react';
+import Box from '@material-ui/core/Box';
 
-import type { ReactNode } from 'react'
+import type { ReactNode } from 'react';
 
-import StatusBar from '../../StatusBar'
-import Notifications from '../../Notifications'
-import StepIndicator from './SimpleUIStepIndicator'
+import StatusBar from '../../StatusBar';
+import Notifications from '../../Notifications';
+import StepIndicator from './SimpleUIStepIndicator';
 
 const pageBg =
-  'linear-gradient(360deg, #42203B 14.41%, rgba(27, 26, 45, 0.81) 55.79%, #101017 93.84%), #101017'
+  'linear-gradient(360deg, #42203B 14.41%, rgba(27, 26, 45, 0.81) 55.79%, #101017 93.84%), #101017';
 
 type Props = {
-  title: string | ReactNode
-  subtitle?: string | ReactNode
-}
+  title: string | ReactNode;
+  subtitle?: string | ReactNode;
+};
 
 export const SimpleUIPage: React.FC<Props> = ({
   title,
@@ -61,7 +61,7 @@ export const SimpleUIPage: React.FC<Props> = ({
         </Box>
       </Box>
     </>
-  )
-}
+  );
+};
 
 // export default React.memo(SimpleUIPage)

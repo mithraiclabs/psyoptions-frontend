@@ -1,14 +1,14 @@
-import React, { memo, useEffect, useState } from 'react'
-import { useHistory } from 'react-router-dom'
-import Box from '@material-ui/core/Box'
-import Button from '@material-ui/core/Button'
-import Avatar from '@material-ui/core/Avatar'
-import { useTheme } from '@material-ui/core/styles'
-import useAssetList from '../../../../hooks/useAssetList'
-import { useBonfidaMarkPrice } from '../../../../hooks/useBonfidaMarkPrice'
-import { useUpdateForm } from '../../../../context/SimpleUIContext'
+import React, { memo, useState } from 'react';
+import { useHistory } from 'react-router-dom';
+import Box from '@material-ui/core/Box';
+import Button from '@material-ui/core/Button';
+import Avatar from '@material-ui/core/Avatar';
+import { useTheme } from '@material-ui/core/styles';
+import useAssetList from '../../../../hooks/useAssetList';
+import { useSerumPriceByAssets } from '../../../../hooks/Serum/useSerumPriceByAssets';
+import { useUpdateForm } from '../../../../context/SimpleUIContext';
 
-import { SimpleUIPage } from '../SimpeUIPage'
+import { SimpleUIPage } from '../SimpeUIPage';
 
 const ChooseAssetButton = ({
   tokenSymbol,
@@ -17,12 +17,12 @@ const ChooseAssetButton = ({
   selected,
   onClick,
 }) => {
-  const theme = useTheme()
+  const theme = useTheme();
 
-  const price = useBonfidaMarkPrice({
-    uAssetSymbol: tokenSymbol,
-    qAssetSymbol: 'USDC',
-  })
+  const price = useSerumPriceByAssets(
+    tokenSymbol,
+    'USDC',
+  );
 
   return (
     <Button
@@ -66,32 +66,32 @@ const ChooseAssetButton = ({
         <Box p={1}>{(price && price > 0 && `$${price.toFixed(2)}`) || ''}</Box>
       </Box>
     </Button>
-  )
-}
+  );
+};
 
 const ChooseAnAsset = () => {
-  const updateForm = useUpdateForm()
-  const history = useHistory()
-  const { supportedAssets, setUAsset } = useAssetList()
-  const assetWhitelist = ['SOL', 'BTC', 'ETH']
-  const [selectedTokenSymbol, setSelectedTokenSymbol] = useState('')
+  const updateForm = useUpdateForm();
+  const history = useHistory();
+  const { supportedAssets, setUAsset } = useAssetList();
+  const assetWhitelist = ['SOL', 'BTC', 'ETH'];
+  const [selectedTokenSymbol, setSelectedTokenSymbol] = useState('');
 
   const assets = supportedAssets.filter((asset) =>
     assetWhitelist.includes(asset.tokenSymbol),
-  )
+  );
 
   const handleMakeSelection = (asset) => {
     if (!selectedTokenSymbol) {
-      setSelectedTokenSymbol(asset.tokenSymbol)
-      updateForm('tokenSymbol', asset.tokenSymbol)
-      setUAsset(asset)
+      setSelectedTokenSymbol(asset.tokenSymbol);
+      updateForm('tokenSymbol', asset.tokenSymbol);
+      setUAsset(asset);
 
       // TODO: animated transition between pages instead of a timeout
       setTimeout(() => {
         history.push('/simple/up-or-down')
-      }, 500)
+      }, 500);
     }
-  }
+  };
 
   return (
     <SimpleUIPage title={'Choose an Asset'}>
@@ -109,7 +109,7 @@ const ChooseAnAsset = () => {
         ))}
       </Box>
     </SimpleUIPage>
-  )
-}
+  );
+};
 
-export default memo(ChooseAnAsset)
+export default memo(ChooseAnAsset);

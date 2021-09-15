@@ -1,16 +1,16 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-import React, { useState } from 'react'
-import Box from '@material-ui/core/Box'
-import Button from '@material-ui/core/Button'
-import TextField from '@material-ui/core/TextField'
-import { makeStyles, ThemeProvider } from '@material-ui/core/styles'
+import React, { useState } from 'react';
+import Box from '@material-ui/core/Box';
+import Button from '@material-ui/core/Button';
+import TextField from '@material-ui/core/TextField';
+import { makeStyles, ThemeProvider } from '@material-ui/core/styles';
 
-import usePassword from '../../hooks/usePassword'
+import usePassword from '../../hooks/usePassword';
 // @ts-ignore
-import logo from '../../../assets/psyoptions-logo-light.png'
-import theme from '../../utils/theme'
-import Footer from '../Footer'
-import { isBrowser } from '../../utils/isNode'
+import logo from '../../../assets/psyoptions-logo-light.png';
+import theme from '../../utils/theme';
+import Footer from '../Footer';
+import { isBrowser } from '../../utils/isNode';
 
 const useStyles = makeStyles({
   logoH1: {
@@ -26,10 +26,10 @@ const useStyles = makeStyles({
     borderRadius: '4px',
     border: `1px solid ${theme.palette.primary.main}`,
   },
-})
+});
 
 const pageBg =
-  'linear-gradient(0deg, rgba(66, 32, 59, 1) 0%, rgba(27, 26, 45, 1) 35%, rgba(16, 16, 23, 1) 70%)'
+  'linear-gradient(0deg, rgba(66, 32, 59, 1) 0%, rgba(27, 26, 45, 1) 35%, rgba(16, 16, 23, 1) 70%)';
 
 const PageWithoutNav = ({ children }) => (
   <Box
@@ -50,13 +50,13 @@ const PageWithoutNav = ({ children }) => (
     </Box>
     <Footer />
   </Box>
-)
+);
 
 const LandingComingSoon = ({ showPasswordField }) => {
-  const [_, setPassword] = isBrowser ? usePassword() : [] // eslint-disable-line
-  const { logoH1 } = useStyles()
+  const [_, setPassword] = isBrowser ? usePassword() : []; // eslint-disable-line
+  const { logoH1 } = useStyles();
 
-  const [pwInput, setPwInput] = useState('')
+  const [pwInput, setPwInput] = useState('');
 
   return (
     <ThemeProvider theme={theme}>
@@ -95,8 +95,8 @@ const LandingComingSoon = ({ showPasswordField }) => {
           {showPasswordField ? (
             <form
               onSubmit={(e) => {
-                e.preventDefault()
-                setPassword(pwInput)
+                e.preventDefault();
+                setPassword(pwInput);
               }}
             >
               <Box
@@ -125,7 +125,7 @@ const LandingComingSoon = ({ showPasswordField }) => {
         </Box>
       </PageWithoutNav>
     </ThemeProvider>
-  )
-}
+  );
+};
 
-export default LandingComingSoon
+export default LandingComingSoon;

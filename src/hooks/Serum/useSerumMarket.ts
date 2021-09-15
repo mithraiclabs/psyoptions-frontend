@@ -1,11 +1,11 @@
-import { PublicKey } from '@solana/web3.js'
-import { useEffect } from 'react'
-import * as Sentry from '@sentry/react'
-import { findMarketByAssets } from '../../utils/serum'
-import useConnection from '../useConnection'
-import { LocalSerumMarket } from '../../types'
-import { useSerumContext } from '../../context/SerumContext'
-import useNotifications from '../useNotifications'
+import { PublicKey } from '@solana/web3.js';
+import { useEffect } from 'react';
+import * as Sentry from '@sentry/react';
+import { findMarketByAssets } from '../../utils/serum';
+import useConnection from '../useConnection';
+import { LocalSerumMarket } from '../../types';
+import { useSerumContext } from '../../context/SerumContext';
+import useNotifications from '../useNotifications';
 
 /**
  * Fetch and return a serum market
@@ -18,38 +18,38 @@ export const useSerumMarket = (
   /* The string represenation of the Serum Market's quote asset's PublicKey */
   mintB: PublicKey,
 ): LocalSerumMarket | undefined => {
-  const { pushNotification } = useNotifications()
-  const { connection, dexProgramId } = useConnection()
-  const { serumMarkets, setSerumMarkets } = useSerumContext()
-  const serumAddress = key.toString()
-  const serumMarket = serumMarkets[serumAddress]
+  const { pushNotification } = useNotifications();
+  const { connection, dexProgramId } = useConnection();
+  const { serumMarkets, setSerumMarkets } = useSerumContext();
+  const serumAddress = key.toString();
+  const serumMarket = serumMarkets[serumAddress];
 
   useEffect(() => {
     if (serumMarket) {
       // Short circuit since the market is already loaded into state.
       // This data should not change, so no need to refetch
-      return
+      return;
     }
 
     setSerumMarkets((markets) => ({
       ...markets,
       [serumAddress]: { loading: true },
-    }))
-    ;(async () => {
+    }));
+    (async () => {
       try {
         const market = await findMarketByAssets(
           connection,
           mintA,
           mintB,
           dexProgramId,
-        )
+        );
         setSerumMarkets((markets) => ({
           ...markets,
           [serumAddress]: {
             loading: false,
             serumMarket: market,
           },
-        }))
+        }));
       } catch (err) {
         setSerumMarkets((markets) => ({
           ...markets,
@@ -57,14 +57,14 @@ export const useSerumMarket = (
             loading: false,
             error: err,
           },
-        }))
-        Sentry.captureException(err)
+        }));
+        Sentry.captureException(err);
         pushNotification({
           severity: 'error',
           message: `${err}`,
-        })
+        });
       }
-    })()
+    })();
   }, [
     connection,
     dexProgramId,
@@ -75,7 +75,7 @@ export const useSerumMarket = (
     serumAddress,
     serumMarket,
     setSerumMarkets,
-  ])
+  ]);
 
-  return serumMarket
-}
+  return serumMarket;
+};

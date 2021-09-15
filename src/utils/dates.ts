@@ -1,7 +1,6 @@
-import moment from 'moment'
+import moment from 'moment';
 
-const subtractDays = [2, 3, 4, 5, 6, 0, 1]
-
+const subtractDays = [2, 3, 4, 5, 6, 0, 1];
 /**
  * Calculate and return an array of the last Friday for every month
  */
@@ -13,8 +12,8 @@ export const getLastFridayOfMonths = (n = 10) =>
         .utc()
         .startOf('month')
         .add(i, 'month')
-        .endOf('month')
-      const lastFriday = lastDay.subtract(subtractDays[lastDay.day()], 'day')
-      return lastFriday
+        .endOf('month');
+      const lastFriday = lastDay.subtract(subtractDays[lastDay.day()], 'day');
+      return lastFriday;
     })
-    .filter((date) => date.isSameOrAfter(moment.utc()))
+    .filter((date) => date.isSameOrAfter(moment.utc()));

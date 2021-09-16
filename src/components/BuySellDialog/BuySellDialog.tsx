@@ -36,6 +36,7 @@ import ConnectButton from '../ConnectButton';
 
 import DialogFullscreenMobile from '../DialogFullscreenMobile';
 import { calculatePriceWithSlippage } from '../../utils/calculatePriceWithSlippage';
+import { calculateBreakeven } from '../../utils/calculateBreakeven';
 
 const bgLighterColor = (theme.palette.background as any).lighter;
 
@@ -564,7 +565,7 @@ const BuySellDialog: React.VFC<{
                       </>
                     )}
                   </Box>
-                  <Box pt={1} pb={2}>
+                  <Box alignSelf="flex-start" pt={1} pb={2}>
                     {orderType === 'limit' &&
                     parsedLimitPrice.isLessThanOrEqualTo(0)
                       ? `Invalid Limit Price: ${parsedLimitPrice}`
@@ -577,6 +578,16 @@ const BuySellDialog: React.VFC<{
                               } ${parsedOrderSize > 1 ? 'each' : ''}`
                             : 'market price'
                         }`}
+                  </Box>
+                  <Box alignSelf="flex-start" pt={1} pb={2}>
+                    Buy breakeven:{' '}
+                    {calculateBreakeven(
+                      strike.toNumber(),
+                      amountPerContract.toNumber(),
+                      parsedOrderSize,
+                      orderbook?.asks ?? [],
+                      type === 'put',
+                    ) ?? '-'}
                   </Box>
                   <Box
                     py={2}

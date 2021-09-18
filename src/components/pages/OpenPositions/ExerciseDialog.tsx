@@ -6,12 +6,12 @@ import Tooltip from '@material-ui/core/Tooltip';
 import { withStyles, useTheme } from '@material-ui/core/styles';
 import * as Sentry from '@sentry/react';
 
-import { StyledFilledInput, PlusMinusButton } from '../../BuySellDialog/styles'
-import DialogFullscreenMobile from '../../DialogFullscreenMobile'
+import { StyledFilledInput, PlusMinusButton } from '../../BuySellDialog/styles';
+import DialogFullscreenMobile from '../../DialogFullscreenMobile';
 import useOwnedTokenAccounts from '../../../hooks/useOwnedTokenAccounts';
 import useNotifications from '../../../hooks/useNotifications';
 import useExerciseOpenPosition from '../../../hooks/useExerciseOpenPosition';
-import { OptionMarket } from '../../../types';
+import { OptionMarket, OptionType } from '../../../types';
 import TxButton from '../../TxButton';
 
 const StyledTooltip = withStyles((theme) => ({
@@ -31,7 +31,7 @@ const ExerciseDialog: React.VFC<{
   uAssetMintAddress: string;
   qAssetSymbol: string;
   qAssetMintAddress: string;
-  optionType: string;
+  optionType: OptionType;
   contractSize: string;
   strike: string;
   expiration: string;
@@ -52,7 +52,9 @@ const ExerciseDialog: React.VFC<{
   price,
   market,
 }) => {
-  const [numContractsToExercise, setNumContractsToExercise] = useState(positionSize.toString());
+  const [numContractsToExercise, setNumContractsToExercise] = useState(
+    positionSize.toString(),
+  );
   const [loading, setLoading] = useState(false);
   const { ownedTokenAccounts } = useOwnedTokenAccounts();
   const { pushNotification } = useNotifications();
@@ -67,38 +69,47 @@ const ExerciseDialog: React.VFC<{
 
   const exercise = useExerciseOpenPosition(
     market,
-    // TODO remove `toString` when useExerciseOpenPosition is refactored
     ownedQAssetKey,
     ownedUAssetKey,
     ownedOAssetKey,
   );
 
-  const handleExercisePosition = useCallback(async (size) => {
-    try {
-      setLoading(true);
-      await exercise(size);
-      setLoading(false);
-    } catch (err) {
-      Sentry.captureException(err);
-      pushNotification({
-        severity: 'error',
-        message: `${err}`,
-      });
-      setLoading(false);
-    }
-  }, [exercise, pushNotification]);
+  const handleExercisePosition = useCallback(
+    async (size) => {
+      try {
+        setLoading(true);
+        await exercise(size);
+        setLoading(false);
+      } catch (err) {
+        Sentry.captureException(err);
+        pushNotification({
+          severity: 'error',
+          message: `${err}`,
+        });
+        setLoading(false);
+      }
+    },
+    [exercise, pushNotification],
+  );
 
   const parsedExerciseSize =
-    Number.isNaN(parseInt(numContractsToExercise, 10)) || parseInt(numContractsToExercise, 10) < 1
+    Number.isNaN(parseInt(numContractsToExercise, 10)) ||
+    parseInt(numContractsToExercise, 10) < 1
       ? 1
       : parseInt(numContractsToExercise, 10);
 
   // within allowable range of 1 and currently available
-  const withinRange =  parseInt(numContractsToExercise, 10) >= 1 && parseInt(numContractsToExercise, 10) <= positionSize
+  const withinRange =
+    parseInt(numContractsToExercise, 10) >= 1 &&
+    parseInt(numContractsToExercise, 10) <= positionSize;
 
   const strikeNumber = parseFloat(strike);
-  const exerciseCost = strikeNumber * parseFloat(contractSize) * parseInt(numContractsToExercise, 10);
-  const sizeTotalToExercise = parseFloat(contractSize) * parseInt(numContractsToExercise, 10);
+  const exerciseCost =
+    strikeNumber *
+    parseFloat(contractSize) *
+    parseInt(numContractsToExercise, 10);
+  const sizeTotalToExercise =
+    parseFloat(contractSize) * parseInt(numContractsToExercise, 10);
   let exerciseCostString = exerciseCost.toString(10);
   if (exerciseCostString.match(/\..{3,}/)) {
     exerciseCostString = exerciseCost.toFixed(2);
@@ -106,21 +117,17 @@ const ExerciseDialog: React.VFC<{
 
   const priceDiff = price - strikeNumber;
   const priceDiffPercentage =
-    (priceDiff / strikeNumber) * (optionType === 'put' ? -100 : 100);
+    (priceDiff / strikeNumber) * (optionType === OptionType.PUT ? -100 : 100);
   const betterOrWorse = priceDiffPercentage > 0;
-  const priceDiffHelperText = 
-    betterOrWorse ? 'In the money' : 'Out of the money';
-
+  const priceDiffHelperText = betterOrWorse
+    ? 'In the money'
+    : 'Out of the money';
 
   const exerciseTooltipLabel = `${
-    optionType === 'put' ? 'Sell' : 'Purchase'
+    optionType === OptionType.PUT ? 'Sell' : 'Purchase'
   } ${sizeTotalToExercise.toFixed(4)} ${
-    uAssetSymbol ||
-    'underlying asset'
-  } for ${exerciseCostString} ${
-    qAssetSymbol ||
-    'quote asset'
-  }`;
+    uAssetSymbol || 'underlying asset'
+  } for ${exerciseCostString} ${qAssetSymbol || 'quote asset'}`;
 
   const exerciseTooltipJsx = (
     <Box p={1} textAlign="center">
@@ -162,15 +169,9 @@ const ExerciseDialog: React.VFC<{
             <Box pb={1} pt={2}>
               {`${uAssetSymbol}  |  ${expiration}  |  ${optionType}`}
             </Box>
-            <Box pt={1}>
-              Strike: {strike}
-            </Box>
-            <Box pt={1}>
-              Contract Size: {contractSize}
-            </Box>
-            <Box pt={1}>
-              Available to exercise: {positionSize}
-            </Box>
+            <Box pt={1}>Strike: {strike}</Box>
+            <Box pt={1}>Contract Size: {contractSize}</Box>
+            <Box pt={1}>Available to exercise: {positionSize}</Box>
           </Box>
           <Box p={1} width={['100%', '100%', '50%']}>
             <Box pb={1} pt={2}>
@@ -189,13 +190,19 @@ const ExerciseDialog: React.VFC<{
                 />
                 <PlusMinusButton
                   onClick={() =>
-                    setNumContractsToExercise(`${Math.max(1, parsedExerciseSize - 1)}`)
+                    setNumContractsToExercise(
+                      `${Math.max(1, parsedExerciseSize - 1)}`,
+                    )
                   }
                 >
                   -
                 </PlusMinusButton>
                 <PlusMinusButton
-                  onClick={() => setNumContractsToExercise(`${Math.min(positionSize, parsedExerciseSize + 1)}`)}
+                  onClick={() =>
+                    setNumContractsToExercise(
+                      `${Math.min(positionSize, parsedExerciseSize + 1)}`,
+                    )
+                  }
                 >
                   +
                 </PlusMinusButton>
@@ -206,15 +213,22 @@ const ExerciseDialog: React.VFC<{
                 style={{ fontSize: '12px' }}
               >
                 <Box pt={2}>
-                  {`Collateral req to exercise:  ${exerciseCostString} ${
-                    qAssetSymbol ||
-                    'quote asset'
+                  {`Collateral req to exercise:  ${
+                    optionType === OptionType.PUT
+                      ? sizeTotalToExercise.toFixed(4)
+                      : exerciseCostString
+                  } ${
+                    optionType === OptionType.PUT
+                      ? uAssetSymbol || 'underlying asset'
+                      : qAssetSymbol || 'quote asset'
                   }`}
                 </Box>
                 <Box pt={1}>
-                  <Button 
-                    size='small'
-                    onClick={() => setNumContractsToExercise(positionSize.toString())}
+                  <Button
+                    size="small"
+                    onClick={() =>
+                      setNumContractsToExercise(positionSize.toString())
+                    }
                   >
                     Max
                   </Button>
@@ -228,26 +242,28 @@ const ExerciseDialog: React.VFC<{
                   disabled={!withinRange}
                   variant="outlined"
                   color="primary"
-                  onClick={() => handleExercisePosition(parseInt(numContractsToExercise, 10))}
+                  onClick={() =>
+                    handleExercisePosition(parseInt(numContractsToExercise, 10))
+                  }
                   loading={loading}
                 >
-                  {loading ? 'Exercising' : 'Exercise'} {numContractsToExercise} Contracts
+                  {loading ? 'Exercising' : 'Exercise'} {numContractsToExercise}{' '}
+                  Contracts
                 </TxButton>
               </Box>
             </StyledTooltip>
-            {
-              !withinRange &&
+            {!withinRange && (
               <Box pt={1} style={{ fontSize: '12px' }}>
                 <span style={{ color: theme.palette.error.light }}>
                   Quantity out of bounds
                 </span>
               </Box>
-            }
+            )}
           </Box>
         </Box>
       </Box>
     </DialogFullscreenMobile>
-  )
-}
+  );
+};
 
 export default memo(ExerciseDialog);

@@ -4,24 +4,29 @@ import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
 import Avatar from '@material-ui/core/Avatar';
 import { useTheme } from '@material-ui/core/styles';
+import { Token } from '@mithraic-labs/market-meta/dist/types';
 import useAssetList from '../../../../hooks/useAssetList';
 import { useSerumPriceByAssets } from '../../../../hooks/Serum/useSerumPriceByAssets';
 import { useUpdateForm } from '../../../../context/SimpleUIContext';
-
 import { SimpleUIPage } from '../SimpeUIPage';
 
+type ChooseAssetButtonProps = {
+  asset: Token,
+  selected: boolean,
+  onClick: () => void,
+};
+
 const ChooseAssetButton = ({
-  tokenSymbol,
-  icon,
-  tokenName,
+  asset,
   selected,
   onClick,
-}) => {
+}: ChooseAssetButtonProps) => {
+  const { USDCToken } = useAssetList();
   const theme = useTheme();
 
   const price = useSerumPriceByAssets(
-    tokenSymbol,
-    'USDC',
+    asset.mintAddress,
+    USDCToken.mintAddress,
   );
 
   return (
@@ -50,20 +55,20 @@ const ChooseAssetButton = ({
         <Box display="flex" flexDirection="row" alignItems="center">
           <Box px={1}>
             <Avatar
-              src={icon}
-              alt={tokenName}
+              src={asset.icon}
+              alt={asset.tokenName}
               style={{
                 backgroundColor: 'transparent',
                 width: '24px',
                 height: '24px',
               }}
             >
-              {tokenSymbol}
+              {asset.tokenSymbol}
             </Avatar>
           </Box>
-          <Box p={1}>{tokenSymbol}</Box>
+          <Box p={1}>{asset.tokenSymbol}</Box>
         </Box>
-        <Box p={1}>{(price && price > 0 && `$${price.toFixed(2)}`) || ''}</Box>
+        <Box p={1}>{(price && price > 0 && `$${price.toFixed(2)}`) || 'Loading...'}</Box>
       </Box>
     </Button>
   );
@@ -99,9 +104,7 @@ const ChooseAnAsset = () => {
         {assets.map((asset) => (
           <Box my={2} key={asset.tokenSymbol}>
             <ChooseAssetButton
-              tokenSymbol={asset.tokenSymbol}
-              icon={asset.icon}
-              tokenName={asset.tokenName}
+              asset={asset}
               selected={selectedTokenSymbol === asset.tokenSymbol}
               onClick={() => handleMakeSelection(asset)}
             />

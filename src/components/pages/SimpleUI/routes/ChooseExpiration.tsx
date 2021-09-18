@@ -3,6 +3,7 @@ import { useHistory } from 'react-router-dom';
 import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
 import { useTheme } from '@material-ui/core/styles';
+import moment from 'moment';
 import {
   useUpdateForm,
   useFormState,
@@ -37,7 +38,8 @@ const ChooseDateButton = ({ date, selected, onClick }) => {
         color={theme?.palette?.primary?.light}
         fontSize={'16px'}
       >
-        <Box p={1}>{`${date.format('MMMM Do YYYY, HH:mm:ss')} GMT`}</Box>
+        <span>{date.format('MMMM Do YYYY')}</span>
+        <span>{`${date.format('HH:mm:ss')} UTC`}</span>
       </Box>
     </Button>
   );
@@ -57,7 +59,7 @@ const ChooseExpiration = () => {
     }
   }, [tokenSymbol, direction, history]);
 
-  const handleMakeSelection = (d) => {
+  const handleMakeSelection = (d: moment.Moment) => {
     if (!selectedExpiration) {
       setSelectedDate(d);
       setSelectedExpiration(d.unix());

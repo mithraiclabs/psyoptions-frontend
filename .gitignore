@@ -4,3 +4,4 @@ dist/
 localnetData.json
 serum/dex
 .DS_Store
+logs/

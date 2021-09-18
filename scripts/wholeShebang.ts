@@ -1,25 +1,24 @@
 import dotenv from 'dotenv';
 import { exec, spawn } from 'child_process';
 import * as fetch from 'node-fetch';
+import * as fs from 'fs';
 
 import { wait } from './helpers';
 
 dotenv.config();
 
+const validatorStream = fs.createWriteStream('./logs/validator.log', {
+  flags: 'w',
+});
 // start the chain...should it be in the parent process or child process?
-const proc = spawn('bash', ['yarn localnet:up'], {
+const validator = spawn('bash', ['yarn localnet:up'], {
   cwd: process.env.OPTIONS_REPO,
   shell: true,
 });
-proc.stdout.on('data', (data) => {
-  console.log(`stdout: ${data}`);
-});
+validator.stdout.pipe(validatorStream);
+validator.stderr.pipe(validatorStream);
 
-proc.stderr.on('data', (data) => {
-  console.error(`stderr: ${data}`);
-});
-
-proc.on('close', (code) => {
+validator.on('close', (code) => {
   console.log(`localnet process exited with code ${code}`);
   process.exit(-1);
 });
@@ -39,6 +38,9 @@ proc.on('close', (code) => {
   }
 
   // Run a bash script to set up a lot of stuff
+  const localSetupStream = fs.createWriteStream('./logs/localSetup.log', {
+    flags: 'w',
+  });
   const localSetupProc = exec(
     './scripts/local_setup.sh',
     {
@@ -57,6 +59,8 @@ proc.on('close', (code) => {
       console.log('********* DONE LOCAL SETUP *********');
     },
   );
+  localSetupProc.stdout.pipe(localSetupStream);
+  localSetupProc.stderr.pipe(localSetupStream);
   localSetupProc.stdout.on('data', (data) => {
     console.log(`stdout: ${data}`);
   });

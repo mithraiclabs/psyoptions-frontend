@@ -4,23 +4,16 @@ set -xe
 echo 'running local setup'
 
 cd $OPTIONS_REPO
-# build the Options program
-cargo build-bpf --manifest-path options/Cargo.toml
+# build the programs
+anchor build
 # set the config to localnet
 solana config set --url http://localhost:8899 --keypair $KEY_FILE
 # airdrop tokens before 
 solana airdrop 100
 solana airdrop 100 $WALLET_ADDRESS
 
-# create local program keypair if not exists
-if test -f $OPTIONS_REPO/options/deployed_programs/psyoptions-local-keypair.json; then
-  echo "local keypair file exists"
-else
-  solana-keygen new --no-passphrase --outfile $OPTIONS_REPO/options/deployed_programs/psyoptions-local-keypair.json
-  # TODO append the PsyOptions program ID to the .env file if it is not already there
-fi
 # deploy the program
-solana program deploy --program-id $OPTIONS_REPO/options/deployed_programs/psyoptions-local-keypair.json $OPTIONS_REPO/options/target/deploy/psyoptions.so
+solana program deploy --program-id $OPTIONS_REPO/target/deploy/psy_american-keypair.json $OPTIONS_REPO/target/deploy/psy_american.so
 
 # Deploy the Serum DEX
 cd $DEX_REPO

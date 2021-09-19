@@ -5,36 +5,21 @@ import * as fs from 'fs';
 
 import { wait } from './helpers';
 
+// create logs directory if it doesn't exist
+!fs.existsSync(`./logs/`) && fs.mkdirSync(`./logs/`, { recursive: true });
+
 dotenv.config();
 
-const validatorStream = fs.createWriteStream('./logs/validator.log', {
-  flags: 'w',
-});
-// start the chain...should it be in the parent process or child process?
-const validator = spawn('bash', ['yarn localnet:up'], {
-  cwd: process.env.OPTIONS_REPO,
-  shell: true,
-});
-validator.stdout.pipe(validatorStream);
-validator.stderr.pipe(validatorStream);
-
-validator.on('close', (code) => {
-  console.log(`localnet process exited with code ${code}`);
-  process.exit(-1);
-});
 (async () => {
   // wait until the chain is up
-  while (true) {
-    try {
-      const res = await fetch('http://localhost:8899');
-      if (res.status !== 0) {
-        console.log('**** chain is up, breaking');
-        break;
-      }
-    } catch (error) {
-      console.log('**** chain is down, waiting...');
+  try {
+    const res = await fetch('http://localhost:8899');
+    if (res.status !== 0) {
+      console.log('**** chain is up');
     }
-    await wait(1000);
+  } catch (error) {
+    console.log('**** chain is down, please run `solana-test-validator`');
+    return;
   }
 
   // Run a bash script to set up a lot of stuff

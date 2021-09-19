@@ -5,19 +5,8 @@
  */
 import dotenv from 'dotenv';
 import * as anchor from '@project-serum/anchor';
-import {
-  initializeAccountsForMarket,
-  initializeMarketInstruction,
-  Market,
-} from '@mithraic-labs/psyoptions';
-import {
-  Account,
-  Connection,
-  Keypair,
-  PublicKey,
-  sendAndConfirmTransaction,
-  Transaction,
-} from '@solana/web3.js';
+import { instructions } from '@mithraic-labs/psy-american';
+import { Connection, Keypair, PublicKey } from '@solana/web3.js';
 import BigNumber from 'bignumber.js';
 import * as fs from 'fs';
 import moment from 'moment';
@@ -26,8 +15,8 @@ import { getSolanaConfig } from './helpers';
 import { getLastFridayOfMonths } from '../src/utils/dates';
 import { getAssetsByNetwork } from '../src/utils/networkInfo';
 import { ClusterName } from '../src/types';
-import BN from 'bn.js';
 import { createInitializeMarketTx } from '../src/utils/serum';
+import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 dotenv.config();
 
 const solanaConfig = getSolanaConfig();
@@ -48,76 +37,6 @@ const psyAmericanIdl = JSON.parse(fs.readFileSync(idlPath, 'utf-8'));
 const programId = new anchor.web3.PublicKey(process.env.LOCAL_PROGRAM_ID);
 
 const program = new anchor.Program(psyAmericanIdl, programId, provider);
-
-const initializeMarket = async (
-  /** the keypair of the wallet creating the market */
-  wallet: Account,
-  /** The full underlying amount per contract **including the quote asset decimal places** */
-  underlyingAmountPerContract: BigNumber,
-  /** The full quoteAmountPerContract **including the quote asset decimal places** */
-  quoteAmountPerContract: BigNumber,
-  /** The public key for the underlying asset mint */
-  underlyingAssetMintKey: PublicKey,
-  /** The public key for the quote asset mint */
-  quoteAssetMintKey: PublicKey,
-  /* The unix time stamp for the contract expiration **in seconds** */
-  expirationUnixTimestamp: number,
-) => {
-  // Create and send transaction for creating/initializing accounts needed
-  // for option market
-  const {
-    transaction: createAccountsTx,
-    signers,
-    optionMintKey,
-    writerTokenMintKey,
-    quoteAssetPoolKey,
-    underlyingAssetPoolKey,
-  } = await initializeAccountsForMarket({
-    connection,
-    payerKey: wallet.publicKey,
-    programId,
-  });
-  console.log('*** sending createAccountsTx TX', new Date().toISOString());
-
-  await sendAndConfirmTransaction(
-    connection,
-    createAccountsTx,
-    [wallet, ...signers],
-    {
-      commitment: 'confirmed',
-    },
-  );
-
-  // create and send transaction for initializing the option market
-  const initializeMarketIx = await initializeMarketInstruction({
-    programId,
-    fundingAccountKey: wallet.publicKey,
-    underlyingAssetMintKey,
-    quoteAssetMintKey,
-    optionMintKey,
-    writerTokenMintKey,
-    underlyingAssetPoolKey,
-    quoteAssetPoolKey,
-    underlyingAmountPerContract: underlyingAmountPerContract.toNumber(),
-    quoteAmountPerContract: quoteAmountPerContract.toNumber(),
-    expirationUnixTimestamp,
-  });
-  const transaction = new Transaction();
-  transaction.add(initializeMarketIx);
-  console.log('** sending initialize market TX', new Date().toISOString());
-  await sendAndConfirmTransaction(connection, transaction, [wallet], {
-    commitment: 'confirmed',
-  });
-  const [optionMarketKey] = await Market.getDerivedAddressFromParams({
-    programId,
-    underlyingAssetMintKey,
-    quoteAssetMintKey,
-    underlyingAmountPerContract: underlyingAmountPerContract.toNumber(),
-    quoteAmountPerContract: quoteAmountPerContract.toNumber(),
-    expirationUnixTimestamp,
-  });
-  return { optionMarketKey, optionMintKey };
-};
 
 (async () => {
   // create markets for the end of the current month,
@@ -148,6 +67,41 @@ const initializeMarket = async (
     usdcKey.toString(),
     expirationUnixTimestamp,
   );
+
+  const underlyingToken = await Token.createMint(
+    connection,
+    wallet.payer,
+    wallet.payer.publicKey,
+    wallet.payer.publicKey,
+    8,
+    TOKEN_PROGRAM_ID,
+  );
+  const quoteToken = await Token.createMint(
+    connection,
+    wallet.payer,
+    wallet.payer.publicKey,
+    wallet.payer.publicKey,
+    2,
+    TOKEN_PROGRAM_ID,
+  );
+
+  const { optionMarketKey } = await instructions.initializeMarket(
+    program,
+    wallet.payer,
+    connection,
+    {
+      expirationUnixTimestamp: new anchor.BN(expirationUnixTimestamp),
+      quoteAmountPerContract: new anchor.BN(quoteAssetPerContract.toNumber()),
+      quoteMint: quoteToken.publicKey,
+      underlyingAmountPerContract: new anchor.BN(
+        underlyingAmountPerContract.toNumber(),
+      ),
+      underlyingMint: underlyingToken.publicKey,
+    },
+  );
+
+  console.log(`*** created option: ${optionMarketKey}`);
+
   // const { optionMarketKey, optionMintKey } = await initializeMarket(
   //   wallet,
   //   underlyingAmountPerContract,

@@ -1,4 +1,4 @@
-import { useContext, useCallback, useMemo } from 'react';
+import { useContext, useCallback } from 'react';
 import BigNumber from 'bignumber.js';
 import { Market } from '@mithraic-labs/psyoptions';
 import { Connection, PublicKey } from '@solana/web3.js';
@@ -317,6 +317,7 @@ const useOptionsMarkets = () => {
         writerTokenDestKey,
       };
     } catch (err) {
+      console.log(err);
       pushErrorNotification(err);
     }
     return {};

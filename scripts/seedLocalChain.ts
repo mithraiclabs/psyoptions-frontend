@@ -5,7 +5,7 @@
  */
 import dotenv from 'dotenv';
 import * as anchor from '@project-serum/anchor';
-import { instructions } from '@mithraic-labs/psy-american';
+// import { instructions } from '@mithraic-labs/psy-american';
 import { Connection, Keypair, PublicKey } from '@solana/web3.js';
 import BigNumber from 'bignumber.js';
 import * as fs from 'fs';
@@ -19,26 +19,26 @@ import { createInitializeMarketTx } from '../src/utils/serum';
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 dotenv.config();
 
-const solanaConfig = getSolanaConfig();
-// Get the default keypair and airdrop some tokens
-const keyBuffer = fs.readFileSync(solanaConfig.keypair_path, 'utf8');
-const wallet = new anchor.Wallet(new Keypair(JSON.parse(keyBuffer)));
-const connection = new Connection('http://localhost:8899', {
-  commitment: 'max',
-});
-
-const dexProgramId = new PublicKey(process.env.LOCAL_DEX_PROGRAM_ID);
-
-const provider = new anchor.Provider(connection, wallet, {
-  commitment: 'max',
-});
-const idlPath = `${process.env.OPTIONS_REPO}/target/idl/psy_american.json`;
-const psyAmericanIdl = JSON.parse(fs.readFileSync(idlPath, 'utf-8'));
-const programId = new anchor.web3.PublicKey(process.env.LOCAL_PROGRAM_ID);
-
-const program = new anchor.Program(psyAmericanIdl, programId, provider);
-
 (async () => {
+  const solanaConfig = getSolanaConfig();
+  // Get the default keypair and airdrop some tokens
+  const keyBuffer = fs.readFileSync(solanaConfig.keypair_path, 'utf8');
+  const payer = new anchor.web3.Keypair(JSON.parse(keyBuffer));
+  const wallet = new anchor.Wallet(payer);
+  const connection = new Connection('http://localhost:8899', {
+    commitment: 'max',
+  });
+
+  const dexProgramId = new PublicKey(process.env.LOCAL_DEX_PROGRAM_ID);
+
+  const provider = new anchor.Provider(connection, wallet, {
+    commitment: 'max',
+  });
+  const idlPath = `${process.env.OPTIONS_REPO}/target/idl/psy_american.json`;
+  const psyAmericanIdl = JSON.parse(fs.readFileSync(idlPath, 'utf-8'));
+  const programId = new anchor.web3.PublicKey(process.env.LOCAL_PROGRAM_ID);
+
+  const program = new anchor.Program(psyAmericanIdl, programId, provider);
   // create markets for the end of the current month,
   // end of next month if last friday on this month passed
   const expirationDate = getLastFridayOfMonths(1)[0]
@@ -70,46 +70,37 @@ const program = new anchor.Program(psyAmericanIdl, programId, provider);
 
   const underlyingToken = await Token.createMint(
     connection,
-    wallet.payer,
-    wallet.payer.publicKey,
-    wallet.payer.publicKey,
+    payer,
+    payer.publicKey,
+    payer.publicKey,
     8,
     TOKEN_PROGRAM_ID,
   );
   const quoteToken = await Token.createMint(
     connection,
-    wallet.payer,
-    wallet.payer.publicKey,
-    wallet.payer.publicKey,
+    payer,
+    payer.publicKey,
+    payer.publicKey,
     2,
     TOKEN_PROGRAM_ID,
   );
 
-  const { optionMarketKey } = await instructions.initializeMarket(
-    program,
-    wallet.payer,
-    connection,
-    {
-      expirationUnixTimestamp: new anchor.BN(expirationUnixTimestamp),
-      quoteAmountPerContract: new anchor.BN(quoteAssetPerContract.toNumber()),
-      quoteMint: quoteToken.publicKey,
-      underlyingAmountPerContract: new anchor.BN(
-        underlyingAmountPerContract.toNumber(),
-      ),
-      underlyingMint: underlyingToken.publicKey,
-    },
-  );
-
-  console.log(`*** created option: ${optionMarketKey}`);
-
-  // const { optionMarketKey, optionMintKey } = await initializeMarket(
-  //   wallet,
-  //   underlyingAmountPerContract,
-  //   quoteAssetPerContract,
-  //   btcKey,
-  //   usdcKey,
-  //   expirationUnixTimestamp,
+  // const { optionMarketKey } = await instructions.initializeMarket(
+  //   program,
+  //   payer,
+  //   connection,
+  //   {
+  //     expirationUnixTimestamp: new anchor.BN(expirationUnixTimestamp),
+  //     quoteAmountPerContract: new anchor.BN(quoteAssetPerContract.toNumber()),
+  //     quoteMint: quoteToken.publicKey,
+  //     underlyingAmountPerContract: new anchor.BN(
+  //       underlyingAmountPerContract.toNumber(),
+  //     ),
+  //     underlyingMint: underlyingToken.publicKey,
+  //   },
   // );
+
+  // console.log(`*** created option: ${optionMarketKey}`);
 
   // // This will likely be USDC or USDT but could be other things in some cases
   // const quoteLotSize = new BN(0.01 * 10 ** usdc.decimals);

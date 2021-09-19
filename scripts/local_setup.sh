@@ -27,4 +27,6 @@ npm run seed -- $KEY_FILE
 sleep 10
 npm run seed:mintTokens -- $KEY_FILE $WALLET_ADDRESS
 
-npm run seed:localChain $OPTIONS_REPO/target/deploy/psy_american-keypair.json
+# This is broken right now.
+# initialization of markets can and should be done using the website.
+# npm run seed:localChain $OPTIONS_REPO/target/deploy/psy_american-keypair.json

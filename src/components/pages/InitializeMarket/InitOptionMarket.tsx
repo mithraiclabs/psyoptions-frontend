@@ -21,7 +21,7 @@ import moment from 'moment';
 import { useInitializeSerumMarket } from '../../../hooks/Serum/useInitializeSerumMarket';
 import useAssetList from '../../../hooks/useAssetList';
 import useConnection from '../../../hooks/useConnection';
-import { useInitializeMarket } from '../../../hooks/useInitializeMarkets';
+import { useInitializeMarket } from '../../../hooks/useInitializeMarket';
 import useNotifications from '../../../hooks/useNotifications';
 import useWallet from '../../../hooks/useWallet';
 import ConnectButton from '../../ConnectButton';
@@ -37,7 +37,7 @@ const darkBorder = `1px solid ${theme.palette.background.main}`;
 export const InitOptionMarket: React.VFC = () => {
   const { pushNotification } = useNotifications();
   const { connected } = useWallet();
-  const initializeMarkets = useInitializeMarket();
+  const initializeMarket = useInitializeMarket();
   const { dexProgramId, endpoint } = useConnection();
   const initializeSerumMarket = useInitializeSerumMarket();
   const [basePrice, setBasePrice] = useState('0');
@@ -120,7 +120,7 @@ export const InitOptionMarket: React.VFC = () => {
         return;
       }
 
-      const initializedMarket = await initializeMarkets({
+      const initializedMarket = await initializeMarket({
         amountPerContract: amountsPerContract,
         quoteAmountPerContract,
         uAssetSymbol: ua.tokenSymbol,

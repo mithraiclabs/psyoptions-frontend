@@ -18,7 +18,7 @@ import { useSubscribeSPLTokenMint } from '../../../hooks/SPLToken';
 import { useOptionMarket } from '../../../hooks/useOptionMarket';
 import { useSerumOrderbooks } from '../../../context/SerumOrderbookContext';
 
-import { useInitializeMarket } from '../../../hooks/useInitializeMarkets';
+import { useInitializeMarket } from '../../../hooks/useInitializeMarket';
 
 import { TCell, TCellLoading, TCellStrike, TRow } from './styles';
 import { useMarketData } from '../../../context/MarketDataContext';

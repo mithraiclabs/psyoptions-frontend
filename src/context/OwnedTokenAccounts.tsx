@@ -7,7 +7,6 @@ import React, {
 } from 'react';
 import { AccountLayout, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { PublicKey } from '@solana/web3.js';
-import bs58 from 'bs58';
 import useConnection from '../hooks/useConnection';
 import useWallet from '../hooks/useWallet';
 import { TokenAccount } from '../types';
@@ -27,18 +26,6 @@ export const OwnedTokenAccountsContext =
     refreshTokenAccounts: () => {},
     subscribeToTokenAccount: () => {},
   });
-
-const getOwnedTokenAccountsFilter = (publicKey) => [
-  {
-    memcmp: {
-      offset: AccountLayout.offsetOf('owner'),
-      bytes: publicKey?.toBase58(),
-    },
-  },
-  {
-    dataSize: AccountLayout.span,
-  },
-];
 
 const convertAccountInfoToLocalStruct = (
   _accountInfo,
@@ -138,23 +125,20 @@ export const OwnedTokenAccountsProvider: React.FC = ({ children }) => {
     (async () => {
       setLoading(true);
       try {
-        // @ts-expect-error we know what we're doing
-        const resp = await connection._rpcRequest('getTokenAccountsByOwner', [
-          pubKey.toBase58(),
+        const resp = await connection.getTokenAccountsByOwner(
+          pubKey,
           {
-            programId: TOKEN_PROGRAM_ID.toBase58(),
+            programId: TOKEN_PROGRAM_ID,
           },
-          {
-            commitment: connection.commitment,
-          },
-        ]);
+          connection.commitment,
+        );
         const _ownedTokenAccounts = {};
-        if (resp?.result?.value) {
-          resp.result.value.forEach(({ account, pubkey }) => {
-            const accountInfo = AccountLayout.decode(bs58.decode(account.data));
+        if (resp?.value) {
+          resp.value.forEach(({ account, pubkey }) => {
+            const accountInfo = AccountLayout.decode(account.data);
             const initialAccount = convertAccountInfoToLocalStruct(
               accountInfo,
-              new PublicKey(pubkey),
+              pubkey,
             );
             const mint = initialAccount.mint.toString();
             if (_ownedTokenAccounts[mint]) {
@@ -162,7 +146,7 @@ export const OwnedTokenAccountsProvider: React.FC = ({ children }) => {
             } else {
               _ownedTokenAccounts[mint] = [initialAccount];
             }
-            if (!subscriptionsRef.current[pubkey]) {
+            if (!subscriptionsRef.current[pubkey.toString()]) {
               // Subscribe to the SPL token account updates only if no subscription exists for this token.
               subscribeToTokenAccount(new PublicKey(pubkey));
             }
@@ -170,6 +154,7 @@ export const OwnedTokenAccountsProvider: React.FC = ({ children }) => {
         }
         setOwnedTokenAccounts(_ownedTokenAccounts);
       } catch (err) {
+        console.log(err);
         pushNotification({
           severity: 'error',
           message: `${err}`,

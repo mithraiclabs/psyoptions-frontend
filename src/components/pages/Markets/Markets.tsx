@@ -11,7 +11,6 @@ import ChevronLeft from '@material-ui/icons/ChevronLeft';
 import ChevronRight from '@material-ui/icons/ChevronRight';
 import { PublicKey } from '@solana/web3.js';
 import moment from 'moment';
-import BigNumber from 'bignumber.js';
 
 import theme from '../../../utils/theme';
 

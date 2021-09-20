@@ -32,8 +32,6 @@ export const useInitializeSerumMarket = (): ((options: {
       quoteLotSize: BN;
     }) => {
       try {
-        // baseLotSize should be 1 -- the options market token doesn't have decimals
-        const baseLotSize = new BN('1');
         pushNotification({
           severity: NotificationSeverity.INFO,
           message: 'Processing: Initialize Serum Market',

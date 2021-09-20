@@ -13,16 +13,13 @@ import BN from 'bn.js';
 import type { Moment } from 'moment';
 
 import theme from '../../utils/theme';
-import { createInitializeMarketTx } from '../../utils/serum';
 import { WRAPPED_SOL_ADDRESS, getHighestAccount } from '../../utils/token';
-import useConnection from '../../hooks/useConnection';
 import useWallet from '../../hooks/useWallet';
 import useSerum from '../../hooks/useSerum';
 import useOwnedTokenAccounts from '../../hooks/useOwnedTokenAccounts';
 import useNotifications from '../../hooks/useNotifications';
 import usePlaceSellOrder from '../../hooks/usePlaceSellOrder';
 import usePlaceBuyOrder from '../../hooks/usePlaceBuyOrder';
-import useSendTransaction from '../../hooks/useSendTransaction';
 import { useSerumOrderbook } from '../../hooks/Serum';
 import { useSerumFeeDiscountKey } from '../../hooks/Serum/useSerumFeeDiscountKey';
 import { useOptionMarket } from '../../hooks/useOptionMarket';
@@ -37,6 +34,7 @@ import ConnectButton from '../ConnectButton';
 import DialogFullscreenMobile from '../DialogFullscreenMobile';
 import { calculatePriceWithSlippage } from '../../utils/calculatePriceWithSlippage';
 import { calculateBreakeven } from '../../utils/calculateBreakeven';
+import { useInitializeSerumMarket } from '../../hooks/Serum/useInitializeSerumMarket';
 
 const bgLighterColor = (theme.palette.background as any).lighter;
 
@@ -96,13 +94,12 @@ const BuySellDialog: React.VFC<{
   const [initializingSerum, setInitializingSerum] = useState(false);
   const [placeOrderLoading, setPlaceOrderLoading] = useState(false);
   const { pushErrorNotification } = useNotifications();
-  const { connection, dexProgramId } = useConnection();
-  const { balance, wallet, pubKey, connected } = useWallet();
+  const { balance, pubKey, connected } = useWallet();
   const placeSellOrder = usePlaceSellOrder(serumAddress);
   const placeBuyOrder = usePlaceBuyOrder(serumAddress);
   const { serumMarkets, fetchSerumMarket } = useSerum();
   const { orderbook } = useSerumOrderbook(serumAddress);
-  const { sendSignedTransaction } = useSendTransaction();
+  const initializeSerumMarket = useInitializeSerumMarket();
   const { feeRates: serumFeeRates, publicKey: serumDiscountFeeKey } =
     useSerumFeeDiscountKey();
   const { ownedTokenAccounts, loadingOwnedTokenAccounts } =
@@ -188,43 +185,21 @@ const BuySellDialog: React.VFC<{
         tickSize * 10 ** (type === 'call' ? qAssetDecimals : uAssetDecimals),
       );
 
-      // baseLotSize should be 1 -- the options market token doesn't have decimals
-      const baseLotSize = new BN('1');
-
-      const { tx1, tx2, market } = await createInitializeMarketTx({
-        connection,
-        payer: pubKey,
-        baseMint: optionMintKey,
-        quoteMint:
+      const [serumMarketKey] = await initializeSerumMarket({
+        optionMarketKey: optionMarket.pubkey,
+        baseMintKey: optionMintKey,
+        quoteMintKey:
           type === 'call'
             ? new PublicKey(qAssetMint)
             : new PublicKey(uAssetMint),
-        baseLotSize,
         quoteLotSize,
-        dexProgramId: serumProgramKey || dexProgramId,
-      });
-
-      const signed = await wallet.signAllTransactions([tx1, tx2]);
-
-      await sendSignedTransaction({
-        signedTransaction: signed[0],
-        connection,
-        sendingMessage: 'Sending: Init Serum market TX 1',
-        successMessage: 'Confirmed: Init Serum market TX 1',
-      });
-
-      await sendSignedTransaction({
-        signedTransaction: signed[1],
-        connection,
-        sendingMessage: 'Sending: Init Serum market TX 2',
-        successMessage: 'Confirmed: Init Serum market TX 2',
       });
 
       // Load the market instance into serum context state
       // There may be a more efficient way to do this part since we have the keypair here
       // Open to suggestions / refactoring
       await fetchSerumMarket(
-        market.publicKey,
+        serumMarketKey,
         new PublicKey(uAssetMint),
         new PublicKey(qAssetMint),
         serumProgramKey,

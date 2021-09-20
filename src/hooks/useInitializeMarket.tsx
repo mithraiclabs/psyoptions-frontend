@@ -8,6 +8,7 @@ import useNotifications from './useNotifications';
 import { OptionsMarketsContext } from '../context/OptionsMarketsContext';
 import { NotificationSeverity, OptionMarket } from '../types';
 import { useAmericanPsyOptionsProgram } from './useAmericanPsyOptionsProgram';
+import WalletAdapter from '../utils/wallet/walletAdapter';
 
 type InitMarketParams = {
   amountPerContract: BigNumber;
@@ -40,7 +41,7 @@ export const useInitializeMarket = (): ((
       uAssetDecimals,
       qAssetDecimals,
     }: InitMarketParams) => {
-      if (!program) {
+      if (!program || !(program.provider.wallet as WalletAdapter).connected) {
         // short circuit when there is no program. This is likely
         // due to there being no wallet connected
         pushErrorNotification('Please connect wallet');

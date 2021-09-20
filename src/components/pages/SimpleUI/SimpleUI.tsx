@@ -4,6 +4,7 @@ import { Switch, Route, useHistory, useLocation } from 'react-router-dom';
 import ChooseAnAsset from './routes/ChooseAnAsset';
 import UpOrDown from './routes/UpOrDown';
 import ChooseExpiration from './routes/ChooseExpiration';
+import ChooseStrike from './routes/ChooseStrike';
 
 export const SimpleUI: React.FC = () => {
   const history = useHistory();
@@ -21,6 +22,7 @@ export const SimpleUI: React.FC = () => {
       <Route component={ChooseAnAsset} path="/simple/choose-asset" />
       <Route component={UpOrDown} path="/simple/up-or-down" />
       <Route component={ChooseExpiration} path="/simple/choose-expiration" />
+      <Route component={ChooseStrike} path="/simple/choose-strike" />
     </Switch>
   );
 };

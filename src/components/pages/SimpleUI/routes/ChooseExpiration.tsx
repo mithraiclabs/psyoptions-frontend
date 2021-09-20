@@ -9,6 +9,7 @@ import {
   useFormState,
 } from '../../../../context/SimpleUIContext';
 import useExpirationDate from '../../../../hooks/useExpirationDate';
+import useOptionsChain from '../../../../hooks/useOptionsChain';
 
 import { SimpleUIPage } from '../SimpeUIPage';
 
@@ -46,11 +47,12 @@ const ChooseDateButton = ({ date, selected, onClick }) => {
 };
 
 const ChooseExpiration = () => {
-  const { setSelectedDate, dates } = useExpirationDate();
+  const { selectedDate, setSelectedDate, dates } = useExpirationDate();
   const { tokenSymbol, direction } = useFormState();
   const updateForm = useUpdateForm();
   const history = useHistory();
   const [selectedExpiration, setSelectedExpiration] = useState(0);
+  const { buildOptionsChain } = useOptionsChain();
 
   // If previous form state didn't exist, send user back to first page (choose asset)
   useEffect(() => {
@@ -58,6 +60,13 @@ const ChooseExpiration = () => {
       history.replace('/simple/choose-asset');
     }
   }, [tokenSymbol, direction, history]);
+
+  useEffect(() => {
+    if (selectedDate) {
+      const defaultContractSize = 0.1;
+      buildOptionsChain(selectedDate.unix(), defaultContractSize);
+    }
+  }, [buildOptionsChain, selectedDate]);
 
   const handleMakeSelection = (d: moment.Moment) => {
     if (!selectedExpiration) {

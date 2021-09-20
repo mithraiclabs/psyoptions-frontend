@@ -40,6 +40,7 @@ import { MarketsTableHeader } from './MarketsTableHeader';
 import { CallOrPut, OptionType, SerumMarketAndProgramId } from '../../../types';
 import { useBatchLoadMints } from '../../../hooks/SPLToken';
 import { useSerumPriceByAssets } from '../../../hooks/Serum/useSerumPriceByAssets';
+import { calculateStrikePrecision } from '../../../utils/getStrikePrices';
 
 const dblsp = `${'\u00A0'}${'\u00A0'}`;
 
@@ -148,14 +149,7 @@ const Markets: React.VFC = () => {
 
   let precision;
   if (round && chains[0]?.strike) {
-    const n = chains[0].strike;
-    if (n >= new BigNumber(1)) {
-      precision = 2;
-    } else {
-      const s = n.toString(10).replace('.', '');
-      const numZeros = s.match(/^0+/)[0]?.length || 0;
-      precision = 3 + numZeros;
-    }
+    precision = calculateStrikePrecision(chains[0].strike);
   }
 
   const filteredChain = chains;

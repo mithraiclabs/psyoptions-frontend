@@ -63,7 +63,7 @@ const ChooseExpiration = () => {
 
   useEffect(() => {
     if (selectedDate) {
-      const defaultContractSize = 0.1;
+      const defaultContractSize = 0.01;
       buildOptionsChain(selectedDate.unix(), defaultContractSize);
     }
   }, [buildOptionsChain, selectedDate]);

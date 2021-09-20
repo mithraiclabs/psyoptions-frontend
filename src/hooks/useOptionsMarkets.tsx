@@ -124,7 +124,7 @@ const useOptionsMarkets = () => {
             qAssetMint: qAsset.mintAddress,
             strike,
             optionMarketKey: optionAccount.publicKey,
-            expiration: expirationUnixTimestamp,
+            expiration: expirationUnixTimestamp.toNumber(),
             optionMintKey: optionMint,
             writerTokenMintKey: writerTokenMint,
             underlyingAssetPoolKey: underlyingAssetPool,

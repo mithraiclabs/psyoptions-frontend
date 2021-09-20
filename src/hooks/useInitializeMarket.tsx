@@ -83,6 +83,7 @@ export const useInitializeMarket = (): ((
 
         const marketData: OptionMarket = {
           key: `${expiration}-${uAssetSymbol}-${qAssetSymbol}-${amountPerContract.toString()}-${amountPerContract.toString()}/${quoteAmountPerContract.toString()}`,
+          pubkey: optionMarketKey,
           amountPerContract,
           quoteAmountPerContract,
           size: `${amountPerContract.toNumber()}`,

@@ -109,6 +109,7 @@ const useOptionsMarkets = () => {
             key: `${expiration}-${uAsset?.tokenSymbol}-${
               qAsset?.tokenSymbol
             }-${amountPerContract.toString()}-${amountPerContract.toString()}/${quoteAmountPerContract.toString()}`,
+            pubkey: market.pubkey,
             amountPerContract,
             quoteAmountPerContract,
             size: `${amountPerContract.toString(10)}`,
@@ -185,6 +186,7 @@ const useOptionsMarkets = () => {
           key: `${market.expiration}-${uAsset?.tokenSymbol}-${
             qAsset?.tokenSymbol
           }-${amountPerContract.toString()}-${amountPerContract.toString()}/${quoteAmountPerContract.toString()}`,
+          pubkey: new PublicKey(market.optionMarketAddress),
           amountPerContract,
           quoteAmountPerContract,
           size: `${amountPerContract.toString(10)}`,

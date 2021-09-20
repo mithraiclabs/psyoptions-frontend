@@ -154,6 +154,7 @@ export const InitOptionMarket: React.VFC = () => {
         );
 
         const initSerumResp = await initializeSerumMarket({
+          optionMarketKey: initializedMarket.pubkey,
           baseMintKey: initializedMarket.optionMintKey,
           // This needs to be the USDC, so flip the quote asset vs underlying asset
           quoteMintKey:

@@ -35,6 +35,7 @@ export const MarketExistsDialog: React.VFC<{
     // This will likely be USDC or USDT but could be other things in some cases
     const quoteLotSize = new BN(tickSize * 10 ** USDCToken?.decimals);
     const initSerumResp = await initializeSerumMarket({
+      optionMarketKey: optionMarket.optionMarketKey,
       baseMintKey: optionMarket.optionMintKey,
       // This needs to be the USDC, so flip the quote asset vs underlying asset
       quoteMintKey: USDCPublicKey,

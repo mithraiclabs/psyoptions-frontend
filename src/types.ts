@@ -33,6 +33,7 @@ export type TokenAccount = {
 export type OptionMarket = {
   key: string;
   // Leave these in tact as BigNumbers to use later for creating the reciprocal put/call
+  pubkey: PublicKey;
   amountPerContract: BigNumber;
   quoteAmountPerContract: BigNumber;
   strike: BigNumber;

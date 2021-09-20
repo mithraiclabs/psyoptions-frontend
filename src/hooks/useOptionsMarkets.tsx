@@ -1,9 +1,13 @@
 import { useContext, useCallback } from 'react';
 import BigNumber from 'bignumber.js';
-import { Market } from '@mithraic-labs/psyoptions';
+import {
+  getAllOptionAccounts,
+  OptionMarket as AmericanOptionData,
+} from '@mithraic-labs/psy-american';
 import { Connection, PublicKey } from '@solana/web3.js';
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 
+import { ProgramAccount } from '@project-serum/anchor';
 import useNotifications from './useNotifications';
 import useWallet from './useWallet';
 import useConnection from './useConnection';
@@ -22,8 +26,10 @@ import {
 import { ClusterName, OptionMarket } from '../types';
 import { getSupportedMarketsByNetwork } from '../utils/networkInfo';
 import { findMarketByAssets } from '../utils/serum';
+import { useAmericanPsyOptionsProgram } from './useAmericanPsyOptionsProgram';
 
 const useOptionsMarkets = () => {
+  const program = useAmericanPsyOptionsProgram();
   const { pushErrorNotification, pushNotification } = useNotifications();
   const { wallet, pubKey } = useWallet();
   const { connection, dexProgramId, endpoint } = useConnection();
@@ -50,21 +56,18 @@ const useOptionsMarkets = () => {
       const assets = supportedAssets.map(
         (asset) => new PublicKey(asset.mintAddress),
       );
-      const res = await Market.getAllMarketsBySplSupport(
-        connection,
-        new PublicKey(endpoint.programId),
-        assets,
-      );
+
+      const res = await getAllOptionAccounts(program);
 
       // Transform the market data to our expectations
       const newMarkets = {};
       await Promise.all(
-        res.map(async (market) => {
-          const uAssetMint = market.marketData.underlyingAssetMintKey;
+        res.map(async (optionAccount: ProgramAccount<AmericanOptionData>) => {
+          const uAssetMint = optionAccount.account.underlyingAssetMint;
           const uAsset = supportedAssets.filter(
             (asset) => asset.mintAddress === uAssetMint.toString(),
           )[0];
-          const qAssetMint = market.marketData.quoteAssetMintKey;
+          const qAssetMint = optionAccount.account.quoteAssetMint;
           const qAsset = supportedAssets.filter(
             (asset) => asset.mintAddress === qAssetMint.toString(),
           )[0];
@@ -72,11 +75,11 @@ const useOptionsMarkets = () => {
           // BN.js doesn't handle decimals while bignumber.js can handle decimals of arbitrary sizes
           // So convert all BN types to BigNumber
           const amountPerContract = new BigNumber(
-            market.marketData.amountPerContract.toString(10),
+            optionAccount.account.underlyingAmountPerContract.toString(10),
           ).div(10 ** uAsset?.decimals);
 
           const quoteAmountPerContract = new BigNumber(
-            market.marketData.quoteAmountPerContract.toString(10),
+            optionAccount.account.quoteAmountPerContract.toString(10),
           ).div(10 ** qAsset?.decimals);
 
           const strike = quoteAmountPerContract.div(
@@ -84,32 +87,34 @@ const useOptionsMarkets = () => {
           );
 
           const {
-            expiration,
-            optionMintKey,
-            writerTokenMintKey,
-            underlyingAssetPoolKey,
-            underlyingAssetMintKey,
-            quoteAssetPoolKey,
-            quoteAssetMintKey,
-            optionMarketKey,
-          } = market.marketData;
+            expirationUnixTimestamp,
+            optionMint,
+            writerTokenMint,
+            underlyingAssetPool,
+            underlyingAssetMint,
+            quoteAssetPool,
+            quoteAssetMint,
+          } = optionAccount.account;
 
           const serumMarket = await findMarketByAssets(
             connection,
-            optionMintKey,
-            quoteAssetMintKey,
+            optionMint,
+            quoteAssetMint,
             dexProgramId,
           );
           // Short circuit if there is no serumMarket because OptionMarket must have a serumMarketKey
-          if (!serumMarket) {
+          if (!serumMarket || !uAsset || !qAsset) {
+            console.warn(
+              `market with address: ${optionAccount.publicKey.toString()} is missing required data`,
+            );
             return;
           }
 
           const newMarket: OptionMarket = {
-            key: `${expiration}-${uAsset?.tokenSymbol}-${
+            key: `${expirationUnixTimestamp}-${uAsset?.tokenSymbol}-${
               qAsset?.tokenSymbol
             }-${amountPerContract.toString()}-${amountPerContract.toString()}/${quoteAmountPerContract.toString()}`,
-            pubkey: market.pubkey,
+            pubkey: optionAccount.publicKey,
             amountPerContract,
             quoteAmountPerContract,
             size: `${amountPerContract.toString(10)}`,
@@ -118,14 +123,14 @@ const useOptionsMarkets = () => {
             uAssetMint: uAsset.mintAddress,
             qAssetMint: qAsset.mintAddress,
             strike,
-            optionMarketKey,
-            expiration,
-            optionMintKey,
-            writerTokenMintKey,
-            underlyingAssetPoolKey,
-            underlyingAssetMintKey,
-            quoteAssetPoolKey,
-            quoteAssetMintKey,
+            optionMarketKey: optionAccount.publicKey,
+            expiration: expirationUnixTimestamp,
+            optionMintKey: optionMint,
+            writerTokenMintKey: writerTokenMint,
+            underlyingAssetPoolKey: underlyingAssetPool,
+            underlyingAssetMintKey: underlyingAssetMint,
+            quoteAssetPoolKey: quoteAssetPool,
+            quoteAssetMintKey: quoteAssetMint,
             serumMarketKey: serumMarket.address,
             psyOptionsProgramId: endpoint.programId,
             serumProgramId: dexProgramId.toString(),
@@ -140,6 +145,7 @@ const useOptionsMarkets = () => {
           newMarkets[key] = newMarket;
         }),
       );
+
       // Not sure if we should replace the existing markets or merge them
       setMarkets(newMarkets);
       setMarketsLoading(false);
@@ -148,7 +154,7 @@ const useOptionsMarkets = () => {
       console.error(err);
       setMarketsLoading(false);
     }
-  }, [connection, supportedAssets, endpoint]); // eslint-disable-line
+  }, [connection, supportedAssets, endpoint, program]); // eslint-disable-line
 
   const packagedMarkets = useCallback(async () => {
     if (endpoint.name === ClusterName.localhost) {

@@ -4,16 +4,16 @@ set -xe
 echo 'running local setup'
 
 cd $OPTIONS_REPO
-# build the programs
-anchor build
 # set the config to localnet
 solana config set --url http://localhost:8899 --keypair $KEY_FILE
 # airdrop tokens before 
 solana airdrop 100
 solana airdrop 100 $WALLET_ADDRESS
 
+# build the programs
+anchor build
 # deploy the program
-solana program deploy --program-id $OPTIONS_REPO/target/deploy/psy_american-keypair.json $OPTIONS_REPO/target/deploy/psy_american.so
+anchor deploy
 
 # Deploy the Serum DEX
 cd $DEX_REPO

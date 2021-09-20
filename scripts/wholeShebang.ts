@@ -3,8 +3,6 @@ import { exec, spawn } from 'child_process';
 import * as fetch from 'node-fetch';
 import * as fs from 'fs';
 
-import { wait } from './helpers';
-
 // create logs directory if it doesn't exist
 !fs.existsSync(`./logs/`) && fs.mkdirSync(`./logs/`, { recursive: true });
 

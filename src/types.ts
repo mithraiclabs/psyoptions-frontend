@@ -1,4 +1,5 @@
 import { Market } from '@mithraic-labs/serum';
+import { BN } from '@project-serum/anchor';
 import { Account, PublicKey, Transaction } from '@solana/web3.js';
 import BigNumber from 'bignumber.js';
 import { SerumMarket } from './utils/serum';
@@ -36,6 +37,8 @@ export type OptionMarket = {
   pubkey: PublicKey;
   amountPerContract: BigNumber;
   quoteAmountPerContract: BigNumber;
+  amountPerContractBN: BN;
+  quoteAmountPerContractBN: BN;
   strike: BigNumber;
   strikePrice?: string;
   size: string;

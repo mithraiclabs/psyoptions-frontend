@@ -3,6 +3,7 @@ import { PublicKey } from '@solana/web3.js';
 import BigNumber from 'bignumber.js';
 import { instructions } from '@mithraic-labs/psy-american';
 import * as anchor from '@project-serum/anchor';
+import { BN } from '@project-serum/anchor';
 import useConnection from './useConnection';
 import useNotifications from './useNotifications';
 import { OptionsMarketsContext } from '../context/OptionsMarketsContext';
@@ -54,12 +55,16 @@ export const useInitializeMarket = (): ((
         // Create and send transaction for creating/initializing accounts needed
         // for option market
 
-        const amountPerContractU64 = amountPerContract
-          .multipliedBy(new BigNumber(10).pow(uAssetDecimals))
-          .toNumber();
-        const quoteAmountPerContractU64 = quoteAmountPerContract
-          .multipliedBy(new BigNumber(10).pow(qAssetDecimals))
-          .toNumber();
+        const amountPerContractBN = new BN(
+          amountPerContract
+            .multipliedBy(new BigNumber(10).pow(uAssetDecimals))
+            .toString(10),
+        );
+        const quoteAmountPerContractBN = new BN(
+          quoteAmountPerContract
+            .multipliedBy(new BigNumber(10).pow(qAssetDecimals))
+            .toString(10),
+        );
 
         pushNotification({
           severity: NotificationSeverity.INFO,
@@ -74,9 +79,9 @@ export const useInitializeMarket = (): ((
           writerMintKey,
         } = await instructions.initializeMarket(program, {
           expirationUnixTimestamp: new anchor.BN(expiration),
-          quoteAmountPerContract: new anchor.BN(quoteAmountPerContractU64),
+          quoteAmountPerContract: quoteAmountPerContractBN,
           quoteMint: quoteMintKey,
-          underlyingAmountPerContract: new anchor.BN(amountPerContractU64),
+          underlyingAmountPerContract: amountPerContractBN,
           underlyingMint: underlyingMintKey,
         });
 
@@ -86,7 +91,9 @@ export const useInitializeMarket = (): ((
           key: `${expiration}-${uAssetSymbol}-${qAssetSymbol}-${amountPerContract.toString()}-${amountPerContract.toString()}/${quoteAmountPerContract.toString()}`,
           pubkey: optionMarketKey,
           amountPerContract,
+          amountPerContractBN,
           quoteAmountPerContract,
+          quoteAmountPerContractBN,
           size: `${amountPerContract.toNumber()}`,
           strike,
           strikePrice: strike.toString(),

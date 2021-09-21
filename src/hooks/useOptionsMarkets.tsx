@@ -7,7 +7,7 @@ import {
 import { Connection, PublicKey } from '@solana/web3.js';
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 
-import { ProgramAccount } from '@project-serum/anchor';
+import { BN, ProgramAccount } from '@project-serum/anchor';
 import useNotifications from './useNotifications';
 import useWallet from './useWallet';
 import useConnection from './useConnection';
@@ -116,7 +116,11 @@ const useOptionsMarkets = () => {
             }-${amountPerContract.toString()}-${amountPerContract.toString()}/${quoteAmountPerContract.toString()}`,
             pubkey: optionAccount.publicKey,
             amountPerContract,
+            amountPerContractBN:
+              optionAccount.account.underlyingAmountPerContract,
             quoteAmountPerContract,
+            quoteAmountPerContractBN:
+              optionAccount.account.quoteAmountPerContract,
             size: `${amountPerContract.toString(10)}`,
             uAssetSymbol: uAsset.tokenSymbol,
             qAssetSymbol: qAsset.tokenSymbol,
@@ -194,7 +198,9 @@ const useOptionsMarkets = () => {
           }-${amountPerContract.toString()}-${amountPerContract.toString()}/${quoteAmountPerContract.toString()}`,
           pubkey: new PublicKey(market.optionMarketAddress),
           amountPerContract,
+          amountPerContractBN: new BN(market.underlyingAssetPerContract),
           quoteAmountPerContract,
+          quoteAmountPerContractBN: new BN(market.quoteAssetPerContract),
           size: `${amountPerContract.toString(10)}`,
           uAssetSymbol: uAsset?.tokenSymbol,
           qAssetSymbol: qAsset?.tokenSymbol,
@@ -287,15 +293,16 @@ const useOptionsMarkets = () => {
     try {
       const tx = transaction;
 
-      const { transaction: mintTx } = await mintInstructions({
-        numberOfContractsToMint: numberOfContracts,
-        authorityPubkey: pubKey,
-        programId: new PublicKey(marketData.psyOptionsProgramId),
-        market: marketData,
+      const { transaction: mintTx } = await mintInstructions(
+        numberOfContracts,
+        marketData,
+        pubKey,
+        new PublicKey(marketData.psyOptionsProgramId),
         mintedOptionDestKey,
         writerTokenDestKey,
         underlyingAssetSrcKey,
-      });
+        program,
+      );
 
       tx.add(mintTx);
       // Close out the wrapped SOL account so it feels native

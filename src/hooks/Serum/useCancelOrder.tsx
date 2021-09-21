@@ -49,7 +49,7 @@ export const useCancelOrder = (
               order,
             );
           } else {
-            const ix = serumInstructions.cancelOrderInstructionV2(
+            const ix = await serumInstructions.cancelOrderInstructionV2(
               program,
               optionMarket.pubkey,
               new PublicKey(optionMarket.serumProgramId),
@@ -57,6 +57,7 @@ export const useCancelOrder = (
               order,
               undefined,
             );
+            cancelTx = new Transaction().add(ix);
           }
           const { blockhash } = await connection.getRecentBlockhash();
           cancelTx.recentBlockhash = blockhash;

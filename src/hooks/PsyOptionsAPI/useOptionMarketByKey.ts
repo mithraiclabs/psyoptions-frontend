@@ -3,7 +3,7 @@ import { OptionMarket } from '../../types';
 import useOptionsMarkets from '../useOptionsMarkets';
 
 export const useOptionMarketByKey = (
-  optionMarketUiKey: string,
+  optionMarketUiKey: string | undefined,
 ): OptionMarket | undefined => {
   const { markets } = useOptionsMarkets();
 

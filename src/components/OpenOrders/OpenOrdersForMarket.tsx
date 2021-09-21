@@ -86,9 +86,11 @@ const OrderRow = ({
 };
 
 // Render all open orders for a given market as table rows
-const OpenOrdersForMarket: React.VFC<CallOrPut> = ({
+const OpenOrdersForMarket: React.VFC<
+  CallOrPut & { optionMarketUiKey: string }
+> = ({
   expiration,
-  key,
+  optionMarketUiKey,
   size: contractSize,
   type,
   qAssetSymbol,
@@ -96,7 +98,7 @@ const OpenOrdersForMarket: React.VFC<CallOrPut> = ({
   serumMarketKey,
   strikePrice,
 }) => {
-  const optionMarket = useOptionMarketByKey(key);
+  const optionMarket = useOptionMarketByKey(optionMarketUiKey);
   const { serumMarkets } = useSerum();
   const [orderbooks] = useSerumOrderbooks();
   const [openOrders] = useSerumOpenOrders();

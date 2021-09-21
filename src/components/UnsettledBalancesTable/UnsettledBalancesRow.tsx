@@ -105,7 +105,7 @@ const UnsettledBalancesRow: React.FC<UnsettledRow> = ({
   const serumMarketAddress = serumMarketKey.toString();
   const { serumMarket } = serumMarkets[serumMarketAddress] || {};
   const { settleFunds } = useSettleFunds(serumMarketAddress, optionMarket);
-  const unsettledFunds = useUnsettledFundsForMarket(serumMarketAddress);
+  const unsettledFunds = useUnsettledFundsForMarket(serumMarketAddress, key);
 
   useSubscribeOpenOrders(serumMarketAddress);
 

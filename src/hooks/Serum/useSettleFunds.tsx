@@ -17,6 +17,7 @@ import { useSerumOpenOrderAccounts } from './useSerumOpenOrderAccounts';
 import useAssetList from '../useAssetList';
 import { useAmericanPsyOptionsProgram } from '../useAmericanPsyOptionsProgram';
 import { OptionMarket } from '../../types';
+import { getReferralId } from '../../utils/networkInfo';
 
 /**
  * Returns function for settling the funds of a specific market
@@ -37,7 +38,11 @@ export const useSettleFunds = (
   const { USDCPublicKey } = useAssetList();
   const { ownedTokenAccounts, subscribeToTokenAccount } =
     useOwnedTokenAccounts();
-  const openOrders = useSerumOpenOrderAccounts(serumMarketAddress, true);
+  const openOrders = useSerumOpenOrderAccounts(
+    serumMarketAddress,
+    optionMarket?.key,
+    true,
+  );
   const serumMarket = serumMarkets[serumMarketAddress]?.serumMarket;
   const baseMintAddress =
     serumMarket?.baseMintAddress && serumMarket.baseMintAddress.toString();
@@ -86,7 +91,8 @@ export const useSettleFunds = (
         subscribeToTokenAccount(newTokenAccountKey);
       }
 
-      let settleTx: Transaction; let settleSigners: Signer[];
+      let settleTx: Transaction;
+      let settleSigners: Signer[] = [];
       if (
         PSY_AMERICAN_PROGRAM_IDS[
           optionMarket.psyOptionsProgramId.toString()
@@ -98,10 +104,11 @@ export const useSettleFunds = (
             openOrders[0],
             _baseTokenAccountKey,
             _quoteTokenAccountKey,
-            serumMarket.quoteMintAddress.equals(USDCPublicKey) &&
-              endpoint.serumReferrerId
-              ? new PublicKey(endpoint.serumReferrerId)
-              : undefined,
+            await getReferralId(
+              program,
+              endpoint,
+              serumMarket.quoteMintAddress,
+            ),
           ));
       } else {
         const ix = await serumInstructions.settleFundsInstruction(
@@ -111,7 +118,7 @@ export const useSettleFunds = (
           serumMarket.address,
           _baseTokenAccountKey,
           _quoteTokenAccountKey,
-          new PublicKey(endpoint.serumReferrerId),
+          await getReferralId(program, endpoint, serumMarket.quoteMintAddress),
           openOrders[0].address,
           undefined,
         );
@@ -131,7 +138,7 @@ export const useSettleFunds = (
     }
     return undefined;
   }, [
-    endpoint.serumReferrerId,
+    endpoint,
     serumMarket,
     openOrders,
     program,
@@ -139,7 +146,6 @@ export const useSettleFunds = (
     quoteTokenAccountKey,
     connection,
     optionMarket,
-    USDCPublicKey,
     pubKey,
     subscribeToTokenAccount,
   ]);

@@ -25,7 +25,10 @@ export const UnsettledFunds: React.VFC<{
   optionMarketUiKey,
 }) => {
   const optionMarket = useOptionMarketByKey(optionMarketUiKey);
-  const unsettledFunds = useUnsettledFundsForMarket(serumMarketAddress);
+  const unsettledFunds = useUnsettledFundsForMarket(
+    serumMarketAddress,
+    optionMarketUiKey,
+  );
   const { settleFunds } = useSettleFunds(serumMarketAddress, optionMarket);
   useSubscribeOpenOrders(serumMarketAddress);
   const [loading, setLoading] = useState(false);

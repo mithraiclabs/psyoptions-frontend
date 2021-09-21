@@ -574,6 +574,7 @@ const BuySellDialog: React.VFC<{
                     }. Mint/Sell will lock the required collateral (${collateralRequired} ${uAssetSymbol}) until the contract expires or is exercised.`}
                   </Box>
                   <UnsettledFunds
+                    optionMarketUiKey={optionMarket.key}
                     qAssetSymbol={type === 'call' ? qAssetSymbol : uAssetSymbol}
                     serumMarketAddress={serumAddress}
                     qAssetDecimals={

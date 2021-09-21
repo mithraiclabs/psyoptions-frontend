@@ -13,6 +13,7 @@ import theme from '../../utils/theme';
 import { TCell } from './OpenOrderStyles';
 import { CallOrPut } from '../../types';
 import TxButton from '../TxButton';
+import { useOptionMarketByKey } from '../../hooks/PsyOptionsAPI/useOptionMarketByKey';
 
 type SerumBidOrAsk = {
   side: string;
@@ -85,8 +86,11 @@ const OrderRow = ({
 };
 
 // Render all open orders for a given market as table rows
-const OpenOrdersForMarket: React.VFC<CallOrPut> = ({
+const OpenOrdersForMarket: React.VFC<
+  CallOrPut & { optionMarketUiKey: string }
+> = ({
   expiration,
+  optionMarketUiKey,
   size: contractSize,
   type,
   qAssetSymbol,
@@ -94,6 +98,7 @@ const OpenOrdersForMarket: React.VFC<CallOrPut> = ({
   serumMarketKey,
   strikePrice,
 }) => {
+  const optionMarket = useOptionMarketByKey(optionMarketUiKey);
   const { serumMarkets } = useSerum();
   const [orderbooks] = useSerumOrderbooks();
   const [openOrders] = useSerumOpenOrders();
@@ -101,7 +106,7 @@ const OpenOrdersForMarket: React.VFC<CallOrPut> = ({
   const { serumMarket, serumProgramId } =
     serumMarkets[serumMarketAddress] || {};
 
-  const handleCancelOrder = useCancelOrder(serumMarketAddress);
+  const handleCancelOrder = useCancelOrder(serumMarketAddress, optionMarket);
 
   useSubscribeOpenOrders(serumMarketAddress, serumProgramId);
 

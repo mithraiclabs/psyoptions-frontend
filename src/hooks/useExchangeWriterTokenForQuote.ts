@@ -1,7 +1,17 @@
 import { useCallback } from 'react';
 import { exchangeWriterTokenForQuoteInstruction } from '@mithraic-labs/psyoptions';
-import { PublicKey, Transaction } from '@solana/web3.js';
+import {
+  PublicKey,
+  Transaction,
+  TransactionInstruction,
+} from '@solana/web3.js';
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import {
+  PSY_AMERICAN_PROGRAM_IDS,
+  ProgramVersions,
+  instructions,
+} from '@mithraic-labs/psy-american';
+import { BN } from '@project-serum/anchor';
 import useNotifications from './useNotifications';
 import useConnection from './useConnection';
 import useWallet from './useWallet';
@@ -11,6 +21,8 @@ import { useSolanaMeta } from '../context/SolanaMetaContext';
 import { OptionMarket } from '../types';
 import { createAssociatedTokenAccountInstruction } from '../utils/instructions';
 import useOwnedTokenAccounts from './useOwnedTokenAccounts';
+import { useAmericanPsyOptionsProgram } from './useAmericanPsyOptionsProgram';
+import { uiOptionMarketToProtocolOptionMarket } from '../utils/typeConversions';
 
 /**
  * Allow user to burn a Writer Token in exchange for Quote Asset in the
@@ -26,6 +38,7 @@ export const useExchangeWriterTokenForQuote = (
   writerTokenSourceKey: PublicKey,
   quoteAssetDestKey: PublicKey,
 ): (() => Promise<void>) => {
+  const program = useAmericanPsyOptionsProgram();
   const { subscribeToTokenAccount } = useOwnedTokenAccounts();
   const { connection } = useConnection();
   const { pubKey, wallet } = useWallet();
@@ -67,16 +80,31 @@ export const useExchangeWriterTokenForQuote = (
         subscribeToTokenAccount(newTokenAccountKey);
         _quoteAssetDestKey = newTokenAccountKey;
       }
-      const ix = await exchangeWriterTokenForQuoteInstruction({
-        programId: new PublicKey(market.psyOptionsProgramId),
-        optionMarketKey: market.optionMarketKey,
-        writerTokenMintKey: market.writerTokenMintKey,
-        writerTokenSourceAuthorityKey: pubKey,
-        quoteAssetPoolKey: market.quoteAssetPoolKey,
-        writerTokenSourceKey,
-        quoteAssetDestKey: _quoteAssetDestKey,
-      });
-      transaction.add(ix);
+
+      let burnWriterForQuoteIx: TransactionInstruction;
+      if (
+        PSY_AMERICAN_PROGRAM_IDS[market.psyOptionsProgramId.toString()] ===
+        ProgramVersions.V1
+      ) {
+        burnWriterForQuoteIx = await exchangeWriterTokenForQuoteInstruction({
+          programId: new PublicKey(market.psyOptionsProgramId),
+          optionMarketKey: market.optionMarketKey,
+          writerTokenMintKey: market.writerTokenMintKey,
+          writerTokenSourceAuthorityKey: pubKey,
+          quoteAssetPoolKey: market.quoteAssetPoolKey,
+          writerTokenSourceKey,
+          quoteAssetDestKey: _quoteAssetDestKey,
+        });
+      } else {
+        burnWriterForQuoteIx = instructions.burnWriterForQuote(
+          program,
+          new BN(1),
+          uiOptionMarketToProtocolOptionMarket(market),
+          writerTokenSourceKey,
+          _quoteAssetDestKey,
+        );
+      }
+      transaction.add(burnWriterForQuoteIx);
 
       // Close out the wrapped SOL account so it feels native
       if (market.quoteAssetMintKey.toString() === WRAPPED_SOL_ADDRESS) {
@@ -104,11 +132,8 @@ export const useExchangeWriterTokenForQuote = (
     }
   }, [
     quoteAssetDestKey,
-    market.quoteAssetMintKey,
-    market.optionMarketKey,
-    market.writerTokenMintKey,
-    market.quoteAssetPoolKey,
-    market.psyOptionsProgramId,
+    market,
+    program,
     pubKey,
     writerTokenSourceKey,
     connection,

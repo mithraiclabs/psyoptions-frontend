@@ -137,10 +137,10 @@ const getAssetsByNetwork = (name: ClusterName): Token[] => {
     case ClusterName.localhost:
       try {
         /* eslint-disable */
-        const localnetData = require('../hooks/localnetData.json');
+        const localnetData = require('../../tmp/localnetData.json');
         return [TOKENS.mainnet[0], ...localnetData];
       } catch (err) {
-        console.error('localnet data not found at ./localnetData.json');
+        console.error('localnet data not found at ../../tmp/localnetData.json');
         return [];
       }
     default:

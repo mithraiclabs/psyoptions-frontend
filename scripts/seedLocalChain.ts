@@ -5,7 +5,7 @@
  */
 import dotenv from 'dotenv';
 import * as anchor from '@project-serum/anchor';
-// import { instructions } from '@mithraic-labs/psy-american';
+import { instructions } from '@mithraic-labs/psy-american';
 import { Connection, Keypair, PublicKey } from '@solana/web3.js';
 import BigNumber from 'bignumber.js';
 import * as fs from 'fs';
@@ -15,7 +15,6 @@ import { getSolanaConfig } from './helpers';
 import { getLastFridayOfMonths } from '../src/utils/dates';
 import { getAssetsByNetwork } from '../src/utils/networkInfo';
 import { ClusterName } from '../src/types';
-import { createInitializeMarketTx } from '../src/utils/serum';
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 dotenv.config();
 
@@ -51,7 +50,9 @@ dotenv.config();
   const usdc = assets.find((asset) => asset.tokenSymbol.match('USDC'));
   const btcKey = new PublicKey(btc.mintAddress);
   const usdcKey = new PublicKey(usdc.mintAddress);
-  const wholeBtcPerContract = 0.1;
+  const usdcToken = new Token(connection, usdcKey, TOKEN_PROGRAM_ID, payer);
+  const btcToken = new Token(connection, btcKey, TOKEN_PROGRAM_ID, payer);
+  const wholeBtcPerContract = 0.01;
   const underlyingAmountPerContract = new BigNumber(
     wholeBtcPerContract,
   ).multipliedBy(new BigNumber(10).pow(btc.decimals));
@@ -68,39 +69,17 @@ dotenv.config();
     expirationUnixTimestamp,
   );
 
-  const underlyingToken = await Token.createMint(
-    connection,
-    payer,
-    payer.publicKey,
-    payer.publicKey,
-    8,
-    TOKEN_PROGRAM_ID,
-  );
-  const quoteToken = await Token.createMint(
-    connection,
-    payer,
-    payer.publicKey,
-    payer.publicKey,
-    2,
-    TOKEN_PROGRAM_ID,
-  );
+  const { optionMarketKey } = await instructions.initializeMarket(program, {
+    expirationUnixTimestamp: new anchor.BN(expirationUnixTimestamp),
+    quoteAmountPerContract: new anchor.BN(quoteAssetPerContract.toNumber()),
+    quoteMint: usdcToken.publicKey,
+    underlyingAmountPerContract: new anchor.BN(
+      underlyingAmountPerContract.toNumber(),
+    ),
+    underlyingMint: btcToken.publicKey,
+  });
 
-  // const { optionMarketKey } = await instructions.initializeMarket(
-  //   program,
-  //   payer,
-  //   connection,
-  //   {
-  //     expirationUnixTimestamp: new anchor.BN(expirationUnixTimestamp),
-  //     quoteAmountPerContract: new anchor.BN(quoteAssetPerContract.toNumber()),
-  //     quoteMint: quoteToken.publicKey,
-  //     underlyingAmountPerContract: new anchor.BN(
-  //       underlyingAmountPerContract.toNumber(),
-  //     ),
-  //     underlyingMint: underlyingToken.publicKey,
-  //   },
-  // );
-
-  // console.log(`*** created option: ${optionMarketKey}`);
+  console.log(`*** created option: ${optionMarketKey}`);
 
   // // This will likely be USDC or USDT but could be other things in some cases
   // const quoteLotSize = new BN(0.01 * 10 ** usdc.decimals);

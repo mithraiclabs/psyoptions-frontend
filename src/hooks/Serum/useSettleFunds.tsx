@@ -1,5 +1,10 @@
-import { PublicKey, Transaction } from '@solana/web3.js';
+import { PublicKey, Signer, Transaction } from '@solana/web3.js';
 import { useCallback } from 'react';
+import {
+  PSY_AMERICAN_PROGRAM_IDS,
+  ProgramVersions,
+  serumInstructions,
+} from '@mithraic-labs/psy-american';
 import { createAssociatedTokenAccountInstruction } from '../../utils/instructions';
 import { getHighestAccount } from '../../utils/token';
 import useConnection from '../useConnection';
@@ -10,16 +15,21 @@ import useWallet from '../useWallet';
 import useSendTransaction from '../useSendTransaction';
 import { useSerumOpenOrderAccounts } from './useSerumOpenOrderAccounts';
 import useAssetList from '../useAssetList';
+import { useAmericanPsyOptionsProgram } from '../useAmericanPsyOptionsProgram';
+import { OptionMarket } from '../../types';
+import { getReferralId } from '../../utils/networkInfo';
 
 /**
  * Returns function for settling the funds of a specific market
  */
 export const useSettleFunds = (
   serumMarketAddress: string,
+  optionMarket: OptionMarket,
 ): {
   makeSettleFundsTx: () => Promise<Transaction>;
   settleFunds: () => Promise<void>;
 } => {
+  const program = useAmericanPsyOptionsProgram();
   const { pushErrorNotification } = useNotifications();
   const { connection, endpoint } = useConnection();
   const { serumMarkets } = useSerum();
@@ -28,7 +38,11 @@ export const useSettleFunds = (
   const { USDCPublicKey } = useAssetList();
   const { ownedTokenAccounts, subscribeToTokenAccount } =
     useOwnedTokenAccounts();
-  const openOrders = useSerumOpenOrderAccounts(serumMarketAddress, true);
+  const openOrders = useSerumOpenOrderAccounts(
+    serumMarketAddress,
+    optionMarket?.key,
+    true,
+  );
   const serumMarket = serumMarkets[serumMarketAddress]?.serumMarket;
   const baseMintAddress =
     serumMarket?.baseMintAddress && serumMarket.baseMintAddress.toString();
@@ -43,7 +57,7 @@ export const useSettleFunds = (
   const makeSettleFundsTx = useCallback(async (): Promise<
     Transaction | undefined
   > => {
-    if (openOrders.length && serumMarket) {
+    if (openOrders.length && serumMarket && optionMarket) {
       const transaction = new Transaction();
       let signers = [];
       let _baseTokenAccountKey = baseTokenAccountKey;
@@ -77,17 +91,39 @@ export const useSettleFunds = (
         subscribeToTokenAccount(newTokenAccountKey);
       }
 
-      const { transaction: settleTx, signers: settleSigners } =
-        await serumMarket.makeSettleFundsTransaction(
-          connection,
-          openOrders[0],
+      let settleTx: Transaction;
+      let settleSigners: Signer[] = [];
+      if (
+        PSY_AMERICAN_PROGRAM_IDS[
+          optionMarket.psyOptionsProgramId.toString()
+        ] === ProgramVersions.V1
+      ) {
+        ({ transaction: settleTx, signers: settleSigners } =
+          await serumMarket.makeSettleFundsTransaction(
+            connection,
+            openOrders[0],
+            _baseTokenAccountKey,
+            _quoteTokenAccountKey,
+            await getReferralId(
+              program,
+              endpoint,
+              serumMarket.quoteMintAddress,
+            ),
+          ));
+      } else {
+        const ix = await serumInstructions.settleFundsInstruction(
+          program,
+          optionMarket.pubkey,
+          new PublicKey(optionMarket.serumProgramId),
+          serumMarket.address,
           _baseTokenAccountKey,
           _quoteTokenAccountKey,
-          serumMarket.quoteMintAddress.equals(USDCPublicKey) &&
-            endpoint.serumReferrerId
-            ? new PublicKey(endpoint.serumReferrerId)
-            : undefined,
+          await getReferralId(program, endpoint, serumMarket.quoteMintAddress),
+          openOrders[0].address,
+          undefined,
         );
+        settleTx = new Transaction().add(ix);
+      }
       transaction.add(settleTx);
       signers = [...signers, ...settleSigners];
 
@@ -102,13 +138,14 @@ export const useSettleFunds = (
     }
     return undefined;
   }, [
-    endpoint.serumReferrerId,
+    endpoint,
     serumMarket,
     openOrders,
+    program,
     baseTokenAccountKey,
     quoteTokenAccountKey,
     connection,
-    USDCPublicKey,
+    optionMarket,
     pubKey,
     subscribeToTokenAccount,
   ]);

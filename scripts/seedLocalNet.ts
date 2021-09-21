@@ -1,3 +1,4 @@
+import { FEE_OWNER_KEY } from '@mithraic-labs/psy-american';
 import { MintLayout, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import {
   Account,
@@ -6,6 +7,7 @@ import {
   Transaction,
   sendAndConfirmTransaction,
   SystemProgram,
+  PublicKey,
 } from '@solana/web3.js';
 const fs = require('fs');
 
@@ -102,7 +104,7 @@ const fs = require('fs');
   const signers = [payer, splMint1, splMint2, splMint3, splMint4];
   await sendAndConfirmTransaction(connection, transaction, signers, {
     skipPreflight: true,
-    commitment: 'recent',
+    commitment: 'max',
   });
 
   // Generate sample assets from local net data and random logos
@@ -136,6 +138,17 @@ const fs = require('fs');
       icon: 'https://raw.githubusercontent.com/trustwallet/assets/f3ffd0b9ae2165336279ce2f8db1981a55ce30f8/blockchains/ethereum/assets/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48/logo.png',
     },
   ];
+
+  // Create the Serum referral account
+  const usdcToken = new Token(
+    connection,
+    splMint2.publicKey,
+    TOKEN_PROGRAM_ID,
+    payer,
+  );
+  const address = await usdcToken.createAssociatedTokenAccount(FEE_OWNER_KEY);
+  console.log(`*** serum referral key: ${address.toString()}`);
+
   !fs.existsSync(`./tmp/`) && fs.mkdirSync(`./tmp/`, { recursive: true });
   fs.writeFileSync('./tmp/localnetData.json', JSON.stringify(localSPLData));
 })();

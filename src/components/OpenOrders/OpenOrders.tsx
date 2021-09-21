@@ -138,6 +138,7 @@ const OpenOrders: React.FC<{
               optionMarketsArray.map((optionMarket) => (
                 <OpenOrdersForMarket
                   {...optionMarket}
+                  optionMarketUiKey={optionMarket.key}
                   key={optionMarket.serumMarketKey.toString()}
                 />
               ))

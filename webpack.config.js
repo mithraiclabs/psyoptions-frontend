@@ -58,7 +58,7 @@ module.exports = [
       extensions: ['.ts', '.tsx', '.js'],
       symlinks: false,
       fallback: {
-        "fs": false
+        fs: false
       },
     },
     output: {
@@ -102,7 +102,7 @@ module.exports = [
       extensions: ['.ts', '.tsx', '.js'],
       symlinks: false,
       fallback: {
-        "fs": false
+        fs: false
       },
     },
     output: {

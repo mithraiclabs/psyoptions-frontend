@@ -6,13 +6,13 @@ import Tooltip from '@material-ui/core/Tooltip';
 import { withStyles, useTheme } from '@material-ui/core/styles';
 import * as Sentry from '@sentry/react';
 
-import { StyledFilledInput, PlusMinusButton } from '../../BuySellDialog/styles';
 import DialogFullscreenMobile from '../../DialogFullscreenMobile';
 import useOwnedTokenAccounts from '../../../hooks/useOwnedTokenAccounts';
 import useNotifications from '../../../hooks/useNotifications';
 import useExerciseOpenPosition from '../../../hooks/useExerciseOpenPosition';
 import { OptionMarket, OptionType } from '../../../types';
 import TxButton from '../../TxButton';
+import { PlusMinusIntegerInput } from '../../PlusMinusIntegerInput';
 
 const StyledTooltip = withStyles((theme) => ({
   tooltip: {
@@ -52,15 +52,12 @@ const ExerciseDialog: React.VFC<{
   price,
   market,
 }) => {
-  const [numContractsToExercise, setNumContractsToExercise] = useState(
-    positionSize.toString(),
-  );
+  const [numContractsToExercise, setNumContractsToExercise] =
+    useState(positionSize);
   const [loading, setLoading] = useState(false);
   const { ownedTokenAccounts } = useOwnedTokenAccounts();
   const { pushNotification } = useNotifications();
   const theme = useTheme();
-
-  const handleChangeSize = (e) => setNumContractsToExercise(e.target.value);
 
   const ownedQAssetKey = ownedTokenAccounts[qAssetMintAddress]?.[0]?.pubKey;
   const ownedUAssetKey = ownedTokenAccounts[uAssetMintAddress]?.[0]?.pubKey;
@@ -92,24 +89,14 @@ const ExerciseDialog: React.VFC<{
     [exercise, pushNotification],
   );
 
-  const parsedExerciseSize =
-    Number.isNaN(parseInt(numContractsToExercise, 10)) ||
-    parseInt(numContractsToExercise, 10) < 1
-      ? 1
-      : parseInt(numContractsToExercise, 10);
-
   // within allowable range of 1 and currently available
   const withinRange =
-    parseInt(numContractsToExercise, 10) >= 1 &&
-    parseInt(numContractsToExercise, 10) <= positionSize;
+    numContractsToExercise >= 1 && numContractsToExercise <= positionSize;
 
   const strikeNumber = parseFloat(strike);
   const exerciseCost =
-    strikeNumber *
-    parseFloat(contractSize) *
-    parseInt(numContractsToExercise, 10);
-  const sizeTotalToExercise =
-    parseFloat(contractSize) * parseInt(numContractsToExercise, 10);
+    strikeNumber * parseFloat(contractSize) * numContractsToExercise;
+  const sizeTotalToExercise = parseFloat(contractSize) * numContractsToExercise;
   let exerciseCostString = exerciseCost.toString(10);
   if (exerciseCostString.match(/\..{3,}/)) {
     exerciseCostString = exerciseCost.toFixed(2);
@@ -176,37 +163,10 @@ const ExerciseDialog: React.VFC<{
           <Box p={1} width={['100%', '100%', '50%']}>
             <Box pb={1} pt={2}>
               Exercise Quantity:
-              <Box pt={1} display="flex" flexDirection="row">
-                <StyledFilledInput
-                  value={`${numContractsToExercise}`}
-                  type="number"
-                  inputProps={{ max: positionSize, min: 1 }}
-                  onChange={handleChangeSize}
-                  onBlur={() => {
-                    if (numContractsToExercise !== `${parsedExerciseSize}`) {
-                      setNumContractsToExercise(`${parsedExerciseSize}`);
-                    }
-                  }}
-                />
-                <PlusMinusButton
-                  onClick={() =>
-                    setNumContractsToExercise(
-                      `${Math.max(1, parsedExerciseSize - 1)}`,
-                    )
-                  }
-                >
-                  -
-                </PlusMinusButton>
-                <PlusMinusButton
-                  onClick={() =>
-                    setNumContractsToExercise(
-                      `${Math.min(positionSize, parsedExerciseSize + 1)}`,
-                    )
-                  }
-                >
-                  +
-                </PlusMinusButton>
-              </Box>
+              <PlusMinusIntegerInput
+                onChange={setNumContractsToExercise}
+                value={numContractsToExercise}
+              />
               <Box
                 display="flex"
                 justifyContent="space-between"
@@ -226,9 +186,7 @@ const ExerciseDialog: React.VFC<{
                 <Box pt={1}>
                   <Button
                     size="small"
-                    onClick={() =>
-                      setNumContractsToExercise(positionSize.toString())
-                    }
+                    onClick={() => setNumContractsToExercise(positionSize)}
                   >
                     Max
                   </Button>
@@ -242,9 +200,7 @@ const ExerciseDialog: React.VFC<{
                   disabled={!withinRange}
                   variant="outlined"
                   color="primary"
-                  onClick={() =>
-                    handleExercisePosition(parseInt(numContractsToExercise, 10))
-                  }
+                  onClick={() => handleExercisePosition(numContractsToExercise)}
                   loading={loading}
                 >
                   {loading ? 'Exercising' : 'Exercise'} {numContractsToExercise}{' '}

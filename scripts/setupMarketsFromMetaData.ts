@@ -4,61 +4,61 @@ import {
   PublicKey,
   sendAndConfirmRawTransaction,
   Transaction,
-} from '@solana/web3.js'
-import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
+} from '@solana/web3.js';
+import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import {
   initializeAccountsForMarket,
   initializeMarketInstruction,
   Market,
-} from '@mithraic-labs/psyoptions'
-import BigNumber from 'bignumber.js'
-import { getSolanaConfig } from './helpers'
+} from '@mithraic-labs/psyoptions';
+import BigNumber from 'bignumber.js';
+import { getSolanaConfig } from './helpers';
 
-const fs = require('fs')
+const fs = require('fs');
 
 const OPTION_PROGRAM_ID = new PublicKey(
-  'GDvqQy3FkDB2wyNwgZGp5YkmRMUmWbhNNWDMYKbLSZ5N',
-)
+  'R2y9ip6mxmWUj4pt54jP2hz2dgvMozy9VTSwMWE7evs',
+);
 
-;(async () => {
-  const marketMetaDataFile = process.argv[2]
+(async () => {
+  const marketMetaDataFile = process.argv[2];
   if (!fs.existsSync(marketMetaDataFile)) {
-    console.error('meta data file argument is missing or file does not exist')
-    process.exit(1)
+    console.error('meta data file argument is missing or file does not exist');
+    process.exit(1);
   }
 
-  const marketsMeta = JSON.parse(fs.readFileSync(marketMetaDataFile))
+  const marketsMeta = JSON.parse(fs.readFileSync(marketMetaDataFile));
 
-  const connection = new Connection('https://devnet.solana.com')
+  const connection = new Connection('https://devnet.solana.com');
 
-  const solanaConfig = getSolanaConfig()
-  const keyBuffer = fs.readFileSync(solanaConfig.keypair_path)
-  const payer = new Keypair(JSON.parse(keyBuffer))
+  const solanaConfig = getSolanaConfig();
+  const keyBuffer = fs.readFileSync(solanaConfig.keypair_path);
+  const payer = new Keypair(JSON.parse(keyBuffer));
 
-  const newOptionMarketAddresses = []
-  const starterPromise = Promise.resolve(null)
+  const newOptionMarketAddresses = [];
+  const starterPromise = Promise.resolve(null);
   // This is run sequentially to avoid RPC node rate limits =/
   await marketsMeta.reduce(async (accumulator, marketMeta) => {
-    await accumulator
+    await accumulator;
     return (async () => {
       const underlyingAssetMintKey = new PublicKey(
         marketMeta.underlyingAssetMint,
-      )
-      const quoteAssetMintKey = new PublicKey(marketMeta.quoteAssetMint)
+      );
+      const quoteAssetMintKey = new PublicKey(marketMeta.quoteAssetMint);
       const underlyingAsset = new Token(
         connection,
         underlyingAssetMintKey,
         TOKEN_PROGRAM_ID,
         payer,
-      )
-      const underlyingMintInfo = await underlyingAsset.getMintInfo()
+      );
+      const underlyingMintInfo = await underlyingAsset.getMintInfo();
       const quoteAsset = new Token(
         connection,
         quoteAssetMintKey,
         TOKEN_PROGRAM_ID,
         payer,
-      )
-      const quoteMintInfo = await quoteAsset.getMintInfo()
+      );
+      const quoteMintInfo = await quoteAsset.getMintInfo();
 
       // Create and send transaction for creating/initializing accounts needed
       // for option market
@@ -73,8 +73,8 @@ const OPTION_PROGRAM_ID = new PublicKey(
         connection,
         payerKey: payer.publicKey,
         programId: OPTION_PROGRAM_ID,
-      })
-      createAccountsTx.partialSign(...signers)
+      });
+      createAccountsTx.partialSign(...signers);
       await sendAndConfirmRawTransaction(
         connection,
         createAccountsTx.serialize(),
@@ -83,14 +83,14 @@ const OPTION_PROGRAM_ID = new PublicKey(
           preflightCommitment: 'recent',
           commitment: 'max',
         },
-      )
+      );
 
       const underlyingAmountPerContract = new BigNumber(
         marketMeta.underlyingAssetPerContract,
-      ).toNumber()
+      ).toNumber();
       const quoteAmountPerContract = new BigNumber(
         marketMeta.quoteAssetPerContract,
-      ).toNumber()
+      ).toNumber();
 
       // create and send transaction for initializing the option market
       const initializeMarketIx = await initializeMarketInstruction({
@@ -105,10 +105,10 @@ const OPTION_PROGRAM_ID = new PublicKey(
         underlyingAmountPerContract,
         quoteAmountPerContract,
         expirationUnixTimestamp: marketMeta.expiration,
-      })
-      const transaction = new Transaction()
-      transaction.add(initializeMarketIx)
-      transaction.partialSign(payer)
+      });
+      const transaction = new Transaction();
+      transaction.add(initializeMarketIx);
+      transaction.partialSign(payer);
 
       const txId = await sendAndConfirmRawTransaction(
         connection,
@@ -118,8 +118,8 @@ const OPTION_PROGRAM_ID = new PublicKey(
           preflightCommitment: 'recent',
           commitment: 'max',
         },
-      )
-      console.log(`* confirmed mint TX id: ${txId}`)
+      );
+      console.log(`* confirmed mint TX id: ${txId}`);
       const [optionMarketKey] = await Market.getDerivedAddressFromParams({
         programId: OPTION_PROGRAM_ID,
         underlyingAssetMintKey,
@@ -127,23 +127,23 @@ const OPTION_PROGRAM_ID = new PublicKey(
         underlyingAmountPerContract,
         quoteAmountPerContract,
         expirationUnixTimestamp: marketMeta.expiration,
-      })
-      newOptionMarketAddresses.push(optionMarketKey.toString())
-    })()
-  }, starterPromise)
+      });
+      newOptionMarketAddresses.push(optionMarketKey.toString());
+    })();
+  }, starterPromise);
 
-  console.log('Storing new address information to file')
-  const outputFile = 'newMarkets2.json'
+  console.log('Storing new address information to file');
+  const outputFile = 'newMarkets2.json';
   if (!fs.existsSync(outputFile)) {
     fs.writeFile(
       outputFile,
       JSON.stringify(newOptionMarketAddresses),
       (err) => {
-        if (err) throw err
-        console.log('Saved!')
+        if (err) throw err;
+        console.log('Saved!');
       },
-    )
+    );
   }
-})()
+})();
 
-export {}
+export {};

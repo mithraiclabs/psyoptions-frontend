@@ -1,4 +1,5 @@
-import { MintLayout, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import { FEE_OWNER_KEY } from '@mithraic-labs/psy-american';
+import { MintLayout, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import {
   Account,
   Connection,
@@ -6,27 +7,28 @@ import {
   Transaction,
   sendAndConfirmTransaction,
   SystemProgram,
-} from '@solana/web3.js'
-const fs = require('fs')
+  PublicKey,
+} from '@solana/web3.js';
+const fs = require('fs');
 
 /**
  * Seed local net with SPL tokens for development purposes.
  * Localnet must be running prior to invoking this script
  */
-;(async () => {
-  const connection = new Connection('http://127.0.0.1:8899')
-  const keyPairFilePath = process.argv[2]
-  let payer
+(async () => {
+  const connection = new Connection('http://127.0.0.1:8899', 'max');
+  const keyPairFilePath = process.argv[2];
+  let payer;
   if (!keyPairFilePath) {
-    throw new Error('Please supply path to keypair `-- PATH_TO_KEYPAIR`')
+    throw new Error('Please supply path to keypair `-- PATH_TO_KEYPAIR`');
   }
-  const keyBuffer = fs.readFileSync(keyPairFilePath)
-  payer = new Account(JSON.parse(keyBuffer))
+  const keyBuffer = fs.readFileSync(keyPairFilePath);
+  payer = new Account(JSON.parse(keyBuffer));
 
-  const splMint1 = new Keypair()
-  const splMint2 = new Keypair()
-  const splMint3 = new Keypair()
-  const splMint4 = new Keypair()
+  const splMint1 = new Keypair();
+  const splMint2 = new Keypair();
+  const splMint3 = new Keypair();
+  const splMint4 = new Keypair();
 
   console.log(
     'Attempting to create SPL Mints ',
@@ -34,12 +36,12 @@ const fs = require('fs')
     splMint2.publicKey.toString(),
     splMint3.publicKey.toString(),
     splMint4.publicKey.toString(),
-  )
+  );
 
-  const transaction = new Transaction()
+  const transaction = new Transaction();
   const mintBalance = await connection.getMinimumBalanceForRentExemption(
     MintLayout.span,
-  )
+  );
 
   transaction.add(
     SystemProgram.createAccount({
@@ -98,12 +100,12 @@ const fs = require('fs')
       payer.publicKey,
       null,
     ),
-  )
-  const signers = [payer, splMint1, splMint2, splMint3, splMint4]
+  );
+  const signers = [payer, splMint1, splMint2, splMint3, splMint4];
   await sendAndConfirmTransaction(connection, transaction, signers, {
     skipPreflight: true,
-    commitment: 'recent',
-  })
+    commitment: 'max',
+  });
 
   // Generate sample assets from local net data and random logos
   const localSPLData = [
@@ -135,9 +137,18 @@ const fs = require('fs')
       tokenName: 'USDC',
       icon: 'https://raw.githubusercontent.com/trustwallet/assets/f3ffd0b9ae2165336279ce2f8db1981a55ce30f8/blockchains/ethereum/assets/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48/logo.png',
     },
-  ]
-  fs.writeFileSync(
-    './src/hooks/localnetData.json',
-    JSON.stringify(localSPLData),
-  )
-})()
+  ];
+
+  // Create the Serum referral account
+  const usdcToken = new Token(
+    connection,
+    splMint2.publicKey,
+    TOKEN_PROGRAM_ID,
+    payer,
+  );
+  const address = await usdcToken.createAssociatedTokenAccount(FEE_OWNER_KEY);
+  console.log(`*** serum referral key: ${address.toString()}`);
+
+  !fs.existsSync(`./tmp/`) && fs.mkdirSync(`./tmp/`, { recursive: true });
+  fs.writeFileSync('./tmp/localnetData.json', JSON.stringify(localSPLData));
+})();

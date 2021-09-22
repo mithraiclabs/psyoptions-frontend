@@ -4,6 +4,7 @@ import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import Avatar from '@material-ui/core/Avatar';
 import Tooltip from '@material-ui/core/Tooltip';
 import Box from '@material-ui/core/Box';
+import Button from '@material-ui/core/Button';
 import { withStyles, useTheme } from '@material-ui/core/styles';
 
 import BN from 'bn.js';
@@ -14,10 +15,10 @@ import { useCloseWrittenOptionPostExpiration } from '../../../../hooks/useCloseW
 import { useClosePosition } from '../../../../hooks/useClosePosition';
 import useOwnedTokenAccounts from '../../../../hooks/useOwnedTokenAccounts';
 import useConnection from '../../../../hooks/useConnection';
-import { useExchangeWriterTokenForQuote } from '../../../../hooks/useExchangeWriterTokenForQuote';
 import useNotifications from '../../../../hooks/useNotifications';
 import useAssetList from '../../../../hooks/useAssetList';
 import TxButton from '../../../TxButton';
+import { ClaimQuoteDialog } from './ClaimQuoteDialog';
 
 const StyledTooltip = withStyles((theme) => ({
   tooltip: {
@@ -50,29 +51,25 @@ export const WrittenOptionRow = React.memo(
     const theme = useTheme();
     const [closeOneLoading, setCloseOneLoading] = useState(false);
     const [closeAllLoading, setCloseAllLoading] = useState(false);
-    const [claimQuoteLoading, setClaimQuoteLoading] = useState(false);
     const { supportedAssets } = useAssetList();
     const { pushNotification } = useNotifications();
     const { connection } = useConnection();
     const { ownedTokenAccounts } = useOwnedTokenAccounts();
     const { markets } = useOptionsMarkets();
     const [quotePoolNotEmpty, setQuoteAssetPoolNotEmpty] = useState(false);
+    const [claimQuoteVisible, setClaimQuoteVisible] = useState(false);
     const market = markets[marketKey];
     // TODO handle multiple wallets for the same Writer Token
     const initialWriterTokenAccount = writerTokenAccounts[0];
     const ownedUAssetKey = ownedTokenAccounts[market.uAssetMint]?.[0]?.pubKey;
-    const ownedQAssetKey = ownedTokenAccounts[market.qAssetMint]?.[0]?.pubKey;
+    const walletQuoteAssetKey =
+      ownedTokenAccounts[market.qAssetMint]?.[0]?.pubKey;
     const ownedOptionTokenAccounts =
       ownedTokenAccounts[market.optionMintKey.toString()];
     const closeOptionPostExpiration = useCloseWrittenOptionPostExpiration(
       market,
       ownedUAssetKey,
       initialWriterTokenAccount.pubKey,
-    );
-    const exchangeWriterTokenForQuote = useExchangeWriterTokenForQuote(
-      market,
-      initialWriterTokenAccount.pubKey,
-      ownedQAssetKey,
     );
     const holdsContracts = !!heldContracts.length;
     // TODO handle multiple wallets for same Option Token
@@ -104,9 +101,7 @@ export const WrittenOptionRow = React.memo(
     };
 
     const handleClaimQuote = async () => {
-      setClaimQuoteLoading(true);
-      await exchangeWriterTokenForQuote();
-      setClaimQuoteLoading(false);
+      setClaimQuoteVisible(true);
     };
 
     let optionType: OptionType;
@@ -272,15 +267,14 @@ export const WrittenOptionRow = React.memo(
                 justifyContent="flex-start"
                 p={1}
               >
-                <TxButton
+                <Button
                   color="primary"
                   variant="outlined"
                   onClick={handleClaimQuote}
                   style={{ marginLeft: holdsContracts ? 8 : 0 }}
-                  loading={claimQuoteLoading}
                 >
-                  {claimQuoteLoading ? 'Claiming Quote' : 'Claim Quote'}
-                </TxButton>
+                  {'Claim Quote'}
+                </Button>
               </Box>
             </StyledTooltip>
           )}
@@ -289,55 +283,64 @@ export const WrittenOptionRow = React.memo(
     }
 
     return (
-      <Box
-        key={marketKey}
-        display="flex"
-        flexDirection="row"
-        alignItems="center"
-        p={1}
-      >
+      <>
         <Box
-          p={1}
-          pl={2}
-          width="12%"
+          key={marketKey}
           display="flex"
           flexDirection="row"
           alignItems="center"
+          p={1}
         >
-          <Avatar style={{ width: 24, height: 24 }} src={uAssetImage}>
-            {uAssetSymbol.slice(0, 1)}
-          </Avatar>
-          <Box pl={1}>{uAssetSymbol}</Box>
+          <Box
+            p={1}
+            pl={2}
+            width="12%"
+            display="flex"
+            flexDirection="row"
+            alignItems="center"
+          >
+            <Avatar style={{ width: 24, height: 24 }} src={uAssetImage}>
+              {uAssetSymbol.slice(0, 1)}
+            </Avatar>
+            <Box pl={1}>{uAssetSymbol}</Box>
+          </Box>
+          <Box p={1} width="8%">
+            {optionType}
+          </Box>
+          <Box p={1} width="10%">
+            {strike}
+          </Box>
+          <Box p={1} width="10%">
+            {lockedAmountDisplay} {market.uAssetSymbol}
+          </Box>
+          <Box p={1} width="10%">
+            {optionType === 'call'
+              ? market.amountPerContract.toString()
+              : market.quoteAmountPerContract.toString()}
+          </Box>
+          <Box p={1} width="10%">
+            {initialWriterTokenAccount.amount}
+          </Box>
+          <Box p={1} width="10%">
+            {ownedOptionTokenAccounts?.[0]?.amount}
+          </Box>
+          <Box p={1} width="15%">
+            {expired ? (
+              <Box color={theme.palette.error.main}>Expired</Box>
+            ) : (
+              formatExpirationTimestamp(market.expiration)
+            )}
+          </Box>
+          <Box width="15%">{ActionFragment}</Box>
         </Box>
-        <Box p={1} width="8%">
-          {optionType}
-        </Box>
-        <Box p={1} width="10%">
-          {strike}
-        </Box>
-        <Box p={1} width="10%">
-          {lockedAmountDisplay} {market.uAssetSymbol}
-        </Box>
-        <Box p={1} width="10%">
-          {optionType === 'call'
-            ? market.amountPerContract.toString()
-            : market.quoteAmountPerContract.toString()}
-        </Box>
-        <Box p={1} width="10%">
-          {initialWriterTokenAccount.amount}
-        </Box>
-        <Box p={1} width="10%">
-          {ownedOptionTokenAccounts?.[0]?.amount}
-        </Box>
-        <Box p={1} width="15%">
-          {expired ? (
-            <Box color={theme.palette.error.main}>Expired</Box>
-          ) : (
-            formatExpirationTimestamp(market.expiration)
-          )}
-        </Box>
-        <Box width="15%">{ActionFragment}</Box>
-      </Box>
+        <ClaimQuoteDialog
+          dismiss={() => setClaimQuoteVisible(false)}
+          option={market}
+          quoteAssetDestKey={walletQuoteAssetKey}
+          visible={claimQuoteVisible}
+          writerTokenAccountKey={initialWriterTokenAccount.pubKey}
+        />
+      </>
     );
   },
 );

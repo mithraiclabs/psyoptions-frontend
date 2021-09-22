@@ -155,7 +155,7 @@ Resources:
             - Name: INITIALIZE_PAGE_ENABLED
               Value: !If [ShowInitPage, true, false]
             - Name: DEVNET_PROGRAM_ID
-              Value: GDvqQy3FkDB2wyNwgZGp5YkmRMUmWbhNNWDMYKbLSZ5N
+              Value: R2y9ip6mxmWUj4pt54jP2hz2dgvMozy9VTSwMWE7evs
             - Name: MAINNET_PROGRAM_ID
               Value: AAcHauRu6eUDePN3hDDAUTbgyRq5xFbRZJCLsUdpBCJb
             - Name: DEVNET_DEX_PROGRAM_ID

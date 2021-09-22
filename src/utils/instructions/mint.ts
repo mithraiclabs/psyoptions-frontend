@@ -1,7 +1,17 @@
 import { mintCoveredCallInstruction } from '@mithraic-labs/psyoptions';
-import { PublicKey, Transaction } from '@solana/web3.js';
+import {
+  PSY_AMERICAN_PROGRAM_IDS,
+  ProgramVersions,
+  instructions,
+} from '@mithraic-labs/psy-american';
+import {
+  PublicKey,
+  Transaction,
+  TransactionInstruction,
+} from '@solana/web3.js';
 import BigNumber from 'bignumber.js';
 import { BN } from 'bn.js';
+import { Program } from '@project-serum/anchor';
 import {
   Asset,
   CreateMissingMintAccountsRes,
@@ -18,6 +28,7 @@ import {
   createAssociatedTokenAccountInstruction,
   createNewTokenAccount,
 } from './token';
+import { uiOptionMarketToProtocolOptionMarket } from '../typeConversions';
 
 /**
  * Check that all the necessary accounts exist. If they're not provided then
@@ -146,41 +157,59 @@ export const createMissingMintAccounts = async ({
     },
   };
 };
+
 /**
  * Generate a transaction containing 1 or more mint option instructions.
+ *
+ * @param numberOfContractsToMint
+ * @param market
+ * @param authorityPubkey
+ * @param programId
+ * @param mintedOptionDestKey
+ * @param writerTokenDestKey
+ * @param underlyingAssetSrcKey
+ * @param program
+ * @returns
  */
-export const mintInstructions = async ({
-  numberOfContractsToMint = 1,
-  authorityPubkey,
-  programId,
-  market,
-  mintedOptionDestKey,
-  writerTokenDestKey,
-  underlyingAssetSrcKey,
-}: {
-  numberOfContractsToMint: number;
-  market: OptionMarket;
-  authorityPubkey: PublicKey;
-  programId: PublicKey;
-  mintedOptionDestKey: PublicKey;
-  writerTokenDestKey: PublicKey;
-  underlyingAssetSrcKey: PublicKey;
-}): Promise<InstructionResponse> => {
+export const mintInstructions = async (
+  numberOfContractsToMint: number,
+  market: OptionMarket,
+  authorityPubkey: PublicKey,
+  programId: PublicKey,
+  mintedOptionDestKey: PublicKey,
+  writerTokenDestKey: PublicKey,
+  underlyingAssetSrcKey: PublicKey,
+  program?: Program,
+): Promise<InstructionResponse> => {
   const transaction = new Transaction();
-  const mintInstruction = await mintCoveredCallInstruction({
-    authorityPubkey,
-    programId,
-    optionMarketKey: market.optionMarketKey,
-    optionMintKey: market.optionMintKey,
-    mintedOptionDestKey,
-    writerTokenDestKey,
-    writerTokenMintKey: market.writerTokenMintKey,
-    underlyingAssetPoolKey: market.underlyingAssetPoolKey,
-    underlyingAssetSrcKey,
-    underlyingMintKey: market.underlyingAssetMintKey,
-    fundingAccountKey: authorityPubkey,
-    size: new BN(numberOfContractsToMint),
-  });
+  let mintInstruction: TransactionInstruction;
+
+  // Handle backwards compatibility for the old PsyOptions version
+  if (PSY_AMERICAN_PROGRAM_IDS[programId.toString()] === ProgramVersions.V1) {
+    mintInstruction = await mintCoveredCallInstruction({
+      authorityPubkey,
+      programId,
+      optionMarketKey: market.optionMarketKey,
+      optionMintKey: market.optionMintKey,
+      mintedOptionDestKey,
+      writerTokenDestKey,
+      writerTokenMintKey: market.writerTokenMintKey,
+      underlyingAssetPoolKey: market.underlyingAssetPoolKey,
+      underlyingAssetSrcKey,
+      underlyingMintKey: market.underlyingAssetMintKey,
+      fundingAccountKey: authorityPubkey,
+      size: new BN(numberOfContractsToMint),
+    });
+  } else if (program) {
+    ({ ix: mintInstruction } = await instructions.mintOptionInstruction(
+      program,
+      mintedOptionDestKey,
+      writerTokenDestKey,
+      underlyingAssetSrcKey,
+      new BN(numberOfContractsToMint),
+      uiOptionMarketToProtocolOptionMarket(market),
+    ));
+  }
 
   transaction.add(mintInstruction);
   // Not sure if we should add the authoirtyPubkey to signers or if it's safe to
@@ -201,6 +230,7 @@ export const createMissingAccountsAndMint = async ({
   mintedOptionDestinationKey,
   writerTokenDestinationKey,
   numberOfContractsToMint,
+  program,
 }: {
   optionsProgramId: PublicKey;
   authorityPubkey: PublicKey;
@@ -212,6 +242,7 @@ export const createMissingAccountsAndMint = async ({
   mintedOptionDestinationKey?: PublicKey;
   writerTokenDestinationKey?: PublicKey;
   numberOfContractsToMint: number;
+  program?: Program;
 }): Promise<Result<CreateMissingMintAccountsRes, InstructionErrorResponse>> => {
   const transaction = new Transaction();
   let signers = [];
@@ -241,15 +272,16 @@ export const createMissingAccountsAndMint = async ({
   transaction.add(createAccountsTx);
   signers = [...signers, ...createAccountsSigners];
 
-  const { transaction: mintTx } = await mintInstructions({
+  const { transaction: mintTx } = await mintInstructions(
     numberOfContractsToMint,
-    authorityPubkey,
-    programId: optionsProgramId,
     market,
-    mintedOptionDestKey: _mintedOptionDestinationKey,
-    writerTokenDestKey: _writerTokenDestinationKey,
-    underlyingAssetSrcKey: _uAssetTokenAccount.pubKey,
-  });
+    authorityPubkey,
+    optionsProgramId,
+    _mintedOptionDestinationKey,
+    _writerTokenDestinationKey,
+    _uAssetTokenAccount.pubKey,
+    program,
+  );
 
   transaction.add(mintTx);
 

@@ -1,6 +1,15 @@
 import { useCallback } from 'react';
-import { PublicKey, Transaction } from '@solana/web3.js';
-
+import {
+  PublicKey,
+  Signer,
+  Transaction,
+  TransactionInstruction,
+} from '@solana/web3.js';
+import {
+  PSY_AMERICAN_PROGRAM_IDS,
+  ProgramVersions,
+  serumInstructions,
+} from '@mithraic-labs/psy-american';
 import { Market, OrderParams } from '@mithraic-labs/serum/lib/market';
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { Asset, OptionMarket, TokenAccount } from '../types';
@@ -13,6 +22,7 @@ import useConnection from './useConnection';
 import useWallet from './useWallet';
 import { createMissingAccountsAndMint } from '../utils/instructions/index';
 import { useCreateAdHocOpenOrdersSubscription } from './Serum';
+import { useAmericanPsyOptionsProgram } from './useAmericanPsyOptionsProgram';
 
 type PlaceSellOrderArgs = {
   numberOfContractsToMint: number;
@@ -28,6 +38,7 @@ type PlaceSellOrderArgs = {
 const usePlaceSellOrder = (
   serumMarketAddress: string,
 ): ((obj: PlaceSellOrderArgs) => Promise<void>) => {
+  const program = useAmericanPsyOptionsProgram();
   const { pushErrorNotification } = useNotifications();
   const { wallet, pubKey } = useWallet();
   const { connection } = useConnection();
@@ -54,12 +65,15 @@ const usePlaceSellOrder = (
         let _uAssetTokenAccount = uAssetTokenAccount;
         let _optionTokenSrcKey = mintedOptionDestinationKey;
         let _writerTokenDestinationKey = writerTokenDestinationKey;
+        const optionsProgramId = new PublicKey(
+          optionMarket.psyOptionsProgramId,
+        );
 
         // Mint and place order
         if (numberOfContractsToMint > 0) {
           // Mint missing contracs before placing order
           const { error, response } = await createMissingAccountsAndMint({
-            optionsProgramId: new PublicKey(optionMarket.psyOptionsProgramId),
+            optionsProgramId,
             authorityPubkey: pubKey,
             owner: pubKey,
             market: optionMarket,
@@ -69,6 +83,7 @@ const usePlaceSellOrder = (
             numberOfContractsToMint,
             mintedOptionDestinationKey: _optionTokenSrcKey,
             writerTokenDestinationKey: _writerTokenDestinationKey,
+            program,
           });
           if (error) {
             // eslint-disable-next-line no-console
@@ -110,25 +125,47 @@ const usePlaceSellOrder = (
           }
         }
 
-        const {
-          openOrdersAddress,
-          transaction: placeOrderTx,
-          signers: placeOrderSigners,
-        } = await serumMarket.makePlaceOrderTransaction(connection, {
-          ...orderArgs,
-          payer: _optionTokenSrcKey,
-        });
+        /// /////////////////// CREATE SERUM TRANSACTION /////////////////////////
+        // Backwards compatability for V1
+        let placeOrderTx: Transaction;
+        let placeOrderSigners: Signer[] = [];
+        if (
+          PSY_AMERICAN_PROGRAM_IDS[optionsProgramId.toString()] ===
+          ProgramVersions.V1
+        ) {
+          let openOrdersAddress: PublicKey;
+          ({
+            openOrdersAddress,
+            transaction: placeOrderTx,
+            signers: placeOrderSigners,
+          } = await serumMarket.makePlaceOrderTransaction(connection, {
+            ...orderArgs,
+            payer: _optionTokenSrcKey,
+          }));
 
-        if (openOrdersAddress) {
-          createAdHocOpenOrdersSub(openOrdersAddress);
+          if (openOrdersAddress) {
+            createAdHocOpenOrdersSub(openOrdersAddress);
+          }
+        } else {
+          const ix = await serumInstructions.newOrderInstruction(
+            program,
+            optionMarket.pubkey,
+            new PublicKey(optionMarket.serumProgramId),
+            optionMarket.serumMarketKey,
+            { ...orderArgs, payer: _optionTokenSrcKey },
+          );
+          placeOrderTx = new Transaction().add(ix);
         }
 
         const { blockhash } = await connection.getRecentBlockhash();
-
-        mintTX.feePayer = pubKey;
-        mintTX.recentBlockhash = blockhash;
-        if (mintSigners.length) {
-          mintTX.partialSign(...mintSigners);
+        const transactions: Transaction[] = [];
+        if (mintTX.instructions.length > 0) {
+          mintTX.feePayer = pubKey;
+          mintTX.recentBlockhash = blockhash;
+          if (mintSigners.length) {
+            mintTX.partialSign(...mintSigners);
+          }
+          transactions.push(mintTX);
         }
         placeOrderTx.feePayer = pubKey;
         placeOrderTx.recentBlockhash = blockhash;
@@ -136,20 +173,23 @@ const usePlaceSellOrder = (
         if (placeOrderSigners.length) {
           placeOrderTx.partialSign(...placeOrderSigners);
         }
+        transactions.push(placeOrderTx);
+        console.log('*** transactions', placeOrderTx);
 
-        const signed = await wallet.signAllTransactions([mintTX, placeOrderTx]);
-
-        // send the PsyOptions Mint transaction
-        await sendSignedTransaction({
-          signedTransaction: signed[0],
-          connection,
-          sendingMessage: `Processing: Write ${numberOfContractsToMint} contract${
-            numberOfContractsToMint > 1 ? 's' : ''
-          }`,
-          successMessage: `Confirmed: Write ${numberOfContractsToMint} contract${
-            numberOfContractsToMint > 1 ? 's' : ''
-          }`,
-        });
+        const signed = await wallet.signAllTransactions(transactions);
+        if (mintTX.instructions.length > 0) {
+          // send the PsyOptions Mint transaction
+          await sendSignedTransaction({
+            signedTransaction: signed[0],
+            connection,
+            sendingMessage: `Processing: Write ${numberOfContractsToMint} contract${
+              numberOfContractsToMint > 1 ? 's' : ''
+            }`,
+            successMessage: `Confirmed: Write ${numberOfContractsToMint} contract${
+              numberOfContractsToMint > 1 ? 's' : ''
+            }`,
+          });
+        }
 
         // send the Serum place order transaction
         await sendSignedTransaction({
@@ -169,6 +209,7 @@ const usePlaceSellOrder = (
     [
       connection,
       createAdHocOpenOrdersSub,
+      program,
       pubKey,
       pushErrorNotification,
       sendSignedTransaction,

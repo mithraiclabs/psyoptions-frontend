@@ -83,6 +83,7 @@ const UnsettledBalancesTable: React.FC<{
                   {...optionMarket}
                   uAssetDecimals={uAssetDecimals}
                   qAssetDecimals={qAssetDecimals}
+                  optionMarketUiKey={optionMarket.key}
                   key={`${optionMarket.serumMarketKey.toString()}-unsettled`}
                 />
               ))

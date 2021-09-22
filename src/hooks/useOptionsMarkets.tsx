@@ -7,7 +7,7 @@ import {
 import { Connection, PublicKey } from '@solana/web3.js';
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 
-import { BN, ProgramAccount } from '@project-serum/anchor';
+import { BN } from '@project-serum/anchor';
 import useNotifications from './useNotifications';
 import useWallet from './useWallet';
 import useConnection from './useConnection';
@@ -53,12 +53,7 @@ const useOptionsMarkets = () => {
 
       setMarketsLoading(true);
 
-      const assets = supportedAssets.map(
-        (asset) => new PublicKey(asset.mintAddress),
-      );
-
       const res = await getAllOptionAccounts(program);
-      console.log('*** res', res);
 
       // Transform the market data to our expectations
       const newMarkets = {};

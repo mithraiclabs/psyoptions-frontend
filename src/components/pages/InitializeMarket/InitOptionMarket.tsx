@@ -1,5 +1,4 @@
 import React, { useCallback, useState } from 'react';
-import { OptionMarket } from '@mithraic-labs/psyoptions';
 import { PublicKey } from '@solana/web3.js';
 import DateFnsUtils from '@date-io/date-fns';
 import Box from '@material-ui/core/Box';
@@ -15,6 +14,7 @@ import { KeyboardDatePicker } from '@material-ui/pickers/DatePicker';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import MuiPickersUtilsProvider from '@material-ui/pickers/MuiPickersUtilsProvider';
 import Radio from '@material-ui/core/Radio';
+import { OptionMarketWithKey } from '@mithraic-labs/psy-american';
 import { BigNumber } from 'bignumber.js';
 import { BN } from 'bn.js';
 import moment from 'moment';
@@ -50,7 +50,7 @@ export const InitOptionMarket: React.VFC = () => {
   const [, setInitializedMarketMeta] = useInitializedMarkets();
   const checkIfMarketExists = useCheckIfMarketExists();
   const [existingMarket, setExistingMarket] =
-    useState<OptionMarket | null>(null);
+    useState<OptionMarketWithKey | null>(null);
 
   const dismissExistingMarketDialog = useCallback(
     () => setExistingMarket(null),

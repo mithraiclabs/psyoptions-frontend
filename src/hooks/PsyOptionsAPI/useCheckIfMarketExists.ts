@@ -1,11 +1,11 @@
+import { Market } from '@mithraic-labs/psyoptions';
 import {
-  Market,
-  OptionMarket,
-  OPTION_MARKET_LAYOUT,
-} from '@mithraic-labs/psyoptions';
+  getOptionByKey,
+  OptionMarketWithKey,
+} from '@mithraic-labs/psy-american';
 import { PublicKey } from '@solana/web3.js';
 import { useCallback } from 'react';
-import useConnection from '../useConnection';
+import { useAmericanPsyOptionsProgram } from '../useAmericanPsyOptionsProgram';
 
 export const useCheckIfMarketExists = (): ((obj: {
   expirationUnixTimestamp: number;
@@ -13,8 +13,8 @@ export const useCheckIfMarketExists = (): ((obj: {
   quoteAssetMintKey: PublicKey;
   underlyingAmountPerContract: number;
   underlyingAssetMintKey: PublicKey;
-}) => Promise<OptionMarket | null>) => {
-  const { connection, endpoint } = useConnection();
+}) => Promise<OptionMarketWithKey | null>) => {
+  const program = useAmericanPsyOptionsProgram();
 
   return useCallback(
     async ({
@@ -25,7 +25,7 @@ export const useCheckIfMarketExists = (): ((obj: {
       underlyingAssetMintKey,
     }) => {
       const [optionMarketKey] = await Market.getDerivedAddressFromParams({
-        programId: new PublicKey(endpoint.programId),
+        programId: program.programId,
         underlyingAssetMintKey,
         quoteAssetMintKey,
         underlyingAmountPerContract,
@@ -33,23 +33,8 @@ export const useCheckIfMarketExists = (): ((obj: {
         expirationUnixTimestamp,
       });
 
-      const accountInfo = await connection.getAccountInfo(
-        optionMarketKey,
-        'recent',
-      );
-
-      if (!accountInfo) {
-        return null;
-      }
-
-      const optionMarketFromBuffer = OPTION_MARKET_LAYOUT.decode(
-        accountInfo.data,
-      );
-      return {
-        ...optionMarketFromBuffer,
-        optionMarketKey,
-      } as OptionMarket;
+      return getOptionByKey(program, optionMarketKey);
     },
-    [connection, endpoint.programId],
+    [program],
   );
 };

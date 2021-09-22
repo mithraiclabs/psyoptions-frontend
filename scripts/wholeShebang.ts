@@ -67,6 +67,7 @@ dotenv.config();
   seedChainProc.stderr.pipe(seedChainStream);
 
   seedChainProc.on('close', (code) => {
+    console.log('Chain is set up!');
     console.log(`seed_chain.sh process exited with code ${code}`);
     // Start logging the chain so the user knows it's still running in the terminal
     chainSetupProc.stdout.on('data', (data) => {

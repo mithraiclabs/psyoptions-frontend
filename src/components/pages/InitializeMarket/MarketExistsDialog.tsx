@@ -7,7 +7,7 @@ import {
   DialogTitle,
 } from '@material-ui/core';
 import Dialog from '@material-ui/core/Dialog';
-import { OptionMarket } from '@mithraic-labs/psyoptions';
+import { OptionMarketWithKey } from '@mithraic-labs/psy-american';
 import BN from 'bn.js';
 import React, { useCallback, useState } from 'react';
 import { useInitializedMarkets } from '../../../context/LocalStorage';
@@ -17,7 +17,7 @@ import useConnection from '../../../hooks/useConnection';
 
 export const MarketExistsDialog: React.VFC<{
   dismiss: () => void;
-  optionMarket: OptionMarket | null;
+  optionMarket: OptionMarketWithKey | null;
 }> = ({ dismiss, optionMarket }) => {
   const { dexProgramId, endpoint } = useConnection();
   const initializeSerumMarket = useInitializeSerumMarket();
@@ -35,8 +35,8 @@ export const MarketExistsDialog: React.VFC<{
     // This will likely be USDC or USDT but could be other things in some cases
     const quoteLotSize = new BN(tickSize * 10 ** USDCToken?.decimals);
     const initSerumResp = await initializeSerumMarket({
-      optionMarketKey: optionMarket.optionMarketKey,
-      baseMintKey: optionMarket.optionMintKey,
+      optionMarketKey: optionMarket.key,
+      baseMintKey: optionMarket.optionMint,
       // This needs to be the USDC, so flip the quote asset vs underlying asset
       quoteMintKey: USDCPublicKey,
       quoteLotSize,
@@ -47,24 +47,23 @@ export const MarketExistsDialog: React.VFC<{
         // must search to see if there exists the same option market
         const marketsWithInitializedRemoved = prevInitializedMarkets.filter(
           (market) =>
-            market.optionMarketAddress !==
-            optionMarket.optionMarketKey.toString(),
+            market.optionMarketAddress !== optionMarket.key.toString(),
         );
         return [
           ...marketsWithInitializedRemoved,
           {
-            expiration: optionMarket.expiration,
-            optionMarketAddress: optionMarket.optionMarketKey.toString(),
-            optionContractMintAddress: optionMarket.optionMintKey.toString(),
+            expiration: optionMarket.expirationUnixTimestamp.toNumber(),
+            optionMarketAddress: optionMarket.key.toString(),
+            optionContractMintAddress: optionMarket.optionMint.toString(),
             optionWriterTokenMintAddress:
-              optionMarket.writerTokenMintKey.toString(),
-            quoteAssetMint: optionMarket.quoteAssetMintKey.toString(),
-            quoteAssetPoolAddress: optionMarket.quoteAssetPoolKey.toString(),
-            underlyingAssetMint: optionMarket.underlyingAssetMintKey.toString(),
+              optionMarket.writerTokenMint.toString(),
+            quoteAssetMint: optionMarket.quoteAssetMint.toString(),
+            quoteAssetPoolAddress: optionMarket.quoteAssetPool.toString(),
+            underlyingAssetMint: optionMarket.underlyingAssetMint.toString(),
             underlyingAssetPoolAddress:
-              optionMarket.underlyingAssetPoolKey.toString(),
+              optionMarket.underlyingAssetPool.toString(),
             underlyingAssetPerContract:
-              optionMarket.amountPerContract.toString(),
+              optionMarket.underlyingAmountPerContract.toString(),
             quoteAssetPerContract:
               optionMarket.quoteAmountPerContract.toString(),
             serumMarketAddress: serumMarketKey.toString(),

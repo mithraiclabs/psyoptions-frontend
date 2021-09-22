@@ -1,8 +1,18 @@
 import { useCallback } from 'react';
-import { PublicKey, Transaction } from '@solana/web3.js';
+import {
+  PublicKey,
+  Transaction,
+  TransactionInstruction,
+} from '@solana/web3.js';
 import { closePostExpirationCoveredCallInstruction } from '@mithraic-labs/psyoptions';
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import BN from 'bn.js';
+import {
+  PSY_AMERICAN_PROGRAM_IDS,
+  ProgramVersions,
+  instructions,
+} from '@mithraic-labs/psy-american';
+
 import useConnection from './useConnection';
 import useWallet from './useWallet';
 import useNotifications from './useNotifications';
@@ -10,6 +20,8 @@ import useSendTransaction from './useSendTransaction';
 import { initializeTokenAccountTx, WRAPPED_SOL_ADDRESS } from '../utils/token';
 import { useSolanaMeta } from '../context/SolanaMetaContext';
 import { OptionMarket } from '../types';
+import { useAmericanPsyOptionsProgram } from './useAmericanPsyOptionsProgram';
+import { uiOptionMarketToProtocolOptionMarket } from '../utils/typeConversions';
 
 /**
  * Close the Option the wallet has written in order to return the
@@ -25,6 +37,7 @@ export const useCloseWrittenOptionPostExpiration = (
   underlyingAssetDestKey: PublicKey | null,
   writerTokenSourceKey: PublicKey,
 ): ((num?: number) => Promise<void>) => {
+  const program = useAmericanPsyOptionsProgram();
   const { connection } = useConnection();
   const { pushErrorNotification } = useNotifications();
   const { pubKey, wallet } = useWallet();
@@ -54,18 +67,34 @@ export const useCloseWrittenOptionPostExpiration = (
           signers.push(wrappedSolAccount);
           _underlyingAssetDestKey = wrappedSolAccount.publicKey;
         }
-        const ix = await closePostExpirationCoveredCallInstruction({
-          programId: new PublicKey(market.psyOptionsProgramId),
-          optionMarketKey: market.optionMarketKey,
-          size: new BN(contractsToClose),
-          underlyingAssetDestKey: _underlyingAssetDestKey,
-          underlyingAssetPoolKey: market.underlyingAssetPoolKey,
-          writerTokenMintKey: market.writerTokenMintKey,
-          writerTokenSourceKey,
-          writerTokenSourceAuthorityKey: pubKey,
-        });
 
-        transaction.add(ix);
+        let closePostExpirationIx: TransactionInstruction;
+        if (
+          PSY_AMERICAN_PROGRAM_IDS[market.psyOptionsProgramId.toString()] ===
+          ProgramVersions.V1
+        ) {
+          closePostExpirationIx =
+            await closePostExpirationCoveredCallInstruction({
+              programId: new PublicKey(market.psyOptionsProgramId),
+              optionMarketKey: market.optionMarketKey,
+              size: new BN(contractsToClose),
+              underlyingAssetDestKey: _underlyingAssetDestKey,
+              underlyingAssetPoolKey: market.underlyingAssetPoolKey,
+              writerTokenMintKey: market.writerTokenMintKey,
+              writerTokenSourceKey,
+              writerTokenSourceAuthorityKey: pubKey,
+            });
+        } else {
+          closePostExpirationIx = instructions.closePostExpirationInstruction(
+            program,
+            new BN(contractsToClose),
+            uiOptionMarketToProtocolOptionMarket(market),
+            writerTokenSourceKey,
+            _underlyingAssetDestKey,
+          );
+        }
+
+        transaction.add(closePostExpirationIx);
 
         // Close out the wrapped SOL account so it feels native
         if (market.uAssetMint === WRAPPED_SOL_ADDRESS) {
@@ -101,11 +130,8 @@ export const useCloseWrittenOptionPostExpiration = (
     },
     [
       underlyingAssetDestKey,
-      market.uAssetMint,
-      market.optionMarketKey,
-      market.underlyingAssetPoolKey,
-      market.writerTokenMintKey,
-      market.psyOptionsProgramId,
+      market,
+      program,
       writerTokenSourceKey,
       pubKey,
       connection,

@@ -6,6 +6,5 @@ cd $FRONTEND_REPO
 npm run seed -- $KEY_FILE
 npm run seed:mintTokens -- $KEY_FILE $WALLET_ADDRESS
 
-# This is broken right now.
 # initialization of markets can and should be done using the website.
-# npm run seed:localChain
+npm run seed:localChain

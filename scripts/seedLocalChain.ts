@@ -5,34 +5,43 @@
  */
 import dotenv from 'dotenv';
 import * as anchor from '@project-serum/anchor';
-import { instructions } from '@mithraic-labs/psy-american';
-import { Connection, Keypair, PublicKey } from '@solana/web3.js';
+import {
+  instructions,
+  OptionMarket,
+  OptionMarketWithKey,
+} from '@mithraic-labs/psy-american';
+import { Keypair, PublicKey } from '@solana/web3.js';
 import BigNumber from 'bignumber.js';
 import * as fs from 'fs';
 import moment from 'moment';
 
-import { getSolanaConfig } from './helpers';
+import { createMinter, getSolanaConfig } from './helpers';
 import { getLastFridayOfMonths } from '../src/utils/dates';
 import { getAssetsByNetwork } from '../src/utils/networkInfo';
 import { ClusterName } from '../src/types';
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { BN, ProgramAccount } from '@project-serum/anchor';
 dotenv.config();
 
 (async () => {
+  console.log('*** running seedLocalChain');
   const solanaConfig = getSolanaConfig();
-  // Get the default keypair and airdrop some tokens
-  const keyBuffer = fs.readFileSync(solanaConfig.keypair_path, 'utf8');
-  const payer = new anchor.web3.Keypair(JSON.parse(keyBuffer));
-  const wallet = new anchor.Wallet(payer);
-  const connection = new Connection('http://localhost:8899', {
-    commitment: 'max',
-  });
+  process.env.ANCHOR_WALLET = solanaConfig.keypair_path;
+  // Get the default keypair
+  const payer = Keypair.fromSecretKey(
+    Buffer.from(
+      JSON.parse(
+        require('fs').readFileSync(process.env.ANCHOR_WALLET, {
+          encoding: 'utf-8',
+        }),
+      ),
+    ),
+  );
+  const provider = anchor.Provider.local();
+  const connection = provider.connection;
 
   const dexProgramId = new PublicKey(process.env.LOCAL_DEX_PROGRAM_ID);
 
-  const provider = new anchor.Provider(connection, wallet, {
-    commitment: 'max',
-  });
   const idlPath = `${process.env.OPTIONS_REPO}/target/idl/psy_american.json`;
   const psyAmericanIdl = JSON.parse(fs.readFileSync(idlPath, 'utf-8'));
   const programId = new anchor.web3.PublicKey(process.env.LOCAL_PROGRAM_ID);
@@ -81,27 +90,90 @@ dotenv.config();
 
   console.log(`*** created option: ${optionMarketKey}`);
 
-  // // This will likely be USDC or USDT but could be other things in some cases
-  // const quoteLotSize = new BN(0.01 * 10 ** usdc.decimals);
-  // // baseLotSize should be 1 -- the options market token doesn't have decimals
-  // const baseLotSize = new BN('1');
-  // console.log('*** intializing serum market', new Date().toISOString());
-  // const { tx1, tx2, signers1, signers2, market } =
-  //   await createInitializeMarketTx({
-  //     connection,
-  //     payer: wallet.publicKey,
-  //     baseMint: optionMintKey,
-  //     quoteMint: usdcKey,
-  //     baseLotSize,
-  //     quoteLotSize,
-  //     dexProgramId,
-  //   });
+  // create and drop a WriterToken who's market expired
+  const { optionMarketKey: expiringOptionKey } =
+    await instructions.initializeMarket(program, {
+      // Market expires in 10 seconds
+      expirationUnixTimestamp: new anchor.BN(new Date().getTime() / 1000 + 10),
+      quoteAmountPerContract: new anchor.BN(quoteAssetPerContract.toNumber()),
+      quoteMint: usdcToken.publicKey,
+      underlyingAmountPerContract: new anchor.BN(
+        underlyingAmountPerContract.toNumber(),
+      ),
+      underlyingMint: btcToken.publicKey,
+    });
 
-  // await sendAndConfirmTransaction(connection, tx1, [wallet, ...signers1], {
-  //   commitment: 'confirmed',
-  // });
+  console.log(`*** created expiring option market: ${optionMarketKey}`);
 
-  // await sendAndConfirmTransaction(connection, tx2, [wallet, ...signers2], {
-  //   commitment: 'confirmed',
-  // });
+  let tmp = await program.account.optionMarket.fetch(expiringOptionKey);
+  const expiringOptionMarket = {
+    ...tmp,
+    key: expiringOptionKey,
+  } as OptionMarketWithKey;
+
+  console.log(
+    'expiringOptionMarket',
+    expiringOptionMarket,
+    typeof expiringOptionMarket,
+    Object.keys(expiringOptionMarket),
+  );
+
+  const expiringOptionsToMint = 5;
+  const {
+    optionAssociatedAddress,
+    quoteAssociatedAddress,
+    underlyingAssociatedAddress,
+    writerAssociatedAddress,
+  } = await createMinter(
+    provider.connection,
+    payer,
+    payer,
+    btcToken,
+    underlyingAmountPerContract
+      .multipliedBy(expiringOptionsToMint * 2)
+      .toNumber(),
+    expiringOptionMarket.optionMint,
+    expiringOptionMarket.writerTokenMint,
+    usdcToken,
+  );
+  console.log('*** created minter, now minting...');
+  await instructions.mintOptionsTx(
+    program,
+    optionAssociatedAddress,
+    writerAssociatedAddress,
+    underlyingAssociatedAddress,
+    new BN(expiringOptionsToMint),
+    expiringOptionMarket,
+  );
+
+  const expiringWriterTokens = new Token(
+    provider.connection,
+    expiringOptionMarket.writerTokenMint,
+    TOKEN_PROGRAM_ID,
+    payer,
+  );
+  // create associated token address for wallet
+  const walletExpiringWriterTokenAcct =
+    await expiringWriterTokens.getOrCreateAssociatedAccountInfo(
+      new PublicKey(process.env.WALLET_ADDRESS),
+    );
+
+  expiringWriterTokens.transfer(
+    writerAssociatedAddress,
+    walletExpiringWriterTokenAcct.address,
+    payer,
+    [],
+    expiringOptionsToMint,
+  );
+
+  console.log('*** creating serum market');
+  // create a Serum market for these options (so they show up in the local UI for now)
+  await instructions.initializeSerumMarket(program, {
+    optionMarketKey: expiringOptionMarket.key,
+    optionMint: expiringOptionMarket.optionMint,
+    pcDustThreshold: new BN(100),
+    pcLotSize: new BN(0.01 * 10 * usdc.decimals),
+    pcMint: usdcToken.publicKey,
+    serumProgramKey: dexProgramId,
+  });
 })();

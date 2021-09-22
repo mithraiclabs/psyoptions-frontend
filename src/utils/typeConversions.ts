@@ -1,5 +1,5 @@
 import { BN } from '@project-serum/anchor';
-import { OptionMarket as PsyAmericanOptionInfo } from '@mithraic-labs/psy-american';
+import { OptionMarketWithKey as PsyAmericanOptionInfo } from '@mithraic-labs/psy-american';
 import { SystemProgram } from '@solana/web3.js';
 import { OptionMarket } from '../types';
 

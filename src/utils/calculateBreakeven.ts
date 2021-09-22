@@ -1,15 +1,26 @@
 import { Order } from '../context/SerumOrderbookContext';
 
-export const calculateBreakeven = (
+export const calculateBreakevenForLimitOrder = (
+  strike: number,
+  contractSize: number,
+  price: number,
+  put?: boolean,
+): number | null => {
+  if (put) {
+    return strike - price / contractSize;
+  }
+
+  return strike + price / contractSize;
+};
+
+
+export const calculateBreakevenForMarketOrder = (
   strike: number,
   contractSize: number,
   size: number,
   orders: Order[],
   put?: boolean,
 ): number | null => {
-  if (size <= 0) {
-    return null;
-  }
   let remaining = size;
   let index = 0;
   let sum = 0;
@@ -26,9 +37,5 @@ export const calculateBreakeven = (
 
   const avgPrice = sum / sizeTakenFromOrders;
 
-  if (put) {
-    return strike - avgPrice / contractSize;
-  }
-
-  return strike + avgPrice / contractSize;
+  return calculateBreakevenForLimitOrder(strike, contractSize, avgPrice, put);
 };

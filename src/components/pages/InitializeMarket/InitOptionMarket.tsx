@@ -107,10 +107,10 @@ export const InitOptionMarket: React.VFC = () => {
         .toNumber();
 
       const _existingMarket = await checkIfMarketExists({
-        expirationUnixTimestamp: expiration,
-        quoteAmountPerContract: quoteAmountPerContractU64,
+        expirationUnixTimestamp: new BN(expiration),
+        quoteAmountPerContract: new BN(quoteAmountPerContractU64),
         quoteAssetMintKey: new PublicKey(qa.mintAddress),
-        underlyingAmountPerContract: amountPerContractU64,
+        underlyingAmountPerContract: new BN(amountPerContractU64),
         underlyingAssetMintKey: new PublicKey(ua.mintAddress),
       });
 

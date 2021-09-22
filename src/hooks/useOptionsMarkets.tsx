@@ -2,7 +2,7 @@ import { useContext, useCallback } from 'react';
 import BigNumber from 'bignumber.js';
 import {
   getAllOptionAccounts,
-  OptionMarket as AmericanOptionData,
+  OptionMarketWithKey as AmericanOptionData,
 } from '@mithraic-labs/psy-american';
 import { Connection, PublicKey } from '@solana/web3.js';
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
@@ -58,16 +58,17 @@ const useOptionsMarkets = () => {
       );
 
       const res = await getAllOptionAccounts(program);
+      console.log('*** res', res);
 
       // Transform the market data to our expectations
       const newMarkets = {};
       await Promise.all(
-        res.map(async (optionAccount: ProgramAccount<AmericanOptionData>) => {
-          const uAssetMint = optionAccount.account.underlyingAssetMint;
+        res.map(async (optionMarket: AmericanOptionData) => {
+          const uAssetMint = optionMarket.underlyingAssetMint;
           const uAsset = supportedAssets.filter(
             (asset) => asset.mintAddress === uAssetMint.toString(),
           )[0];
-          const qAssetMint = optionAccount.account.quoteAssetMint;
+          const qAssetMint = optionMarket.quoteAssetMint;
           const qAsset = supportedAssets.filter(
             (asset) => asset.mintAddress === qAssetMint.toString(),
           )[0];
@@ -75,11 +76,11 @@ const useOptionsMarkets = () => {
           // BN.js doesn't handle decimals while bignumber.js can handle decimals of arbitrary sizes
           // So convert all BN types to BigNumber
           const amountPerContract = new BigNumber(
-            optionAccount.account.underlyingAmountPerContract.toString(10),
+            optionMarket.underlyingAmountPerContract.toString(10),
           ).div(10 ** uAsset?.decimals);
 
           const quoteAmountPerContract = new BigNumber(
-            optionAccount.account.quoteAmountPerContract.toString(10),
+            optionMarket.quoteAmountPerContract.toString(10),
           ).div(10 ** qAsset?.decimals);
 
           const strike = quoteAmountPerContract.div(
@@ -94,7 +95,7 @@ const useOptionsMarkets = () => {
             underlyingAssetMint,
             quoteAssetPool,
             quoteAssetMint,
-          } = optionAccount.account;
+          } = optionMarket;
 
           const serumMarket = await findMarketByAssets(
             connection,
@@ -105,7 +106,7 @@ const useOptionsMarkets = () => {
           // Short circuit if there is no serumMarket because OptionMarket must have a serumMarketKey
           if (!serumMarket || !uAsset || !qAsset) {
             console.warn(
-              `market with address: ${optionAccount.publicKey.toString()} is missing required data`,
+              `market with address: ${optionMarket.key.toString()} is missing required data`,
             );
             return;
           }
@@ -114,20 +115,18 @@ const useOptionsMarkets = () => {
             key: `${expirationUnixTimestamp}-${uAsset?.tokenSymbol}-${
               qAsset?.tokenSymbol
             }-${amountPerContract.toString()}-${amountPerContract.toString()}/${quoteAmountPerContract.toString()}`,
-            pubkey: optionAccount.publicKey,
+            pubkey: optionMarket.key,
             amountPerContract,
-            amountPerContractBN:
-              optionAccount.account.underlyingAmountPerContract,
+            amountPerContractBN: optionMarket.underlyingAmountPerContract,
             quoteAmountPerContract,
-            quoteAmountPerContractBN:
-              optionAccount.account.quoteAmountPerContract,
+            quoteAmountPerContractBN: optionMarket.quoteAmountPerContract,
             size: `${amountPerContract.toString(10)}`,
             uAssetSymbol: uAsset.tokenSymbol,
             qAssetSymbol: qAsset.tokenSymbol,
             uAssetMint: uAsset.mintAddress,
             qAssetMint: qAsset.mintAddress,
             strike,
-            optionMarketKey: optionAccount.publicKey,
+            optionMarketKey: optionMarket.key,
             expiration: expirationUnixTimestamp.toNumber(),
             optionMintKey: optionMint,
             writerTokenMintKey: writerTokenMint,

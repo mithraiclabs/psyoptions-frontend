@@ -1,10 +1,10 @@
 import { Order } from '../context/SerumOrderbookContext';
-import { calculateBreakeven } from './calculateBreakeven';
+import { calculateBreakevenForMarketOrder } from './calculateBreakeven';
 
-describe('calculateBreakeven', () => {
+describe('calculateBreakevenForMarketOrder', () => {
   it('should return null by default', () => {
     expect(
-      calculateBreakeven(2000, 0.1, 0, [
+      calculateBreakevenForMarketOrder(2000, 0.1, 0, [
         { price: 100, size: 1 },
         { price: 110, size: 1 },
       ]),
@@ -13,14 +13,14 @@ describe('calculateBreakeven', () => {
 
   it('should calculate breakeven price', () => {
     expect(
-      calculateBreakeven(2000, 0.1, 2, [
+      calculateBreakevenForMarketOrder(2000, 0.1, 2, [
         { price: 100, size: 1 },
         { price: 110, size: 1 },
       ]),
     ).toEqual(3050);
 
     expect(
-      calculateBreakeven(1000, 1, 4, [
+      calculateBreakevenForMarketOrder(1000, 1, 4, [
         { price: 100, size: 1 },
         { price: 110, size: 2 },
         { price: 200, size: 3 },
@@ -28,7 +28,7 @@ describe('calculateBreakeven', () => {
     ).toEqual(1130);
 
     expect(
-      calculateBreakeven(
+      calculateBreakevenForMarketOrder(
         3000,
         0.1,
         4,
@@ -48,6 +48,6 @@ describe('calculateBreakeven', () => {
       { price: 110, size: 1 },
     ];
 
-    expect(calculateBreakeven(1000, 0.5, 3, orders)).toEqual(1210);
+    expect(calculateBreakevenForMarketOrder(1000, 0.5, 3, orders)).toEqual(1210);
   });
 });

@@ -33,7 +33,7 @@ import ConnectButton from '../ConnectButton';
 
 import DialogFullscreenMobile from '../DialogFullscreenMobile';
 import { calculatePriceWithSlippage } from '../../utils/calculatePriceWithSlippage';
-import { calculateBreakeven } from '../../utils/calculateBreakeven';
+import { calculateBreakevenForLimitOrder, calculateBreakevenForMarketOrder } from '../../utils/calculateBreakeven';
 import { useInitializeSerumMarket } from '../../hooks/Serum/useInitializeSerumMarket';
 import { PlusMinusIntegerInput } from '../PlusMinusIntegerInput';
 
@@ -525,14 +525,19 @@ const BuySellDialog: React.VFC<{
                         }`}
                   </Box>
                   <Box alignSelf="flex-start" pt={1} pb={2}>
-                    Buy breakeven:{' '}
-                    {calculateBreakeven(
+                    Breakeven:{' $'}
+                    {orderSize ? (orderType === 'market' ? calculateBreakevenForMarketOrder(
                       strike.toNumber(),
                       amountPerContract.toNumber(),
                       orderSize,
                       orderbook?.asks ?? [],
                       type === 'put',
-                    ) ?? '-'}
+                    ) : calculateBreakevenForLimitOrder(
+                      strike.toNumber(),
+                      amountPerContract.toNumber(),
+                      parsedLimitPrice.toNumber(),
+                      type === 'put',
+                    )) : '-'}
                   </Box>
                   <Box
                     py={2}

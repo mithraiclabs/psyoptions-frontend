@@ -57,6 +57,9 @@ module.exports = [
     resolve: {
       extensions: ['.ts', '.tsx', '.js'],
       symlinks: false,
+      fallback: {
+        fs: false
+      },
     },
     output: {
       filename: 'index.js',
@@ -98,6 +101,9 @@ module.exports = [
     resolve: {
       extensions: ['.ts', '.tsx', '.js'],
       symlinks: false,
+      fallback: {
+        fs: false
+      },
     },
     output: {
       filename: 'public/bundle.[chunkhash].js',

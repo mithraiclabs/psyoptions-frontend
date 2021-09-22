@@ -2,15 +2,6 @@ import { Order } from '../context/SerumOrderbookContext';
 import { calculateBreakevenForMarketOrder } from './calculateBreakeven';
 
 describe('calculateBreakevenForMarketOrder', () => {
-  it('should return null by default', () => {
-    expect(
-      calculateBreakevenForMarketOrder(2000, 0.1, 0, [
-        { price: 100, size: 1 },
-        { price: 110, size: 1 },
-      ]),
-    ).toEqual(null);
-  });
-
   it('should calculate breakeven price', () => {
     expect(
       calculateBreakevenForMarketOrder(2000, 0.1, 2, [

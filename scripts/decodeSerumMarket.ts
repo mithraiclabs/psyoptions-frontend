@@ -19,8 +19,7 @@ yargs
   });
 
 const DEX_PROGRAM_ID = new PublicKey(
-  yargs.argv['dex-program-id'] ||
-    'AAcHauRu6eUDePN3hDDAUTbgyRq5xFbRZJCLsUdpBCJb',
+  yargs.argv['dex-program-id'] || 'R2y9ip6mxmWUj4pt54jP2hz2dgvMozy9VTSwMWE7evs',
 );
 
 (async () => {

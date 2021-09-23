@@ -9,6 +9,7 @@ ENV NODE_ENV='production'
 ENV SHORT_SHA=$SHORT_SHA
 
 COPY *.json ./
+COPY *.lock ./
 
 RUN yarn install --frozen-lockfile
 

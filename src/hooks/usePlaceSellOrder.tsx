@@ -174,7 +174,6 @@ const usePlaceSellOrder = (
           placeOrderTx.partialSign(...placeOrderSigners);
         }
         transactions.push(placeOrderTx);
-        console.log('*** transactions', placeOrderTx);
 
         const signed = await wallet.signAllTransactions(transactions);
         if (mintTX.instructions.length > 0) {

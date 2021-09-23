@@ -1,4 +1,4 @@
-import { createMuiTheme } from '@material-ui/core/styles';
+import { createTheme } from '@material-ui/core/styles';
 
 type Gradients = {
   secondary: string;
@@ -9,7 +9,7 @@ type Gradients = {
   info: string;
 };
 
-declare module '@material-ui/core/styles/createMuiTheme' {
+declare module '@material-ui/core/styles/createTheme' {
   interface Theme {
     gradients?: Gradients;
   }
@@ -50,7 +50,7 @@ declare module '@material-ui/core/styles/createPalette' {
   }
 }
 
-const theme = createMuiTheme({
+const theme = createTheme({
   gradients: {
     secondary: 'linear-gradient(90deg, #24001A 0%, #790068 50%, #D18641 100%)',
     secondaryPrimary: 'linear-gradient(90deg, #DD3E76 -0.83%, #1D4DC9 100%)',

@@ -29,7 +29,7 @@ export const ClaimQuoteDialog: React.VFC<{
 }) => {
   const quoteAssetDecimals = useDecimalsForMint(option.quoteAssetMintKey);
   const [loading, setLoading] = useState(false);
-  const [size, setSize] = useState(0);
+  const [size, setSize] = useState(1);
   const exchangeWriterTokenForQuote = useExchangeWriterTokenForQuote(
     option,
     writerTokenAccountKey,

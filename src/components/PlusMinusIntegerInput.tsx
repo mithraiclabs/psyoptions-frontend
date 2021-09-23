@@ -32,8 +32,8 @@ const StyledFilledInput = withStyles({
 
 interface PlusMinusIntegerInputProps
   extends Omit<FilledInputProps, 'onChange'> {
-  onChange: (val: number) => void;
-  value: number;
+  onChange: (val: number | null) => void;
+  value: number | null;
 }
 
 export const PlusMinusIntegerInput: React.VFC<PlusMinusIntegerInputProps> = ({
@@ -46,8 +46,12 @@ export const PlusMinusIntegerInput: React.VFC<PlusMinusIntegerInputProps> = ({
   > = useCallback(
     (e) => {
       const parsedValue = parseInt(e.target.value, 10);
-      const _value =
-        Number.isNaN(parsedValue) || parsedValue < 1 ? 1 : parsedValue;
+      let _value = parsedValue;
+      if (Number.isNaN(parsedValue)) {
+        _value = null;
+      } else if (parsedValue < 1) {
+        _value = 0;
+      }
       onChange(_value);
     },
     [onChange],
@@ -64,7 +68,7 @@ export const PlusMinusIntegerInput: React.VFC<PlusMinusIntegerInputProps> = ({
         {...passThruProps}
         type="number"
         onChange={_onChange}
-        value={value}
+        value={value ?? ''}
       />
       <PlusMinusButton onClick={decrement}>-</PlusMinusButton>
       <PlusMinusButton onClick={increment}>+</PlusMinusButton>

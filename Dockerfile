@@ -10,12 +10,12 @@ ENV SHORT_SHA=$SHORT_SHA
 
 COPY *.json ./
 
-RUN npm ci --production
+RUN yarn install --frozen-lockfile
 
 # This will re-copy json files, but oh well
 COPY . ./
 
-RUN npm run build
+RUN yarn build
 
 EXPOSE 3000
 

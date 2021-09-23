@@ -27,7 +27,7 @@ const serverPlugins = isDev
   ? [
       new (require('webpack-shell-plugin-next'))({
         onBuildStart: {
-          scripts: ['npm run clean', ...dedupeBnJs],
+          scripts: ['yarn clean', ...dedupeBnJs],
           blocking: true,
           parallel: false,
         },
@@ -58,7 +58,7 @@ module.exports = [
       extensions: ['.ts', '.tsx', '.js'],
       symlinks: false,
       fallback: {
-        fs: false
+        fs: false,
       },
     },
     output: {
@@ -102,7 +102,7 @@ module.exports = [
       extensions: ['.ts', '.tsx', '.js'],
       symlinks: false,
       fallback: {
-        fs: false
+        fs: false,
       },
     },
     output: {

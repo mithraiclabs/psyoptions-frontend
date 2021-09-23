@@ -11,7 +11,7 @@
     "seed": "ts-node ./scripts/seedLocalNet.ts",
     "seed:mintTokens": "ts-node ./scripts/mintLocalNetTokens.ts",
     "seed:localChain": "ts-node ./scripts/seedLocalChain.ts",
-    "start": "npm run build",
+    "start": "yarn build",
     "test": "jest",
     "type-check": "tsc --noEmit",
     "build-docker": "docker build -t solana-options-frontend:latest .",
@@ -114,7 +114,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "lint-staged && npm run type-check"
+      "pre-commit": "lint-staged && yarn type-check"
     }
   },
   "lint-staged": {

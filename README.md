@@ -23,12 +23,12 @@ WALLET_ADDRESS=
 
 We aim to make development setup as easy as possible. Follow the steps below:
 
-1. Run `npm run wholeShebang`
+1. Run `yarn wholeShebang`
    - This will run a few scripts to build the programs, run a local Solana network (with
      Psy American and Serum DEX deployed to the right addresses at genesis) airdrop SOL to
      your wallet, create and airdrop SPL tokens to your wallet, deploy PsyOptions,
      deploy Serum, and create an example PsyOptions market with a Serum market attached.
-2. In a separate temrinal `npm run start`
+2. In a separate temrinal `yarn start`
    - This will run the local UI server
 
 ### Extracting market meta data
@@ -43,4 +43,4 @@ See <a href="https://github.com/mithraiclabs/solana-options-frontend/blob/master
 
 ### Troubleshooting
 
-If a build fails in google cloud, you can run `npm run build-docker` locally to simulate a cloud build and debug errors.
+If a build fails in google cloud, you can run `yarn build-docker` locally to simulate a cloud build and debug errors.

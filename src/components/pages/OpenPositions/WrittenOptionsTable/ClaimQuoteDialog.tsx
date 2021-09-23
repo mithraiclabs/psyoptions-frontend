@@ -4,6 +4,7 @@ import CircularProgress from '@material-ui/core/CircularProgress';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogTitle from '@material-ui/core/DialogTitle';
+import { BN } from '@project-serum/anchor';
 import { PublicKey } from '@solana/web3.js';
 import React, { useCallback, useState } from 'react';
 import { useDecimalsForMint } from '../../../../hooks/useDecimalsForMint';
@@ -36,10 +37,11 @@ export const ClaimQuoteDialog: React.VFC<{
   );
   const handleClaimQuote = useCallback(async () => {
     setLoading(true);
-    await exchangeWriterTokenForQuote();
+    const sizeBN = new BN(size);
+    await exchangeWriterTokenForQuote(sizeBN);
     setLoading(false);
     dismiss();
-  }, [dismiss, exchangeWriterTokenForQuote]);
+  }, [dismiss, exchangeWriterTokenForQuote, size]);
 
   const quoteSize =
     size *

@@ -52,7 +52,6 @@ export const useSerumOpenOrderAccounts = (
             new PublicKey(serumMarketAddress),
           );
         }
-        console.log('*** openOrders', openOrders);
         const containsUnsettled = hasUnsettled(openOrders);
         setSerumOpenOrders((prevSerumOpenOrders) => ({
           ...prevSerumOpenOrders,

@@ -1,9 +1,11 @@
 import React, { memo, useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
+import Box from '@material-ui/core/Box';
 import {
   useFormState,
 } from '../../../../../context/SimpleUIContext';
 import { SimpleUIPage } from '../../SimpeUIPage';
+import OrderDetails from './OrderDetails';
 
 const ConfirmOrder = () => {
   const history = useHistory();
@@ -35,7 +37,22 @@ const ConfirmOrder = () => {
   ]);
 
   return (
-    <SimpleUIPage title={'Confirm Order'} />
+    <SimpleUIPage title={'Confirm Order'}>
+      <Box
+        width='100%'
+        px={2}
+        py={1}
+        flexDirection='column'
+        display='flex'
+      >
+        <OrderDetails
+          side='buy'
+          callOrPut={direction === 'up' ? 'call' : 'put'}
+          contractSize={0.1}
+          orderSize={orderSize}
+        />
+      </Box>
+    </SimpleUIPage>
   );
 };
 

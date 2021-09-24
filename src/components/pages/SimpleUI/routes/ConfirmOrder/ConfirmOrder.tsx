@@ -2,8 +2,8 @@ import React, { memo, useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
 import {
   useFormState,
-} from '../../../../context/SimpleUIContext';
-import { SimpleUIPage } from '../SimpeUIPage';
+} from '../../../../../context/SimpleUIContext';
+import { SimpleUIPage } from '../../SimpeUIPage';
 
 const ConfirmOrder = () => {
   const history = useHistory();

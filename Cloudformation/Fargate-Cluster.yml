@@ -157,7 +157,7 @@ Resources:
             - Name: DEVNET_PROGRAM_ID
               Value: R2y9ip6mxmWUj4pt54jP2hz2dgvMozy9VTSwMWE7evs
             - Name: MAINNET_PROGRAM_ID
-              Value: AAcHauRu6eUDePN3hDDAUTbgyRq5xFbRZJCLsUdpBCJb
+              Value: R2y9ip6mxmWUj4pt54jP2hz2dgvMozy9VTSwMWE7evs
             - Name: DEVNET_DEX_PROGRAM_ID
               Value: DESVgJVGajEgKGXhb6XmqDHGz3VjdgP7rEVESBgxmroY
             - Name: MAINNET_DEX_PROGRAM_ID

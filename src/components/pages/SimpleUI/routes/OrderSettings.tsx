@@ -10,14 +10,16 @@ import {
   useFormState,
 } from '../../../../context/SimpleUIContext';
 import useAssetList from '../../../../hooks/useAssetList';
+import useFilteredOptionsChain from '../../../../hooks/useFilteredOptionsChain';
 import { StyledFilledInput, PlusMinusButton } from '../../../BuySellDialog/styles';
 import { SimpleUIPage } from '../SimpeUIPage';
+import ChooseStrikeButton from './ChooseStrike/ChooseStrikeButton';
 
 // #TODO: Make this a global enum, i see BuySellDialog.tsx is using it
 const orderTypes = ['limit', 'market'];
 
 const OrderSettings = () => {
-  const { tokenSymbol, direction } = useFormState();
+  const { tokenSymbol, direction, expirationUnixTimestamp, strike } = useFormState();
   const updateForm = useUpdateForm();
   const history = useHistory();
   const theme = useTheme();
@@ -25,15 +27,19 @@ const OrderSettings = () => {
   const [limitPrice, setLimitPrice] = useState(0);
   const [orderType, setOrderType] = useState('limit');
   const [orderSize, setOrderSize] = useState(1);
+  const { lowestAskHighestBidPerStrike, setDirection } = useFilteredOptionsChain();
   const [isReviewButtonDisabled, setIsReviewButtonDisabled] = useState(false);
 
   // If previous form state didn't exist, send user back to first page (choose asset)
   useEffect(() => {
-    if (!tokenSymbol || !direction) {
+    if (!tokenSymbol || !direction || !expirationUnixTimestamp || !strike) {
       history.replace('/simple/choose-asset');
     }
-  }, [tokenSymbol, direction, history]);
+  }, [tokenSymbol, direction, expirationUnixTimestamp, strike, history]);
 
+  useEffect(() => {
+    setDirection(direction);
+  }, [direction, setDirection]);
 
   const handleChangeOrderSize = (e) => setOrderSize(e.target.value);
   const handleChangeLimitPrice = (e) => setLimitPrice(e.target.value);
@@ -58,6 +64,19 @@ const OrderSettings = () => {
         display='flex'
         justifyContent='center'
       >
+        <Box
+          width='100%'
+          paddingBottom={3}
+        >
+          <ChooseStrikeButton
+            strike={strike.toString()}
+            bid={lowestAskHighestBidPerStrike[strike]?.bid}
+            ask={lowestAskHighestBidPerStrike[strike]?.ask}
+            selected
+            onClick={null}
+            disabled
+          />
+        </Box>
         <Box pb={1} pt={2}>
           Order Quantity:
           <Box pt={1} display='flex' flexDirection='row'>
@@ -118,7 +137,7 @@ const OrderSettings = () => {
           pt={2}
           color={
             orderType === 'market'
-              ? (theme.palette.background as any).lighter
+              ? theme.palette.background.lighter
               : theme.palette.primary.main
           }
         >
@@ -132,21 +151,20 @@ const OrderSettings = () => {
             />
           </Box>
         </Box>
-      </Box>
-      <Box
-        width='100%'
-        px={2}
-        paddingTop={2}
-      >
-        <Button
-          color='primary'
-          onClick={handleReviewClicked}
-          variant='outlined'
-          disabled={isReviewButtonDisabled}
-          style={{ width: '100%' }}
+        <Box
+          width='100%'
+          paddingTop={3}
         >
-          Review your order
-        </Button>
+          <Button
+            color='primary'
+            onClick={handleReviewClicked}
+            variant='outlined'
+            disabled={isReviewButtonDisabled}
+            style={{ width: '100%' }}
+          >
+            Review your order
+          </Button>
+        </Box>
       </Box>
     </SimpleUIPage>
   );

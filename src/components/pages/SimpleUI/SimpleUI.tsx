@@ -4,7 +4,7 @@ import { Switch, Route, useHistory, useLocation } from 'react-router-dom';
 import ChooseAnAsset from './routes/ChooseAnAsset';
 import UpOrDown from './routes/UpOrDown';
 import ChooseExpiration from './routes/ChooseExpiration';
-import ChooseStrike from './routes/ChooseStrike';
+import ChooseStrike from './routes/ChooseStrike/ChooseStrike';
 import OrderSettings from './routes/OrderSettings';
 
 export const SimpleUI: React.FC = () => {

@@ -6,6 +6,7 @@ import UpOrDown from './routes/UpOrDown';
 import ChooseExpiration from './routes/ChooseExpiration';
 import ChooseStrike from './routes/ChooseStrike/ChooseStrike';
 import OrderSettings from './routes/OrderSettings';
+import ConfirmOrder from './routes/ConfirmOrder';
 
 export const SimpleUI: React.FC = () => {
   const history = useHistory();
@@ -25,6 +26,7 @@ export const SimpleUI: React.FC = () => {
       <Route component={ChooseExpiration} path="/simple/choose-expiration" />
       <Route component={ChooseStrike} path="/simple/choose-strike" />
       <Route component={OrderSettings} path="/simple/order-settings" />
+      <Route component={ConfirmOrder} path="/simple/confirm-order" />
     </Switch>
   );
 };

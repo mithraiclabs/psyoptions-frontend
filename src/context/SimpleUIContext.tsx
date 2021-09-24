@@ -6,6 +6,9 @@ type FormState = {
   direction: 'up' | 'down' | ''
   expirationUnixTimestamp: number
   strike: number
+  orderSize: number
+  orderType: 'limit' | 'market'
+  limitPrice: number | null
 }
 
 type ContextValue = {
@@ -25,6 +28,9 @@ const initialState: FormState = {
   direction: '',
   expirationUnixTimestamp: 0,
   strike: 0,
+  orderSize: 0,
+  orderType: 'limit',
+  limitPrice: 0,
 }
 
 // Simple reducer that replaces key/value pairs of the form state

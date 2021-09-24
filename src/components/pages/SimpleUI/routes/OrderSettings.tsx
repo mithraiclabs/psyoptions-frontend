@@ -28,7 +28,6 @@ const OrderSettings = () => {
   const [orderType, setOrderType] = useState('limit');
   const [orderSize, setOrderSize] = useState(1);
   const { lowestAskHighestBidPerStrike, setDirection } = useFilteredOptionsChain();
-  const [isReviewButtonDisabled, setIsReviewButtonDisabled] = useState(false);
 
   // If previous form state didn't exist, send user back to first page (choose asset)
   useEffect(() => {
@@ -45,12 +44,13 @@ const OrderSettings = () => {
   const handleChangeLimitPrice = (e) => setLimitPrice(e.target.value);
 
   const handleReviewClicked = () => {
-    if (orderType === 'limit' && !limitPrice)
-      return;
-      
+    updateForm('orderSize', orderSize);
+    updateForm('orderType', orderType);
+    updateForm('limitPrice', limitPrice);
+    
     // TODO: animated transition between pages instead of a timeout
     setTimeout(() => {
-    history.push('/simple/confirm');
+    history.push('/simple/confirm-order');
     }, 500);
   };
 
@@ -159,7 +159,7 @@ const OrderSettings = () => {
             color='primary'
             onClick={handleReviewClicked}
             variant='outlined'
-            disabled={isReviewButtonDisabled}
+            disabled={orderType === 'limit' && !limitPrice}
             style={{ width: '100%' }}
           >
             Review your order

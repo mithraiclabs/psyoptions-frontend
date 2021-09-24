@@ -120,7 +120,7 @@ const ChooseStrike = () => {
 
       // TODO: animated transition between pages instead of a timeout
       setTimeout(() => {
-        history.push('/simple/confirm');
+        history.push('/simple/order-settings');
       }, 500);
     }
   }

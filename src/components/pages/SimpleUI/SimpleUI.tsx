@@ -5,6 +5,7 @@ import ChooseAnAsset from './routes/ChooseAnAsset';
 import UpOrDown from './routes/UpOrDown';
 import ChooseExpiration from './routes/ChooseExpiration';
 import ChooseStrike from './routes/ChooseStrike';
+import OrderSettings from './routes/OrderSettings';
 
 export const SimpleUI: React.FC = () => {
   const history = useHistory();
@@ -23,6 +24,7 @@ export const SimpleUI: React.FC = () => {
       <Route component={UpOrDown} path="/simple/up-or-down" />
       <Route component={ChooseExpiration} path="/simple/choose-expiration" />
       <Route component={ChooseStrike} path="/simple/choose-strike" />
+      <Route component={OrderSettings} path="/simple/order-settings" />
     </Switch>
   );
 };

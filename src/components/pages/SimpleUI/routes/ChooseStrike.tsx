@@ -3,10 +3,10 @@ import { useHistory } from 'react-router-dom';
 import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
 import { useTheme } from '@material-ui/core/styles';
+import { SerumMarketAndProgramId, ChainRow } from 'src/types';
 import useSerum from '../../../../hooks/useSerum';
 import { OrderbookData, useSerumOrderbooks } from '../../../../context/SerumOrderbookContext';
 import { calculateStrikePrecision } from '../../../../utils/getStrikePrices';
-import { SerumMarketAndProgramId, ChainRow } from 'src/types';
 import useOptionsChain from '../../../../hooks/useOptionsChain';
 import {
   useUpdateForm,
@@ -31,23 +31,30 @@ const ChooseStrikeButton = ({ strike, bid, ask, selected, onClick }) => {
       onClick={onClick}
     >
       <Box
-        width="100%"
-        display="flex"
-        flexDirection="column"
-        textAlign="left"
+        width='100%'
+        display='flex'
+        flexDirection='column'
+        textAlign='left'
         p={1}
         color={theme?.palette?.primary?.light}
         fontSize={'16px'}
       >
         <Box paddingLeft={1}>
-          <h4 style={{ margin: 0 }}>{`$${strike}`}</h4>
+          <div style={{
+              margin: 0,
+              fontSize: 20,
+              fontFamily: 'Goldman',
+              fontWeight: 'bold'
+            }}
+          >{`$${strike}`}</div>
         </Box>
         <Box
-          width="100%"
-          display="flex"
-          flexDirection="row"
-          justifyContent="space-between"
-          p={1}
+          width='100%'
+          display='flex'
+          flexDirection='row'
+          justifyContent='space-between'
+          paddingLeft={1}
+          paddingRight={1}
         >
           <Box>{bid ? `Bid: $${bid}`: 'Bid: None'}</Box>
           <Box>{ask ? `Ask: $${ask}`: 'Ask: None'}</Box>
@@ -87,9 +94,9 @@ const ChooseStrike = () => {
   useEffect(() => {
     // depending on direction user chose, only show calls or puts accordingly
     const filtered: ChainRow[] = chains.filter(chain => {
-      if (chain.call.key && direction === "up")
+      if (chain.call.key && direction === 'up')
         return true;
-      if (chain.put.key && direction === "down")
+      if (chain.put.key && direction === 'down')
         return true;
       return false;
     });
@@ -155,8 +162,11 @@ const ChooseStrike = () => {
       let lowestAsk: number | null = null;
       let orderbook: OrderbookData | null;
 
-      chain.call.key ? orderbook = orderbooks[chain.call.serumMarketKey?.toString()] :
+      if (chain.call.key) {
+        orderbook = orderbooks[chain.call.serumMarketKey?.toString()];
+      } else {
         orderbook = orderbooks[chain.put.serumMarketKey?.toString()];
+      }
       highestBid = orderbook?.bids[0]?.price;
       lowestAsk = orderbook?.asks[0]?.price;
 
@@ -173,25 +183,56 @@ const ChooseStrike = () => {
   return (
     <SimpleUIPage title={`Strike Price`}>
       <Box
-        width="100%"
-        px={2}
-        py={1}
-        flexDirection="column"
-        display="flex"
-        justifyContent="center"
+        display='flex'
+        flexDirection='row'
+        width='100%'
       >
-        {/* #TODO: come back and choose middle 3 strikes? */}
-        {strikeButtonData.slice(0, 3).map((s) => (
-          <Box my={1} key={s.strike}>
-            <ChooseStrikeButton
-              strike={s.strike}
-              bid={s.bid}
-              ask={s.ask}
-              onClick={() => handleMakeSelection(s.strike)}
-              selected={selectedStrike === s.strike}
-            />
-          </Box>
-        ))}
+        {strikeButtonData.length > 1 && <Box
+          display='flex'
+          flexDirection='column'
+          alignItems='center'
+          textAlign='center'
+          padding='42.5px 0 42.5px 16px'
+        >
+          <div style={{
+            fontWeight: 700,
+            color: '#8BEAFF',
+            fontSize: 10
+          }}>Low risk High cost</div>
+          <div style={{
+            height: '100%',
+            width: 4,
+            background: 'linear-gradient(180deg, #51F39C 0%, #E36491 100%)',
+            borderRadius: 100,
+            margin: '8px 0 8px 0',
+          }}/>
+          <div style={{
+            fontWeight: 700,
+            color: '#8BEAFF',
+            fontSize: 10
+          }}>High risk Low cost</div>
+        </Box>}
+        <Box
+          width='100%'
+          px={2}
+          py={1}
+          flexDirection='column'
+          display='flex'
+          justifyContent='center'
+        >
+          {/* #TODO: come back and choose middle 3 strikes? */}
+          {strikeButtonData.slice(0, 3).map((s) => (
+            <Box my={1} key={s.strike}>
+              <ChooseStrikeButton
+                strike={s.strike}
+                bid={s.bid}
+                ask={s.ask}
+                onClick={() => handleMakeSelection(s.strike)}
+                selected={selectedStrike === s.strike}
+              />
+            </Box>
+          ))}
+        </Box>
       </Box>
     </SimpleUIPage>
   )

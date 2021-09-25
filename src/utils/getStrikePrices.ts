@@ -71,11 +71,11 @@ const calculateStrikePrecision = (n: BigNumber): number => {
     precision = 2;
   } else {
     const s = n.toString(10).replace('.', '');
-    const numZeros = s.match(/^0+/)[0]?.length || 0;
+    const numZeros = s?.match(/^0+/)?.[0]?.length || 0;
     precision = 3 + numZeros;
   }
 
   return precision;
-}
+};
 
 export { intervals, getStrikePrices, calculateStrikePrecision };

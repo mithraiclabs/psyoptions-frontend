@@ -1,16 +1,16 @@
 import { PublicKey } from '@solana/web3.js';
 import { useCallback, useContext } from 'react';
-import WalletAdapter from 'src/utils/wallet/walletAdapter';
 import { WalletContext } from '../context/WalletContext';
+import WalletAdapter from '../utils/wallet/walletAdapter';
 
 const useWallet = (): {
   balance: number;
-  wallet: WalletAdapter;
+  wallet: WalletAdapter | null;
   connect: (walletAdapter: WalletAdapter, args: unknown) => void;
   disconnect: () => void;
   connected: boolean;
   loading: boolean;
-  pubKey: PublicKey;
+  pubKey: PublicKey | null;
 } => {
   const {
     balance,
@@ -26,7 +26,7 @@ const useWallet = (): {
 
   // Reset state in case user is changing wallets
   const connect = useCallback(
-    async (walletAdapter: WalletAdapter, args: any) => {
+    async (walletAdapter: WalletAdapter, args: unknown) => {
       setPubKey(null);
       setConnected(false);
       setLoading(true);
@@ -41,9 +41,11 @@ const useWallet = (): {
 
       walletAdapter.on('connect', (key) => {
         setLoading(false);
-        setConnected(true);
-        setPubKey(key);
-        console.log('connected');
+        if (key) {
+          setConnected(true);
+          setPubKey(key);
+          console.log('connected');
+        }
       });
 
       await walletAdapter.connect(args);
@@ -52,7 +54,7 @@ const useWallet = (): {
   );
 
   const disconnect = () => {
-    wallet.disconnect();
+    wallet?.disconnect();
     setPubKey(null);
     setConnected(false);
   };

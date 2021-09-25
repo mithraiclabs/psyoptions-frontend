@@ -21,15 +21,17 @@ export const useSerumFeeDiscountKey = (): {
   const { ownedTokenAccounts } = useOwnedTokenAccounts();
 
   return useMemo(() => {
-    const srmAccounts = ownedTokenAccounts[srmPublicKey?.toString()] ?? [];
+    const srmAccounts =
+      ownedTokenAccounts[srmPublicKey?.toString() ?? ''] ?? [];
     const highestSRMAccount = getHighestAccount(srmAccounts);
     const feeTier = getFeeTier(0, highestSRMAccount?.amount ?? 0);
     const feeRates = getFeeRates(feeTier);
     return {
       feeRates,
-      publicKey: Object.keys(highestSRMAccount).length
-        ? highestSRMAccount.pubKey
-        : null,
+      publicKey:
+        highestSRMAccount && Object.keys(highestSRMAccount).length
+          ? highestSRMAccount.pubKey
+          : null,
     };
   }, [ownedTokenAccounts, srmPublicKey]);
 };

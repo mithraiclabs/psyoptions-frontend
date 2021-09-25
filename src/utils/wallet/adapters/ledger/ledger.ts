@@ -20,8 +20,8 @@ class LedgerWalletAdapter extends EventEmitter implements WalletAdapter {
     this._transport = null;
   }
 
-  get publicKey(): PublicKey | null {
-    return this._publicKey;
+  get publicKey(): PublicKey {
+    return this._publicKey as PublicKey;
   }
 
   get connected(): boolean {

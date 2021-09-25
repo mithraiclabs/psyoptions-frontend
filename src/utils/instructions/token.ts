@@ -13,7 +13,7 @@ import {
   Transaction,
   TransactionInstruction,
 } from '@solana/web3.js';
-import { CreateNewTokenAccountResponse } from 'src/types';
+import { CreateNewTokenAccountResponse } from '../../types';
 
 const SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID = new PublicKey(
   'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL',

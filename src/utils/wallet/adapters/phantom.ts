@@ -10,16 +10,10 @@ type PhantomRequestMethod =
   | 'signTransaction'
   | 'signAllTransactions';
 
-interface PhantomProvider {
-  publicKey?: PublicKey;
+interface PhantomProvider extends WalletAdapter {
   isConnected?: boolean;
-  autoApprove?: boolean;
-  signTransaction: (transaction: Transaction) => Promise<Transaction>;
-  signAllTransactions: (transactions: Transaction[]) => Promise<Transaction[]>;
-  connect: ({ onlyIfTrusted: boolean }) => Promise<void>;
-  disconnect: () => Promise<void>;
-  on: (event: PhantomEvent, handler: (args: any) => void) => void;
-  request: (method: PhantomRequestMethod, params: any) => Promise<any>;
+  connect: ({ onlyIfTrusted }: { onlyIfTrusted: boolean }) => Promise<void>;
+  request: (method: PhantomRequestMethod, params: unknown) => Promise<unknown>;
   listeners: (event: PhantomEvent) => (() => void)[];
 }
 
@@ -31,17 +25,17 @@ class PhantomWalletAdapter extends EventEmitter implements WalletAdapter {
 
   // eslint-disable-next-line
   private get _provider(): PhantomProvider | undefined {
-    if ((window as any)?.solana?.isPhantom) {
+    if (window?.solana?.isPhantom) {
       return (window as any).solana;
     }
     return undefined;
   }
 
-  private _handleConnect = (...args) => {
+  private _handleConnect = (...args: any) => {
     this.emit('connect', ...args);
   };
 
-  private _handleDisconnect = (...args) => {
+  private _handleDisconnect = (...args: any) => {
     this.emit('disconnect', ...args);
   };
 
@@ -64,7 +58,7 @@ class PhantomWalletAdapter extends EventEmitter implements WalletAdapter {
   }
 
   get publicKey() {
-    return this._provider?.publicKey;
+    return this._provider?.publicKey as PublicKey;
   }
 
   async signTransaction(transaction: Transaction) {
@@ -75,7 +69,7 @@ class PhantomWalletAdapter extends EventEmitter implements WalletAdapter {
     return this._provider.signTransaction(transaction);
   }
 
-  async connect(args) {
+  async connect(args: { onlyIfTrusted: boolean }) {
     if (!isBrowser) {
       return;
     }
@@ -89,7 +83,6 @@ class PhantomWalletAdapter extends EventEmitter implements WalletAdapter {
     if (!this._provider.listeners('disconnect').length) {
       this._provider?.on('disconnect', this._handleDisconnect);
     }
-    // eslint-disable-next-line
     return this._provider?.connect(args);
   }
 
@@ -102,7 +95,7 @@ class PhantomWalletAdapter extends EventEmitter implements WalletAdapter {
 
 const phantom = new PhantomWalletAdapter();
 
-const getAdapter = (): WalletAdapter => {
+const getAdapter = (): PhantomWalletAdapter => {
   return phantom;
 };
 

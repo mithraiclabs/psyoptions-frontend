@@ -14,7 +14,7 @@ export default class TransactionError extends Error {
 
   public instructionError?: InstructionError;
 
-  constructor(message: string, transaction: Transaction, txid?: string) {
+  constructor(message: string, transaction: Transaction, txid: string) {
     super(message);
     this.txid = txid;
     this.transaction = transaction;

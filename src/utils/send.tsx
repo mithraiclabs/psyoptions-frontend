@@ -11,15 +11,13 @@ import {
 import Wallet from '@project-serum/sol-wallet-adapter';
 import { TimeoutError } from './transactionErrors/TimeoutError';
 
-export async function sleep(ms) {
+export async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export const getUnixTs = () => {
+export const getUnixTs = (): number => {
   return new Date().getTime() / 1000;
 };
-
-const DEFAULT_TIMEOUT = 30000;
 
 export async function signTransaction({
   transaction,
@@ -31,10 +29,10 @@ export async function signTransaction({
   wallet: Wallet;
   signers?: Array<Keypair>;
   connection: Connection;
-}) {
+}): Promise<Transaction> {
   const tx = transaction;
   tx.recentBlockhash = (await connection.getRecentBlockhash('max')).blockhash;
-  tx.feePayer = wallet.publicKey;
+  tx.feePayer = wallet.publicKey ?? undefined;
   if (signers.length > 0) {
     tx.partialSign(...signers);
   }
@@ -52,13 +50,13 @@ export async function signTransactions({
   }[];
   wallet: Wallet;
   connection: Connection;
-}) {
+}): Promise<Transaction[]> {
   const { blockhash } = await connection.getRecentBlockhash('max');
   const tempTransactionsAndSigners = transactionsAndSigners.map(
     ({ transaction, signers = [] }) => {
       const tx = transaction;
       tx.recentBlockhash = blockhash;
-      tx.feePayer = wallet.publicKey;
+      tx.feePayer = wallet.publicKey ?? undefined;
 
       if (signers?.length > 0) {
         transaction.partialSign(...signers);
@@ -78,7 +76,7 @@ export async function awaitTransactionSignatureConfirmation(
   txid: TransactionSignature,
   timeout: number,
   connection: Connection,
-) {
+): Promise<unknown> {
   let done = false;
   const res = await new Promise((resolve, reject) => {
     // eslint-disable-next-line
@@ -166,7 +164,7 @@ export async function simulateTransaction(
   // @ts-ignore
   const wireTransaction = tx._serialize(signData);
   const encodedTransaction = wireTransaction.toString('base64');
-  const config: any = { encoding: 'base64', commitment };
+  const config = { encoding: 'base64', commitment };
   const args = [encodedTransaction, config];
 
   // @ts-ignore

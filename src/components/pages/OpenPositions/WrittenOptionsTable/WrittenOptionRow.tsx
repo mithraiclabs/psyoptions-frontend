@@ -1,17 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { PublicKey } from '@solana/web3.js';
-import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { Token, TOKEN_PROGRAM_ID, u64 } from '@solana/spl-token';
 import Avatar from '@material-ui/core/Avatar';
 import Tooltip from '@material-ui/core/Tooltip';
 import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
 import { withStyles, useTheme } from '@material-ui/core/styles';
 
-import BN from 'bn.js';
 import { OptionType, TokenAccount } from '../../../../types';
 import { formatExpirationTimestamp } from '../../../../utils/format';
 import useOptionsMarkets from '../../../../hooks/useOptionsMarkets';
-import { useCloseWrittenOptionPostExpiration } from '../../../../hooks/useCloseWrittenOptionPostExpiration';
 import { useClosePosition } from '../../../../hooks/useClosePosition';
 import useOwnedTokenAccounts from '../../../../hooks/useOwnedTokenAccounts';
 import useConnection from '../../../../hooks/useConnection';
@@ -19,6 +16,7 @@ import useNotifications from '../../../../hooks/useNotifications';
 import useAssetList from '../../../../hooks/useAssetList';
 import TxButton from '../../../TxButton';
 import { ClaimQuoteDialog } from './ClaimQuoteDialog';
+import { CloseWrittenOptionsDialog } from '../../../CloseWrittenOptionsDialog';
 
 const StyledTooltip = withStyles((theme) => ({
   tooltip: {
@@ -35,6 +33,9 @@ type WrittenOptionRowProps = {
   writerTokenAccounts: TokenAccount[];
   heldContracts: TokenAccount[];
 };
+
+// eslint-disable-next-line new-cap
+const ZERO_U64 = new u64(0);
 
 /**
  * Row to display the wallet's minted options
@@ -56,21 +57,21 @@ export const WrittenOptionRow = React.memo(
     const { connection } = useConnection();
     const { ownedTokenAccounts } = useOwnedTokenAccounts();
     const { markets } = useOptionsMarkets();
-    const [quotePoolNotEmpty, setQuoteAssetPoolNotEmpty] = useState(false);
+    const [quoteVaultAmount, setQuoteVaultAmount] = useState<u64>(ZERO_U64);
+    const [underlyingVaultAmount, setUnderlyingVaultAmount] =
+      useState<u64>(ZERO_U64);
     const [claimQuoteVisible, setClaimQuoteVisible] = useState(false);
+    const [closeWrittenOptionsVisible, setCloseWrittenOptionsVisible] =
+      useState(false);
     const market = markets[marketKey];
     // TODO handle multiple wallets for the same Writer Token
-    const initialWriterTokenAccount = writerTokenAccounts[0];
-    const ownedUAssetKey = ownedTokenAccounts[market.uAssetMint]?.[0]?.pubKey;
+    const writerTokenAccount = writerTokenAccounts[0];
+    const walletUnderlyingAssetKey =
+      ownedTokenAccounts[market.uAssetMint]?.[0]?.pubKey;
     const walletQuoteAssetKey =
       ownedTokenAccounts[market.qAssetMint]?.[0]?.pubKey;
     const ownedOptionTokenAccounts =
       ownedTokenAccounts[market.optionMintKey.toString()];
-    const closeOptionPostExpiration = useCloseWrittenOptionPostExpiration(
-      market,
-      ownedUAssetKey,
-      initialWriterTokenAccount.pubKey,
-    );
     const holdsContracts = !!heldContracts.length;
     // TODO handle multiple wallets for same Option Token
     const initialOptionTokenAccount = heldContracts[0];
@@ -78,8 +79,8 @@ export const WrittenOptionRow = React.memo(
       market,
       // initialOptionTokenAccount can be undefined if there are no held contracts
       initialOptionTokenAccount?.pubKey,
-      ownedUAssetKey,
-      initialWriterTokenAccount.pubKey,
+      walletUnderlyingAssetKey,
+      writerTokenAccount.pubKey,
     );
 
     const handleCloseOne = async () => {
@@ -94,15 +95,10 @@ export const WrittenOptionRow = React.memo(
       setCloseAllLoading(false);
     };
 
-    const handleCloseOnePostExpiration = async () => {
-      setCloseOneLoading(true);
-      await closeOptionPostExpiration(initialWriterTokenAccount.amount);
-      setCloseOneLoading(false);
-    };
-
-    const handleClaimQuote = async () => {
+    const handleClaimQuote = () => {
       setClaimQuoteVisible(true);
     };
+    const showCloseWrittenOptions = () => setCloseWrittenOptionsVisible(true);
 
     let optionType: OptionType;
     if (market?.uAssetSymbol) {
@@ -132,8 +128,7 @@ export const WrittenOptionRow = React.memo(
           : market?.uAssetSymbol),
     )?.icon;
 
-    const lockedAmount =
-      initialWriterTokenAccount.amount * parseFloat(market.size);
+    const lockedAmount = writerTokenAccount.amount * parseFloat(market.size);
     const lockedAmountDisplay = `${lockedAmount}`.match(/\.(.{4,})$/)
       ? `≈${lockedAmount.toFixed(3)}`
       : lockedAmount;
@@ -143,16 +138,24 @@ export const WrittenOptionRow = React.memo(
         try {
           const quoteToken = new Token(
             connection,
-            new PublicKey(market.qAssetMint),
+            market.quoteAssetMintKey,
             TOKEN_PROGRAM_ID,
             null,
           );
-          const quoteAssetPoolAccount = await quoteToken.getAccountInfo(
-            market.quoteAssetPoolKey,
+          const underlyingToken = new Token(
+            connection,
+            market.underlyingAssetMintKey,
+            TOKEN_PROGRAM_ID,
+            null,
           );
-          if (!(quoteAssetPoolAccount.amount as BN).isZero()) {
-            setQuoteAssetPoolNotEmpty(true);
-          }
+          const [quoteVaultAccount, underlyingVaultAccount] = await Promise.all(
+            [
+              quoteToken.getAccountInfo(market.quoteAssetPoolKey),
+              underlyingToken.getAccountInfo(market.underlyingAssetPoolKey),
+            ],
+          );
+          setQuoteVaultAmount(quoteVaultAccount.amount);
+          setUnderlyingVaultAmount(underlyingVaultAccount.amount);
         } catch (err) {
           pushNotification({
             severity: 'error',
@@ -163,7 +166,10 @@ export const WrittenOptionRow = React.memo(
     }, [
       connection,
       market.qAssetMint,
+      market.quoteAssetMintKey,
       market.quoteAssetPoolKey,
+      market.underlyingAssetMintKey,
+      market.underlyingAssetPoolKey,
       pushNotification,
     ]);
 
@@ -172,34 +178,64 @@ export const WrittenOptionRow = React.memo(
     let ActionFragment = null;
     if (expired) {
       ActionFragment = (
-        <Box>
-          <StyledTooltip
-            title={
-              <Box
-                p={1}
-              >{`The written option has expired, closing will return the locked underlying asset`}</Box>
-            }
-          >
-            <Box
-              display="flex"
-              flexDirection={['column', 'column', 'row']}
-              flexWrap="wrap"
-              alignItems="flex-start"
-              justifyContent="flex-start"
+        <>
+          {!underlyingVaultAmount.isZero() && (
+            <Box>
+              <StyledTooltip
+                title={
+                  <Box p={1}>
+                    The written option has expired, closing will return the
+                    locked underlying asset
+                  </Box>
+                }
+              >
+                <Box
+                  display="flex"
+                  flexDirection={['column', 'column', 'row']}
+                  flexWrap="wrap"
+                  alignItems="flex-start"
+                  justifyContent="flex-start"
+                >
+                  <Box p={1}>
+                    <Button
+                      color="primary"
+                      variant="outlined"
+                      onClick={showCloseWrittenOptions}
+                    >
+                      Claim {market.uAssetSymbol}
+                    </Button>
+                  </Box>
+                </Box>
+              </StyledTooltip>
+            </Box>
+          )}
+          {!quoteVaultAmount.isZero() && (
+            <StyledTooltip
+              title={
+                <Box p={1}>
+                  Some option contracts have been exercised. Burn the writer
+                  token to claim the quote asset and forfeit the locked
+                  underlying asset
+                </Box>
+              }
             >
-              <Box p={1}>
-                <TxButton
+              <Box
+                display="flex"
+                alignItems="center"
+                justifyContent="flex-start"
+                p={1}
+              >
+                <Button
                   color="primary"
                   variant="outlined"
-                  onClick={handleCloseOnePostExpiration}
-                  loading={closeOneLoading}
+                  onClick={handleClaimQuote}
                 >
-                  {closeOneLoading ? 'Closing' : 'Close'}
-                </TxButton>
+                  Claim {market.qAssetSymbol}
+                </Button>
               </Box>
-            </Box>
-          </StyledTooltip>
-        </Box>
+            </StyledTooltip>
+          )}
+        </>
       );
     } else {
       ActionFragment = (
@@ -207,9 +243,10 @@ export const WrittenOptionRow = React.memo(
           {holdsContracts && (
             <StyledTooltip
               title={
-                <Box
-                  p={1}
-                >{`Unlock the underlying asset used to write the contract by burning the option and writer tokens`}</Box>
+                <Box p={1}>
+                  Unlock the underlying asset used to write the contract by
+                  burning the option and writer tokens
+                </Box>
               }
             >
               <Box
@@ -227,7 +264,7 @@ export const WrittenOptionRow = React.memo(
                     disabled={!canClose}
                     loading={closeOneLoading}
                   >
-                    {closeOneLoading ? 'Closing One' : 'Close one'}
+                    Claim {market.uAssetSymbol}
                   </TxButton>
                 </Box>
                 <Box p={1}>
@@ -238,7 +275,7 @@ export const WrittenOptionRow = React.memo(
                       handleCloseAll(
                         Math.min(
                           ownedOptionTokenAccounts?.[0]?.amount,
-                          initialWriterTokenAccount.amount,
+                          writerTokenAccount.amount,
                         ),
                       );
                     }}
@@ -251,7 +288,7 @@ export const WrittenOptionRow = React.memo(
               </Box>
             </StyledTooltip>
           )}
-          {quotePoolNotEmpty && (
+          {!quoteVaultAmount.isZero() && (
             <StyledTooltip
               title={
                 <Box p={1}>
@@ -273,7 +310,7 @@ export const WrittenOptionRow = React.memo(
                   onClick={handleClaimQuote}
                   style={{ marginLeft: holdsContracts ? 8 : 0 }}
                 >
-                  {'Claim Quote'}
+                  Claim {market.qAssetSymbol}
                 </Button>
               </Box>
             </StyledTooltip>
@@ -319,7 +356,7 @@ export const WrittenOptionRow = React.memo(
               : market.quoteAmountPerContract.toString()}
           </Box>
           <Box p={1} width="10%">
-            {initialWriterTokenAccount.amount}
+            {writerTokenAccount.amount}
           </Box>
           <Box p={1} width="10%">
             {ownedOptionTokenAccounts?.[0]?.amount}
@@ -336,9 +373,24 @@ export const WrittenOptionRow = React.memo(
         <ClaimQuoteDialog
           dismiss={() => setClaimQuoteVisible(false)}
           option={market}
+          numLeftToClaim={quoteVaultAmount
+            .div(market.quoteAmountPerContractBN)
+            .toNumber()}
           quoteAssetDestKey={walletQuoteAssetKey}
+          vaultBalance={quoteVaultAmount}
           visible={claimQuoteVisible}
-          writerTokenAccountKey={initialWriterTokenAccount.pubKey}
+          writerTokenAccount={writerTokenAccount}
+        />
+        <CloseWrittenOptionsDialog
+          dismiss={() => setCloseWrittenOptionsVisible(false)}
+          numLeftToClaim={underlyingVaultAmount
+            .div(market.amountPerContractBN)
+            .toNumber()}
+          option={market}
+          underlyingAssetDestKey={walletUnderlyingAssetKey}
+          vaultBalance={underlyingVaultAmount}
+          visible={closeWrittenOptionsVisible}
+          writerTokenAccount={writerTokenAccount}
         />
       </>
     );

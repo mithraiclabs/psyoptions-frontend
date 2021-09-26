@@ -21,7 +21,11 @@ export const formatExpirationTimestampDate = (value: number): string =>
 /**
  * Format option to the following structure `BTC | 24 Sep 2021 | call`
  */
-export const getOptionNameByMarket = (option: OptionMarket): string =>
-  `${option.uAssetSymbol} | ${formatExpirationTimestampDate(
-    option.expiration,
-  )} | ${option.uAssetSymbol.match(/^USD/) ? OptionType.PUT : OptionType.CALL}`;
+export const getOptionNameByMarket = (option: OptionMarket): string => {
+  const type = option.uAssetSymbol.match(/^USD/)
+    ? OptionType.PUT
+    : OptionType.CALL;
+  return `${
+    type === OptionType.PUT ? option.qAssetSymbol : option.uAssetSymbol
+  } | ${formatExpirationTimestampDate(option.expiration)} | ${type}`;
+};

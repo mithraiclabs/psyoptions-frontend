@@ -32,11 +32,30 @@ const StyledFilledInput = withStyles({
 
 interface PlusMinusIntegerInputProps
   extends Omit<FilledInputProps, 'onChange'> {
+  max?: number;
+  min?: number;
   onChange: (val: number | null) => void;
   value: number | null;
 }
 
+const handleMinMax = (
+  min: number | undefined,
+  max: number | undefined,
+  value: number,
+): number => {
+  let result = value;
+  if (min) {
+    result = Math.max(result, min);
+  }
+  if (max) {
+    result = Math.min(result, max);
+  }
+  return result;
+};
+
 export const PlusMinusIntegerInput: React.VFC<PlusMinusIntegerInputProps> = ({
+  max,
+  min,
   onChange,
   value,
   ...passThruProps
@@ -46,21 +65,23 @@ export const PlusMinusIntegerInput: React.VFC<PlusMinusIntegerInputProps> = ({
   > = useCallback(
     (e) => {
       const parsedValue = parseInt(e.target.value, 10);
-      let _value = parsedValue;
+      let _value: number | null = parsedValue;
       if (Number.isNaN(parsedValue)) {
         _value = null;
       } else if (parsedValue < 1) {
         _value = 0;
       }
-      onChange(_value);
+      onChange(_value == null ? null : handleMinMax(min, max, _value));
     },
-    [onChange],
+    [max, min, onChange],
   );
   const decrement = () => {
-    onChange(value - 1);
+    const newValue = (value ?? 0) - 1;
+    onChange(handleMinMax(min, max, newValue));
   };
   const increment = () => {
-    onChange(value + 1);
+    const newValue = (value ?? 0) + 1;
+    onChange(handleMinMax(min, max, newValue));
   };
   return (
     <Box pt={1} display="flex" flexDirection="row">

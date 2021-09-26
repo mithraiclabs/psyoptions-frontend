@@ -8,17 +8,18 @@ import Divider from '@material-ui/core/Divider';
 import { u64 } from '@solana/spl-token';
 import { PublicKey } from '@solana/web3.js';
 import React, { useCallback, useState } from 'react';
-import { useCloseWrittenOptionPostExpiration } from '../hooks/useCloseWrittenOptionPostExpiration';
+import { useClosePosition } from '../hooks/useClosePosition';
 import { useDecimalsForMint } from '../hooks/useDecimalsForMint';
 import { OptionMarket, TokenAccount } from '../types';
 import { getOptionNameByMarket } from '../utils/format';
 import DialogFullscreenMobile from './DialogFullscreenMobile';
 import { PlusMinusIntegerInput } from './PlusMinusIntegerInput';
 
-export const CloseWrittenOptionsDialog: React.VFC<{
+export const WrittenOptionsClosePositionPreExpiryDialog: React.VFC<{
   dismiss: () => void;
   numLeftToClaim: number;
   option: OptionMarket;
+  optionTokenAccount: TokenAccount;
   underlyingAssetDestKey: PublicKey;
   vaultBalance: u64;
   visible: boolean;
@@ -27,6 +28,7 @@ export const CloseWrittenOptionsDialog: React.VFC<{
   dismiss,
   numLeftToClaim,
   option,
+  optionTokenAccount,
   underlyingAssetDestKey,
   vaultBalance,
   visible,
@@ -37,17 +39,18 @@ export const CloseWrittenOptionsDialog: React.VFC<{
   );
   const [loading, setLoading] = useState(false);
   const [size, setSize] = useState<number | null>(1);
-  const closeOptionPostExpiration = useCloseWrittenOptionPostExpiration(
+  const closeWrittenOptionPreExpiry = useClosePosition(
     option,
+    optionTokenAccount.pubKey,
     underlyingAssetDestKey,
     writerTokenAccount.pubKey,
   );
   const handleClaimUnderlying = useCallback(async () => {
     setLoading(true);
-    await closeOptionPostExpiration(size ?? 1);
+    await closeWrittenOptionPreExpiry(size ?? 1);
     setLoading(false);
     dismiss();
-  }, [closeOptionPostExpiration, dismiss, size]);
+  }, [closeWrittenOptionPreExpiry, dismiss, size]);
 
   const underlyingSize =
     (size ?? 0) *
@@ -56,7 +59,11 @@ export const CloseWrittenOptionsDialog: React.VFC<{
 
   const normalizedVaultBalance =
     vaultBalance.toNumber() * 10 ** -underlyingAssetDecimals;
-  const max = Math.min(writerTokenAccount.amount, numLeftToClaim);
+  const max = Math.min(
+    optionTokenAccount.amount,
+    writerTokenAccount.amount,
+    numLeftToClaim,
+  );
 
   return (
     <DialogFullscreenMobile onClose={dismiss} maxWidth="lg" open={visible}>
@@ -73,7 +80,8 @@ export const CloseWrittenOptionsDialog: React.VFC<{
             <Box pt={1}>
               Vault balance: {normalizedVaultBalance} {option.uAssetSymbol}
             </Box>
-            <Box py={1}>Writer Tokens held: {writerTokenAccount.amount}</Box>
+            <Box pt={1}>Writer Tokens held: {writerTokenAccount.amount}</Box>
+            <Box py={1}>Option Tokens held: {optionTokenAccount.amount}</Box>
             <Divider />
             <Box pt={1}>Max redeemable: {max}</Box>
           </Box>
@@ -85,7 +93,7 @@ export const CloseWrittenOptionsDialog: React.VFC<{
               value={size}
             />
             <Box pt={2} style={{ fontSize: 12 }}>
-              {`Burn ${size} Writer Tokens to claim ${underlyingSize} ${option.uAssetSymbol}`}
+              {`Burn ${size} Writer Tokens and Option Tokens to claim ${underlyingSize} ${option.uAssetSymbol}`}
             </Box>
           </Box>
         </Box>

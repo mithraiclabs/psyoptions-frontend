@@ -16,7 +16,8 @@ import useNotifications from '../../../../hooks/useNotifications';
 import useAssetList from '../../../../hooks/useAssetList';
 import TxButton from '../../../TxButton';
 import { ClaimQuoteDialog } from './ClaimQuoteDialog';
-import { CloseWrittenOptionsDialog } from '../../../CloseWrittenOptionsDialog';
+import { WrittenOptionsClaimUnderlyingDialog } from '../../../WrittenOptionsClaimUnderlyingDialog';
+import { WrittenOptionsClosePositionPreExpiryDialog } from '../../../WrittenOptionsClosePositionPreExpiryDialog';
 
 const StyledTooltip = withStyles((theme) => ({
   tooltip: {
@@ -63,8 +64,11 @@ export const WrittenOptionRow = React.memo(
     const [claimQuoteVisible, setClaimQuoteVisible] = useState(false);
     const [closeWrittenOptionsVisible, setCloseWrittenOptionsVisible] =
       useState(false);
+    const [
+      closeWrittenOptionsPreExpiryVisible,
+      setCloseWrittenOptionsPreExpiryVisible,
+    ] = useState(false);
     const market = markets[marketKey];
-    // TODO handle multiple wallets for the same Writer Token
     const writerTokenAccount = writerTokenAccounts[0];
     const walletUnderlyingAssetKey =
       ownedTokenAccounts[market.uAssetMint]?.[0]?.pubKey;
@@ -73,32 +77,14 @@ export const WrittenOptionRow = React.memo(
     const ownedOptionTokenAccounts =
       ownedTokenAccounts[market.optionMintKey.toString()];
     const holdsContracts = !!heldContracts.length;
-    // TODO handle multiple wallets for same Option Token
-    const initialOptionTokenAccount = heldContracts[0];
-    const closePosition = useClosePosition(
-      market,
-      // initialOptionTokenAccount can be undefined if there are no held contracts
-      initialOptionTokenAccount?.pubKey,
-      walletUnderlyingAssetKey,
-      writerTokenAccount.pubKey,
-    );
-
-    const handleCloseOne = async () => {
-      setCloseOneLoading(true);
-      await closePosition();
-      setCloseOneLoading(false);
-    };
-
-    const handleCloseAll = async (numContracts) => {
-      setCloseAllLoading(true);
-      await closePosition(numContracts);
-      setCloseAllLoading(false);
-    };
+    const optionTokenAccount = ownedOptionTokenAccounts[0];
 
     const handleClaimQuote = () => {
       setClaimQuoteVisible(true);
     };
     const showCloseWrittenOptions = () => setCloseWrittenOptionsVisible(true);
+    const showCloseWrittenOptionsPreExpiry = () =>
+      setCloseWrittenOptionsPreExpiryVisible(true);
 
     let optionType: OptionType;
     if (market?.uAssetSymbol) {
@@ -240,7 +226,7 @@ export const WrittenOptionRow = React.memo(
     } else {
       ActionFragment = (
         <Box>
-          {holdsContracts && (
+          {holdsContracts && canClose && (
             <StyledTooltip
               title={
                 <Box p={1}>
@@ -257,33 +243,13 @@ export const WrittenOptionRow = React.memo(
                 justifyContent="flex-start"
               >
                 <Box p={1}>
-                  <TxButton
+                  <Button
                     color="primary"
                     variant="outlined"
-                    onClick={handleCloseOne}
-                    disabled={!canClose}
-                    loading={closeOneLoading}
+                    onClick={showCloseWrittenOptionsPreExpiry}
                   >
                     Claim {market.uAssetSymbol}
-                  </TxButton>
-                </Box>
-                <Box p={1}>
-                  <TxButton
-                    color="primary"
-                    variant="outlined"
-                    onClick={() => {
-                      handleCloseAll(
-                        Math.min(
-                          ownedOptionTokenAccounts?.[0]?.amount,
-                          writerTokenAccount.amount,
-                        ),
-                      );
-                    }}
-                    disabled={!canClose}
-                    loading={closeAllLoading}
-                  >
-                    {closeAllLoading ? 'Closing All' : 'Close All'}
-                  </TxButton>
+                  </Button>
                 </Box>
               </Box>
             </StyledTooltip>
@@ -308,7 +274,6 @@ export const WrittenOptionRow = React.memo(
                   color="primary"
                   variant="outlined"
                   onClick={handleClaimQuote}
-                  style={{ marginLeft: holdsContracts ? 8 : 0 }}
                 >
                   Claim {market.qAssetSymbol}
                 </Button>
@@ -381,7 +346,7 @@ export const WrittenOptionRow = React.memo(
           visible={claimQuoteVisible}
           writerTokenAccount={writerTokenAccount}
         />
-        <CloseWrittenOptionsDialog
+        <WrittenOptionsClaimUnderlyingDialog
           dismiss={() => setCloseWrittenOptionsVisible(false)}
           numLeftToClaim={underlyingVaultAmount
             .div(market.amountPerContractBN)
@@ -390,6 +355,18 @@ export const WrittenOptionRow = React.memo(
           underlyingAssetDestKey={walletUnderlyingAssetKey}
           vaultBalance={underlyingVaultAmount}
           visible={closeWrittenOptionsVisible}
+          writerTokenAccount={writerTokenAccount}
+        />
+        <WrittenOptionsClosePositionPreExpiryDialog
+          dismiss={() => setCloseWrittenOptionsPreExpiryVisible(false)}
+          numLeftToClaim={underlyingVaultAmount
+            .div(market.amountPerContractBN)
+            .toNumber()}
+          option={market}
+          optionTokenAccount={optionTokenAccount}
+          underlyingAssetDestKey={walletUnderlyingAssetKey}
+          vaultBalance={underlyingVaultAmount}
+          visible={closeWrittenOptionsPreExpiryVisible}
           writerTokenAccount={writerTokenAccount}
         />
       </>

@@ -1,4 +1,4 @@
-import { Token, TOKEN_PROGRAM_ID, u64 } from '@solana/spl-token';
+import { AccountLayout, Token, TOKEN_PROGRAM_ID, u64 } from '@solana/spl-token';
 import { PublicKey, Signer } from '@solana/web3.js';
 import { useEffect, useState } from 'react';
 import useConnection from './useConnection';
@@ -22,8 +22,10 @@ export const useOptionVaultAmounts = (
 
   useEffect(() => {
     if (!connection) {
-      return;
+      return () => {};
     }
+    let quoteVaultSubscriptionId: number;
+    let underlyingVaultSubscriptionId: number;
     (async () => {
       try {
         const quoteToken = new Token(
@@ -46,6 +48,30 @@ export const useOptionVaultAmounts = (
           quoteVaultAccount.amount,
           underlyingVaultAccount.amount,
         ]);
+
+        quoteVaultSubscriptionId = connection.onAccountChange(
+          quoteVaultKey,
+          (_account) => {
+            const listenerAccountInfo = AccountLayout.decode(_account.data);
+            console.log('listenerAccountInfo ', listenerAccountInfo);
+            const amountBuf = Buffer.from(listenerAccountInfo.amount);
+            const amountNum = amountBuf.readUIntLE(0, 8);
+            // eslint-disable-next-line new-cap
+            const amount = new u64(amountNum);
+            setVaultAmounts((balances) => [amount, balances[1]]);
+          },
+        );
+        underlyingVaultSubscriptionId = connection.onAccountChange(
+          underlyingVaultKey,
+          (_account) => {
+            const listenerAccountInfo = AccountLayout.decode(_account.data);
+            const amountBuf = Buffer.from(listenerAccountInfo.amount);
+            const amountNum = amountBuf.readUIntLE(0, 8);
+            // eslint-disable-next-line new-cap
+            const amount = new u64(amountNum);
+            setVaultAmounts((balances) => [balances[0], amount]);
+          },
+        );
       } catch (err) {
         pushNotification({
           severity: 'error',
@@ -53,6 +79,15 @@ export const useOptionVaultAmounts = (
         });
       }
     })();
+
+    return () => {
+      if (quoteVaultSubscriptionId) {
+        connection.removeAccountChangeListener(quoteVaultSubscriptionId);
+      }
+      if (underlyingVaultSubscriptionId) {
+        connection.removeAccountChangeListener(underlyingVaultSubscriptionId);
+      }
+    };
   }, [
     connection,
     pushNotification,

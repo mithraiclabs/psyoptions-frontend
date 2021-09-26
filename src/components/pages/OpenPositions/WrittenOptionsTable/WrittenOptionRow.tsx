@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from 'react';
-import { Token, TOKEN_PROGRAM_ID, u64 } from '@solana/spl-token';
+import React, { useState } from 'react';
 import Avatar from '@material-ui/core/Avatar';
 import Tooltip from '@material-ui/core/Tooltip';
 import Box from '@material-ui/core/Box';
@@ -9,15 +8,12 @@ import { withStyles, useTheme } from '@material-ui/core/styles';
 import { OptionType, TokenAccount } from '../../../../types';
 import { formatExpirationTimestamp } from '../../../../utils/format';
 import useOptionsMarkets from '../../../../hooks/useOptionsMarkets';
-import { useClosePosition } from '../../../../hooks/useClosePosition';
 import useOwnedTokenAccounts from '../../../../hooks/useOwnedTokenAccounts';
-import useConnection from '../../../../hooks/useConnection';
-import useNotifications from '../../../../hooks/useNotifications';
 import useAssetList from '../../../../hooks/useAssetList';
-import TxButton from '../../../TxButton';
 import { ClaimQuoteDialog } from './ClaimQuoteDialog';
 import { WrittenOptionsClaimUnderlyingDialog } from '../../../WrittenOptionsClaimUnderlyingDialog';
 import { WrittenOptionsClosePositionPreExpiryDialog } from '../../../WrittenOptionsClosePositionPreExpiryDialog';
+import { useOptionVaultAmounts } from '../../../../hooks/useOptionVaultAmounts';
 
 const StyledTooltip = withStyles((theme) => ({
   tooltip: {
@@ -35,9 +31,6 @@ type WrittenOptionRowProps = {
   heldContracts: TokenAccount[];
 };
 
-// eslint-disable-next-line new-cap
-const ZERO_U64 = new u64(0);
-
 /**
  * Row to display the wallet's minted options
  *
@@ -51,16 +44,9 @@ export const WrittenOptionRow = React.memo(
     heldContracts,
   }: WrittenOptionRowProps) => {
     const theme = useTheme();
-    const [closeOneLoading, setCloseOneLoading] = useState(false);
-    const [closeAllLoading, setCloseAllLoading] = useState(false);
     const { supportedAssets } = useAssetList();
-    const { pushNotification } = useNotifications();
-    const { connection } = useConnection();
     const { ownedTokenAccounts } = useOwnedTokenAccounts();
     const { markets } = useOptionsMarkets();
-    const [quoteVaultAmount, setQuoteVaultAmount] = useState<u64>(ZERO_U64);
-    const [underlyingVaultAmount, setUnderlyingVaultAmount] =
-      useState<u64>(ZERO_U64);
     const [claimQuoteVisible, setClaimQuoteVisible] = useState(false);
     const [closeWrittenOptionsVisible, setCloseWrittenOptionsVisible] =
       useState(false);
@@ -69,6 +55,12 @@ export const WrittenOptionRow = React.memo(
       setCloseWrittenOptionsPreExpiryVisible,
     ] = useState(false);
     const market = markets[marketKey];
+    const [quoteVaultAmount, underlyingVaultAmount] = useOptionVaultAmounts(
+      market.quoteAssetMintKey,
+      market.quoteAssetPoolKey,
+      market.underlyingAssetMintKey,
+      market.underlyingAssetPoolKey,
+    );
     const writerTokenAccount = writerTokenAccounts[0];
     const walletUnderlyingAssetKey =
       ownedTokenAccounts[market.uAssetMint]?.[0]?.pubKey;
@@ -118,46 +110,6 @@ export const WrittenOptionRow = React.memo(
     const lockedAmountDisplay = `${lockedAmount}`.match(/\.(.{4,})$/)
       ? `≈${lockedAmount.toFixed(3)}`
       : lockedAmount;
-
-    useEffect(() => {
-      (async () => {
-        try {
-          const quoteToken = new Token(
-            connection,
-            market.quoteAssetMintKey,
-            TOKEN_PROGRAM_ID,
-            null,
-          );
-          const underlyingToken = new Token(
-            connection,
-            market.underlyingAssetMintKey,
-            TOKEN_PROGRAM_ID,
-            null,
-          );
-          const [quoteVaultAccount, underlyingVaultAccount] = await Promise.all(
-            [
-              quoteToken.getAccountInfo(market.quoteAssetPoolKey),
-              underlyingToken.getAccountInfo(market.underlyingAssetPoolKey),
-            ],
-          );
-          setQuoteVaultAmount(quoteVaultAccount.amount);
-          setUnderlyingVaultAmount(underlyingVaultAccount.amount);
-        } catch (err) {
-          pushNotification({
-            severity: 'error',
-            message: `${err}`,
-          });
-        }
-      })();
-    }, [
-      connection,
-      market.qAssetMint,
-      market.quoteAssetMintKey,
-      market.quoteAssetPoolKey,
-      market.underlyingAssetMintKey,
-      market.underlyingAssetPoolKey,
-      pushNotification,
-    ]);
 
     const canClose = (ownedOptionTokenAccounts?.[0]?.amount || 0) > 0;
 

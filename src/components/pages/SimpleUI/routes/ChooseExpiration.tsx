@@ -48,7 +48,7 @@ const ChooseDateButton = ({ date, selected, onClick }) => {
 
 const ChooseExpiration = () => {
   const { selectedDate, setSelectedDate, dates } = useExpirationDate();
-  const { tokenSymbol, direction } = useFormState();
+  const { tokenSymbol, direction, contractSize } = useFormState();
   const updateForm = useUpdateForm();
   const history = useHistory();
   const [selectedExpiration, setSelectedExpiration] = useState(0);
@@ -63,10 +63,9 @@ const ChooseExpiration = () => {
 
   useEffect(() => {
     if (selectedDate) {
-      const defaultContractSize = 0.01;
-      buildOptionsChain(selectedDate.unix(), defaultContractSize);
+      buildOptionsChain(selectedDate.unix(), contractSize);
     }
-  }, [buildOptionsChain, selectedDate]);
+  }, [buildOptionsChain, selectedDate, contractSize]);
 
   const handleMakeSelection = (d: moment.Moment) => {
     if (!selectedExpiration) {

@@ -8,7 +8,8 @@ type FormState = {
   strike: number
   orderSize: number
   orderType: 'limit' | 'market'
-  limitPrice: number | null
+  limitPrice: number | null,
+  contractSize: number,
 }
 
 type ContextValue = {
@@ -31,6 +32,7 @@ const initialState: FormState = {
   orderSize: 0,
   orderType: 'limit',
   limitPrice: 0,
+  contractSize: 0.01,
 }
 
 // Simple reducer that replaces key/value pairs of the form state

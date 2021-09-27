@@ -25,12 +25,13 @@ const ConfirmOrder = () => {
     orderSize,
     orderType,
     limitPrice,
+    contractSize,
   } = useFormState();
 
   // If previous form state didn't exist, send user back to first page (choose asset)
   useEffect(() => {
     if (!tokenSymbol || !direction || !expirationUnixTimestamp || !strike ||
-      !orderSize || (orderType === 'limit' && !limitPrice)) {
+      !orderSize || !contractSize || (orderType === 'limit' && !limitPrice)) {
       history.replace('/simple/choose-asset');
     }
   }, [
@@ -41,6 +42,7 @@ const ConfirmOrder = () => {
     orderSize,
     orderType,
     limitPrice,
+    contractSize,
     history,
   ]);
 
@@ -57,14 +59,14 @@ const ConfirmOrder = () => {
     if (orderType === 'limit') {
       newBreakevenPrice = calculateBreakevenForLimitOrder(
         strike,
-        0.01,
+        contractSize,
         limitPrice,
         direction === 'down',
       );
     } else if (lowestAskHighestBidPerStrike[strike]?.ask) {
       newBreakevenPrice = calculateBreakevenForMarketOrder(
         strike,
-        0.01,
+        contractSize,
         orderSize,
         asksForStrike[strike] ?? [],
         direction === 'down',
@@ -72,7 +74,7 @@ const ConfirmOrder = () => {
     }
 
     setBreakeven(newBreakevenPrice);
-  }, [limitPrice, orderType, lowestAskHighestBidPerStrike, strike, orderSize, direction, asksForStrike]);
+  }, [limitPrice, orderType, lowestAskHighestBidPerStrike, strike, contractSize, orderSize, direction, asksForStrike]);
 
   const handlePlaceOrderClicked = () => {
 
@@ -90,7 +92,7 @@ const ConfirmOrder = () => {
         <OrderDetails
           side='buy'
           callOrPut={direction === 'up' ? 'call' : 'put'}
-          contractSize={0.01}
+          contractSize={contractSize}
           orderSize={orderSize}
         />
         <Box

@@ -65,8 +65,9 @@ const ChooseStrike = () => {
       };
     });
 
-    setStrikeButtonData(buttonData);
-  }, [lowestAskHighestBidPerStrike]);
+    // if put, then strikes need to flip so higher strike shows at top (because we have that Low/High risk scale)
+    setStrikeButtonData(direction === 'down' ? buttonData.reverse() : buttonData);
+  }, [lowestAskHighestBidPerStrike, direction]);
 
   return (
     <SimpleUIPage title={`Strike Price`}>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { SerumMarketAndProgramId, ChainRow } from 'src/types';
+import { SerumMarketAndProgramId } from 'src/types';
 import useSerum from './useSerum';
 import { OrderbookData, useSerumOrderbooks } from '../context/SerumOrderbookContext';
 import { calculateStrikePrecision } from '../utils/getStrikePrices';
@@ -12,7 +12,6 @@ type BidAsk = {
 
 const useFilteredOptionsChain = () => {
   const { chains } = useOptionsChain();
-  const [filteredChains, setFilteredChains] = useState([] as ChainRow[]);
   const { serumMarkets, fetchMultipleSerumMarkets } = useSerum();
   const [direction, setDirection] = useState('');
   const [precision, setPrecision] = useState(2);
@@ -20,29 +19,18 @@ const useFilteredOptionsChain = () => {
   const [lowestAskHighestBidPerStrike, setLowestAskHighestBidPerStrike] = useState({} as Record<string, BidAsk>);
 
   useEffect(() => {
-    // depending on direction user chose, only show calls or puts accordingly
-    const filtered: ChainRow[] = chains.filter(chain => {
-      if (chain.call.key && direction === 'up')
-        return true;
-      if (chain.put.key && direction === 'down')
-        return true;
-      return false;
-    });
-
-    if (filtered[0]?.strike) {
+    if (chains[0]?.strike) {
       setPrecision(calculateStrikePrecision(chains[0].strike));
     }
-
-    setFilteredChains(filtered);
-  }, [chains, direction]);
+  }, [chains]);
 
   // Load serum markets when the options chain changes
   // Only if they don't already exist for the matching call/put
   useEffect(() => {
     const serumKeys: SerumMarketAndProgramId[] = [];
-    filteredChains.forEach(chain => {
+    chains.forEach(chain => {
       if (
-        chain.call.key && chain.call.serumMarketKey &&
+        direction === 'up' && chain.call.serumMarketKey &&
         !serumMarkets[chain.call.serumMarketKey.toString()]
       ) {
         serumKeys.push({
@@ -51,7 +39,7 @@ const useFilteredOptionsChain = () => {
         });
       }
       if (
-        chain.put.key && chain.put.serumMarketKey &&
+        direction === 'down' && chain.put.serumMarketKey &&
         !serumMarkets[chain.put.serumMarketKey.toString()]
       ) {
         serumKeys.push({
@@ -64,18 +52,18 @@ const useFilteredOptionsChain = () => {
     if (serumKeys.length) {
       fetchMultipleSerumMarkets(serumKeys);
     }
-  }, [filteredChains, fetchMultipleSerumMarkets, serumMarkets]);
+  }, [chains, direction, fetchMultipleSerumMarkets, serumMarkets]);
 
   // Map filtered chains to a Strike + Bid + Ask
   useEffect(() => {
     const askBidPerStrike = {} as Record<string, BidAsk>;
 
-    filteredChains.forEach(chain => {
+    chains.forEach(chain => {
       let highestBid: number | null = null;
       let lowestAsk: number | null = null;
       let orderbook: OrderbookData | null;
 
-      if (chain.call.key) {
+      if (direction === 'up') {
         orderbook = orderbooks[chain.call.serumMarketKey?.toString()];
       } else {
         orderbook = orderbooks[chain.put.serumMarketKey?.toString()];
@@ -90,7 +78,7 @@ const useFilteredOptionsChain = () => {
     });
 
     setLowestAskHighestBidPerStrike(askBidPerStrike);
-  }, [filteredChains, orderbooks, precision]);
+  }, [chains, direction, orderbooks, precision]);
 
   return { lowestAskHighestBidPerStrike, setDirection };
 };

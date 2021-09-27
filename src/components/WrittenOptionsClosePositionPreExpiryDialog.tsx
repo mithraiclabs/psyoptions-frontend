@@ -5,8 +5,8 @@ import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import Divider from '@material-ui/core/Divider';
-import { u64 } from '@solana/spl-token';
 import { PublicKey } from '@solana/web3.js';
+import BN from 'bn.js';
 import React, { useCallback, useState } from 'react';
 import { useClosePosition } from '../hooks/useClosePosition';
 import { useDecimalsForMint } from '../hooks/useDecimalsForMint';
@@ -21,7 +21,7 @@ export const WrittenOptionsClosePositionPreExpiryDialog: React.VFC<{
   option: OptionMarket;
   optionTokenAccount: TokenAccount;
   underlyingAssetDestKey: PublicKey;
-  vaultBalance: u64;
+  vaultBalance: BN;
   visible: boolean;
   writerTokenAccount: TokenAccount;
 }> = ({

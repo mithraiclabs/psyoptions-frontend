@@ -1,6 +1,7 @@
 import React from 'react';
 import Box from '@material-ui/core/Box';
 import { useTheme } from '@material-ui/core/styles';
+import LabelledText from './LabelledText';
 
 const OrderDetailBox: React.VFC<{
   title: string;
@@ -11,7 +12,6 @@ const OrderDetailBox: React.VFC<{
   subtitle,
   titleColor,
 }) => {
-  const theme = useTheme();
 
   return (
     <Box
@@ -23,24 +23,7 @@ const OrderDetailBox: React.VFC<{
       borderRadius='4px'
       padding='8px 16px 8px 16px'
     >
-      <div
-        style={{
-          fontSize: 16,
-          fontWeight: 400,
-        }}
-      >
-        {subtitle}
-      </div>
-      <div
-        style={{
-          fontSize: 20,
-          fontFamily: 'Goldman',
-          fontWeight: 700,
-          color: titleColor ?? theme.palette.primary.light,
-        }}
-      >
-        {title}
-      </div>
+      <LabelledText title={title} subtitle={subtitle} titleColor={titleColor} />
     </Box>
   );
 };

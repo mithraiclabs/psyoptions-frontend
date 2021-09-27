@@ -24,9 +24,9 @@ const OrderSettings = () => {
   const history = useHistory();
   const theme = useTheme();
   const { qAsset } = useAssetList();
-  const [limitPrice, setLimitPrice] = useState(0);
+  const [limitPrice, setLimitPrice] = useState('0');
   const [orderType, setOrderType] = useState('limit');
-  const [orderSize, setOrderSize] = useState(1);
+  const [orderSize, setOrderSize] = useState('1');
   const { lowestAskHighestBidPerStrike, setDirection } = useFilteredOptionsChain();
 
   // If previous form state didn't exist, send user back to first page (choose asset)
@@ -44,9 +44,9 @@ const OrderSettings = () => {
   const handleChangeLimitPrice = (e) => setLimitPrice(e.target.value);
 
   const handleReviewClicked = () => {
-    updateForm('orderSize', orderSize);
+    updateForm('orderSize', Number(orderSize));
     updateForm('orderType', orderType);
-    updateForm('limitPrice', limitPrice);
+    updateForm('limitPrice', Number(limitPrice));
     
     // TODO: animated transition between pages instead of a timeout
     setTimeout(() => {
@@ -86,19 +86,19 @@ const OrderSettings = () => {
               onChange={handleChangeOrderSize}
               onBlur={() => {
                 if (!orderSize) {
-                  setOrderSize(1);
+                  setOrderSize('1');
                 }
               }}
             />
             <PlusMinusButton
               onClick={() =>
-                setOrderSize(Math.max(1, orderSize - 1))
+                setOrderSize(`${Math.max(1, parseInt(orderSize) - 1)}`)
               }
             >
               -
             </PlusMinusButton>
             <PlusMinusButton
-              onClick={() => setOrderSize(orderSize + 1)}
+              onClick={() => setOrderSize(`${parseInt(orderSize) + 1}`)}
             >
               +
             </PlusMinusButton>

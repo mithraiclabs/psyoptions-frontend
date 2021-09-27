@@ -44,7 +44,7 @@ const ChooseStrike = () => {
   const handleMakeSelection = (strike: string) => {
     if (!selectedStrike) {
       setSelectedStrike(strike);
-      updateForm('strike', strike);
+      updateForm('strike', Number(strike));
 
       // TODO: animated transition between pages instead of a timeout
       setTimeout(() => {

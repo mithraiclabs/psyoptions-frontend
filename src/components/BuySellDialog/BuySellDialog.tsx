@@ -528,13 +528,13 @@ const BuySellDialog: React.VFC<{
                     Breakeven:{' $'}
                     {orderSize ? (orderType === 'market' ? calculateBreakevenForMarketOrder(
                       strike.toNumber(),
-                      amountPerContract.toNumber(),
+                      type === 'call' ? amountPerContract.toNumber() : quoteAmountPerContract.toNumber(),
                       orderSize,
                       orderbook?.asks ?? [],
                       type === 'put',
                     ) : calculateBreakevenForLimitOrder(
                       strike.toNumber(),
-                      amountPerContract.toNumber(),
+                      type === 'call' ? amountPerContract.toNumber() : quoteAmountPerContract.toNumber(),
                       parsedLimitPrice.toNumber(),
                       type === 'put',
                     )) : '-'}

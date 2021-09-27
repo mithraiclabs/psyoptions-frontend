@@ -1,5 +1,4 @@
 import React, { useCallback, useState } from 'react';
-import { OptionMarket } from '@mithraic-labs/psyoptions';
 import { PublicKey } from '@solana/web3.js';
 import DateFnsUtils from '@date-io/date-fns';
 import Box from '@material-ui/core/Box';
@@ -15,13 +14,14 @@ import { KeyboardDatePicker } from '@material-ui/pickers/DatePicker';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import MuiPickersUtilsProvider from '@material-ui/pickers/MuiPickersUtilsProvider';
 import Radio from '@material-ui/core/Radio';
+import { OptionMarketWithKey } from '@mithraic-labs/psy-american';
 import { BigNumber } from 'bignumber.js';
 import { BN } from 'bn.js';
 import moment from 'moment';
 import { useInitializeSerumMarket } from '../../../hooks/Serum/useInitializeSerumMarket';
 import useAssetList from '../../../hooks/useAssetList';
 import useConnection from '../../../hooks/useConnection';
-import { useInitializeMarket } from '../../../hooks/useInitializeMarkets';
+import { useInitializeMarket } from '../../../hooks/useInitializeMarket';
 import useNotifications from '../../../hooks/useNotifications';
 import useWallet from '../../../hooks/useWallet';
 import ConnectButton from '../../ConnectButton';
@@ -37,7 +37,7 @@ const darkBorder = `1px solid ${theme.palette.background.main}`;
 export const InitOptionMarket: React.VFC = () => {
   const { pushNotification } = useNotifications();
   const { connected } = useWallet();
-  const initializeMarkets = useInitializeMarket();
+  const initializeMarket = useInitializeMarket();
   const { dexProgramId, endpoint } = useConnection();
   const initializeSerumMarket = useInitializeSerumMarket();
   const [basePrice, setBasePrice] = useState('0');
@@ -50,7 +50,7 @@ export const InitOptionMarket: React.VFC = () => {
   const [, setInitializedMarketMeta] = useInitializedMarkets();
   const checkIfMarketExists = useCheckIfMarketExists();
   const [existingMarket, setExistingMarket] =
-    useState<OptionMarket | null>(null);
+    useState<OptionMarketWithKey | null>(null);
 
   const dismissExistingMarketDialog = useCallback(
     () => setExistingMarket(null),
@@ -107,10 +107,10 @@ export const InitOptionMarket: React.VFC = () => {
         .toNumber();
 
       const _existingMarket = await checkIfMarketExists({
-        expirationUnixTimestamp: expiration,
-        quoteAmountPerContract: quoteAmountPerContractU64,
+        expirationUnixTimestamp: new BN(expiration),
+        quoteAmountPerContract: new BN(quoteAmountPerContractU64),
         quoteAssetMintKey: new PublicKey(qa.mintAddress),
-        underlyingAmountPerContract: amountPerContractU64,
+        underlyingAmountPerContract: new BN(amountPerContractU64),
         underlyingAssetMintKey: new PublicKey(ua.mintAddress),
       });
 
@@ -120,7 +120,7 @@ export const InitOptionMarket: React.VFC = () => {
         return;
       }
 
-      const initializedMarket = await initializeMarkets({
+      const initializedMarket = await initializeMarket({
         amountPerContract: amountsPerContract,
         quoteAmountPerContract,
         uAssetSymbol: ua.tokenSymbol,
@@ -154,6 +154,7 @@ export const InitOptionMarket: React.VFC = () => {
         );
 
         const initSerumResp = await initializeSerumMarket({
+          optionMarketKey: initializedMarket.pubkey,
           baseMintKey: initializedMarket.optionMintKey,
           // This needs to be the USDC, so flip the quote asset vs underlying asset
           quoteMintKey:

@@ -9,9 +9,13 @@ const BN_ZERO = new BN(0);
  * Maybe it's just for power users
  */
 export const useUnsettledFundsForMarket = (
-  key: string,
+  serumMarketAddress: string,
+  optionMarketUiKey: string,
 ): { baseFree: BN; quoteFree: BN } => {
-  const openOrders = useSerumOpenOrderAccounts(key);
+  const openOrders = useSerumOpenOrderAccounts(
+    serumMarketAddress,
+    optionMarketUiKey,
+  );
   const initOpenOrders = openOrders?.[0];
 
   return {

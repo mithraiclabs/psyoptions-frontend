@@ -3,6 +3,7 @@ import type { Moment } from 'moment';
 import moment from 'moment';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import useLocalStorageState from 'use-local-storage-state';
+import useOptionsMarkets from '../hooks/useOptionsMarkets';
 import useAssetList from '../hooks/useAssetList';
 import useConnection from '../hooks/useConnection';
 
@@ -21,6 +22,7 @@ const ExpirationDateContext = createContext<DateContextValue>({
 const ExpirationDateProvider: React.FC = ({ children }) => {
   const { endpoint } = useConnection();
   const { uAsset, qAsset, assetListLoading } = useAssetList();
+  const { markets } = useOptionsMarkets();
   const [dates, setDates] = useState([]);
   const [_selectedDatesByAsset, _setSelectedDatesByAsset] =
     useLocalStorageState('selectedDates', {});
@@ -30,18 +32,17 @@ const ExpirationDateProvider: React.FC = ({ children }) => {
 
   useEffect(() => {
     if (!assetListLoading && uAsset?.mintAddress && qAsset?.mintAddress) {
-      const markets =
-        MarketMeta[endpoint.name.toLowerCase()]?.optionMarkets || [];
-
       const expirationsForAssetPair = [
         ...new Set(
-          markets
+          Object.keys(markets)
             .filter(
-              (market) =>
-                market.underlyingAssetMint === uAsset?.mintAddress &&
-                market.quoteAssetMint === qAsset?.mintAddress,
+              (marketKey) =>
+                markets[marketKey].underlyingAssetMintKey.toString() ===
+                  uAsset?.mintAddress &&
+                markets[marketKey].quoteAssetMintKey.toString() ===
+                  qAsset?.mintAddress,
             )
-            .map((market) => market.expiration),
+            .map((marketKey) => markets[marketKey].expiration),
         ),
       ] as number[];
 
@@ -55,12 +56,7 @@ const ExpirationDateProvider: React.FC = ({ children }) => {
 
       setDates(newDates);
     }
-  }, [
-    assetListLoading,
-    endpoint.name,
-    uAsset?.mintAddress,
-    qAsset?.mintAddress,
-  ]);
+  }, [assetListLoading, markets, uAsset?.mintAddress, qAsset?.mintAddress]);
 
   useEffect(() => {
     // Set default date or load user's stored date for current asset

@@ -5,6 +5,13 @@ import { MARKETS } from '@mithraic-labs/serum';
 import { MarketMeta } from '@mithraic-labs/market-meta';
 import { ClusterName } from '../types';
 import { Token } from '@mithraic-labs/market-meta/dist/types';
+import { Program } from '@project-serum/anchor';
+import {
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  Token as SPLToken,
+  TOKEN_PROGRAM_ID,
+} from '@solana/spl-token';
+import { FEE_OWNER_KEY } from '@mithraic-labs/psy-american';
 
 export type Network = {
   name: ClusterName;
@@ -12,7 +19,7 @@ export type Network = {
   fallbackUrl: string;
   programId: string;
   wsEndpoint?: string;
-  serumReferrerId?: string;
+  serumReferrerIds: Record<string, PublicKey>;
 };
 
 // Note these network values are used for determining the asset list.
@@ -24,7 +31,11 @@ const networks: Network[] = [
     fallbackUrl: clusterApiUrl('mainnet-beta'),
     wsEndpoint: 'wss://lokidfxnWLaBDQ.main.genesysgo.net:8900',
     programId: process.env.MAINNET_PROGRAM_ID,
-    serumReferrerId: 'CzuipkNnvG4JaTQPjgAseWLNhLZFYxMcYpd2G8hDLHco',
+    serumReferrerIds: {
+      EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v: new PublicKey(
+        'CzuipkNnvG4JaTQPjgAseWLNhLZFYxMcYpd2G8hDLHco',
+      ),
+    },
   },
   {
     name: ClusterName.devnet,
@@ -32,21 +43,56 @@ const networks: Network[] = [
     fallbackUrl: clusterApiUrl('devnet'),
     wsEndpoint: 'wss://psytrbhymqlkfrhudd.dev.genesysgo.net:8900',
     programId: process.env.DEVNET_PROGRAM_ID,
-    serumReferrerId: '4wpxNqqAqLtZscg1VZWnnBTQnzJSc42HtSitjpLfm3jz',
+    serumReferrerIds: {
+      E6Z6zLzk8MWY3TY8E87mr88FhGowEPJTeMWzkqtL6qkF: new PublicKey(
+        '4wpxNqqAqLtZscg1VZWnnBTQnzJSc42HtSitjpLfm3jz',
+      ),
+    },
   },
   {
     name: ClusterName.testnet,
     url: clusterApiUrl('testnet'),
     fallbackUrl: clusterApiUrl('testnet'),
     programId: process.env.TESTNET_PROGRAM_ID,
+    serumReferrerIds: {},
   },
   {
     name: ClusterName.localhost,
     url: 'http://127.0.0.1:8899',
     fallbackUrl: 'http://127.0.0.1:8899',
     programId: process.env.LOCAL_PROGRAM_ID,
+    serumReferrerIds: {},
   },
 ];
+
+export const getReferralId = async (
+  program: Program,
+  endpoint: Network,
+  quoteAssetMint: PublicKey,
+): Promise<PublicKey> => {
+  // Check if this lookup has already been done
+  const codedOrCachedKey = endpoint.serumReferrerIds[quoteAssetMint.toString()];
+  if (codedOrCachedKey) return codedOrCachedKey;
+
+  // Get the associated address for a referral
+  const owner = new PublicKey(FEE_OWNER_KEY);
+  const associatedAddress = await SPLToken.getAssociatedTokenAddress(
+    ASSOCIATED_TOKEN_PROGRAM_ID,
+    TOKEN_PROGRAM_ID,
+    quoteAssetMint,
+    owner,
+  );
+  const accountInfo = await program.provider.connection.getAccountInfo(
+    associatedAddress,
+  );
+  if (!accountInfo) {
+    throw new Error(
+      `Referral account does not exist for ${quoteAssetMint.toString()}. Please create one.`,
+    );
+  }
+  endpoint.serumReferrerIds[quoteAssetMint.toString()] = associatedAddress;
+  return associatedAddress;
+};
 
 const getDexProgramKeyByNetwork = (name: ClusterName) => {
   switch (name) {
@@ -137,10 +183,10 @@ const getAssetsByNetwork = (name: ClusterName): Token[] => {
     case ClusterName.localhost:
       try {
         /* eslint-disable */
-        const localnetData = require('../hooks/localnetData.json');
+        const localnetData = require('../../tmp/localnetData.json');
         return [TOKENS.mainnet[0], ...localnetData];
       } catch (err) {
-        console.error('localnet data not found at ./localnetData.json');
+        console.error('localnet data not found at ../../tmp/localnetData.json');
         return [];
       }
     default:

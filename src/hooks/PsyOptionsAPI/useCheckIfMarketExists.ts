@@ -1,20 +1,21 @@
 import {
-  Market,
-  OptionMarket,
-  OPTION_MARKET_LAYOUT,
-} from '@mithraic-labs/psyoptions';
+  deriveOptionKeyFromParams,
+  getOptionByKey,
+  OptionMarketWithKey,
+} from '@mithraic-labs/psy-american';
+import { BN } from '@project-serum/anchor';
 import { PublicKey } from '@solana/web3.js';
 import { useCallback } from 'react';
-import useConnection from '../useConnection';
+import { useAmericanPsyOptionsProgram } from '../useAmericanPsyOptionsProgram';
 
 export const useCheckIfMarketExists = (): ((obj: {
-  expirationUnixTimestamp: number;
-  quoteAmountPerContract: number;
+  expirationUnixTimestamp: BN;
+  quoteAmountPerContract: BN;
   quoteAssetMintKey: PublicKey;
-  underlyingAmountPerContract: number;
+  underlyingAmountPerContract: BN;
   underlyingAssetMintKey: PublicKey;
-}) => Promise<OptionMarket | null>) => {
-  const { connection, endpoint } = useConnection();
+}) => Promise<OptionMarketWithKey | null>) => {
+  const program = useAmericanPsyOptionsProgram();
 
   return useCallback(
     async ({
@@ -24,32 +25,17 @@ export const useCheckIfMarketExists = (): ((obj: {
       underlyingAmountPerContract,
       underlyingAssetMintKey,
     }) => {
-      const [optionMarketKey] = await Market.getDerivedAddressFromParams({
-        programId: new PublicKey(endpoint.programId),
-        underlyingAssetMintKey,
-        quoteAssetMintKey,
+      const [optionMarketKey] = await deriveOptionKeyFromParams({
+        programId: program.programId,
+        underlyingMint: underlyingAssetMintKey,
+        quoteMint: quoteAssetMintKey,
         underlyingAmountPerContract,
         quoteAmountPerContract,
         expirationUnixTimestamp,
       });
 
-      const accountInfo = await connection.getAccountInfo(
-        optionMarketKey,
-        'recent',
-      );
-
-      if (!accountInfo) {
-        return null;
-      }
-
-      const optionMarketFromBuffer = OPTION_MARKET_LAYOUT.decode(
-        accountInfo.data,
-      );
-      return {
-        ...optionMarketFromBuffer,
-        optionMarketKey,
-      } as OptionMarket;
+      return getOptionByKey(program, optionMarketKey);
     },
-    [connection, endpoint.programId],
+    [program],
   );
 };

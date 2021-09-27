@@ -1,6 +1,16 @@
-import { PublicKey, Transaction } from '@solana/web3.js';
+import {
+  PublicKey,
+  Signer,
+  Transaction,
+  TransactionInstruction,
+} from '@solana/web3.js';
 import { useCallback } from 'react';
 import { Market, OrderParams } from '@mithraic-labs/serum/lib/market';
+import {
+  PSY_AMERICAN_PROGRAM_IDS,
+  ProgramVersions,
+  serumInstructions,
+} from '@mithraic-labs/psy-american';
 import { OptionMarket } from '../types';
 import { createAssociatedTokenAccountInstruction } from '../utils/instructions/token';
 import useWallet from './useWallet';
@@ -9,6 +19,7 @@ import useConnection from './useConnection';
 import useSendTransaction from './useSendTransaction';
 import useOwnedTokenAccounts from './useOwnedTokenAccounts';
 import { useCreateAdHocOpenOrdersSubscription } from './Serum';
+import { useAmericanPsyOptionsProgram } from './useAmericanPsyOptionsProgram';
 
 type PlaceBuyOrderArgs = {
   optionMarket: OptionMarket;
@@ -20,6 +31,7 @@ type PlaceBuyOrderArgs = {
 const usePlaceBuyOrder = (
   serumMarketAddress: string,
 ): ((obj: PlaceBuyOrderArgs) => Promise<void>) => {
+  const program = useAmericanPsyOptionsProgram();
   const { pushErrorNotification } = useNotifications();
   const { wallet, pubKey } = useWallet();
   const { connection } = useConnection();
@@ -39,6 +51,9 @@ const usePlaceBuyOrder = (
         const transaction = new Transaction();
         let signers = [];
         const _optionDestinationKey = optionDestinationKey;
+        const optionsProgramId = new PublicKey(
+          optionMarket.psyOptionsProgramId,
+        );
 
         if (!_optionDestinationKey) {
           // Create a SPL Token account for this option market if the wallet doesn't have one
@@ -52,14 +67,31 @@ const usePlaceBuyOrder = (
           transaction.add(createOptAccountIx);
           subscribeToTokenAccount(newPublicKey);
         }
+
         // place the buy order
-        const {
-          openOrdersAddress,
-          transaction: placeOrderTx,
-          signers: placeOrderSigners,
-        } = await serumMarket.makePlaceOrderTransaction(connection, {
-          ...orderArgs,
-        });
+        let placeOrderTx: Transaction;
+        let placeOrderSigners: Signer[] = [];
+        let openOrdersAddress: PublicKey;
+        if (
+          PSY_AMERICAN_PROGRAM_IDS[optionsProgramId.toString()] ===
+          ProgramVersions.V1
+        ) {
+          ({
+            openOrdersAddress,
+            transaction: placeOrderTx,
+            signers: placeOrderSigners,
+          } = await serumMarket.makePlaceOrderTransaction(connection, {
+            ...orderArgs,
+          }));
+        } else {
+          placeOrderTx = await serumInstructions.newOrderInstruction(
+            program,
+            optionMarket.pubkey,
+            new PublicKey(optionMarket.serumProgramId),
+            optionMarket.serumMarketKey,
+            orderArgs,
+          );
+        }
         transaction.add(placeOrderTx);
         signers = [...signers, ...placeOrderSigners];
 
@@ -83,6 +115,7 @@ const usePlaceBuyOrder = (
       connection,
       createAdHocOpenOrdersSub,
       pubKey,
+      program,
       pushErrorNotification,
       sendTransaction,
       subscribeToTokenAccount,

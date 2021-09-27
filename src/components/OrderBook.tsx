@@ -37,7 +37,7 @@ const OrderBook: React.FC<{
   bids: BidOrAsk[];
   asks: BidOrAsk[];
   setLimitPrice: (limitPrice: string) => void;
-  setOrderSize: (orderSize: string) => void;
+  setOrderSize: React.Dispatch<React.SetStateAction<number>>;
 }> = ({ bids = [], asks = [], setLimitPrice, setOrderSize }) => {
   // Maybe we should do this zipping of the bids/asks elsewhere
   // Doing it here for quick and dirty solution, don't over-engineer right? :)
@@ -57,7 +57,7 @@ const OrderBook: React.FC<{
 
   const setPriceAndSize = (bidAsk: BidOrAsk) => {
     if (bidAsk?.price) setLimitPrice(bidAsk.price.toString());
-    if (bidAsk?.size) setOrderSize(bidAsk.size.toString());
+    if (bidAsk?.size) setOrderSize(bidAsk.size);
   };
 
   return (

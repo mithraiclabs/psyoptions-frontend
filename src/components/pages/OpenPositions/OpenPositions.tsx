@@ -17,7 +17,7 @@ import { useWrittenOptions } from '../../../hooks/useWrittenOptions';
 import SupportedAssetBalances from '../../SupportedAssetBalances';
 import { PricesProvider } from '../../../context/PricesContext';
 
-const OpenPositions = () => {
+const OpenPositions: React.VFC = () => {
   const { connected } = useWallet();
   const theme = useTheme();
   const [page] = useState(0);

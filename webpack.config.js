@@ -1,15 +1,15 @@
-const { ContextReplacementPlugin } = require('webpack')
-const nodeExternals = require('webpack-node-externals')
-const NodePolyfillPlugin = require('node-polyfill-webpack-plugin')
-const WebpackAssetsManifest = require('webpack-assets-manifest')
-const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
-const SentryWebpackPlugin = require('@sentry/webpack-plugin')
+const { ContextReplacementPlugin } = require('webpack');
+const nodeExternals = require('webpack-node-externals');
+const NodePolyfillPlugin = require('node-polyfill-webpack-plugin');
+const WebpackAssetsManifest = require('webpack-assets-manifest');
+const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
+const SentryWebpackPlugin = require('@sentry/webpack-plugin');
 
-const isDev = process.env.NODE_ENV !== 'production'
+const isDev = process.env.NODE_ENV !== 'production';
 
-const watch = isDev
-const mode = isDev ? 'development' : 'production'
-const devtool = isDev ? 'inline-source-map' : 'source-map'
+const watch = isDev;
+const mode = isDev ? 'development' : 'production';
+const devtool = isDev ? 'inline-source-map' : 'source-map';
 
 // Remove nested bn.js that are still on 4.x.x
 // Not too worried about breaking changes in 5.x.x based on release notes:
@@ -21,13 +21,13 @@ const dedupeBnJs = [
   'rm -rf node_modules/diffie-hellman/node_modules/bn.js/',
   'rm -rf node_modules/miller-rabin/node_modules/bn.js/',
   'rm -rf node_modules/public-encrypt/node_modules/bn.js/',
-]
+];
 
 const serverPlugins = isDev
   ? [
       new (require('webpack-shell-plugin-next'))({
         onBuildStart: {
-          scripts: ['npm run clean', ...dedupeBnJs],
+          scripts: ['yarn clean', ...dedupeBnJs],
           blocking: true,
           parallel: false,
         },
@@ -46,7 +46,7 @@ const serverPlugins = isDev
           parallel: false,
         },
       }),
-    ]
+    ];
 
 module.exports = [
   {
@@ -56,6 +56,10 @@ module.exports = [
     mode,
     resolve: {
       extensions: ['.ts', '.tsx', '.js'],
+      symlinks: false,
+      fallback: {
+        fs: false,
+      },
     },
     output: {
       filename: 'index.js',
@@ -71,7 +75,7 @@ module.exports = [
         },
         {
           test: /\.m?js$/,
-          exclude: /(node_modules)/,
+          exclude: [`${__dirname}/node_modules/`, `${__dirname}/scripts/`],
           use: {
             loader: 'babel-loader',
             options: {
@@ -82,7 +86,7 @@ module.exports = [
         {
           test: /\.tsx?/,
           use: 'ts-loader',
-          exclude: /node_modules/,
+          exclude: [`${__dirname}/node_modules/`, `${__dirname}/scripts/`],
         },
       ],
     },
@@ -96,6 +100,10 @@ module.exports = [
     mode,
     resolve: {
       extensions: ['.ts', '.tsx', '.js'],
+      symlinks: false,
+      fallback: {
+        fs: false,
+      },
     },
     output: {
       filename: 'public/bundle.[chunkhash].js',
@@ -109,7 +117,7 @@ module.exports = [
         },
         {
           test: /\.m?js$/,
-          exclude: /(node_modules)/,
+          exclude: [`${__dirname}/node_modules/`, `${__dirname}/scripts/`],
           use: {
             loader: 'babel-loader',
             options: {
@@ -120,7 +128,7 @@ module.exports = [
         {
           test: /\.tsx?/,
           use: 'ts-loader',
-          exclude: /node_modules/,
+          exclude: [`${__dirname}/node_modules/`, `${__dirname}/scripts/`],
         },
       ],
     },
@@ -158,6 +166,7 @@ module.exports = [
     mode,
     resolve: {
       extensions: ['.ts', '.tsx', '.js'],
+      symlinks: false,
     },
     output: {
       filename: 'public/rate-limited-fetch-worker.[contenthash].js',
@@ -168,4 +177,4 @@ module.exports = [
       }),
     ],
   },
-]
+];

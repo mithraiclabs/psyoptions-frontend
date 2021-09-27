@@ -1,14 +1,13 @@
 import { useState, useEffect } from 'react';
 
-export const useCountry = () => {
-  const [countryCode, setCountryCode] = useState(null);
+export const useCountry = (): string | null => {
+  const [countryCode, setCountryCode] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
       const URL = 'https://countrycode.bonfida.workers.dev/';
       const response = await fetch(URL);
       const data = await response.json();
-      console.log('Country Code', data?.countryCode);
       setCountryCode(data?.countryCode);
     })();
   }, []);

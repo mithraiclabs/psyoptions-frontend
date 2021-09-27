@@ -20,6 +20,7 @@ type AssetListContext = {
   setUAsset: React.Dispatch<React.SetStateAction<Token | null>>;
   setQAsset: React.Dispatch<React.SetStateAction<Token | null>>;
   assetListLoading: boolean;
+  tokenMap: Record<string, Token>;
 };
 
 const defaultAssetPairsByNetworkName: Record<string, TickerPair> = {
@@ -52,11 +53,13 @@ const AssetListContext = createContext<AssetListContext>({
   setUAsset: () => {},
   setQAsset: () => {},
   assetListLoading: true,
+  tokenMap: {},
 });
 
 const AssetListProvider: React.FC = ({ children }) => {
   const { endpoint } = useConnection();
   const [supportedAssets, setSupportedAssets] = useState<Token[]>([]);
+  const [tokenMap, setTokenMap] = useState<Record<string, Token>>({});
   const [uAsset, setUAsset] = useState<Token | null>(null);
   const [qAsset, setQAsset] = useState<Token | null>(null);
   const [assetListLoading, setAssetListLoading] = useState(true);
@@ -98,6 +101,11 @@ const AssetListProvider: React.FC = ({ children }) => {
     setSupportedAssets(basicAssets);
     setDefaultAssets(basicAssets);
     setAssetListLoading(false);
+    const _tokenMap = basicAssets.reduce((acc, token) => {
+      acc[token.mintAddress] = token;
+      return acc;
+    }, {});
+    setTokenMap(_tokenMap);
   }, [endpoint.name]);
 
   const value = {
@@ -111,6 +119,7 @@ const AssetListProvider: React.FC = ({ children }) => {
     setUAsset,
     setQAsset,
     assetListLoading,
+    tokenMap,
   };
 
   return (

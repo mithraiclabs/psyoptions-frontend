@@ -1,4 +1,4 @@
-import React, { memo, useEffect } from 'react';
+import React, { memo, useEffect, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import Box from '@material-ui/core/Box';
 import { Button } from '@material-ui/core';
@@ -9,9 +9,14 @@ import {
 import { SimpleUIPage } from '../../SimpeUIPage';
 import OrderDetails from './OrderDetails';
 import LabelledText from './LabelledText';
+import useFilteredOptionsChain from '../../../../../hooks/useFilteredOptionsChain';
+import { calculateBreakevenForLimitOrder, calculateBreakevenForMarketOrder } from '../../../../../utils/calculateBreakeven';
 
 const ConfirmOrder = () => {
   const history = useHistory();
+  const { lowestAskHighestBidPerStrike, asksForStrike } = useFilteredOptionsChain();
+  const [cost, setCost] = useState(null);
+  const [breakeven, setBreakeven] = useState(null);
   const {
     tokenSymbol,
     direction,
@@ -39,6 +44,36 @@ const ConfirmOrder = () => {
     history,
   ]);
 
+  useEffect(() => {
+    if (orderType === 'limit') {
+      setCost(limitPrice);
+    } else if (lowestAskHighestBidPerStrike[strike]?.ask) {
+      setCost(lowestAskHighestBidPerStrike[strike].ask);
+    }
+  }, [limitPrice, orderType, lowestAskHighestBidPerStrike, strike]);
+
+  useEffect(() => {
+    let newBreakevenPrice: number | null = null
+    if (orderType === 'limit') {
+      newBreakevenPrice = calculateBreakevenForLimitOrder(
+        strike,
+        0.01,
+        limitPrice,
+        direction === 'down',
+      );
+    } else if (lowestAskHighestBidPerStrike[strike]?.ask) {
+      newBreakevenPrice = calculateBreakevenForMarketOrder(
+        strike,
+        0.01,
+        orderSize,
+        asksForStrike[strike] ?? [],
+        direction === 'down',
+      );
+    }
+
+    setBreakeven(newBreakevenPrice);
+  }, [limitPrice, orderType, lowestAskHighestBidPerStrike, strike, orderSize, direction, asksForStrike]);
+
   const handlePlaceOrderClicked = () => {
 
   };
@@ -55,7 +90,7 @@ const ConfirmOrder = () => {
         <OrderDetails
           side='buy'
           callOrPut={direction === 'up' ? 'call' : 'put'}
-          contractSize={0.1}
+          contractSize={0.01}
           orderSize={orderSize}
         />
         <Box
@@ -69,6 +104,12 @@ const ConfirmOrder = () => {
           </Box>
           <Box paddingBottom={1}>
             <LabelledText title={`$${strike.toString()}`} subtitle="Strike" />
+          </Box>
+          <Box paddingBottom={1}>
+          <LabelledText title={cost ? `$${cost.toString()}` : '-'} subtitle="Cost" />
+          </Box>
+          <Box paddingBottom={1}>
+            <LabelledText title={breakeven ? `$${breakeven.toString()}` : '-'} subtitle="Breakeven" />
           </Box>
         </Box>
         <Box

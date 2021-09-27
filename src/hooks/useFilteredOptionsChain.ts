@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { SerumMarketAndProgramId } from 'src/types';
 import useSerum from './useSerum';
-import { OrderbookData, useSerumOrderbooks } from '../context/SerumOrderbookContext';
+import { Order, OrderbookData, useSerumOrderbooks } from '../context/SerumOrderbookContext';
 import { calculateStrikePrecision } from '../utils/getStrikePrices';
 import useOptionsChain from './useOptionsChain';
 
@@ -15,6 +15,7 @@ const useFilteredOptionsChain = () => {
   const { serumMarkets, fetchMultipleSerumMarkets } = useSerum();
   const [direction, setDirection] = useState('');
   const [precision, setPrecision] = useState(2);
+  const [asksForStrike, setAsksForStrike] = useState({} as Record<string, Order[]>);
   const [orderbooks] = useSerumOrderbooks();
   const [lowestAskHighestBidPerStrike, setLowestAskHighestBidPerStrike] = useState({} as Record<string, BidAsk>);
 
@@ -57,6 +58,7 @@ const useFilteredOptionsChain = () => {
   // Map filtered chains to a Strike + Bid + Ask
   useEffect(() => {
     const askBidPerStrike = {} as Record<string, BidAsk>;
+    const newAsksForStrike = {} as Record<string, Order[]>;
 
     chains.forEach(chain => {
       let highestBid: number | null = null;
@@ -71,16 +73,20 @@ const useFilteredOptionsChain = () => {
       highestBid = orderbook?.bids[0]?.price;
       lowestAsk = orderbook?.asks[0]?.price;
 
-      askBidPerStrike[chain.strike.toFixed(precision)] = {
+      const strikeWithPrecision = chain.strike.toFixed(precision);
+      newAsksForStrike[strikeWithPrecision] = orderbook?.asks;
+
+      askBidPerStrike[strikeWithPrecision] = {
         bid: highestBid,
         ask: lowestAsk,
       };
     });
 
+    setAsksForStrike(newAsksForStrike);
     setLowestAskHighestBidPerStrike(askBidPerStrike);
   }, [chains, direction, orderbooks, precision]);
 
-  return { lowestAskHighestBidPerStrike, setDirection };
+  return { lowestAskHighestBidPerStrike, asksForStrike, setDirection };
 };
 
 export default useFilteredOptionsChain;

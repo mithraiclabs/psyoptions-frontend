@@ -1,9 +1,4 @@
-import {
-  PublicKey,
-  Signer,
-  Transaction,
-  TransactionInstruction,
-} from '@solana/web3.js';
+import { PublicKey, Signer, Transaction } from '@solana/web3.js';
 import { useCallback } from 'react';
 import { Market, OrderParams } from '@mithraic-labs/serum/lib/market';
 import {

@@ -19,7 +19,7 @@ const ChooseStrike = () => {
   const { tokenSymbol, direction, expirationUnixTimestamp } = useFormState();
   const updateForm = useUpdateForm();
   const history = useHistory();
-  const { lowestAskHighestBidPerStrike, setDirection } = useFilteredOptionsChain();
+  const { lowestAskHighestBidPerStrike } = useFilteredOptionsChain(direction === 'down' ? 'put' : 'call');
   const [selectedStrike, setSelectedStrike] = useState('');
   const [strikeButtonData, setStrikeButtonData] = useState([] as StrikeButtonData[]);
 
@@ -31,10 +31,6 @@ const ChooseStrike = () => {
 
     // If previous form state did exist, we need to load the markets on mount
   }, [tokenSymbol, direction, history, expirationUnixTimestamp]);
-
-  useEffect(() => {
-    setDirection(direction);
-  }, [direction, setDirection]);
 
   // #TODO: eventually, when adding contract size input
   // useEffect(() => {

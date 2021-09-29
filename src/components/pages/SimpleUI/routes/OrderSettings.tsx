@@ -27,7 +27,7 @@ const OrderSettings = () => {
   const [limitPrice, setLimitPrice] = useState('0');
   const [orderType, setOrderType] = useState('limit');
   const [orderSize, setOrderSize] = useState('1');
-  const { lowestAskHighestBidPerStrike, setDirection } = useFilteredOptionsChain();
+  const { lowestAskHighestBidPerStrike } = useFilteredOptionsChain(direction === 'down' ? 'put' : 'call');
 
   // If previous form state didn't exist, send user back to first page (choose asset)
   useEffect(() => {
@@ -35,10 +35,6 @@ const OrderSettings = () => {
       history.replace('/simple/choose-asset');
     }
   }, [tokenSymbol, direction, expirationUnixTimestamp, strike, history]);
-
-  useEffect(() => {
-    setDirection(direction);
-  }, [direction, setDirection]);
 
   const handleChangeOrderSize = (e) => setOrderSize(e.target.value);
   const handleChangeLimitPrice = (e) => setLimitPrice(e.target.value);
@@ -69,9 +65,9 @@ const OrderSettings = () => {
           paddingBottom={3}
         >
           <ChooseStrikeButton
-            strike={strike.toString()}
-            bid={lowestAskHighestBidPerStrike[strike]?.bid}
-            ask={lowestAskHighestBidPerStrike[strike]?.ask}
+            strike={strike.toString(10)}
+            bid={lowestAskHighestBidPerStrike[strike.toString(10)]?.bid}
+            ask={lowestAskHighestBidPerStrike[strike.toString(10)]?.ask}
             selected
             onClick={null}
             disabled

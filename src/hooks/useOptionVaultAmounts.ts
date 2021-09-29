@@ -1,23 +1,23 @@
-import { AccountLayout, Token, TOKEN_PROGRAM_ID, u64 } from '@solana/spl-token';
+import { BN } from '@project-serum/anchor';
+import { AccountLayout, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { PublicKey, Signer } from '@solana/web3.js';
 import { useEffect, useState } from 'react';
 import useConnection from './useConnection';
 import useNotifications from './useNotifications';
 
-// eslint-disable-next-line new-cap
-const ZERO_U64 = new u64(0);
+const ZERO_BN = new BN(0);
 
 export const useOptionVaultAmounts = (
   quoteMint: PublicKey,
   quoteVaultKey: PublicKey,
   underlyingMint: PublicKey,
   underlyingVaultKey: PublicKey,
-): [u64, u64] => {
+): [BN, BN] => {
   const { pushNotification } = useNotifications();
   const { connection } = useConnection();
-  const [vaultAmounts, setVaultAmounts] = useState<[u64, u64]>([
-    ZERO_U64,
-    ZERO_U64,
+  const [vaultAmounts, setVaultAmounts] = useState<[BN, BN]>([
+    ZERO_BN,
+    ZERO_BN,
   ]);
 
   useEffect(() => {
@@ -57,7 +57,7 @@ export const useOptionVaultAmounts = (
             const amountBuf = Buffer.from(listenerAccountInfo.amount);
             const amountNum = amountBuf.readUIntLE(0, 8);
             // eslint-disable-next-line new-cap
-            const amount = new u64(amountNum);
+            const amount = new BN(amountNum);
             setVaultAmounts((balances) => [amount, balances[1]]);
           },
         );
@@ -68,7 +68,7 @@ export const useOptionVaultAmounts = (
             const amountBuf = Buffer.from(listenerAccountInfo.amount);
             const amountNum = amountBuf.readUIntLE(0, 8);
             // eslint-disable-next-line new-cap
-            const amount = new u64(amountNum);
+            const amount = new BN(amountNum);
             setVaultAmounts((balances) => [balances[0], amount]);
           },
         );

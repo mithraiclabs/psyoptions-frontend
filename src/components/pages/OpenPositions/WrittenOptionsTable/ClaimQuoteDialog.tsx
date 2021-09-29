@@ -6,7 +6,6 @@ import DialogContent from '@material-ui/core/DialogContent';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import Divider from '@material-ui/core/Divider';
 import { BN } from '@project-serum/anchor';
-import { u64 } from '@solana/spl-token';
 import { PublicKey } from '@solana/web3.js';
 import React, { useCallback, useState } from 'react';
 import { useDecimalsForMint } from '../../../../hooks/useDecimalsForMint';
@@ -21,7 +20,7 @@ export const ClaimQuoteDialog: React.VFC<{
   numLeftToClaim: number;
   option: OptionMarket;
   quoteAssetDestKey: PublicKey;
-  vaultBalance: u64;
+  vaultBalance: BN;
   visible: boolean;
   writerTokenAccount: TokenAccount;
 }> = ({

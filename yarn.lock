@@ -1516,10 +1516,10 @@
   resolved "https://registry.yarnpkg.com/@mithraic-labs/market-meta/-/market-meta-0.0.15.tgz#86e94aa960f831007e8c825ebe26f8ec7af5349f"
   integrity sha512-Wx6bwqNO994ENJm4Wt3xNM3PGdq9nnpc87q/X66D5j0UogrJPRDkJHg9bW0k596MgH8pJQmfB2Mi9JuGBm8P6Q==
 
-"@mithraic-labs/psy-american@^0.0.4":
-  version "0.0.4"
-  resolved "https://registry.yarnpkg.com/@mithraic-labs/psy-american/-/psy-american-0.0.4.tgz#73a2244841290032bdc57a6fa789c8d93b4b6121"
-  integrity sha512-w/dAUGoKgVbK/WkC1zxJDdTGjDY0cW9Zbkx+SBU9TAbJlIONAK8Wvzad3xxAixLmRjJD21gGzsWvI7m//zhxeg==
+"@mithraic-labs/psy-american@^0.0.5":
+  version "0.0.5"
+  resolved "https://registry.yarnpkg.com/@mithraic-labs/psy-american/-/psy-american-0.0.5.tgz#c81fbe69dab9b2060e28c8445fec162dbeb3e335"
+  integrity sha512-AxaAgBvXqDLSfbNT7c4HzkOD52Blkdfcr8vC3EAF/Xa0T6HRn1Sprk3b1ocYLi2hT+vSMeYYq7mpBl49ddBucw==
   dependencies:
     "@project-serum/anchor" "^0.16.1"
     "@project-serum/serum" "^0.13.60"

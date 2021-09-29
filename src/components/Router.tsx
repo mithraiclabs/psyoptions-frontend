@@ -18,6 +18,7 @@ import Faucets from './pages/Faucets';
 import NotFound from './pages/NotFound';
 import ProhibitedJurisdiction from './pages/ProhibitedJurisdiction';
 import { DISALLOWED_COUNTRIES, useCountry } from '../hooks/useCountry';
+import { SimpleUI } from './pages/SimpleUI';
 
 const { INITIALIZE_PAGE_ENABLED, APP_PASSWORD_PROTECTED, APP_PASSWORD } =
   process.env;
@@ -75,6 +76,9 @@ const Routes: React.FC<any> = (props) => {
         </Route>
         <Route exact path="/markets">
           <Markets />
+        </Route>
+        <Route path="/simple">
+          <SimpleUI />
         </Route>
         {INITIALIZE_PAGE_ENABLED && (
           <Route exact path="/initialize-market">

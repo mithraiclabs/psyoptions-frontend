@@ -52,6 +52,17 @@ const NavOptions = React.memo(() => {
           Markets
         </Button>
       </Box>
+      <Box mx={2}>
+        <Button
+          href="/simple/choose-asset"
+          onClick={(e) => {
+            e.preventDefault()
+            history.push('/simple/choose-asset')
+          }}
+        >
+          Beginner UI
+        </Button>
+      </Box>
       {isTrue(INITIALIZE_PAGE_ENABLED) && (
         <Box mx={2}>
           <Button
@@ -104,7 +115,7 @@ const NavOptions = React.memo(() => {
   );
 });
 
-const StatusBar = React.memo(() => {
+const StatusBar: React.FC<{ transparent: boolean; }> = React.memo(({ transparent = false }) => {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   return (
@@ -128,7 +139,9 @@ const StatusBar = React.memo(() => {
         justifyContent="space-between"
         flexDirection="row"
         style={{
-          background: theme.gradients?.secondaryPrimary,
+          background: transparent
+            ? 'transparent'
+            : theme.gradients?.secondaryPrimary,
         }}
       >
         <Box display="flex">

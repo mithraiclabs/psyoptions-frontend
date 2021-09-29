@@ -60,4 +60,22 @@ const getStrikePrices = (markPrice: number, rangeAbove = 4, rangeBelow = 4) => {
   ];
 };
 
-export { getStrikePrices, intervals };
+/**
+ * Calculates precision for a strike
+ * @returns number
+ */
+const calculateStrikePrecision = (n: BigNumber): number => {
+  let precision: number;
+
+  if (n >= new BigNumber(1)) {
+    precision = 2;
+  } else {
+    const s = n.toString(10).replace('.', '');
+    const numZeros = s.match(/^0+/)[0]?.length || 0;
+    precision = 3 + numZeros;
+  }
+
+  return precision;
+}
+
+export { intervals, getStrikePrices, calculateStrikePrecision };

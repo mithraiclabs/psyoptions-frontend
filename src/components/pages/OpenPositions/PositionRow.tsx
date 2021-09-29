@@ -80,8 +80,8 @@ const PositionRow: React.VFC<{
   };
 
   const openExerciseDialog = useCallback(() => {
-    setExerciseDialogOpen(true)
-  }, [])
+    setExerciseDialogOpen(true);
+  }, []);
 
   const uAssetSymbol =
     optionType === 'put' ? row?.qAssetSymbol : row?.uAssetSymbol;
@@ -110,7 +110,7 @@ const PositionRow: React.VFC<{
         strike={strike}
         expiration={formatExpirationTimestampDate(row.expiration)}
         price={price}
-        market={row.market}
+        option={row.market}
       />
       <Box
         onClick={onRowClick}

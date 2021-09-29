@@ -4,6 +4,7 @@ import Button from '@material-ui/core/Button';
 import Close from '@material-ui/icons/Close';
 import Tooltip from '@material-ui/core/Tooltip';
 import { withStyles, useTheme } from '@material-ui/core/styles';
+import { feeAmount } from '@mithraic-labs/psy-american';
 import * as Sentry from '@sentry/react';
 
 import DialogFullscreenMobile from '../../DialogFullscreenMobile';
@@ -13,6 +14,7 @@ import useExerciseOpenPosition from '../../../hooks/useExerciseOpenPosition';
 import { OptionMarket, OptionType } from '../../../types';
 import TxButton from '../../TxButton';
 import { PlusMinusIntegerInput } from '../../PlusMinusIntegerInput';
+import { useDecimalsForMint } from '../../../hooks/useDecimalsForMint';
 
 const StyledTooltip = withStyles((theme) => ({
   tooltip: {
@@ -36,7 +38,7 @@ const ExerciseDialog: React.VFC<{
   strike: string;
   expiration: string;
   price: number;
-  market: OptionMarket;
+  option: OptionMarket;
 }> = ({
   open,
   onClose,
@@ -50,8 +52,9 @@ const ExerciseDialog: React.VFC<{
   strike,
   expiration,
   price,
-  market,
+  option,
 }) => {
+  const quoteAssetDecimals = useDecimalsForMint(option.quoteAssetMintKey);
   const [numContractsToExercise, setNumContractsToExercise] =
     useState(positionSize);
   const [loading, setLoading] = useState(false);
@@ -62,10 +65,10 @@ const ExerciseDialog: React.VFC<{
   const ownedQAssetKey = ownedTokenAccounts[qAssetMintAddress]?.[0]?.pubKey;
   const ownedUAssetKey = ownedTokenAccounts[uAssetMintAddress]?.[0]?.pubKey;
   const ownedOAssetKey =
-    ownedTokenAccounts[market.optionMintKey.toString()]?.[0]?.pubKey;
+    ownedTokenAccounts[option.optionMintKey.toString()]?.[0]?.pubKey;
 
   const exercise = useExerciseOpenPosition(
-    market,
+    option,
     ownedQAssetKey,
     ownedUAssetKey,
     ownedOAssetKey,
@@ -94,8 +97,13 @@ const ExerciseDialog: React.VFC<{
     numContractsToExercise >= 1 && numContractsToExercise <= positionSize;
 
   const strikeNumber = parseFloat(strike);
-  const exerciseCost =
+  let exerciseCost =
     strikeNumber * parseFloat(contractSize) * numContractsToExercise;
+  const exerciseFees =
+    feeAmount(option.quoteAmountPerContractBN).toNumber() *
+    numContractsToExercise *
+    10 ** -quoteAssetDecimals;
+  exerciseCost += exerciseFees;
   const sizeTotalToExercise = parseFloat(contractSize) * numContractsToExercise;
   let exerciseCostString = exerciseCost.toString(10);
   if (exerciseCostString.match(/\..{3,}/)) {
@@ -192,6 +200,11 @@ const ExerciseDialog: React.VFC<{
                   </Button>
                 </Box>
               </Box>
+              <StyledTooltip title="Fees help fund the PsyOptions foundation">
+                <Box pt={1} style={{ fontSize: '12px' }}>
+                  {exerciseFees} {option.qAssetSymbol} fee included
+                </Box>
+              </StyledTooltip>
             </Box>
             <StyledTooltip title={exerciseTooltipJsx}>
               <Box pt={1}>

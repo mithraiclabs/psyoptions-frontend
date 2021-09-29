@@ -50,7 +50,7 @@ const ChooseStrikeButton: React.VFC<{
               fontFamily: 'Goldman',
               fontWeight: 'bold'
             }}
-          >{strike}</div>
+          >${strike}</div>
         </Box>
         <Box
           width='100%'

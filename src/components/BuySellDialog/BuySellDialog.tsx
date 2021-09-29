@@ -33,7 +33,10 @@ import ConnectButton from '../ConnectButton';
 
 import DialogFullscreenMobile from '../DialogFullscreenMobile';
 import { calculatePriceWithSlippage } from '../../utils/calculatePriceWithSlippage';
-import { calculateBreakevenForLimitOrder, calculateBreakevenForMarketOrder } from '../../utils/calculateBreakeven';
+import {
+  calculateBreakevenForLimitOrder,
+  calculateBreakevenForMarketOrder,
+} from '../../utils/calculateBreakeven';
 import { useInitializeSerumMarket } from '../../hooks/Serum/useInitializeSerumMarket';
 import { PlusMinusIntegerInput } from '../PlusMinusIntegerInput';
 
@@ -154,6 +157,10 @@ const BuySellDialog: React.VFC<{
         0,
       )
     : 'N/A';
+
+  const contractSize =
+    type === 'put' ? quoteAmountPerContract : amountPerContract;
+  const assetSymbol = type === 'put' ? qAssetSymbol : uAssetSymbol;
 
   const formatStrike = (sp) => {
     if (!sp) return '—';
@@ -349,6 +356,9 @@ const BuySellDialog: React.VFC<{
                 ? `${qAssetSymbol}/${uAssetSymbol}`
                 : `${uAssetSymbol}/${qAssetSymbol}`}
             </Box>
+            <Box pt={1}>
+              Contract Size: {contractSize.toString()} {assetSymbol}
+            </Box>
             <Box pt={1}>Mark Price: {markPrice ?? '-'}</Box>
             <Box pt={1}>
               Open Position:{' '}
@@ -526,18 +536,22 @@ const BuySellDialog: React.VFC<{
                   </Box>
                   <Box alignSelf="flex-start" pt={1} pb={2}>
                     Breakeven:{' $'}
-                    {orderSize ? (orderType === 'market' ? calculateBreakevenForMarketOrder(
-                      strike.toNumber(),
-                      amountPerContract.toNumber(),
-                      orderSize,
-                      orderbook?.asks ?? [],
-                      type === 'put',
-                    ) : calculateBreakevenForLimitOrder(
-                      strike.toNumber(),
-                      amountPerContract.toNumber(),
-                      parsedLimitPrice.toNumber(),
-                      type === 'put',
-                    )) : '-'}
+                    {orderSize
+                      ? orderType === 'market'
+                        ? calculateBreakevenForMarketOrder(
+                            strike.toNumber(),
+                            amountPerContract.toNumber(),
+                            orderSize,
+                            orderbook?.asks ?? [],
+                            type === 'put',
+                          )
+                        : calculateBreakevenForLimitOrder(
+                            strike.toNumber(),
+                            amountPerContract.toNumber(),
+                            parsedLimitPrice.toNumber(),
+                            type === 'put',
+                          )
+                      : '-'}
                   </Box>
                   <Box
                     py={2}

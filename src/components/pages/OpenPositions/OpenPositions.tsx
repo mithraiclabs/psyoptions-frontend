@@ -1,8 +1,12 @@
-import Box from '@material-ui/core/Box';
+import {
+  Box,
+  makeStyles,
+  useMediaQuery
+} from "@material-ui/core";
 import React, { useState, useMemo } from 'react';
+import clsx from "clsx";
 import CreateIcon from '@material-ui/icons/Create';
 import BarChartIcon from '@material-ui/icons/BarChart';
-import { useTheme } from '@material-ui/core/styles';
 import Page from '../Page';
 import TabCustom from '../../Tab';
 
@@ -18,9 +22,66 @@ import { useWrittenOptions } from '../../../hooks/useWrittenOptions';
 import SupportedAssetBalances from '../../SupportedAssetBalances';
 import { PricesProvider } from '../../../context/PricesContext';
 
+const useStyles = makeStyles((theme) => ({
+  root: {
+    display: "flex",
+    justifyContent: "flex-start",
+    flexDirection: "column",
+    height: "100%",
+    minHeight: "500px",
+    paddingTop: theme.spacing(2),
+    paddingBottom: theme.spacing(4),
+  },
+  tabsContainer: {
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "flex-start",
+    alignItems: "flex-start",
+  },
+  openPositionsTable: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr 1fr 1fr 1fr 1fr 2fr 1fr 1fr",
+    alignItems: "center",
+    backgroundColor: theme.palette.background.paper,
+    padding: "20px",
+    fontSize: "14px",
+  },
+  openPositionsTableTablet: {
+    gridTemplateColumns: "2fr 1.5fr 1fr 1fr",
+    fontSize: "10px",
+  },
+  openPositionsTableMobile: {
+    gridTemplateColumns: "2fr 1.5fr 1fr 1fr",
+    fontSize: "10px",
+  },
+  openPositionsContainer: {
+    display: "flex",
+    flexDirection: "column",
+    width: "100%",
+    backgroundColor: theme.palette.background.medium,
+    minHeight: "514px",
+  },
+  mainColor: {
+    color: theme.palette.border.main,
+  },
+  emptySVGContainer: {
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    flexDirection: "column",
+    padding: theme.spacing(3),
+    flexGrow: 1,
+  },
+  writtenOptionsContainer: {
+    backgroundColor: theme.palette.background.medium,
+  },
+}));
+
 const OpenPositions: React.VFC = () => {
+  const classes = useStyles();
+  const mobileDevice = !useMediaQuery("(min-width:375px)");
+  const tabletDevice = !useMediaQuery("(min-width:880px)");
   const { connected } = useWallet();
-  const theme = useTheme();
   const [page] = useState(0);
   const [rowsPerPage] = useState(10);
   const positions = useOpenPositions();
@@ -65,32 +126,19 @@ const OpenPositions: React.VFC = () => {
   return (
     <PricesProvider>
       <Page>
-        <Box
-          display="flex"
-          justifyContent="flex-start"
-          flexDirection="column"
-          height="100%"
-          minHeight="500px"
-          pt={2}
-          pb={4}
-        >
+        <Box className={classes.root}>
           <Box pb={2}>
             <SupportedAssetBalances />
           </Box>
-          <Box
-            display="flex"
-            flexDirection="row"
-            justifyContent="flex-start"
-            alignItems="flex-start"
-          >
+          <Box className={classes.tabsContainer}>
             <TabCustom
               selected={selectedTab === 0}
               onClick={() => setSelectedTab(0)}
             >
               <Box display="flex" flexDirection="row" alignItems="center">
-                <Box px={1}>
+                {(!mobileDevice && !tabletDevice) && <Box px={1}>
                   <BarChartIcon />
-                </Box>
+                </Box>}
                 <Box px={1} textAlign="left" lineHeight={'22px'}>
                   <Box fontSize={'16px'} fontWeight={700}>
                     Open Positions
@@ -106,9 +154,9 @@ const OpenPositions: React.VFC = () => {
               onClick={() => setSelectedTab(1)}
             >
               <Box display="flex" flexDirection="row" alignItems="center">
-                <Box px={1}>
+                {(!mobileDevice && !tabletDevice) && <Box px={1}>
                   <CreateIcon fontSize="small" />
-                </Box>
+                </Box>}
                 <Box px={1} textAlign="left" lineHeight={'22px'}>
                   <Box fontSize={'16px'} fontWeight={700}>
                     Written Options
@@ -121,52 +169,32 @@ const OpenPositions: React.VFC = () => {
             </TabCustom>
           </Box>
           {selectedTab === 0 && (
-            <Box
-              width="100%"
-              bgcolor={theme.palette.background.medium}
-              style={{
-                overflowX: 'auto',
-              }}
-            >
-              <Box
-                minWidth="880px"
-                minHeight="514px"
-                display="flex"
-                flexDirection="column"
-              >
-                <Heading>Open Positions</Heading>
-                <OpenPositionsTableHeader />
-                {hasOpenPositions && connected ? (
-                  positionRows
-                    .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                    .map((row) => (
-                      <PositionRow
-                        key={row.market.optionMintKey.toString()}
-                        row={row}
-                      />
-                    ))
-                ) : (
-                  <Box
-                    display="flex"
-                    justifyContent="center"
-                    alignItems="center"
-                    flexDirection="column"
-                    p={3}
-                    flexGrow="1"
-                  >
-                    <EmptySvg />
-                    <Box color={theme.palette.border.main}>
-                      {connected
-                        ? 'You have no open positions'
-                        : 'Wallet not connected'}
-                    </Box>
+            <Box className={classes.openPositionsContainer}>
+              <Heading>Open Positions</Heading>
+              <OpenPositionsTableHeader className={clsx(classes.openPositionsTable, mobileDevice && classes.openPositionsTableMobile, tabletDevice && classes.openPositionsTableTablet)}/>
+              {hasOpenPositions && connected ? (
+                positionRows
+                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                  .map((row) => (
+                    <PositionRow
+                      key={row.market.optionMintKey.toString()}
+                      row={row}
+                    />
+                  ))
+              ) : (
+                <Box className={classes.emptySVGContainer}>
+                  <EmptySvg />
+                  <Box className={classes.mainColor}>
+                    {connected
+                      ? 'You have no open positions'
+                      : 'Wallet not connected'}
                   </Box>
-                )}
-              </Box>
+                </Box>
+              )}
             </Box>
           )}
           {selectedTab === 1 && (
-            <Box bgcolor={theme.palette.background.medium}>
+            <Box className={classes.writtenOptionsContainer}>
               <WrittenOptionsTable />
             </Box>
           )}

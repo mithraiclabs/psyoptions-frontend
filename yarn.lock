@@ -1516,10 +1516,10 @@
   resolved "https://registry.yarnpkg.com/@mithraic-labs/market-meta/-/market-meta-0.0.15.tgz#86e94aa960f831007e8c825ebe26f8ec7af5349f"
   integrity sha512-Wx6bwqNO994ENJm4Wt3xNM3PGdq9nnpc87q/X66D5j0UogrJPRDkJHg9bW0k596MgH8pJQmfB2Mi9JuGBm8P6Q==
 
-"@mithraic-labs/psy-american@^0.0.5":
-  version "0.0.5"
-  resolved "https://registry.yarnpkg.com/@mithraic-labs/psy-american/-/psy-american-0.0.5.tgz#c81fbe69dab9b2060e28c8445fec162dbeb3e335"
-  integrity sha512-AxaAgBvXqDLSfbNT7c4HzkOD52Blkdfcr8vC3EAF/Xa0T6HRn1Sprk3b1ocYLi2hT+vSMeYYq7mpBl49ddBucw==
+"@mithraic-labs/psy-american@^0.0.6":
+  version "0.0.6"
+  resolved "https://registry.yarnpkg.com/@mithraic-labs/psy-american/-/psy-american-0.0.6.tgz#9e24266e2d0a8fcd7f3b13eb4b301797267d7269"
+  integrity sha512-wlcXCCJjY2V4qNUm1NVg1HG/NCx7OkAEF7iBKvBQnbCFYNsXvPNm8Znr3O2lVBODtwR/ccnoicO8USX121Busw==
   dependencies:
     "@project-serum/anchor" "^0.16.1"
     "@project-serum/serum" "^0.13.60"
@@ -2124,6 +2124,11 @@
   integrity sha512-W/iTlIkGEyTBGTEvZCey8EgQlQ5l0DwMqi3iOXlLs2kyBwYTXHKEiU6IZ5EwoRwngL8/dGYuzezSup89ttVHLw==
   dependencies:
     "@types/react" "*"
+
+"@types/throttle-debounce@^2.1.0":
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/@types/throttle-debounce/-/throttle-debounce-2.1.0.tgz#1c3df624bfc4b62f992d3012b84c56d41eab3776"
+  integrity sha512-5eQEtSCoESnh2FsiLTxE121IiE60hnMqcb435fShf4bpLRjEu1Eoekht23y6zXS9Ts3l+Szu3TARnTsA0GkOkQ==
 
 "@types/ws@^7.4.4":
   version "7.4.7"

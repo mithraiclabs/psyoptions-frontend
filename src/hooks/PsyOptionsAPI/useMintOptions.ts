@@ -12,7 +12,6 @@ import { useAmericanPsyOptionsProgram } from '../useAmericanPsyOptionsProgram';
 import useNotifications from '../useNotifications';
 import useWallet from '../useWallet';
 
-// 8dmNRKc6h23mbKePFtYhyFWVYV4wvuN4uzUezPgfzmfV
 export const useMintOptions = (): ((
   option: OptionMarketWithKey,
   size: number,

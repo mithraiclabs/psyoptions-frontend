@@ -16,11 +16,12 @@ import useWallet from '../../../hooks/useWallet';
 import ConnectButton from '../../ConnectButton';
 import theme from '../../../utils/theme';
 import { useMintOptions } from '../../../hooks/PsyOptionsAPI/useMintOptions';
+import { MintInfo } from './MintInfo';
 
 /**
  * Page to allow users to mint options that have been initialized.
  *
- * Start with input of option market mint???
+ * TODO allow user to input parameters instead of option key
  */
 const Mint: React.VFC = () => {
   const program = useAmericanPsyOptionsProgram();
@@ -32,9 +33,9 @@ const Mint: React.VFC = () => {
   const [validKey, setValidKey] = useState(true);
   const [loading, setLoading] = useState(false);
   const validInput = !!(option && quantity);
-  // TODO maybe keep track of valid/invalid address
   const onTextChange = useCallback((e) => {
     setOptionMarketAddress(e.target.value);
+    setOption(null);
   }, []);
   const handleMint = useCallback(async () => {
     if (!option || !quantity) {
@@ -113,7 +114,10 @@ const Mint: React.VFC = () => {
                 value={quantity}
               />
             </Box>
-            <Box mx={2}>
+            <Box m={2}>
+              <MintInfo option={option} size={quantity} />
+            </Box>
+            <Box mt={3} mx={2}>
               {loading ? (
                 <Box display="flex" justifyContent="center" p={1}>
                   <CircularProgress />

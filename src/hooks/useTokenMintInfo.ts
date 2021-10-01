@@ -9,7 +9,9 @@ import useNotifications from './useNotifications';
 /**
  * Get MintInfo for an arbitray public key
  */
-export const useTokenMintInfo = (mint: PublicKey | null): MintInfo | null => {
+export const useTokenMintInfo = (
+  mint: PublicKey | null | undefined,
+): MintInfo | null => {
   const { connection } = useConnection();
   const { pushErrorNotification } = useNotifications();
   const { tokenMap } = useAssetList();

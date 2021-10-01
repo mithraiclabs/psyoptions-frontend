@@ -6,7 +6,14 @@ import React, { Fragment } from "react";
 import clsx from "clsx";
 
 const useStyles = makeStyles((theme) => ({
-  root: {},
+  root: {
+    backgroundColor: theme.palette.background.paper,
+    padding: "20px",
+    fontSize: "14px",
+  },
+  mobile: {
+    fontSize: "12px",
+  },
 }));
 
 const OpenPositionsTableHeader: React.VFC<{
@@ -16,7 +23,11 @@ const OpenPositionsTableHeader: React.VFC<{
   const classes = useStyles();
 
   return (
-    <Box className={clsx(classes.root, className)}>
+    <Box className={clsx(
+      classes.root,
+      className,
+      formFactor === "mobile" && classes.mobile
+    )}>
       <Box pl={formFactor === "mobile" ? 2 : 0}>
         Asset
       </Box>

@@ -3,7 +3,6 @@ import {
   makeStyles,
   useMediaQuery
 } from "@material-ui/core";
-import { CSSProperties } from "@material-ui/core/styles/withStyles";
 import React, { useState, useMemo } from 'react';
 import clsx from "clsx";
 import CreateIcon from '@material-ui/icons/Create';
@@ -16,24 +15,12 @@ import OpenPositionsTableHeader from './OpenPositionsTableHeader';
 import useOpenPositions from '../../../hooks/useOpenPositions';
 import useOptionsMarkets from '../../../hooks/useOptionsMarkets';
 import { Heading } from './Heading';
-import { WrittenOptionsTable } from './WrittenOptionsTable';
+import WrittenOptionsTable from './WrittenOptionsTable';
 import EmptySvg from './EmptySvg';
 import useWallet from '../../../hooks/useWallet';
 import { useWrittenOptions } from '../../../hooks/useWrittenOptions';
 import SupportedAssetBalances from '../../SupportedAssetBalances';
 import { PricesProvider } from '../../../context/PricesContext';
-
-const desktopColumns: CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "1fr 1fr 1fr 1fr 1fr 1fr 2fr 1fr 1fr",
-  alignItems: "center",
-};
-
-const mobileColumns: CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "2fr 1.5fr 1fr 1fr",
-  alignItems: "center",
-};
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -51,17 +38,15 @@ const useStyles = makeStyles((theme) => ({
     justifyContent: "flex-start",
     alignItems: "flex-start",
   },
-  desktopColumns: desktopColumns,
-  openPositionsTable: {
-    ...desktopColumns,
-    backgroundColor: theme.palette.background.paper,
-    padding: "20px",
-    fontSize: "14px",
+  desktopColumns: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr 1fr 1fr 1fr 1fr 2fr 1fr 1fr",
+    alignItems: "center",
   },
-  mobileColumns: mobileColumns,
-  openPositionsTableMobile: {
-    ...mobileColumns,
-    fontSize: "12px",
+  mobileColumns: {
+    display: "grid",
+    gridTemplateColumns: "2fr 1.5fr 1fr 1fr",
+    alignItems: "center",
   },
   openPositionsContainer: {
     display: "flex",
@@ -185,10 +170,9 @@ const OpenPositions: React.VFC = () => {
             <Box className={classes.openPositionsContainer}>
               <Heading>Open Positions</Heading>
               <OpenPositionsTableHeader
-                className={clsx(classes.openPositionsTable,
-                  formFactor === "mobile" && classes.openPositionsTableMobile,
-                  formFactor === "tablet" && classes.mobileColumns)}
                 formFactor={formFactor}
+                className={clsx(classes.desktopColumns,
+                  !isDesktop && classes.mobileColumns)}
               />
               {hasOpenPositions && connected ? (
                 positionRows
@@ -216,7 +200,11 @@ const OpenPositions: React.VFC = () => {
           )}
           {selectedTab === 1 && (
             <Box className={classes.writtenOptionsContainer}>
-              <WrittenOptionsTable />
+              <WrittenOptionsTable
+                formFactor={formFactor}
+                className={clsx(classes.desktopColumns,
+                  !isDesktop && classes.mobileColumns)}
+              />
             </Box>
           )}
         </Box>

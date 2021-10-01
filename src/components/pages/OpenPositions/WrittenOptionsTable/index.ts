@@ -1,1 +1,1 @@
-export * from './WrittenOptionsTable';
+export { default } from './WrittenOptionsTable';

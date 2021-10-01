@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { memo, useMemo } from 'react';
 import Box from '@material-ui/core/Box';
 import { useTheme } from '@material-ui/core/styles';
 
@@ -11,7 +11,10 @@ import { WrittenOptionRow } from './WrittenOptionRow';
 import EmptySvg from '../EmptySvg';
 
 // TODO handle the case where the writer has multiple underlying asset accounts
-export const WrittenOptionsTable = React.memo(() => {
+const WrittenOptionsTable: React.VFC<{
+  className: string;
+  formFactor: "desktop" | "tablet" | "mobile";
+}> = ({ className, formFactor }) => {
   const { connected } = useWallet();
   const theme = useTheme();
   const positions = useOpenPositions();
@@ -120,4 +123,6 @@ export const WrittenOptionsTable = React.memo(() => {
       </Box>
     </Box>
   );
-});
+};
+
+export default memo(WrittenOptionsTable);

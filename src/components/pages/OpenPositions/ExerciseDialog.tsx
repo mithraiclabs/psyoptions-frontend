@@ -4,7 +4,7 @@ import Button from '@material-ui/core/Button';
 import Close from '@material-ui/icons/Close';
 import Tooltip from '@material-ui/core/Tooltip';
 import { withStyles, useTheme } from '@material-ui/core/styles';
-import { feeAmount } from '@mithraic-labs/psy-american';
+import { feeAmountPerContract } from '@mithraic-labs/psy-american';
 import * as Sentry from '@sentry/react';
 
 import DialogFullscreenMobile from '../../DialogFullscreenMobile';
@@ -100,7 +100,7 @@ const ExerciseDialog: React.VFC<{
   let exerciseCost =
     strikeNumber * parseFloat(contractSize) * numContractsToExercise;
   const exerciseFees =
-    feeAmount(option.quoteAmountPerContractBN).toNumber() *
+    feeAmountPerContract(option.quoteAmountPerContractBN).toNumber() *
     numContractsToExercise *
     10 ** -quoteAssetDecimals;
   exerciseCost += exerciseFees;

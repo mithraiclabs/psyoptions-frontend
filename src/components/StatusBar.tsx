@@ -56,25 +56,38 @@ const NavOptions = React.memo(() => {
         <Button
           href="/simple/choose-asset"
           onClick={(e) => {
-            e.preventDefault()
-            history.push('/simple/choose-asset')
+            e.preventDefault();
+            history.push('/simple/choose-asset');
           }}
         >
           Beginner UI
         </Button>
       </Box>
       {isTrue(INITIALIZE_PAGE_ENABLED) && (
-        <Box mx={2}>
-          <Button
-            href="/initialize-market"
-            onClick={(e) => {
-              e.preventDefault();
-              history.push('/initialize-market');
-            }}
-          >
-            Initialize
-          </Button>
-        </Box>
+        <>
+          <Box mx={2}>
+            <Button
+              href="/initialize-market"
+              onClick={(e) => {
+                e.preventDefault();
+                history.push('/initialize-market');
+              }}
+            >
+              Initialize
+            </Button>
+          </Box>
+          <Box mx={2}>
+            <Button
+              href="/mint"
+              onClick={(e) => {
+                e.preventDefault();
+                history.push('/mint');
+              }}
+            >
+              Mint
+            </Button>
+          </Box>
+        </>
       )}
       <Box mx={2}>
         <Button
@@ -115,60 +128,62 @@ const NavOptions = React.memo(() => {
   );
 });
 
-const StatusBar: React.FC<{ transparent: boolean; }> = React.memo(({ transparent = false }) => {
-  const [drawerOpen, setDrawerOpen] = useState(false);
+const StatusBar: React.FC<{ transparent: boolean }> = React.memo(
+  ({ transparent = false }) => {
+    const [drawerOpen, setDrawerOpen] = useState(false);
 
-  return (
-    <>
-      <Hidden mdUp>
-        <SwipeableDrawer
-          anchor="left"
-          open={drawerOpen}
-          onClose={() => setDrawerOpen(false)}
-          onOpen={() => setDrawerOpen(true)}
+    return (
+      <>
+        <Hidden mdUp>
+          <SwipeableDrawer
+            anchor="left"
+            open={drawerOpen}
+            onClose={() => setDrawerOpen(false)}
+            onOpen={() => setDrawerOpen(true)}
+          >
+            <Box pt={6}>
+              <NavOptions />
+            </Box>
+          </SwipeableDrawer>
+        </Hidden>
+        <Box
+          px={2}
+          py={1}
+          display="flex"
+          justifyContent="space-between"
+          flexDirection="row"
+          style={{
+            background: transparent
+              ? 'transparent'
+              : theme.gradients?.secondaryPrimary,
+          }}
         >
-          <Box pt={6}>
-            <NavOptions />
+          <Box display="flex">
+            <Hidden smDown>
+              <NavOptions />
+            </Hidden>
+            <Hidden mdUp>
+              <IconButton
+                edge="start"
+                color="inherit"
+                aria-label="menu"
+                style={{ padding: '4px 8px' }}
+                onClick={() => setDrawerOpen(true)}
+              >
+                <Menu />
+              </IconButton>
+            </Hidden>
           </Box>
-        </SwipeableDrawer>
-      </Hidden>
-      <Box
-        px={2}
-        py={1}
-        display="flex"
-        justifyContent="space-between"
-        flexDirection="row"
-        style={{
-          background: transparent
-            ? 'transparent'
-            : theme.gradients?.secondaryPrimary,
-        }}
-      >
-        <Box display="flex">
-          <Hidden smDown>
-            <NavOptions />
-          </Hidden>
-          <Hidden mdUp>
-            <IconButton
-              edge="start"
-              color="inherit"
-              aria-label="menu"
-              style={{ padding: '4px 8px' }}
-              onClick={() => setDrawerOpen(true)}
-            >
-              <Menu />
-            </IconButton>
-          </Hidden>
+          <Box display="flex">
+            <WalletStatus />
+            <NoSsr>
+              <NetworkMenu />
+            </NoSsr>
+          </Box>
         </Box>
-        <Box display="flex">
-          <WalletStatus />
-          <NoSsr>
-            <NetworkMenu />
-          </NoSsr>
-        </Box>
-      </Box>
-    </>
-  );
-});
+      </>
+    );
+  },
+);
 
 export default StatusBar;

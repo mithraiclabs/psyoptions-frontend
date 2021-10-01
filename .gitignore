@@ -1,6 +1,7 @@
 node_modules/
 dist/
 .env
+.env.local
 localnetData.json
 serum/dex
 .DS_Store

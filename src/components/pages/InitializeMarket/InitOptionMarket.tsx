@@ -19,18 +19,18 @@ import { BigNumber } from 'bignumber.js';
 import { BN } from 'bn.js';
 import moment from 'moment';
 import { useInitializeSerumMarket } from '../../../hooks/Serum/useInitializeSerumMarket';
-import useAssetList from '../../../hooks/useAssetList';
 import useConnection from '../../../hooks/useConnection';
 import { useInitializeMarket } from '../../../hooks/useInitializeMarket';
 import useNotifications from '../../../hooks/useNotifications';
 import useWallet from '../../../hooks/useWallet';
 import ConnectButton from '../../ConnectButton';
-import SelectAsset from '../../SelectAsset';
 import { StyledTooltip } from '../Markets/styles';
 import theme from '../../../utils/theme';
 import { useInitializedMarkets } from '../../../context/LocalStorage';
 import { useCheckIfMarketExists } from '../../../hooks/PsyOptionsAPI/useCheckIfMarketExists';
 import { MarketExistsDialog } from './MarketExistsDialog';
+import { SelectAssetOrEnterMint } from '../../SelectAssetOrEnterMint';
+import { useTokenMintInfo } from '../../../hooks/useTokenMintInfo';
 
 const darkBorder = `1px solid ${theme.palette.background.main}`;
 
@@ -42,7 +42,8 @@ export const InitOptionMarket: React.VFC = () => {
   const initializeSerumMarket = useInitializeSerumMarket();
   const [basePrice, setBasePrice] = useState('0');
   const [selectorDate, setSelectorDate] = useState(moment.utc().endOf('day'));
-  const { uAsset, qAsset, setUAsset } = useAssetList();
+  const [underlyingMint, setUnderlyingMint] = useState<PublicKey | null>(null);
+  const [quoteMint, setQuoteMint] = useState<PublicKey | null>(null);
   const [initSerumMarket, setInitSerumMarket] = useState(false);
   const [size, setSize] = useState('1');
   const [loading, setLoading] = useState(false);
@@ -51,7 +52,8 @@ export const InitOptionMarket: React.VFC = () => {
   const checkIfMarketExists = useCheckIfMarketExists();
   const [existingMarket, setExistingMarket] =
     useState<OptionMarketWithKey | null>(null);
-
+  const underlyingMintInfo = useTokenMintInfo(underlyingMint);
+  const quoteMintInfo = useTokenMintInfo(quoteMint);
   const dismissExistingMarketDialog = useCallback(
     () => setExistingMarket(null),
     [],
@@ -60,15 +62,12 @@ export const InitOptionMarket: React.VFC = () => {
   const parsedBasePrice = parseFloat(
     basePrice && basePrice.replace(/^\./, '0.'),
   );
-  let strikePrice: BigNumber;
-  if (parsedBasePrice) {
-    strikePrice = new BigNumber(parsedBasePrice);
-  }
+  const strikePrice = new BigNumber(parsedBasePrice);
 
-  const assetsSelected = uAsset && qAsset;
+  const assetsSelected = !!(underlyingMint && quoteMint);
   const parametersValid = size && !Number.isNaN(size) && !!strikePrice;
 
-  const handleChangeBasePrice = (e) => {
+  const handleChangeBasePrice = (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target.value || '';
     setBasePrice(input);
   };
@@ -77,16 +76,40 @@ export const InitOptionMarket: React.VFC = () => {
     setSelectorDate(moment.utc(date).endOf('day'));
   };
 
-  const handleChangeCallPut = (e) => {
-    setCallOrPut(e.target.value);
+  const handleChangeCallPut = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCallOrPut(e.target.value as any);
   };
 
   const handleInitialize = async () => {
+    if (!underlyingMint || !quoteMint) {
+      pushNotification({
+        severity: 'error',
+        message: 'Invalid input',
+      });
+      return;
+    }
+    if (!underlyingMintInfo || !quoteMintInfo) {
+      pushNotification({
+        severity: 'error',
+        message: `Could not get Mint info for ${
+          !underlyingMintInfo ? 'Underlying Asset' : 'Quote Asset'
+        }`,
+      });
+      return;
+    }
     try {
       setLoading(true);
       const expiration = selectorDate.unix();
-      const ua = callOrPut === 'calls' ? uAsset : qAsset;
-      const qa = callOrPut === 'calls' ? qAsset : uAsset;
+      let optionUnderlyingMint = underlyingMint;
+      let optionQuoteMint = quoteMint;
+      let optionUnderlyingDecimals = underlyingMintInfo.decimals;
+      let optionQuoteDecimals = quoteMintInfo.decimals;
+      if (callOrPut !== 'calls') {
+        optionUnderlyingMint = quoteMint;
+        optionQuoteMint = underlyingMint;
+        optionUnderlyingDecimals = quoteMintInfo.decimals;
+        optionQuoteDecimals = underlyingMintInfo.decimals;
+      }
 
       let amountsPerContract: BigNumber;
       let quoteAmountPerContract: BigNumber;
@@ -100,18 +123,18 @@ export const InitOptionMarket: React.VFC = () => {
       }
 
       const amountPerContractU64 = amountsPerContract
-        .multipliedBy(new BigNumber(10).pow(ua.decimals))
+        .multipliedBy(new BigNumber(10).pow(optionUnderlyingDecimals))
         .toNumber();
       const quoteAmountPerContractU64 = quoteAmountPerContract
-        .multipliedBy(new BigNumber(10).pow(qa.decimals))
+        .multipliedBy(new BigNumber(10).pow(optionQuoteDecimals))
         .toNumber();
 
       const _existingMarket = await checkIfMarketExists({
         expirationUnixTimestamp: new BN(expiration),
         quoteAmountPerContract: new BN(quoteAmountPerContractU64),
-        quoteAssetMintKey: new PublicKey(qa.mintAddress),
+        quoteAssetMintKey: optionQuoteMint,
         underlyingAmountPerContract: new BN(amountPerContractU64),
-        underlyingAssetMintKey: new PublicKey(ua.mintAddress),
+        underlyingAssetMintKey: optionUnderlyingMint,
       });
 
       if (_existingMarket) {
@@ -123,12 +146,10 @@ export const InitOptionMarket: React.VFC = () => {
       const initializedMarket = await initializeMarket({
         amountPerContract: amountsPerContract,
         quoteAmountPerContract,
-        uAssetSymbol: ua.tokenSymbol,
-        qAssetSymbol: qa.tokenSymbol,
-        uAssetMint: ua.mintAddress,
-        qAssetMint: qa.mintAddress,
-        uAssetDecimals: ua.decimals,
-        qAssetDecimals: qa.decimals,
+        uAssetMint: optionUnderlyingMint,
+        qAssetMint: optionQuoteMint,
+        uAssetDecimals: optionUnderlyingDecimals,
+        qAssetDecimals: optionQuoteDecimals,
         expiration,
       });
 
@@ -139,22 +160,22 @@ export const InitOptionMarket: React.VFC = () => {
       }
 
       let serumMarketAddress: string;
+      // TODO determine what to do about tick size. Prob needs to be use configurable
       if (initSerumMarket) {
-        let tickSize = 0.0001;
-        if (
-          (callOrPut === 'calls' && qa.tokenSymbol.match(/^USD/)) ||
-          (callOrPut === 'puts' && ua.tokenSymbol.match(/^USD/))
-        ) {
-          tickSize = 0.01;
-        }
+        const tickSize = 0.01;
+        // let tickSize = 0.0001;
+        // if (
+        //   (callOrPut === 'calls' && qa.tokenSymbol.match(/^USD/)) ||
+        //   (callOrPut === 'puts' && ua.tokenSymbol.match(/^USD/))
+        // ) {
+        //   tickSize = 0.01;
+        // }
 
         // This will likely be USDC or USDT but could be other things in some cases
-        const quoteLotSize = new BN(
-          tickSize * 10 ** (callOrPut === 'calls' ? qa.decimals : ua.decimals),
-        );
+        const quoteLotSize = new BN(tickSize * 10 ** quoteMintInfo.decimals);
 
         const initSerumResp = await initializeSerumMarket({
-          optionMarketKey: initializedMarket.pubkey,
+          optionMarketKey: initializedMarket.optionMarketKey,
           baseMintKey: initializedMarket.optionMintKey,
           // This needs to be the USDC, so flip the quote asset vs underlying asset
           quoteMintKey:
@@ -184,24 +205,23 @@ export const InitOptionMarket: React.VFC = () => {
           underlyingAssetPoolAddress:
             initializedMarket.underlyingAssetPoolKey.toString(),
           underlyingAssetPerContract: initializedMarket.amountPerContract
-            .multipliedBy(new BigNumber(10).pow(ua.decimals))
+            .multipliedBy(new BigNumber(10).pow(optionUnderlyingDecimals))
             .toString(),
           quoteAssetPerContract: initializedMarket.quoteAmountPerContract
-            .multipliedBy(new BigNumber(10).pow(qa.decimals))
+            .multipliedBy(new BigNumber(10).pow(optionQuoteDecimals))
             .toString(),
           ...(initSerumMarket
             ? {
                 serumMarketAddress,
-                serumProgramId: dexProgramId.toString(),
+                serumProgramId: dexProgramId?.toString(),
               }
             : {}),
-          psyOptionsProgramId: endpoint.programId,
+          psyOptionsProgramId: endpoint?.programId ?? '',
         };
         return [...prevMarketsMetaArr, marketsMeta];
       });
     } catch (err) {
       setLoading(false);
-      // TODO: display some meaningful error state to user
       console.error(err);
       pushNotification({
         severity: 'error',
@@ -265,11 +285,9 @@ export const InitOptionMarket: React.VFC = () => {
           <Box width="50%" p={2} borderRight={darkBorder}>
             Underlying Asset:
             <Box mt={2}>
-              <SelectAsset
-                selectedAsset={uAsset}
-                onSelectAsset={(asset) => {
-                  setUAsset(asset);
-                }}
+              <SelectAssetOrEnterMint
+                mint={underlyingMint}
+                onSelectAsset={setUnderlyingMint}
               />
             </Box>
           </Box>
@@ -277,7 +295,10 @@ export const InitOptionMarket: React.VFC = () => {
           <Box width="50%" p={2}>
             Quote Asset:
             <Box mt={2}>
-              <SelectAsset selectedAsset={qAsset} disabled />
+              <SelectAssetOrEnterMint
+                mint={quoteMint}
+                onSelectAsset={setQuoteMint}
+              />
             </Box>
           </Box>
         </Box>

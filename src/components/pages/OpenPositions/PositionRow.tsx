@@ -58,7 +58,7 @@ const PositionRow: React.VFC<{
     amountPerContract: BigNumber;
     quoteAmountPerContract: BigNumber;
   };
-  className: any;
+  className: string;
   formFactor: "desktop" | "tablet" | "mobile";
 }> = ({ row, className, formFactor }) => {
   const classes = useStyles();

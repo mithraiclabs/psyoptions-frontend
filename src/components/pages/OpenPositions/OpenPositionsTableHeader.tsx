@@ -10,7 +10,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const OpenPositionsTableHeader: React.VFC<{
-  className: any;
+  className: string;
   formFactor: "desktop" | "tablet" | "mobile";
 }> = ({ className, formFactor }) => {
   const classes = useStyles();

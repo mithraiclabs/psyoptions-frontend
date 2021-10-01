@@ -1,7 +1,6 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useMemo } from 'react';
 
 import { styled } from '@material-ui/core';
-import CircularProgress from '@material-ui/core/CircularProgress';
 import Button from '@material-ui/core/Button';
 import Box from '@material-ui/core/Box';
 import moment, { Moment } from 'moment';
@@ -9,7 +8,6 @@ import BigNumber from 'bignumber.js';
 
 import theme from '../../../utils/theme';
 import useSerum from '../../../hooks/useSerum';
-import useNotifications from '../../../hooks/useNotifications';
 import { useImpliedVol } from '../../../hooks/useImpliedVol';
 
 import Loading from '../../Loading';
@@ -17,8 +15,6 @@ import { useSubscribeSerumOrderbook } from '../../../hooks/Serum';
 import { useSubscribeSPLTokenMint } from '../../../hooks/SPLToken';
 import { useOptionMarket } from '../../../hooks/useOptionMarket';
 import { useSerumOrderbooks } from '../../../context/SerumOrderbookContext';
-
-import { useInitializeMarket } from '../../../hooks/useInitializeMarket';
 
 import { TCell, TCellLoading, TCellStrike, TRow } from './styles';
 import { useMarketData } from '../../../context/MarketDataContext';
@@ -90,9 +86,7 @@ const CallPutRow: React.VFC<CallPutRowProps> = ({
   showLastPrice,
   contractSize,
 }) => {
-  const { pushNotification } = useNotifications();
   const { serumMarkets } = useSerum();
-  const initializeMarkets = useInitializeMarket();
   const [orderbooks] = useSerumOrderbooks();
   const callOrderbook = orderbooks[row.call?.serumMarketKey?.toString()];
   const putOrderbook = orderbooks[row.put?.serumMarketKey?.toString()];
@@ -166,55 +160,10 @@ const CallPutRow: React.VFC<CallPutRowProps> = ({
     type: OptionType.PUT,
   });
 
-  const [loading, setLoading] = useState({ call: false, put: false });
-
   const formatStrike = (sp) => {
     if (!sp) return <Empty>{'—'}</Empty>;
     return <span>{round ? sp.toFixed(precision) : sp.toString(10)}</span>;
   };
-
-  const handleInitialize = useCallback(
-    async ({ type }) => {
-      setLoading((prevState) => ({ ...prevState, [type]: true }));
-      try {
-        const ua = type === 'call' ? uAsset : qAsset;
-        const qa = type === 'call' ? qAsset : uAsset;
-        const { call, put } = row;
-
-        let quoteAmountPerContract;
-        let amountPerContract;
-
-        if (type === 'call') {
-          quoteAmountPerContract = put.amountPerContract;
-          amountPerContract = put.quoteAmountPerContract;
-        } else {
-          quoteAmountPerContract = call.amountPerContract;
-          amountPerContract = call.quoteAmountPerContract;
-        }
-
-        await initializeMarkets({
-          amountPerContract,
-          quoteAmountPerContract,
-          uAssetSymbol: ua.tokenSymbol,
-          qAssetSymbol: qa.tokenSymbol,
-          uAssetMint: ua.mintAddress,
-          qAssetMint: qa.mintAddress,
-          uAssetDecimals: ua.decimals,
-          qAssetDecimals: qa.decimals,
-          expiration: date.unix(),
-        });
-      } catch (err) {
-        console.log(err);
-        pushNotification({
-          severity: 'error',
-          message: `${err}`,
-        });
-      } finally {
-        setLoading((prevState) => ({ ...prevState, [type]: false }));
-      }
-    },
-    [uAsset, qAsset, initializeMarkets, date, row, pushNotification],
-  );
 
   const callCellStyle = row.strike?.lte(markPrice)
     ? { backgroundColor: theme.palette.background.tableHighlight }
@@ -251,33 +200,15 @@ const CallPutRow: React.VFC<CallPutRowProps> = ({
   return (
     <TRow hover role="checkbox" tabIndex={-1}>
       <TCell align="left" style={callCellStyle} width={'120px'}>
-        {row.call?.emptyRow ? (
-          ''
-        ) : loading.call ? (
-          <CircularProgress size={32} />
-        ) : row.call?.initialized ? (
+        {row.call?.initialized ? (
           <Button
             variant="outlined"
             color="primary"
-            // p="8px"
             onClick={() => openBuySellModal('call')}
           >
             Buy/Sell
           </Button>
-        ) : (
-          <Button
-            variant="outlined"
-            color="primary"
-            // p="8px"
-            onClick={() =>
-              handleInitialize({
-                type: 'call',
-              })
-            }
-          >
-            Initialize
-          </Button>
-        )}
+        ) : null}
       </TCell>
       {row.call?.serumMarketKey &&
       serumMarkets[row.call.serumMarketKey?.toString()]?.loading ? (
@@ -487,33 +418,15 @@ const CallPutRow: React.VFC<CallPutRowProps> = ({
         </>
       )}
       <TCell align="right" style={putCellStyle} width={'120px'}>
-        {row.put?.emptyRow ? (
-          ''
-        ) : loading.put ? (
-          <CircularProgress size={32} />
-        ) : row.put?.initialized ? (
+        {row.put?.initialized ? (
           <Button
             variant="outlined"
             color="primary"
-            // p="8px"
             onClick={() => openBuySellModal('put')}
           >
             Buy/Sell
           </Button>
-        ) : (
-          <Button
-            variant="outlined"
-            color="primary"
-            // p="8px"
-            onClick={() =>
-              handleInitialize({
-                type: 'put',
-              })
-            }
-          >
-            Initialize
-          </Button>
-        )}
+        ) : null}
       </TCell>
     </TRow>
   );

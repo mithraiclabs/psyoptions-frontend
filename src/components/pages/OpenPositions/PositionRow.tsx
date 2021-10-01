@@ -32,6 +32,12 @@ const useStyles = makeStyles((theme) => ({
     flexDirection: "row",
     alignItems: "center",
   },
+  rowWrap: {
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    flexFlow: "wrap"
+  },
   column: {
     display: "flex",
     flexDirection: "column",
@@ -39,7 +45,6 @@ const useStyles = makeStyles((theme) => ({
   avatar: {
     width: 24,
     height: 24,
-    marginRight: 8,
   },
   dropdownOpen: {
     transform: 'rotate(-180deg)',
@@ -160,20 +165,24 @@ const PositionRow: React.VFC<{
             <Avatar className={classes.avatar} src={uAssetImage}>
               {uAssetSymbol.slice(0, 1)}
             </Avatar>
-            <Box>{uAssetSymbol}</Box>
+            <Box pl={1}>{uAssetSymbol}</Box>
             </Fragment>) : (<Fragment>
               <Avatar className={classes.avatar} src={uAssetImage}>
               {uAssetSymbol.slice(0, 1)}
             </Avatar>
-            <Box className={classes.column}>
-              <Box>{`${uAssetSymbol} | ${optionType}`}</Box>
-              <Box>{`Strike: ${strike}`}</Box>
-              <Box>{`Size: ${contractSize}`}</Box>
-              <Box>{`Qty: ${row.size}`}</Box>
+            <Box className={classes.rowWrap}>
+              <Box pl={formFactor === "mobile" ? 1 : 2} className={classes.column}>
+                <Box>{`${uAssetSymbol} | ${optionType}`}</Box>
+                <Box>{`Strike: ${strike}`}</Box>
+              </Box>
+              <Box pl={formFactor === "mobile" ? 1 : 2} className={classes.column}>
+                <Box>{`Size: ${contractSize}`}</Box>
+                <Box>{`Qty: ${row.size}`}</Box>
+              </Box>
             </Box>
           </Fragment>)}
         </Box>
-        {formFactor === "desktop" && <Fragment><Box pr={1}>
+        {formFactor === "desktop" && <Fragment><Box pl={1} pr={1}>
             {optionType}
           </Box>
           <Box pr={1}>
@@ -193,7 +202,7 @@ const PositionRow: React.VFC<{
           {formatExpirationTimestamp(row.expiration)}
         </Box>
         <Box pr={1}>{`+$0.00`}</Box>
-        <Box className={classes.row}>
+        <Box className={classes.row} justifySelf="center">
           {expired && <Box className={classes.errorColor}>Expired</Box>}
           {!expired && (
             <Box>
@@ -243,7 +252,7 @@ const PositionRow: React.VFC<{
                   <Box/>
                 </Fragment>}
                 <Box pr={1}>{`+$0.00`}</Box>
-                <Box>
+                <Box justifySelf="center">
                   {expired && (
                     <Box className={classes.errorColor}>Expired</Box>
                   )}

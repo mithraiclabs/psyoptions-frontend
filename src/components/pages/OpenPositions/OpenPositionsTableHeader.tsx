@@ -12,7 +12,7 @@ const useStyles = makeStyles((theme) => ({
     fontSize: "14px",
   },
   mobile: {
-    fontSize: "12px",
+    fontSize: "12px !important",
   },
 }));
 
@@ -28,7 +28,7 @@ const OpenPositionsTableHeader: React.VFC<{
       className,
       formFactor === "mobile" && classes.mobile
     )}>
-      <Box pl={formFactor === "mobile" ? 2 : 0}>
+      <Box pl={formFactor === "mobile" ? 2 : formFactor === "tablet" ? 6 : 0}>
         Asset
       </Box>
       {formFactor === "desktop" && <Fragment>
@@ -54,7 +54,7 @@ const OpenPositionsTableHeader: React.VFC<{
       <Box>
         PNL
       </Box>
-      <Box textAlign="left">
+      <Box pl={formFactor === "mobile" ? 2 : 6}>
         Action
       </Box>
     </Box>

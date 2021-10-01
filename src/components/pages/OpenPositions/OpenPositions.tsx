@@ -3,6 +3,7 @@ import {
   makeStyles,
   useMediaQuery
 } from "@material-ui/core";
+import { CSSProperties } from "@material-ui/core/styles/withStyles";
 import React, { useState, useMemo } from 'react';
 import clsx from "clsx";
 import CreateIcon from '@material-ui/icons/Create';
@@ -22,6 +23,18 @@ import { useWrittenOptions } from '../../../hooks/useWrittenOptions';
 import SupportedAssetBalances from '../../SupportedAssetBalances';
 import { PricesProvider } from '../../../context/PricesContext';
 
+const desktopColumns: CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "1fr 1fr 1fr 1fr 1fr 1fr 2fr 1fr 1fr",
+  alignItems: "center",
+};
+
+const mobileColumns: CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "2fr 1.5fr 1fr 1fr",
+  alignItems: "center",
+};
+
 const useStyles = makeStyles((theme) => ({
   root: {
     display: "flex",
@@ -38,21 +51,17 @@ const useStyles = makeStyles((theme) => ({
     justifyContent: "flex-start",
     alignItems: "flex-start",
   },
+  desktopColumns: desktopColumns,
   openPositionsTable: {
-    display: "grid",
-    gridTemplateColumns: "1fr 1fr 1fr 1fr 1fr 1fr 2fr 1fr 1fr",
-    alignItems: "center",
+    ...desktopColumns,
     backgroundColor: theme.palette.background.paper,
     padding: "20px",
     fontSize: "14px",
   },
-  openPositionsTableTablet: {
-    gridTemplateColumns: "2fr 1.5fr 1fr 1fr",
-    fontSize: "10px",
-  },
+  mobileColumns: mobileColumns,
   openPositionsTableMobile: {
-    gridTemplateColumns: "2fr 1.5fr 1fr 1fr",
-    fontSize: "10px",
+    ...mobileColumns,
+    fontSize: "12px",
   },
   openPositionsContainer: {
     display: "flex",
@@ -79,8 +88,8 @@ const useStyles = makeStyles((theme) => ({
 
 const OpenPositions: React.VFC = () => {
   const classes = useStyles();
-  const mobileDevice = !useMediaQuery("(min-width:375px)");
-  const tabletDevice = !useMediaQuery("(min-width:880px)");
+  const mobileDevice = !useMediaQuery("(min-width:376px)");
+  const tabletDevice = !useMediaQuery("(min-width:881px)");
   const { connected } = useWallet();
   const [page] = useState(0);
   const [rowsPerPage] = useState(10);
@@ -88,6 +97,10 @@ const OpenPositions: React.VFC = () => {
   const { markets } = useOptionsMarkets();
   const [selectedTab, setSelectedTab] = useState(0);
   const writtenOptions = useWrittenOptions();
+
+  // #TODO: move this all the way up in the tree
+  const isDesktop = !mobileDevice && !tabletDevice;
+  const formFactor = isDesktop ? 'desktop' : mobileDevice ? 'mobile' : 'tablet';
 
   const positionRows = useMemo(
     () =>
@@ -136,7 +149,7 @@ const OpenPositions: React.VFC = () => {
               onClick={() => setSelectedTab(0)}
             >
               <Box display="flex" flexDirection="row" alignItems="center">
-                {(!mobileDevice && !tabletDevice) && <Box px={1}>
+                {formFactor === "desktop" && <Box px={1}>
                   <BarChartIcon />
                 </Box>}
                 <Box px={1} textAlign="left" lineHeight={'22px'}>
@@ -154,7 +167,7 @@ const OpenPositions: React.VFC = () => {
               onClick={() => setSelectedTab(1)}
             >
               <Box display="flex" flexDirection="row" alignItems="center">
-                {(!mobileDevice && !tabletDevice) && <Box px={1}>
+                {formFactor === "desktop" && <Box px={1}>
                   <CreateIcon fontSize="small" />
                 </Box>}
                 <Box px={1} textAlign="left" lineHeight={'22px'}>
@@ -171,7 +184,12 @@ const OpenPositions: React.VFC = () => {
           {selectedTab === 0 && (
             <Box className={classes.openPositionsContainer}>
               <Heading>Open Positions</Heading>
-              <OpenPositionsTableHeader className={clsx(classes.openPositionsTable, mobileDevice && classes.openPositionsTableMobile, tabletDevice && classes.openPositionsTableTablet)}/>
+              <OpenPositionsTableHeader
+                className={clsx(classes.openPositionsTable,
+                  formFactor === "mobile" && classes.openPositionsTableMobile,
+                  formFactor === "tablet" && classes.mobileColumns)}
+                formFactor={formFactor}
+              />
               {hasOpenPositions && connected ? (
                 positionRows
                   .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
@@ -179,6 +197,9 @@ const OpenPositions: React.VFC = () => {
                     <PositionRow
                       key={row.market.optionMintKey.toString()}
                       row={row}
+                      formFactor={formFactor}
+                      className={clsx(classes.desktopColumns,
+                        !isDesktop && classes.mobileColumns)}
                     />
                   ))
               ) : (

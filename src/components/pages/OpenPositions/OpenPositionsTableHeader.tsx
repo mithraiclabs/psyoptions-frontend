@@ -1,7 +1,6 @@
 import {
   Box,
   makeStyles,
-  useMediaQuery
 } from "@material-ui/core";
 import React, { Fragment } from "react";
 import clsx from "clsx";
@@ -10,17 +9,18 @@ const useStyles = makeStyles((theme) => ({
   root: {},
 }));
 
-const OpenPositionsTableHeader: React.VFC<{ className: any }> = ({ className }) => {
+const OpenPositionsTableHeader: React.VFC<{
+  className: any;
+  formFactor: "desktop" | "tablet" | "mobile";
+}> = ({ className, formFactor }) => {
   const classes = useStyles();
-  const mobileDevice = !useMediaQuery("(min-width:375px)");
-  const tabletDevice = !useMediaQuery("(min-width:880px)");
 
   return (
     <Box className={clsx(classes.root, className)}>
       <Box>
         Asset
       </Box>
-      {(!mobileDevice && !tabletDevice) && <Fragment>
+      {formFactor === "desktop" && <Fragment>
         <Box>
           Type
         </Box>

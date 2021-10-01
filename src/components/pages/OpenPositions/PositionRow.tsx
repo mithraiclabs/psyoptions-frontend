@@ -1,10 +1,13 @@
-import React, { useCallback, useState } from 'react';
-import Box from '@material-ui/core/Box';
-import Collapse from '@material-ui/core/Collapse';
-import Button from '@material-ui/core/Button';
-import Avatar from '@material-ui/core/Avatar';
+import React, { Fragment, useCallback, useState } from 'react';
+import clsx from "clsx";
 import KeyboardArrowDown from '@material-ui/icons/KeyboardArrowDown';
-import { makeStyles, useTheme } from '@material-ui/core/styles';
+import {
+  Avatar,
+  Box,
+  Button,
+  Collapse,
+  makeStyles,
+} from '@material-ui/core';
 import BigNumber from 'bignumber.js';
 
 import ExerciseDialog from './ExerciseDialog';
@@ -16,14 +19,29 @@ import {
 import { OptionMarket, OptionType, TokenAccount } from '../../../types';
 import { usePrices } from '../../../context/PricesContext';
 
-const useStyles = makeStyles({
+const useStyles = makeStyles((theme) => ({
+  root: {},
+  mobile: {
+    fontSize: "10px",
+  },
+  tablet: {
+    fontSize: "12px",
+  },
+  row: {
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+  },
   dropdownOpen: {
     transform: 'rotate(-180deg)',
   },
   dropdownClosed: {
     transform: 'rotate(0)',
   },
-});
+  errorColor: {
+    color: theme.palette.error.main,
+  },
+}));
 
 const PositionRow: React.VFC<{
   row: {
@@ -40,11 +58,12 @@ const PositionRow: React.VFC<{
     amountPerContract: BigNumber;
     quoteAmountPerContract: BigNumber;
   };
-}> = ({ row }) => {
+  className: any;
+  formFactor: "desktop" | "tablet" | "mobile";
+}> = ({ row, className, formFactor }) => {
   const classes = useStyles();
   const [visible, setVisible] = useState(false);
   const { supportedAssets } = useAssetList();
-  const theme = useTheme();
   const { prices } = usePrices();
   const [exerciseDialogOpen, setExerciseDialogOpen] = useState(false);
 
@@ -117,58 +136,56 @@ const PositionRow: React.VFC<{
         role="checkbox"
         tabIndex={-1}
         key={row.market.optionMintKey.toString()}
-        display="flex"
-        flexDirection="row"
-        alignItems="center"
         p={1}
+        className={clsx(classes.root,
+          className,
+          formFactor === "tablet" && classes.tablet,
+          formFactor === "mobile" && classes.mobile)}
       >
         <Box
-          p={1}
+          pr={1}
           pl={2}
-          width="12%"
-          display="flex"
-          flexDirection="row"
-          alignItems="center"
+          className={classes.row}
         >
           <Avatar style={{ width: 24, height: 24 }} src={uAssetImage}>
             {uAssetSymbol.slice(0, 1)}
           </Avatar>
           <Box pl={1}>{uAssetSymbol}</Box>
         </Box>
-        <Box p={1} width="8%">
-          {optionType}
-        </Box>
-        <Box p={1} width="10%">
-          {strike}
-        </Box>
-        <Box p={1} width="10%">
-          {price ? `$${price.toFixed(2)}` : '-'}
-        </Box>
-        <Box p={1} width="10%">
-          {contractSize}
-        </Box>
-        <Box p={1} width="10%">
-          {row.size}
-        </Box>
-        <Box p={1} width="16%">
+        {formFactor === "desktop" && <Fragment><Box pr={1}>
+            {optionType}
+          </Box>
+          <Box pr={1}>
+            {strike}
+          </Box>
+          <Box pr={1}>
+            {price ? `$${price.toFixed(2)}` : '-'}
+          </Box>
+          <Box pr={1}>
+            {contractSize}
+          </Box>
+          <Box pr={1}>
+            {row.size}
+          </Box>
+        </Fragment>}
+        <Box pr={1}>
           {formatExpirationTimestamp(row.expiration)}
         </Box>
-        <Box p={1} width="9%">{`+$0.00`}</Box>
-        <Box p={1} width="10%">
-          {expired && <Box color={theme.palette.error.main}>Expired</Box>}
+        <Box pr={1}>{`+$0.00`}</Box>
+        <Box className={classes.row}>
+          {expired && <Box className={classes.errorColor}>Expired</Box>}
           {!expired && (
             <Box>
               <Button
                 color="primary"
                 variant="outlined"
                 onClick={openExerciseDialog}
+                size={formFactor === "mobile" ? "small" : "large"}
               >
                 Exercise
               </Button>
             </Box>
           )}
-        </Box>
-        <Box width="5%" p={1} pr={2}>
           {row.accounts.length > 1 && (
             <KeyboardArrowDown
               className={
@@ -184,26 +201,30 @@ const PositionRow: React.VFC<{
             {row.accounts.map((account) => (
               <Box
                 key={`${account?.pubKey}`}
-                display="flex"
-                flexDirection="row"
-                alignItems="center"
+                className={clsx(classes.root,
+                  className,
+                  formFactor === "mobile" && classes.mobile,
+                  formFactor === "tablet" && classes.tablet)}
                 p={1}
               >
-                <Box p={1} pl={2} width="12%" />
-                <Box p={1} width="8%" />
-                <Box p={1} width="10%" />
-                <Box p={1} width="10%" />
-                <Box p={1} width="10%">
-                  {contractSize}
+                {formFactor === "desktop" && <Fragment><Box/>
+                  <Box/>
+                  <Box/>
+                  <Box/>
+                </Fragment>}
+                <Box pr={1}>
+                  {formFactor === "desktop" ? contractSize : `Size: ${contractSize}`}
                 </Box>
-                <Box p={1} width="10%">
-                  {account.amount}
+                <Box pr={1}>
+                {formFactor === "desktop" ? account.amount : `Qty: ${account.amount}`}
                 </Box>
-                <Box p={1} width="16%" />
-                <Box p={1} width="9%">{`+$0.00`}</Box>
-                <Box p={1} width="10%">
+                {formFactor === "desktop" && <Fragment>
+                  <Box/>
+                </Fragment>}
+                <Box pr={1}>{`+$0.00`}</Box>
+                <Box>
                   {expired && (
-                    <Box color={theme.palette.error.main}>Expired</Box>
+                    <Box className={classes.errorColor}>Expired</Box>
                   )}
                   {!expired && (
                     <Box>
@@ -211,13 +232,13 @@ const PositionRow: React.VFC<{
                         color="primary"
                         variant="outlined"
                         onClick={openExerciseDialog}
+                        size={formFactor === "mobile" ? "small" : "large"}
                       >
                         Exercise
                       </Button>
                     </Box>
                   )}
                 </Box>
-                <Box width="5%" p={1} pr={2} />
               </Box>
             ))}
           </Box>

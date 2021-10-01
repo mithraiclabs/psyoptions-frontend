@@ -17,7 +17,7 @@ const OpenPositionsTableHeader: React.VFC<{
 
   return (
     <Box className={clsx(classes.root, className)}>
-      <Box>
+      <Box pl={formFactor === "mobile" ? 2 : 0}>
         Asset
       </Box>
       {formFactor === "desktop" && <Fragment>

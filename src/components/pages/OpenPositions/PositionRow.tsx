@@ -32,6 +32,15 @@ const useStyles = makeStyles((theme) => ({
     flexDirection: "row",
     alignItems: "center",
   },
+  column: {
+    display: "flex",
+    flexDirection: "column",
+  },
+  avatar: {
+    width: 24,
+    height: 24,
+    marginRight: 8,
+  },
   dropdownOpen: {
     transform: 'rotate(-180deg)',
   },
@@ -144,13 +153,25 @@ const PositionRow: React.VFC<{
       >
         <Box
           pr={1}
-          pl={2}
+          pl={1}
           className={classes.row}
         >
-          <Avatar style={{ width: 24, height: 24 }} src={uAssetImage}>
-            {uAssetSymbol.slice(0, 1)}
-          </Avatar>
-          <Box pl={1}>{uAssetSymbol}</Box>
+          {formFactor === "desktop" ? (<Fragment>
+            <Avatar className={classes.avatar} src={uAssetImage}>
+              {uAssetSymbol.slice(0, 1)}
+            </Avatar>
+            <Box>{uAssetSymbol}</Box>
+            </Fragment>) : (<Fragment>
+              <Avatar className={classes.avatar} src={uAssetImage}>
+              {uAssetSymbol.slice(0, 1)}
+            </Avatar>
+            <Box className={classes.column}>
+              <Box>{`${uAssetSymbol} | ${optionType}`}</Box>
+              <Box>{`Strike: ${strike}`}</Box>
+              <Box>{`Size: ${contractSize}`}</Box>
+              <Box>{`Qty: ${row.size}`}</Box>
+            </Box>
+          </Fragment>)}
         </Box>
         {formFactor === "desktop" && <Fragment><Box pr={1}>
             {optionType}

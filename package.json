@@ -81,6 +81,7 @@
     "bn.js": "^5.2.0",
     "buffer": "6.0.1",
     "buffer-layout": "^1.2.0",
+    "clsx": "^1.1.1",
     "cookie": "^0.4.1",
     "cookie-parser": "^1.4.5",
     "date-fns": "^2.23.0",

@@ -7,7 +7,6 @@ import TableBody from '@material-ui/core/TableBody';
 import TableContainer from '@material-ui/core/TableContainer';
 
 import useWallet from '../../hooks/useWallet';
-import { useSerumOpenOrders } from '../../context/SerumOpenOrdersContext';
 
 import ConnectButton from '../ConnectButton';
 import UnsettledBalancesRow from './UnsettledBalancesRow';
@@ -20,28 +19,11 @@ const UnsettledBalancesTable: React.FC<{
   qAssetDecimals: number;
 }> = ({ optionMarkets, uAssetDecimals, qAssetDecimals }) => {
   const { connected } = useWallet();
-  const [serumOpenOrders] = useSerumOpenOrders();
-
-  const hasUnsettled = Object.values(serumOpenOrders)
-    .map((serumMarketAddress) => {
-      return !!serumMarketAddress?.hasUnsettled;
-    })
-    .includes(true);
-
-  // Don't show if not connected or has no unsettled
-  if (!connected || !hasUnsettled) {
-    return null;
-  }
 
   // filters out non-initialized serum markets
-  const existingMarketsArray = optionMarkets
-    .map((optionMarket) => {
-      if (optionMarket?.serumMarketKey) {
-        return optionMarket;
-      }
-      return undefined;
-    })
-    .filter((item) => !!item);
+  const existingMarketsArray = optionMarkets.filter(
+    (optionMarket) => !!optionMarket?.serumMarketKey,
+  );
 
   return (
     <Box mt={'20px'}>

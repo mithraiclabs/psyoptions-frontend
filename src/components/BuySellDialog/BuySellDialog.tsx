@@ -247,7 +247,7 @@ const BuySellDialog: React.VFC<{
           feeRate:
             orderType === 'market' ||
             parsedLimitPrice.isLessThanOrEqualTo(orderbook?.bids?.[0]?.price)
-              ? serumFeeRates?.taker
+              ? (serumFeeRates?.taker ?? 0) * 2
               : undefined,
         },
         uAsset: {
@@ -313,7 +313,7 @@ const BuySellDialog: React.VFC<{
           feeRate:
             orderType === 'market' ||
             parsedLimitPrice.isGreaterThanOrEqualTo(orderbook?.asks?.[0]?.price)
-              ? serumFeeRates?.taker
+              ? (serumFeeRates?.taker ?? 0) * 2
               : undefined,
         },
       });
@@ -536,18 +536,26 @@ const BuySellDialog: React.VFC<{
                   </Box>
                   <Box alignSelf="flex-start" pt={1} pb={2}>
                     Breakeven:{' $'}
-                    {orderSize ? (orderType === 'market' ? calculateBreakevenForMarketOrder(
-                      strike.toNumber(),
-                      type === 'call' ? amountPerContract.toNumber() : quoteAmountPerContract.toNumber(),
-                      orderSize,
-                      orderbook?.asks ?? [],
-                      type === 'put',
-                    ) : calculateBreakevenForLimitOrder(
-                      strike.toNumber(),
-                      type === 'call' ? amountPerContract.toNumber() : quoteAmountPerContract.toNumber(),
-                      parsedLimitPrice.toNumber(),
-                      type === 'put',
-                    )) : '-'}
+                    {orderSize
+                      ? orderType === 'market'
+                        ? calculateBreakevenForMarketOrder(
+                            strike.toNumber(),
+                            type === 'call'
+                              ? amountPerContract.toNumber()
+                              : quoteAmountPerContract.toNumber(),
+                            orderSize,
+                            orderbook?.asks ?? [],
+                            type === 'put',
+                          )
+                        : calculateBreakevenForLimitOrder(
+                            strike.toNumber(),
+                            type === 'call'
+                              ? amountPerContract.toNumber()
+                              : quoteAmountPerContract.toNumber(),
+                            parsedLimitPrice.toNumber(),
+                            type === 'put',
+                          )
+                      : '-'}
                   </Box>
                   <Box
                     py={2}

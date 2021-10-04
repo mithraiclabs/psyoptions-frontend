@@ -78,7 +78,7 @@ const UnsettledRow = ({
         <TxButton
           variant="outlined"
           color="primary"
-          onClick={() => handleSettleFunds()}
+          onClick={handleSettleFunds}
           loading={loading}
         >
           {loading ? 'Settling Funds' : 'Settle Funds'}

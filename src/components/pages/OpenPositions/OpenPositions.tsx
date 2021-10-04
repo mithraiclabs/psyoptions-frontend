@@ -45,17 +45,6 @@ const useStyles = makeStyles((theme) => ({
     gridTemplateColumns: "2fr 1.5fr 1fr 1fr",
     alignItems: "center",
   },
-  emptySVGContainer: {
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    flexDirection: "column",
-    padding: theme.spacing(3),
-    flexGrow: 1,
-  },
-  writtenOptionsContainer: {
-    backgroundColor: theme.palette.background.medium,
-  },
 }));
 
 export type Position = {
@@ -165,23 +154,19 @@ const OpenPositions: React.VFC = () => {
             </TabCustom>
           </Box>
           {selectedTab === 0 && (
-            <Box>
-              <OpenPositionsTable
-                positions={positionRows}
-                formFactor={formFactor}
-                className={clsx(classes.desktopColumns,
-                  !isDesktop && classes.mobileColumns)}
-              />
-            </Box>
+            <OpenPositionsTable
+              positions={positionRows}
+              formFactor={formFactor}
+              className={clsx(classes.desktopColumns,
+                !isDesktop && classes.mobileColumns)}
+            />
           )}
           {selectedTab === 1 && (
-            <Box className={classes.writtenOptionsContainer}>
-              <WrittenOptionsTable
-                formFactor={formFactor}
-                className={clsx(classes.desktopColumns,
-                  !isDesktop && classes.mobileColumns)}
-              />
-            </Box>
+            <WrittenOptionsTable
+              formFactor={formFactor}
+              className={clsx(classes.desktopColumns,
+                !isDesktop && classes.mobileColumns)}
+            />
           )}
         </Box>
       </Page>

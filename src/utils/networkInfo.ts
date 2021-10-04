@@ -17,7 +17,7 @@ export type Network = {
   name: ClusterName;
   url: string;
   fallbackUrl: string;
-  programId: string;
+  programId: string | undefined;
   wsEndpoint?: string;
   serumReferrerIds: Record<string, PublicKey>;
 };
@@ -30,7 +30,7 @@ const networks: Network[] = [
     url: 'https://lokidfxnwlabdq.main.genesysgo.net:8899',
     fallbackUrl: clusterApiUrl('mainnet-beta'),
     wsEndpoint: 'wss://lokidfxnWLaBDQ.main.genesysgo.net:8900',
-    programId: process.env.MAINNET_PROGRAM_ID,
+    programId: process.env.NEXT_PUBLIC_MAINNET_PROGRAM_ID,
     serumReferrerIds: {
       EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v: new PublicKey(
         'CzuipkNnvG4JaTQPjgAseWLNhLZFYxMcYpd2G8hDLHco',
@@ -42,7 +42,7 @@ const networks: Network[] = [
     url: 'https://psytrbhymqlkfrhudd.dev.genesysgo.net:8899',
     fallbackUrl: clusterApiUrl('devnet'),
     wsEndpoint: 'wss://psytrbhymqlkfrhudd.dev.genesysgo.net:8900',
-    programId: process.env.DEVNET_PROGRAM_ID,
+    programId: process.env.NEXT_PUBLIC_DEVNET_PROGRAM_ID,
     serumReferrerIds: {
       E6Z6zLzk8MWY3TY8E87mr88FhGowEPJTeMWzkqtL6qkF: new PublicKey(
         '4wpxNqqAqLtZscg1VZWnnBTQnzJSc42HtSitjpLfm3jz',
@@ -53,14 +53,14 @@ const networks: Network[] = [
     name: ClusterName.testnet,
     url: clusterApiUrl('testnet'),
     fallbackUrl: clusterApiUrl('testnet'),
-    programId: process.env.TESTNET_PROGRAM_ID,
+    programId: process.env.NEXT_PUBLIC_TESTNET_PROGRAM_ID,
     serumReferrerIds: {},
   },
   {
     name: ClusterName.localhost,
     url: 'http://127.0.0.1:8899',
     fallbackUrl: 'http://127.0.0.1:8899',
-    programId: process.env.LOCAL_PROGRAM_ID,
+    programId: process.env.NEXT_PUBLIC_LOCAL_PROGRAM_ID,
     serumReferrerIds: {},
   },
 ];
@@ -97,19 +97,21 @@ export const getReferralId = async (
 const getDexProgramKeyByNetwork = (name: ClusterName) => {
   switch (name) {
     case 'Mainnet':
-      return MARKETS.find(({ deprecated }) => !deprecated).programId;
+      return MARKETS.find(({ deprecated }) => !deprecated)?.programId;
     case 'Devnet':
-      return new PublicKey(process.env.DEVNET_DEX_PROGRAM_ID);
+      return new PublicKey(process.env.NEXT_PUBLIC_DEVNET_DEX_PROGRAM_ID ?? '');
     case 'Testnet':
       // NOTE THIS WILL NOT WORK BECUASE THERE IS NO SERUM DEX DEPLOYED TO TESTNET
-      return new PublicKey(process.env.TESTNET_DEX_PROGRAM_ID);
+      return new PublicKey(
+        process.env.NEXT_PUBLIC_TESTNET_DEX_PROGRAM_ID ?? '',
+      );
     case 'localhost':
       // TODO fix this when we can work through the issues with Serum locally
       // NOTE THIS WILL NOT WORK LOCALLY (fix the commented out section)
       // const serumDexKeyBuffer = fs.readFileSync(ScriptHelpers.serumDexProgramKeypair);
       // const dexProgramAccount = new Account(JSON.parse(serumDexKeyBuffer));
       // const dexProgramId = dexProgramAccount.publicKey;
-      return new PublicKey(process.env.LOCAL_DEX_PROGRAM_ID);
+      return new PublicKey(process.env.NEXT_PUBLIC_LOCAL_DEX_PROGRAM_ID ?? '');
     default:
       return undefined;
   }

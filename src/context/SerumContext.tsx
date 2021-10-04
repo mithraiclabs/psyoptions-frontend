@@ -1,19 +1,19 @@
 import React, { useState, createContext, useContext } from 'react';
 import { LocalSerumMarket } from '../types';
 
-type ContextProps = {
+export type SerumContextType = {
   serumMarkets: Record<string, LocalSerumMarket>;
   setSerumMarkets: React.Dispatch<
     React.SetStateAction<Record<string, LocalSerumMarket>>
   >;
 };
 
-const SerumContext = createContext<ContextProps>({
+const SerumContext = createContext<SerumContextType>({
   serumMarkets: {},
-  setSerumMarkets: undefined,
+  setSerumMarkets: () => {},
 });
 
-export const useSerumContext = () => useContext(SerumContext);
+export const useSerumContext = (): SerumContextType => useContext(SerumContext);
 
 const initSerumMarkets: Record<string, LocalSerumMarket> = {};
 

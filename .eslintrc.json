@@ -2,10 +2,9 @@
   "env": {
     "browser": true,
     "es2021": true,
-    "node": true,
-    "jest/globals": true
+    "node": true
   },
-  "extends": ["plugin:react/recommended", "airbnb", "prettier"],
+  "extends": ["next/core-web-vitals", "prettier"],
   "ignorePatterns": ["dist", "scripts"],
   "parserOptions": {
     "ecmaFeatures": {
@@ -14,7 +13,6 @@
     "ecmaVersion": 12,
     "sourceType": "module"
   },
-  "plugins": ["react", "react-hooks", "jest"],
   "rules": {
     "import/prefer-default-export": "off",
     "no-console": "off",

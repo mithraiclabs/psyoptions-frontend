@@ -6,6 +6,7 @@ import {
 } from '@mithraic-labs/psy-american';
 import {
   PublicKey,
+  Signer,
   Transaction,
   TransactionInstruction,
 } from '@solana/web3.js';
@@ -182,10 +183,14 @@ export const mintInstructions = async (
   program?: Program,
 ): Promise<InstructionResponse> => {
   const transaction = new Transaction();
-  let mintInstruction: TransactionInstruction;
+  let mintInstruction: TransactionInstruction | null = null;
 
   // Handle backwards compatibility for the old PsyOptions version
-  if (PSY_AMERICAN_PROGRAM_IDS[programId.toString()] === ProgramVersions.V1) {
+  if (
+    PSY_AMERICAN_PROGRAM_IDS[
+      programId.toString() as keyof typeof PSY_AMERICAN_PROGRAM_IDS
+    ] === ProgramVersions.V1
+  ) {
     mintInstruction = await mintCoveredCallInstruction({
       authorityPubkey,
       programId,
@@ -210,11 +215,12 @@ export const mintInstructions = async (
       uiOptionMarketToProtocolOptionMarket(market),
     ));
   }
-
-  transaction.add(mintInstruction);
+  if (mintInstruction) {
+    transaction.add(mintInstruction);
+  }
   // Not sure if we should add the authoirtyPubkey to signers or if it's safe to
   //  make the assumption that the authority is the wallet.
-  const signers = [];
+  const signers: Signer[] = [];
 
   return { transaction, signers };
 };
@@ -245,9 +251,8 @@ export const createMissingAccountsAndMint = async ({
   program?: Program;
 }): Promise<Result<CreateMissingMintAccountsRes, InstructionErrorResponse>> => {
   const transaction = new Transaction();
-  let signers = [];
+  let signers: Signer[] = [];
 
-  // TODO fix typescript yelling with Either or Option return type from create missing accounts
   const { response, error } = await createMissingMintAccounts({
     owner,
     market,
@@ -258,7 +263,7 @@ export const createMissingAccountsAndMint = async ({
     writerTokenDestinationKey,
     numberOfContractsToMint,
   });
-  if (error) {
+  if (error || !response) {
     return { error };
   }
   const {

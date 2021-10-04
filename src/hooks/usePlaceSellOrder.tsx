@@ -59,6 +59,9 @@ const usePlaceSellOrder = (
       mintedOptionDestinationKey,
       writerTokenDestinationKey,
     }: PlaceSellOrderArgs) => {
+      if (!connection) {
+        return;
+      }
       try {
         const mintTX = new Transaction();
         let mintSigners = [];

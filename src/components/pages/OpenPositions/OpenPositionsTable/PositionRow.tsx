@@ -10,14 +10,14 @@ import {
 } from '@material-ui/core';
 import BigNumber from 'bignumber.js';
 
-import ExerciseDialog from './ExerciseDialog';
-import useAssetList from '../../../hooks/useAssetList';
+import ExerciseDialog from '../ExerciseDialog';
+import useAssetList from '../../../../hooks/useAssetList';
 import {
   formatExpirationTimestamp,
   formatExpirationTimestampDate,
-} from '../../../utils/format';
-import { OptionMarket, OptionType, TokenAccount } from '../../../types';
-import { usePrices } from '../../../context/PricesContext';
+} from '../../../../utils/format';
+import { OptionMarket, OptionType, TokenAccount } from '../../../../types';
+import { usePrices } from '../../../../context/PricesContext';
 
 const useStyles = makeStyles((theme) => ({
   root: {},

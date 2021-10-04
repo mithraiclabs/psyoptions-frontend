@@ -18,17 +18,6 @@ const useStyles = makeStyles((theme) => ({
     backgroundColor: theme.palette.background.medium,
     minHeight: "514px",
   },
-  mobile: {
-    fontSize: "12px !important",
-  },
-  noOptionsBox: {
-    color: theme.palette.border.main,
-  },
-  headerColumns: {
-    backgroundColor: theme.palette.background.paper,
-    padding: "20px",
-    fontSize: "14px",
-  },
   emptySVGContainer: {
     display: "flex",
     justifyContent: "center",

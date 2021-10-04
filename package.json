@@ -39,6 +39,7 @@
     "eslint-config-prettier": "^8.1.0",
     "eslint-plugin-jest": "^24.4.0",
     "eslint-plugin-prettier": "^4.0.0",
+    "eslint-plugin-tsc": "^2.0.0",
     "husky": "^4.2.3",
     "jest": "^26.6.3",
     "js-yaml": "^4.0.0",
@@ -116,12 +117,13 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "lint-staged && yarn type-check"
+      "pre-commit": "lint-staged"
     }
   },
   "lint-staged": {
     "**/*.{js,jsx,ts,tsx}": [
-      "eslint"
+      "eslint --fix --plugin tsc --rule 'tsc/config: [2, {configFile: \"./tsconfig.json\"}]'",
+      "git add"
     ]
   }
 }

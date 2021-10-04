@@ -63,7 +63,7 @@ export type Position = {
   quoteAmountPerContract: BigNumber;
 };
 
-const OpenPositions: React.VFC = () => {
+const Portfolio: React.VFC = () => {
   const classes = useStyles();
   const mobileDevice = !useMediaQuery("(min-width:376px)");
   const tabletDevice = !useMediaQuery("(min-width:881px)");
@@ -174,4 +174,4 @@ const OpenPositions: React.VFC = () => {
   );
 };
 
-export default OpenPositions;
+export default Portfolio;

@@ -11,7 +11,7 @@ import Landing from './pages/Landing';
 import LandingComingSoon from './pages/LandingComingSoon';
 import Mint from './pages/Mint';
 import InitializeMarket from './pages/InitializeMarket';
-import OpenPositions from './pages/OpenPositions';
+import Portfolio from './pages/Portfolio';
 import History from './pages/History';
 import Markets from './pages/Markets';
 import Faucets from './pages/Faucets';
@@ -89,7 +89,7 @@ const Routes: React.FC<any> = (props) => {
           <Mint />
         </Route>
         <Route exact path="/portfolio">
-          <OpenPositions />
+          <Portfolio />
         </Route>
         <Route exact path="/faucets">
           <Faucets />

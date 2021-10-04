@@ -8,7 +8,7 @@ import { Heading } from '../Heading';
 import EmptySvg from '../EmptySvg';
 import OpenPositionsTableHeader from './OpenPositionsTableHeader';
 import PositionRow from './PositionRow';
-import { Position } from '../OpenPositions';
+import { Position } from '../Portfolio';
 
 const useStyles = makeStyles((theme) => ({
   root: {

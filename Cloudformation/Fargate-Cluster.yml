@@ -150,8 +150,6 @@ Resources:
           Environment:
             - Name: PORT
               Value: !Ref ContainerPort
-            - Name: NEXT_PUBLIC_APP_ENABLED
-              Value: true
             - Name: NEXT_PUBLIC_INITIALIZE_PAGE_ENABLED
               Value: !If [ShowInitPage, true, false]
             - Name: NEXT_PUBLIC_DEVNET_PROGRAM_ID

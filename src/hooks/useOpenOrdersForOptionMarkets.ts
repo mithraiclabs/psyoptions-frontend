@@ -8,10 +8,14 @@ import useWallet from './useWallet';
 /**
  * Get open orders for a user for option market keys
  *
- * @returns OpenOrders[]
+ * @returns { openOrders: OpenOrders[]; loadingOpenOrders: boolean; }
  */
-export const useOpenOrdersForOptionMarkets = () => {
+export const useOpenOrdersForOptionMarkets = (): {
+  openOrders: OpenOrders[];
+  loadingOpenOrders: boolean;
+} => {
   const [openOrders, setOpenOrders] = useState([] as OpenOrders[]);
+  const [loadingOpenOrders, setLoadingOpenOrders] = useState(false);
   const program = useAmericanPsyOptionsProgram();
   const { dexProgramId } = useConnection();
   const { pubKey } = useWallet();
@@ -19,6 +23,7 @@ export const useOpenOrdersForOptionMarkets = () => {
   useEffect(() => {
     (async () => {
       if (!program || !dexProgramId || !pubKey) return;
+      setLoadingOpenOrders(true);
       const optionMarketWithKeys = await getAllOptionAccounts(program);
       const keys = optionMarketWithKeys.map(marketInfo => marketInfo.key);
 
@@ -28,10 +33,12 @@ export const useOpenOrdersForOptionMarkets = () => {
         keys,
       );
 
+      setLoadingOpenOrders(false);
+      
       // #TODO: remove as any
       setOpenOrders(orders as any);
     })();
   }, [program, dexProgramId, pubKey]);
 
-  return { openOrders };
+  return { openOrders, loadingOpenOrders };
 };

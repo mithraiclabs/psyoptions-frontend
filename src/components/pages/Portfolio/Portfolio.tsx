@@ -68,7 +68,7 @@ const Portfolio: React.VFC = () => {
   const mobileDevice = !useMediaQuery("(min-width:376px)");
   const tabletDevice = !useMediaQuery("(min-width:881px)");
   const positions = useOpenPositions();
-  const { markets } = useOptionsMarkets();
+  const { marketsByUiKey } = useOptionsMarkets();
   const [selectedTab, setSelectedTab] = useState(0);
   const writtenOptions = useWrittenOptions();
 
@@ -81,26 +81,26 @@ const Portfolio: React.VFC = () => {
       Object.keys(positions)
         .map((key) => ({
           accounts: positions[key],
-          assetPair: `${markets[key]?.uAssetSymbol}-${markets[key]?.qAssetSymbol}`,
-          expiration: markets[key]?.expiration,
+          assetPair: `${marketsByUiKey[key]?.uAssetSymbol}-${marketsByUiKey[key]?.qAssetSymbol}`,
+          expiration: marketsByUiKey[key]?.expiration,
           size: positions[key]?.reduce(
             (acc, tokenAccount) => acc + tokenAccount.amount,
             0,
           ),
-          strike: markets[key]?.strike,
-          strikePrice: markets[key]?.strikePrice,
-          market: markets[key],
-          qAssetMintAddress: markets[key]?.qAssetMint,
-          uAssetMintAddress: markets[key]?.uAssetMint,
-          qAssetSymbol: markets[key]?.qAssetSymbol,
-          uAssetSymbol: markets[key]?.uAssetSymbol,
-          amountPerContract: markets[key]?.amountPerContract,
-          quoteAmountPerContract: markets[key]?.quoteAmountPerContract,
+          strike: marketsByUiKey[key]?.strike,
+          strikePrice: marketsByUiKey[key]?.strikePrice,
+          market: marketsByUiKey[key],
+          qAssetMintAddress: marketsByUiKey[key]?.qAssetMint,
+          uAssetMintAddress: marketsByUiKey[key]?.uAssetMint,
+          qAssetSymbol: marketsByUiKey[key]?.qAssetSymbol,
+          uAssetSymbol: marketsByUiKey[key]?.uAssetSymbol,
+          amountPerContract: marketsByUiKey[key]?.amountPerContract,
+          quoteAmountPerContract: marketsByUiKey[key]?.quoteAmountPerContract,
         }))
         .sort((rowA, rowB) => {
           return rowB?.expiration - rowA?.expiration;
         }),
-    [positions, markets],
+    [positions, marketsByUiKey],
   );
 
   const writtenOptionKeys = useMemo(

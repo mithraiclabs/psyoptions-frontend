@@ -9,13 +9,13 @@ import useOwnedTokenAccounts from './useOwnedTokenAccounts';
  * Note that the market key will contain an array of token accounts
  */
 const useOpenPositions = (): Record<string, TokenAccount[]> => {
-  const { markets } = useOptionsMarkets();
+  const { marketsByUiKey } = useOptionsMarkets();
   const { ownedTokenAccounts } = useOwnedTokenAccounts();
 
   return useMemo(() => {
-    const positions = Object.keys(markets).reduce((acc, marketKey) => {
+    const positions = Object.keys(marketsByUiKey).reduce((acc, marketKey) => {
       const accountsWithHoldings = ownedTokenAccounts[
-        markets[marketKey].optionMintKey.toString()
+        marketsByUiKey[marketKey].optionMintKey.toString()
       ]?.filter((optionTokenAcct) => optionTokenAcct.amount > 0);
       if (accountsWithHoldings?.length) {
         acc[marketKey] = accountsWithHoldings;
@@ -23,7 +23,7 @@ const useOpenPositions = (): Record<string, TokenAccount[]> => {
       return acc;
     }, {});
     return positions;
-  }, [markets, ownedTokenAccounts]);
+  }, [marketsByUiKey, ownedTokenAccounts]);
 };
 
 export default useOpenPositions;

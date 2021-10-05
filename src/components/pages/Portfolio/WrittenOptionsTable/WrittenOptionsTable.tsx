@@ -50,7 +50,7 @@ const WrittenOptionsTable: React.VFC<{
   const { connected } = useWallet();
   const positions = useOpenPositions();
   const writtenOptions = useWrittenOptions();
-  const { markets } = useOptionsMarkets();
+  const { marketsByUiKey } = useOptionsMarkets();
   const nowInSeconds = Date.now() / 1000;
 
   // TODO - Add user-configurable sort order
@@ -58,11 +58,11 @@ const WrittenOptionsTable: React.VFC<{
   const writtenOptionKeys = useMemo(
     () =>
       Object.keys(writtenOptions).sort((keyA, keyB) => {
-        const marketA = markets[keyA];
-        const marketB = markets[keyB];
+        const marketA = marketsByUiKey[keyA];
+        const marketB = marketsByUiKey[keyB];
         return marketB?.expiration - marketA?.expiration;
       }),
-    [writtenOptions, markets],
+    [writtenOptions, marketsByUiKey],
   );
 
   return (
@@ -115,7 +115,7 @@ const WrittenOptionsTable: React.VFC<{
       ) : (
         <Box>
           {writtenOptionKeys.map((marketKey) => {
-            const market = markets[marketKey];
+            const market = marketsByUiKey[marketKey];
             const heldContracts = positions[marketKey]
               ? positions[marketKey].filter((position) => position.amount > 0)
               : [];

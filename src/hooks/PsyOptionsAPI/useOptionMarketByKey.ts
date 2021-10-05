@@ -5,10 +5,10 @@ import useOptionsMarkets from '../useOptionsMarkets';
 export const useOptionMarketByKey = (
   optionMarketUiKey: string | undefined,
 ): OptionMarket | undefined => {
-  const { markets } = useOptionsMarkets();
+  const { marketsByUiKey } = useOptionsMarkets();
 
   return useMemo(
-    () => markets[optionMarketUiKey],
-    [markets, optionMarketUiKey],
+    () => marketsByUiKey[optionMarketUiKey],
+    [marketsByUiKey, optionMarketUiKey],
   );
 };

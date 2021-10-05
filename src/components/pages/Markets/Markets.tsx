@@ -520,7 +520,7 @@ const Markets: React.VFC = () => {
               </Table>
             </TableContainer>
             <Box>
-              <OpenOrders optionMarkets={marketsFlat} />
+              <OpenOrders />
             </Box>
             <Box id="unsettled-balances-table">
               <UnsettledBalancesTable

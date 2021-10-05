@@ -82,7 +82,7 @@ const WrittenOptionRow: React.VFC<{
   const classes = useStyles();
   const { supportedAssets } = useAssetList();
   const { ownedTokenAccounts } = useOwnedTokenAccounts();
-  const { markets } = useOptionsMarkets();
+  const { marketsByUiKey } = useOptionsMarkets();
   const [claimQuoteVisible, setClaimQuoteVisible] = useState(false);
   const [closeWrittenOptionsVisible, setCloseWrittenOptionsVisible] =
     useState(false);
@@ -90,7 +90,7 @@ const WrittenOptionRow: React.VFC<{
     closeWrittenOptionsPreExpiryVisible,
     setCloseWrittenOptionsPreExpiryVisible,
   ] = useState(false);
-  const market = markets[marketKey];
+  const market = marketsByUiKey[marketKey];
   const [quoteVaultAmount, underlyingVaultAmount] = useOptionVaultAmounts(
     market.quoteAssetMintKey,
     market.quoteAssetPoolKey,

@@ -35,7 +35,7 @@ const useOptionsMarkets = () => {
   const { connection, dexProgramId, endpoint } = useConnection();
   const { splTokenAccountRentBalance } = useSolanaMeta();
   const { sendTransaction } = useSendTransaction();
-  const { markets, setMarkets, marketsLoading, setMarketsLoading } = useContext(
+  const { marketsByUiKey, setMarkets, marketsLoading, setMarketsLoading } = useContext(
     OptionsMarketsContext,
   );
   const { supportedAssets } = useAssetList();
@@ -241,37 +241,37 @@ const useOptionsMarkets = () => {
     ({ uAssetSymbol, qAssetSymbol }) => {
       const keyPart = `-${uAssetSymbol}-${qAssetSymbol}-`;
 
-      const sizes = Object.keys(markets)
+      const sizes = Object.keys(marketsByUiKey)
         .filter((key) => key.match(keyPart))
-        .map((key) => markets[key].size);
+        .map((key) => marketsByUiKey[key].size);
 
       return [...new Set(sizes)];
     },
-    [markets],
+    [marketsByUiKey],
   );
 
   const getSizesWithDate = useCallback(
     ({ uAssetSymbol, qAssetSymbol, date }) => {
       const keyPart = `${date}-${uAssetSymbol}-${qAssetSymbol}-`;
 
-      const sizes = Object.keys(markets)
+      const sizes = Object.keys(marketsByUiKey)
         .filter((key) => key.match(keyPart))
-        .map((key) => markets[key].size);
+        .map((key) => marketsByUiKey[key].size);
 
       return [...new Set(sizes)];
     },
-    [markets],
+    [marketsByUiKey],
   );
 
   const getStrikePrices = ({ uAssetSymbol, qAssetSymbol, date, size }) => {
     const keyPart = `${date}-${uAssetSymbol}-${qAssetSymbol}-${size}-`;
-    return Object.keys(markets)
+    return Object.keys(marketsByUiKey)
       .filter((key) => key.match(keyPart))
-      .map((key) => markets[key].strikePrice);
+      .map((key) => marketsByUiKey[key].strikePrice);
   };
 
   const getDates = () => {
-    const dates = Object.values(markets).map((m: OptionMarket) => m.expiration);
+    const dates = Object.values(marketsByUiKey).map((m: OptionMarket) => m.expiration);
     const deduped = [...new Set(dates)];
     return deduped;
   };
@@ -348,7 +348,7 @@ const useOptionsMarkets = () => {
     const qAssetSymbol = qAsset.tokenSymbol;
 
     const marketData =
-      markets[`${date}-${uAssetSymbol}-${qAssetSymbol}-${size}-${price}`];
+      marketsByUiKey[`${date}-${uAssetSymbol}-${qAssetSymbol}-${size}-${price}`];
 
     // Fallback to first oowned minted option account
     const mintedOptionDestAddress =
@@ -389,7 +389,7 @@ const useOptionsMarkets = () => {
   };
 
   return {
-    markets,
+    marketsByUiKey,
     marketsLoading,
     setMarkets,
     setMarketsLoading,

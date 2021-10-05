@@ -78,7 +78,7 @@ const LandingCard = ({
 
 const Landing = () => {
   const history = useHistory();
-  const { markets } = useOptionsMarkets();
+  const { marketsByUiKey } = useOptionsMarkets();
   const positions = useOpenPositions();
   const { logoH1 } = useStyles();
   const { landingCard } = useStyles();
@@ -158,9 +158,9 @@ const Landing = () => {
           </Box>
           <Box display="flex" flexDirection={['column', 'row', 'row']}>
             <LandingCard
-              title={`${Object.keys(markets).length}`}
+              title={`${Object.keys(marketsByUiKey).length}`}
               text={`Options Market${
-                Object.keys(markets).length === 1 ? '' : 's'
+                Object.keys(marketsByUiKey).length === 1 ? '' : 's'
               } Created`}
               button={
                 <Button

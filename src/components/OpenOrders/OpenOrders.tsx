@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect } from 'react';
 import Box from '@material-ui/core/Box';
 import Table from '@material-ui/core/Table';
 import TableHead from '@material-ui/core/TableHead';
@@ -11,34 +11,19 @@ import {
 } from '../../context/SerumOpenOrdersContext';
 
 import ConnectButton from '../ConnectButton';
-import OpenOrdersForMarket from './OpenOrdersForMarket';
 import { TCell, THeadCell } from './OpenOrderStyles';
 import Loading from '../Loading';
 import { useOpenOrdersForOptionMarkets } from '../../hooks/useOpenOrdersForOptionMarkets';
-import { CallOrPut } from '../../types';
 
 // Render all open orders for all optionMarkets specified in props
-const OpenOrders: React.FC<{
-  optionMarkets: CallOrPut[]
-}> = ({ optionMarkets }) => {
+const OpenOrders: React.FC = () => {
   const { connected } = useWallet();
   const [, setOpenOrders] = useSerumOpenOrders();
   const { openOrders, loadingOpenOrders } = useOpenOrdersForOptionMarkets();
 
   useEffect(() => {
     setOpenOrders(openOrders as any);
-  }, [setOpenOrders, openOrders]);
-
-  const optionMarketsArray = useMemo(
-    () =>
-      optionMarkets.map((optionMarket) => {
-        if (optionMarket?.serumMarketKey) {
-          return optionMarket;
-        }
-        return undefined;
-      }).filter((item) => !!item),
-    [optionMarkets],
-  );
+  }, [setOpenOrders, openOrders,]);
 
   return (
     <Box mt={'20px'}>
@@ -79,15 +64,7 @@ const OpenOrders: React.FC<{
               <TCell colSpan={9}>
                 <Loading />
               </TCell>
-            ) : (
-              optionMarketsArray.map((optionMarket) => (
-                <OpenOrdersForMarket
-                  {...optionMarket}
-                  optionMarketUiKey={optionMarket.key}
-                  key={optionMarket.serumMarketKey.toString()}
-                />
-              ))
-            )}
+            ) : (<></>)}
           </TableBody>
         </Table>
       </TableContainer>

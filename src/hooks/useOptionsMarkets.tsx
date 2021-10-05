@@ -35,9 +35,14 @@ const useOptionsMarkets = () => {
   const { connection, dexProgramId, endpoint } = useConnection();
   const { splTokenAccountRentBalance } = useSolanaMeta();
   const { sendTransaction } = useSendTransaction();
-  const { marketsByUiKey, setMarkets, marketsLoading, setMarketsLoading } = useContext(
-    OptionsMarketsContext,
-  );
+  const {
+    marketsByUiKey,
+    setMarkets,
+    marketsLoading,
+    setMarketsLoading,
+    marketsBySerumKey,
+    setMarketsBySerumKey,
+  } = useContext(OptionsMarketsContext);
   const { supportedAssets } = useAssetList();
 
   /**
@@ -56,7 +61,8 @@ const useOptionsMarkets = () => {
       const res = await getAllOptionAccounts(program);
 
       // Transform the market data to our expectations
-      const newMarkets = {};
+      const newMarketsByUiKey = {};
+      const newMarketsBySerumKey = {};
       await Promise.all(
         res.map(async (optionMarket: AmericanOptionData) => {
           const uAssetMint = optionMarket.underlyingAssetMint;
@@ -140,12 +146,14 @@ const useOptionsMarkets = () => {
             10,
           )}/${quoteAmountPerContract.toString(10)}`;
 
-          newMarkets[key] = newMarket;
+          newMarketsByUiKey[key] = newMarket;
+          newMarketsBySerumKey[serumMarket.address.toString()] = newMarket;
         }),
       );
 
       // Not sure if we should replace the existing markets or merge them
-      setMarkets(newMarkets);
+      setMarkets(newMarketsByUiKey);
+      setMarketsBySerumKey(newMarketsBySerumKey);
       setMarketsLoading(false);
       return;
     } catch (err) {
@@ -161,8 +169,11 @@ const useOptionsMarkets = () => {
     try {
       setMarketsLoading(true);
       const supportedMarkets = getSupportedMarketsByNetwork(endpoint.name);
+
       // Transform the market data to our expectations
-      const newMarkets = {};
+      const newMarketsByUiKey = {};
+      const newMarketsBySerumKey = {};
+
       supportedMarkets.forEach((market) => {
         const uAsset = supportedAssets.filter(
           (asset) => asset.mintAddress === market.underlyingAssetMint,
@@ -224,12 +235,14 @@ const useOptionsMarkets = () => {
           10,
         )}/${quoteAmountPerContract.toString(10)}`;
 
-        newMarkets[key] = newMarket;
+        newMarketsByUiKey[key] = newMarket;
+        newMarketsBySerumKey[market.serumMarketAddress] = newMarket;
       });
       // Not sure if we should replace the existing markets or merge them
-      setMarkets(newMarkets);
+      setMarkets(newMarketsByUiKey);
+      setMarketsBySerumKey(newMarketsBySerumKey);
       setMarketsLoading(false);
-      return newMarkets;
+      return newMarketsByUiKey;
     } catch (err) {
       console.error(err);
       setMarketsLoading(false);
@@ -392,6 +405,8 @@ const useOptionsMarkets = () => {
     marketsByUiKey,
     marketsLoading,
     setMarkets,
+    marketsBySerumKey,
+    setMarketsBySerumKey,
     setMarketsLoading,
     getStrikePrices,
     getSizes,

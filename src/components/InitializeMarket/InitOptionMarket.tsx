@@ -31,6 +31,7 @@ import { StyledTooltip } from '../Markets/styles';
 import ConnectButton from '../ConnectButton';
 import { useTokenMintInfo } from '../../hooks/useTokenMintInfo';
 import { SelectAssetOrEnterMint } from '../SelectAssetOrEnterMint';
+import useAssetList from '../../hooks/useAssetList';
 
 const darkBorder = `1px solid ${theme.palette.background.main}`;
 
@@ -42,10 +43,11 @@ export const InitOptionMarket: React.VFC = () => {
   const initializeMarket = useInitializeMarket();
   const { dexProgramId, endpoint } = useConnection();
   const initializeSerumMarket = useInitializeSerumMarket();
+  const { USDCPublicKey } = useAssetList();
   const [basePrice, setBasePrice] = useState('0');
   const [selectorDate, setSelectorDate] = useState(moment.utc().endOf('day'));
   const [underlyingMint, setUnderlyingMint] = useState<PublicKey | null>(null);
-  const [quoteMint, setQuoteMint] = useState<PublicKey | null>(null);
+  const [quoteMint, setQuoteMint] = useState<PublicKey | null>(USDCPublicKey);
   const [initSerumMarket, setInitSerumMarket] = useState(false);
   const [size, setSize] = useState('1');
   const [loading, setLoading] = useState(false);

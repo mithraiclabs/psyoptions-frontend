@@ -7,9 +7,9 @@ import TableBody from '@material-ui/core/TableBody';
 import TableContainer from '@material-ui/core/TableContainer';
 import useWallet from '../../hooks/useWallet';
 import {
+  SerumOpenOrders,
   useSerumOpenOrders,
 } from '../../context/SerumOpenOrdersContext';
-
 import ConnectButton from '../ConnectButton';
 import OpenOrdersForMarket from './OpenOrdersForMarket';
 import { TCell, THeadCell } from './OpenOrderStyles';
@@ -18,17 +18,14 @@ import { useOpenOrdersForOptionMarkets } from '../../hooks/useOpenOrdersForOptio
 import useOptionsMarkets from '../../hooks/useOptionsMarkets';
 import { OptionMarket, OptionType, SerumMarketAndProgramId } from '../../types';
 import useSerum from '../../hooks/useSerum';
-
-export type OptionMarketWithSerumProgramId = OptionMarket & {
-  serumProgramId: string;
-};
+import { OpenOrders as Orders } from '@mithraic-labs/serum';
 
 // Render all open orders for all optionMarkets specified in props
 const OpenOrders: React.FC = () => {
   const { connected } = useWallet();
   const { fetchMultipleSerumMarkets } = useSerum();
-  const [, setOpenOrders] = useSerumOpenOrders();
-  const [optionMarkets, setOptionMarkets] = useState([] as OptionMarketWithSerumProgramId[]);
+  const { openOrdersBySerumMarket: prevOpenOrders, setOpenOrdersBySerumMarket } = useSerumOpenOrders();
+  const [optionMarkets, setOptionMarkets] = useState([] as OptionMarket[]);
   const { openOrders, loadingOpenOrders } = useOpenOrdersForOptionMarkets();
   const { marketsBySerumKey } = useOptionsMarkets();
 
@@ -50,19 +47,25 @@ const OpenOrders: React.FC = () => {
 
   // grab option markets of the open orders
   useEffect(() => {
-    setOpenOrders(openOrders as any);
-
+    const newOpenOrders: SerumOpenOrders = prevOpenOrders;
     const marketArray: OptionMarket[] = [];
-    openOrders.forEach(order => {
-      const market: OptionMarket = marketsBySerumKey[order.market.toString()];
-      if (market) {
-        marketArray.push({ ...market, serumProgramId: order.owner.toString() });
-      }
+
+    openOrders.forEach(orders => {
+      const serumMarketKey = orders.market.toString();
+      const market: OptionMarket = marketsBySerumKey[serumMarketKey];
+      if (!newOpenOrders[serumMarketKey])
+        newOpenOrders[serumMarketKey] = [] as Orders[];
+
+      newOpenOrders[serumMarketKey].push(orders);
+
+      if (market)
+        marketArray.push({ ...market, serumProgramId: orders.owner.toString() });
     });
 
     setOptionMarkets(marketArray);
+    setOpenOrdersBySerumMarket(newOpenOrders);
 
-  }, [setOpenOrders, openOrders, marketsBySerumKey]);
+  }, [prevOpenOrders, setOpenOrdersBySerumMarket, openOrders, marketsBySerumKey]);
 
   return (
     <Box mt={'20px'}>
@@ -106,7 +109,6 @@ const OpenOrders: React.FC = () => {
             ) : (
               optionMarkets.map((optionMarket) => (
                 <OpenOrdersForMarket
-                  serumProgramId={optionMarket.serumProgramId}
                   expiration={optionMarket.expiration}
                   optionMarketUiKey={optionMarket.key}
                   contractSize={optionMarket.size}

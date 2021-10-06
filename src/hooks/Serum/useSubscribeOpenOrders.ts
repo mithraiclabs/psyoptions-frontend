@@ -3,35 +3,27 @@ import { PublicKey } from '@solana/web3.js';
 import { useCallback, useEffect, useRef } from 'react';
 import { useSerumOpenOrders } from '../../context/SerumOpenOrdersContext';
 import useConnection from '../useConnection';
-import { hasUnsettled } from '../../utils/hasUnsettled';
 
 /**
  * Handle subscriptions to serum OpenOrders for given market key
  */
-export const useSubscribeOpenOrders = (
-  key: string,
-  serumProgramId?: string,
-): void => {
+export const useSubscribeOpenOrders = (key: string): void => {
   const { connection, dexProgramId } = useConnection();
-  const [serumOpenOrders, setSerumOpenOrders] = useSerumOpenOrders();
-  const openOrders = serumOpenOrders[key];
+  const { openOrdersBySerumMarket, setOpenOrdersBySerumMarket } = useSerumOpenOrders();
+  const openOrders = openOrdersBySerumMarket[key];
 
   useEffect(() => {
-    const serumProgramKey = serumProgramId
-      ? new PublicKey(serumProgramId)
-      : dexProgramId;
-
     let subscriptions: number[];
-    if (openOrders?.orders) {
-      subscriptions = openOrders.orders.map((openOrder) =>
+    if (openOrders) {
+      subscriptions = openOrders.map((openOrder) =>
         connection.onAccountChange(openOrder.address, (accountInfo) => {
           const _openOrder = OpenOrders.fromAccountInfo(
             openOrder.address,
             accountInfo,
-            serumProgramKey,
+            dexProgramId,
           );
-          setSerumOpenOrders((prevSerumOpenOrders) => {
-            const orders = prevSerumOpenOrders[key]?.orders || [];
+          setOpenOrdersBySerumMarket((prevSerumOpenOrders) => {
+            const orders = prevSerumOpenOrders[key] || [];
 
             // find the index of the OpenOrders instance that should be replaced
             const index = orders.findIndex((prevOpenOrder) =>
@@ -42,15 +34,9 @@ export const useSubscribeOpenOrders = (
               [index]: _openOrder,
             });
 
-            const containsUnsettled = hasUnsettled(updatedOpenOrders);
             return {
               ...prevSerumOpenOrders,
-              [key]: {
-                loading: false,
-                error: null,
-                orders: updatedOpenOrders,
-                hasUnsettled: containsUnsettled,
-              },
+              [key]: updatedOpenOrders
             };
           });
         }),
@@ -65,11 +51,10 @@ export const useSubscribeOpenOrders = (
     };
   }, [
     connection,
-    serumProgramId,
     dexProgramId,
     key,
     openOrders,
-    setSerumOpenOrders,
+    setOpenOrdersBySerumMarket,
   ]);
 };
 
@@ -81,7 +66,7 @@ export const useCreateAdHocOpenOrdersSubscription = (
   key: string,
 ): ((publicKey: PublicKey) => void) => {
   const { connection, dexProgramId } = useConnection();
-  const [, setSerumOpenOrders] = useSerumOpenOrders();
+  const { setOpenOrdersBySerumMarket } = useSerumOpenOrders();
   const subRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -102,8 +87,8 @@ export const useCreateAdHocOpenOrdersSubscription = (
           accountInfo,
           dexProgramId,
         );
-        setSerumOpenOrders((prevSerumOpenOrders) => {
-          const orders = prevSerumOpenOrders[key]?.orders || [];
+        setOpenOrdersBySerumMarket((prevSerumOpenOrders) => {
+          const orders = prevSerumOpenOrders[key] || [];
           // find the index of the OpenOrders instance that should be replaced
           let index = orders.findIndex((prevOpenOrder) =>
             prevOpenOrder.address.equals(publicKey),
@@ -118,21 +103,15 @@ export const useCreateAdHocOpenOrdersSubscription = (
             [index]: _openOrder,
           });
 
-          const containsUnsettled = hasUnsettled(updatedOpenOrders);
           return {
             ...prevSerumOpenOrders,
-            [key]: {
-              loading: false,
-              error: null,
-              orders: updatedOpenOrders,
-              hasUnsettled: containsUnsettled,
-            },
+            [key]: updatedOpenOrders
           };
         });
       });
 
       subRef.current = sub;
     },
-    [connection, dexProgramId, key, setSerumOpenOrders],
+    [connection, dexProgramId, key, setOpenOrdersBySerumMarket],
   );
 };

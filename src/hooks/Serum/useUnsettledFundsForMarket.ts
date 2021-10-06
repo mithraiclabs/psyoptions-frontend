@@ -1,5 +1,5 @@
 import BN from 'bn.js';
-import { useSerumOpenOrderAccounts } from './useSerumOpenOrderAccounts';
+import { useSerumOpenOrders } from '../../context/SerumOpenOrdersContext';
 
 const BN_ZERO = new BN(0);
 
@@ -10,12 +10,9 @@ const BN_ZERO = new BN(0);
  */
 export const useUnsettledFundsForMarket = (
   serumMarketAddress: string,
-  optionMarketUiKey: string,
 ): { baseFree: BN; quoteFree: BN } => {
-  const openOrders = useSerumOpenOrderAccounts(
-    serumMarketAddress,
-    optionMarketUiKey,
-  );
+  const { openOrdersBySerumMarket } = useSerumOpenOrders();
+  const openOrders = openOrdersBySerumMarket[serumMarketAddress];
   const initOpenOrders = openOrders?.[0];
 
   return {

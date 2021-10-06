@@ -13,10 +13,10 @@ import useOwnedTokenAccounts from '../useOwnedTokenAccounts';
 import useSerum from '../useSerum';
 import useWallet from '../useWallet';
 import useSendTransaction from '../useSendTransaction';
-import { useSerumOpenOrderAccounts } from './useSerumOpenOrderAccounts';
 import { useAmericanPsyOptionsProgram } from '../useAmericanPsyOptionsProgram';
 import { OptionMarket } from '../../types';
 import { getReferralId } from '../../utils/networkInfo';
+import { useSerumOpenOrders } from '../../context/SerumOpenOrdersContext';
 
 /**
  * Returns function for settling the funds of a specific market
@@ -36,11 +36,8 @@ export const useSettleFunds = (
   const { sendTransaction } = useSendTransaction();
   const { ownedTokenAccounts, subscribeToTokenAccount } =
     useOwnedTokenAccounts();
-  const openOrders = useSerumOpenOrderAccounts(
-    serumMarketAddress,
-    optionMarket?.key,
-    true,
-  );
+  const { openOrdersBySerumMarket } = useSerumOpenOrders();
+  const openOrders = openOrdersBySerumMarket[serumMarketAddress];
   const serumMarket = serumMarkets[serumMarketAddress]?.serumMarket;
   const baseMintAddress =
     serumMarket?.baseMintAddress && serumMarket.baseMintAddress.toString();
@@ -54,7 +51,7 @@ export const useSettleFunds = (
   const makeSettleFundsTx = useCallback(async (): Promise<
     Transaction | undefined
   > => {
-    if (openOrders.length && serumMarket && optionMarket) {
+    if (openOrders?.length && serumMarket && optionMarket) {
       const transaction = new Transaction();
       let signers = [];
       let _baseTokenAccountKey = highestBaseTokenAccount?.pubKey;

@@ -35,7 +35,7 @@ import UnsettledBalancesTable from '../UnsettledBalancesTable';
 import { calculateStrikePrecision } from '../../utils/getStrikePrices';
 import { useSerumPriceByAssets } from '../../hooks/Serum/useSerumPriceByAssets';
 import { useBatchLoadMints } from '../../hooks/SPLToken';
-import { CallOrPut, OptionType, SerumMarketAndProgramId } from '../../types';
+import { CallOrPut, SerumMarketAndProgramId } from '../../types';
 
 const dblsp = `${'\u00A0'}${'\u00A0'}`;
 
@@ -183,31 +183,6 @@ const Markets: React.VFC = () => {
     return tmp;
   }, [rows]);
   useBatchLoadMints(optionMints);
-
-  // Flat markets object for open orders component
-  const marketsFlat = useMemo(
-    () =>
-      filteredChain
-        .map((row) => [
-          {
-            ...row.call,
-            type: OptionType.CALL,
-            strikePrice: round
-              ? row.strike.toFixed(precision)
-              : row.strike.toString(10),
-          },
-          {
-            ...row.put,
-            type: OptionType.PUT,
-            strikePrice: round
-              ? row.strike.toFixed(precision)
-              : row.strike.toString(10),
-          },
-        ])
-        .reduce((a, b) => [...a, ...b], [])
-        .filter((callOrPut) => !!callOrPut),
-    [filteredChain, precision, round],
-  );
 
   useEffect(() => {
     buildOptionsChain(date?.unix() ?? 0, contractSize);
@@ -520,9 +495,7 @@ const Markets: React.VFC = () => {
             </Box>
             <Box id="unsettled-balances-table">
               <UnsettledBalancesTable
-                uAssetDecimals={uAsset?.decimals}
                 qAssetDecimals={qAsset?.decimals}
-                optionMarkets={marketsFlat}
               />
             </Box>
           </Box>

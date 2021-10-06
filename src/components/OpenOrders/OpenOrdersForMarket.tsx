@@ -9,7 +9,7 @@ import { TCell } from './OpenOrderStyles';
 import TxButton from '../TxButton';
 import { useOptionMarketByKey } from '../../hooks/PsyOptionsAPI/useOptionMarketByKey';
 import { OptionType } from '../../types';
-import { useOpenOrdersForOptionMarkets } from '../../hooks/useOpenOrdersForOptionMarkets';
+import { useSerumOpenOrders } from '../../context/SerumOpenOrdersContext';
 
 type SerumBidOrAsk = {
   side: string;
@@ -83,7 +83,6 @@ const OrderRow = ({
 
 // Render all open orders for a given market as table rows
 const OpenOrdersForMarket: React.VFC<{
-  serumProgramId: string;
   expiration: number;
   optionMarketUiKey: string;
   contractSize: string;
@@ -93,7 +92,6 @@ const OpenOrdersForMarket: React.VFC<{
   serumMarketKey: PublicKey;
   strikePrice: string;
 }> = ({
-  serumProgramId,
   expiration,
   optionMarketUiKey,
   contractSize,
@@ -104,12 +102,13 @@ const OpenOrdersForMarket: React.VFC<{
   strikePrice,
 }) => {
   const optionMarket = useOptionMarketByKey(optionMarketUiKey);
-  const { openOrders } = useOpenOrdersForOptionMarkets();
   const [orderbooks] = useSerumOrderbooks();
   const [actualOpenOrders, setActualOpenOrders] = useState([] as SerumBidOrAsk[]);
   const serumMarketAddress = serumMarketKey.toString();
+  const { openOrdersBySerumMarket } = useSerumOpenOrders();
+  const openOrders = openOrdersBySerumMarket[serumMarketAddress];
 
-  useSubscribeOpenOrders(serumMarketAddress, serumProgramId);
+  useSubscribeOpenOrders(serumMarketAddress);
 
   const handleCancelOrder = useCancelOrder(serumMarketAddress, optionMarket);
 

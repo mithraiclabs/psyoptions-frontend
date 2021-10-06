@@ -1,29 +1,69 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Box from '@material-ui/core/Box';
 import Table from '@material-ui/core/Table';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import TableBody from '@material-ui/core/TableBody';
 import TableContainer from '@material-ui/core/TableContainer';
-
 import useWallet from '../../hooks/useWallet';
-
 import ConnectButton from '../ConnectButton';
 import UnsettledBalancesRow from './UnsettledBalancesRow';
 import { TCell, THeadCell } from './UnsettledBalancesStyles';
-import { CallOrPut } from '../../types';
+import useOptionsMarkets from '../../hooks/useOptionsMarkets';
+import { OptionMarket, OptionType, SerumMarketAndProgramId } from '../../types';
+import { useOpenOrdersForOptionMarkets } from '../../hooks/useOpenOrdersForOptionMarkets';
+import Loading from '../Loading';
+import useSerum from '../../hooks/useSerum';
+import { SerumOpenOrders, useSerumOpenOrders } from '../../context/SerumOpenOrdersContext';
+import { OpenOrders as Orders } from '@mithraic-labs/serum';
 
 const UnsettledBalancesTable: React.FC<{
-  optionMarkets: CallOrPut[];
-  uAssetDecimals: number;
   qAssetDecimals: number;
-}> = ({ optionMarkets, uAssetDecimals, qAssetDecimals }) => {
+}> = ({ qAssetDecimals }) => {
   const { connected } = useWallet();
+  const { fetchMultipleSerumMarkets } = useSerum();
+  const { openOrdersBySerumMarket: prevOpenOrders, setOpenOrdersBySerumMarket } = useSerumOpenOrders();
+  const { marketsBySerumKey } = useOptionsMarkets();
+  const [optionMarkets, setOptionMarkets] = useState([] as OptionMarket[]);
+  const { openOrders, loadingOpenOrders } = useOpenOrdersForOptionMarkets();
 
-  // filters out non-initialized serum markets
-  const existingMarketsArray = optionMarkets.filter(
-    (optionMarket) => !!optionMarket?.serumMarketKey,
-  );
+  // fetch serum markets of the open orders
+  useEffect(() => {
+    const serumKeys: SerumMarketAndProgramId[] = [];
+    openOrders.forEach(order => {
+      serumKeys.push({
+        serumMarketKey: order.market,
+        serumProgramId: order.owner.toString(),
+      });
+    });
+
+    if (serumKeys.length) {
+      fetchMultipleSerumMarkets(serumKeys);
+    }
+
+  }, [openOrders, fetchMultipleSerumMarkets]);
+
+  // grab option markets of the open orders
+  useEffect(() => {
+    const newOpenOrders: SerumOpenOrders = prevOpenOrders;
+    const marketArray: OptionMarket[] = [];
+
+    openOrders.forEach(orders => {
+      const serumMarketKey = orders.market.toString();
+      const market: OptionMarket = marketsBySerumKey[serumMarketKey];
+      if (!newOpenOrders[serumMarketKey])
+        newOpenOrders[serumMarketKey] = [] as Orders[];
+
+      newOpenOrders[serumMarketKey].push(orders);
+
+      if (market)
+        marketArray.push({ ...market, serumProgramId: orders.owner.toString() });
+    });
+
+    setOptionMarkets(marketArray);
+    setOpenOrdersBySerumMarket(newOpenOrders);
+
+  }, [prevOpenOrders, setOpenOrdersBySerumMarket, openOrders, marketsBySerumKey]);
 
   return (
     <Box mt={'20px'}>
@@ -59,11 +99,21 @@ const UnsettledBalancesTable: React.FC<{
                   </Box>
                 </TCell>
               </TableRow>
+            ) : loadingOpenOrders ? (
+              <TCell colSpan={9}>
+                <Loading />
+              </TCell>
             ) : (
-              existingMarketsArray.map((optionMarket) => (
+              optionMarkets.map((optionMarket) => (
                 <UnsettledBalancesRow
-                  {...optionMarket}
-                  uAssetDecimals={uAssetDecimals}
+                  expiration={optionMarket.expiration}
+                  contractSize={optionMarket.size}
+                  // #TODO: change later, should have option type here
+                  type={optionMarket.qAssetSymbol === "USDC" ? OptionType.CALL : OptionType.PUT}
+                  qAssetSymbol={optionMarket.qAssetSymbol}
+                  uAssetSymbol={optionMarket.uAssetSymbol}
+                  serumMarketKey={optionMarket.serumMarketKey}
+                  strikePrice={optionMarket.strike.toString()}
                   qAssetDecimals={qAssetDecimals}
                   optionMarketUiKey={optionMarket.key}
                   key={`${optionMarket.serumMarketKey.toString()}-unsettled`}

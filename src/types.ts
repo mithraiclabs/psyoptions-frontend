@@ -85,11 +85,6 @@ export type CallOrPut = OptionRow & {
   strike: BigNumber;
 };
 
-export type UnsettledRow = CallOrPut & {
-  uAssetDecimals: number;
-  qAssetDecimals: number;
-};
-
 export type OptionMarketMeta = {
   expiration: number;
   optionMarketAddress: string;

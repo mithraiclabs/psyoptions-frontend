@@ -1,7 +1,6 @@
 import Box from '@material-ui/core/Box';
 import React, { useCallback, useState } from 'react';
 import BigNumber from 'bignumber.js';
-import { OptionMarket } from '@mithraic-labs/psyoptions';
 import {
   useSettleFunds,
   useSubscribeOpenOrders,
@@ -25,10 +24,7 @@ export const UnsettledFunds: React.VFC<{
   optionMarketUiKey,
 }) => {
   const optionMarket = useOptionMarketByKey(optionMarketUiKey);
-  const unsettledFunds = useUnsettledFundsForMarket(
-    serumMarketAddress,
-    optionMarketUiKey,
-  );
+  const unsettledFunds = useUnsettledFundsForMarket(serumMarketAddress);
   const { settleFunds } = useSettleFunds(serumMarketAddress, optionMarket);
   useSubscribeOpenOrders(serumMarketAddress);
   const [loading, setLoading] = useState(false);

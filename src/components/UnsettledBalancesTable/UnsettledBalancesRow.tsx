@@ -6,7 +6,6 @@ import BigNumber from 'bignumber.js';
 import { PublicKey } from '@solana/web3.js';
 import useSerum from '../../hooks/useSerum';
 import {
-  useSubscribeOpenOrders,
   useSettleFunds,
   useUnsettledFundsForMarket,
 } from '../../hooks/Serum';
@@ -114,8 +113,6 @@ const UnsettledBalancesRow: React.FC<{
   const { serumMarket } = serumMarkets[serumMarketAddress] || {};
   const { settleFunds } = useSettleFunds(serumMarketAddress, optionMarket);
   const unsettledFunds = useUnsettledFundsForMarket(serumMarketAddress);
-
-  useSubscribeOpenOrders(serumMarketAddress);
 
   if (
     !serumMarket ||

@@ -19,6 +19,7 @@ import useOptionsMarkets from '../../hooks/useOptionsMarkets';
 import { OptionMarket, OptionType, SerumMarketAndProgramId } from '../../types';
 import useSerum from '../../hooks/useSerum';
 import { OpenOrders as Orders } from '@mithraic-labs/serum';
+import { useSubscribeOpenOrders } from '../../hooks/Serum';
 
 // Render all open orders for all optionMarkets specified in props
 const OpenOrders: React.FC = () => {
@@ -66,6 +67,8 @@ const OpenOrders: React.FC = () => {
     setOpenOrdersBySerumMarket(newOpenOrders);
 
   }, [prevOpenOrders, setOpenOrdersBySerumMarket, openOrders, marketsBySerumKey]);
+
+  useSubscribeOpenOrders();
 
   return (
     <Box mt={'20px'}>

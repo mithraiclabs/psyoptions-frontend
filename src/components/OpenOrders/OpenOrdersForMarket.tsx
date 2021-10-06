@@ -3,7 +3,7 @@ import TableRow from '@material-ui/core/TableRow';
 import moment from 'moment';
 import { PublicKey } from '@solana/web3.js';
 import { useSerumOrderbooks } from '../../context/SerumOrderbookContext';
-import { useSubscribeOpenOrders, useCancelOrder } from '../../hooks/Serum';
+import { useCancelOrder } from '../../hooks/Serum';
 import theme from '../../utils/theme';
 import { TCell } from './OpenOrderStyles';
 import TxButton from '../TxButton';
@@ -107,8 +107,6 @@ const OpenOrdersForMarket: React.VFC<{
   const serumMarketAddress = serumMarketKey.toString();
   const { openOrdersBySerumMarket } = useSerumOpenOrders();
   const openOrders = openOrdersBySerumMarket[serumMarketAddress];
-
-  useSubscribeOpenOrders(serumMarketAddress);
 
   const handleCancelOrder = useCancelOrder(serumMarketAddress, optionMarket);
 

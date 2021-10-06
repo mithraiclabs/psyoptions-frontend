@@ -3,7 +3,6 @@ import React, { useCallback, useState } from 'react';
 import BigNumber from 'bignumber.js';
 import {
   useSettleFunds,
-  useSubscribeOpenOrders,
   useUnsettledFundsForMarket,
 } from '../../hooks/Serum';
 import TxButton from '../TxButton';
@@ -26,7 +25,6 @@ export const UnsettledFunds: React.VFC<{
   const optionMarket = useOptionMarketByKey(optionMarketUiKey);
   const unsettledFunds = useUnsettledFundsForMarket(serumMarketAddress);
   const { settleFunds } = useSettleFunds(serumMarketAddress, optionMarket);
-  useSubscribeOpenOrders(serumMarketAddress);
   const [loading, setLoading] = useState(false);
   const _settleFunds = useCallback(async () => {
     setLoading(true);

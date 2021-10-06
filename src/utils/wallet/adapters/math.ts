@@ -44,8 +44,8 @@ class MathWalletAdapter extends EventEmitter implements WalletAdapter {
     return undefined;
   }
 
-  get publicKey(): PublicKey | undefined {
-    return this._publicKey;
+  get publicKey(): PublicKey {
+    return this._publicKey as PublicKey;
   }
 
   async signTransaction(transaction: Transaction): Promise<Transaction> {
@@ -69,7 +69,7 @@ class MathWalletAdapter extends EventEmitter implements WalletAdapter {
     this._onProcess = true;
     this._provider
       .getAccount()
-      .then((account: any) => {
+      .then((account) => {
         this._publicKey = new PublicKey(account);
         this._connected = true;
         this.emit('connect', this._publicKey);

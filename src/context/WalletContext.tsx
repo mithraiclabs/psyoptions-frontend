@@ -11,26 +11,32 @@ import type WalletAdapter from '../utils/wallet/walletAdapter';
 const WalletContext = createContext<{
   balance: number;
   loading: boolean;
-  setLoading?: React.Dispatch<React.SetStateAction<boolean>>;
-  wallet?: WalletAdapter;
-  setWallet?: React.Dispatch<React.SetStateAction<WalletAdapter>>;
+  setLoading: React.Dispatch<React.SetStateAction<boolean>>;
+  wallet: WalletAdapter | null;
+  setWallet: React.Dispatch<React.SetStateAction<WalletAdapter | null>>;
   connected: boolean;
-  setConnected?: React.Dispatch<React.SetStateAction<boolean>>;
-  pubKey?: PublicKey;
-  setPubKey?: React.Dispatch<React.SetStateAction<PublicKey>>;
+  setConnected: React.Dispatch<React.SetStateAction<boolean>>;
+  pubKey: PublicKey | null;
+  setPubKey: React.Dispatch<React.SetStateAction<PublicKey | null>>;
 }>({
   balance: 0,
   loading: false,
+  pubKey: null,
   connected: false,
+  setConnected: () => {},
+  setLoading: () => {},
+  setPubKey: () => {},
+  setWallet: () => {},
+  wallet: null,
 });
 
 const WalletProvider: React.FC = ({ children }) => {
   const { pushNotification } = useNotifications();
   const { connection } = useConnection();
   const [loading, setLoading] = useState(false);
-  const [wallet, setWallet] = useState<WalletAdapter>();
+  const [wallet, setWallet] = useState<WalletAdapter | null>(null);
   const [connected, setConnected] = useState(false);
-  const [pubKey, setPubKey] = useState<PublicKey>(null);
+  const [pubKey, setPubKey] = useState<PublicKey | null>(null);
   // balance of public key in lamports
   const [balance, setBalance] = useState(0);
 
@@ -59,7 +65,10 @@ const WalletProvider: React.FC = ({ children }) => {
   // This is ok to have in the context because the logic
   // should remain the same no matter where the user is
   useEffect(() => {
-    let subscription;
+    if (!connection) {
+      return;
+    }
+    let subscription: number;
     if (pubKey) {
       // fetch balance on mount
       (async () => {

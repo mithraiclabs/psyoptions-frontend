@@ -61,15 +61,9 @@ export function getSolanaDerivationPath(
   account?: number,
   change?: number,
 ): Buffer {
-  let length;
+  let length = 2;
   if (account !== undefined) {
-    if (change !== undefined) {
-      length = 4;
-    } else {
-      length = 3;
-    }
-  } else {
-    length = 2;
+    length = change !== undefined ? 4 : 3;
   }
 
   const derivationPath = Buffer.alloc(1 + length * 4);
@@ -78,11 +72,11 @@ export function getSolanaDerivationPath(
   offset = derivationPath.writeUInt32BE(harden(44), offset); // Using BIP44
   offset = derivationPath.writeUInt32BE(harden(501), offset); // Solana's BIP44 path
 
-  if (length > 2) {
+  if (length > 2 && account) {
     offset = derivationPath.writeUInt32BE(harden(account), offset);
-    if (length === 4) {
+    if (length === 4 && change) {
       // @FIXME: https://github.com/project-serum/spl-token-wallet/issues/59
-      offset = derivationPath.writeUInt32BE(harden(change), offset);
+      derivationPath.writeUInt32BE(harden(change), offset);
     }
   }
 

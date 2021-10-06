@@ -25,7 +25,38 @@ const DEFAULT_TIMEOUT = 30000;
 /**
  * Send transactions and use push notifications for info, confirmation, and errors
  */
-const useSendTransaction = () => {
+const useSendTransaction = (): {
+  sendSignedTransaction: ({
+    signedTransaction,
+    connection,
+    sendingMessage,
+    successMessage,
+    timeout,
+  }: {
+    signedTransaction: Transaction;
+    connection: Connection;
+    sendingMessage?: string | undefined;
+    successMessage?: string | undefined;
+    timeout?: number | undefined;
+  }) => Promise<string>;
+  sendTransaction: ({
+    transaction,
+    wallet,
+    signers,
+    connection,
+    sendingMessage,
+    successMessage,
+    timeout,
+  }: {
+    transaction: Transaction;
+    wallet: Wallet;
+    signers?: Keypair[] | undefined;
+    connection: Connection;
+    sendingMessage?: string | undefined;
+    successMessage?: string | undefined;
+    timeout?: number | undefined;
+  }) => Promise<string>;
+} => {
   const { pushNotification } = useNotifications();
   const sendSignedTransaction = useCallback(
     async ({
@@ -76,7 +107,7 @@ const useSendTransaction = () => {
       try {
         await awaitTransactionSignatureConfirmation(txid, timeout, connection);
       } catch (err) {
-        if (err.timeout) {
+        if ((err as TransactionError).timeout) {
           throw new Error('Timed out awaiting confirmation on transaction');
         }
         let simulateResult: SimulatedTransactionResponse | null = null;

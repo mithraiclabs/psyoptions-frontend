@@ -19,30 +19,33 @@ import { ExpirationDateProvider } from './ExpirationDateContext';
 import { GraphQLProvider } from './GraphQLProvider';
 import { SimpleUIFormProvider } from './SimpleUIContext';
 
-const _providers = [
+const _providers: React.ReactElement[] = [
   // eslint-disable-next-line react/no-children-prop
-  <ThemeProvider theme={theme} children={<div />} />,
-  <ConnectionProvider />,
-  <GraphQLProvider />,
-  <NotificationsProvider />,
-  <SolanaMetaProvider />,
-  <AssetListProvider />,
-  <WalletProvider />,
-  <OwnedTokenAccountsProvider />,
-  <OptionsMarketsProvider />,
-  <SPLTokenMintsProvider />,
-  <OptionsChainProvider />,
-  <SerumProvider />,
-  <SerumOrderbooksProvider />,
-  <SerumOpenOrdersProvider />,
-  <PasswordProvider />,
-  <ExpirationDateProvider />,
-  <SimpleUIFormProvider />,
+  <ThemeProvider key="ThemeProvider" theme={theme} children={<div />} />,
+  <ConnectionProvider key="ConnectionProvider" />,
+  <GraphQLProvider key="GraphQLProvider" />,
+  <NotificationsProvider key="NotificationsProvider" />,
+  <SolanaMetaProvider key="SolanaMetaProvider" />,
+  <AssetListProvider key="AssetListProvider" />,
+  <WalletProvider key="WalletProvider" />,
+  <OwnedTokenAccountsProvider key="OwnedTokenAccountsProvider" />,
+  <OptionsMarketsProvider key="OptionsMarketsProvider" />,
+  <SPLTokenMintsProvider key="SPLTokenMintsProvider" />,
+  <OptionsChainProvider key="OptionsChainProvider" />,
+  <SerumProvider key="SerumProvider" />,
+  <SerumOrderbooksProvider key="SerumOrderbooksProvider" />,
+  <SerumOpenOrdersProvider key="SerumOpenOrdersProvider" />,
+  <PasswordProvider key="PasswordProvider" />,
+  <ExpirationDateProvider key="ExpirationDateProvider" />,
+  <SimpleUIFormProvider key="SimpleUIFormProvider" />,
 ];
 
 // flatten context providers for simpler app component tree
 
-const ProviderComposer = ({ providers, children }) =>
+const ProviderComposer: React.FC<{
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  providers: any[];
+}> = ({ providers, children }) =>
   providers.reduceRight(
     (kids, parent) => cloneElement(parent, { children: kids }),
     children,

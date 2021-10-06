@@ -32,7 +32,7 @@ export const useWrittenOptions = (): Record<string, TokenAccount[]> => {
         acc[marketKey] = accountsWithHoldings;
       }
       return acc;
-    }, {});
+    }, {} as Record<string, TokenAccount[]>);
     return positions;
   }, [marketsByUiKey, ownedTokenAccounts]);
 };

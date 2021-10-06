@@ -4,14 +4,15 @@
   "description": "",
   "main": "dist/index.js",
   "scripts": {
-    "build": "npx webpack",
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
     "clean": "rm -rf ./dist",
     "lint": "npx eslint .",
     "lint:fix": "npx eslint . --fix",
     "seed": "ts-node ./scripts/seedLocalNet.ts",
     "seed:mintTokens": "ts-node ./scripts/mintLocalNetTokens.ts",
     "seed:localChain": "ts-node ./scripts/seedLocalChain.ts",
-    "start": "yarn build",
     "test": "jest",
     "type-check": "tsc --noEmit",
     "build-docker": "docker build -t solana-options-frontend:latest .",
@@ -24,6 +25,8 @@
     "@babel/node": "^7.12.13",
     "@types/bn.js": "^5.1.0",
     "@types/jest": "^27.0.1",
+    "@types/ledgerhq__hw-transport": "^4.21.4",
+    "@types/ledgerhq__hw-transport-webusb": "^4.70.1",
     "@types/react": "^17.0.3",
     "@types/react-router-dom": "^5.1.8",
     "@types/throttle-debounce": "^2.1.0",
@@ -32,15 +35,11 @@
     "babel-jest": "^26.6.3",
     "concurrently": "^5.3.0",
     "eslint": "^7.20.0",
-    "eslint-config-airbnb": "^18.2.1",
+    "eslint-config-next": "^11.1.2",
     "eslint-config-prettier": "^8.1.0",
-    "eslint-import-resolver-typescript": "^2.4.0",
-    "eslint-plugin-import": "^2.22.1",
     "eslint-plugin-jest": "^24.4.0",
-    "eslint-plugin-jsx-a11y": "^6.4.1",
-    "eslint-plugin-prettier": "^3.3.1",
-    "eslint-plugin-react": "^7.22.0",
-    "eslint-plugin-react-hooks": "^4.2.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "eslint-plugin-tsc": "^2.0.0",
     "husky": "^4.2.3",
     "jest": "^26.6.3",
     "js-yaml": "^4.0.0",
@@ -67,7 +66,7 @@
     "@mithraic-labs/psyoptions": "^0.7.2",
     "@mithraic-labs/serum": "^0.0.5",
     "@project-serum/anchor": "^0.16.1",
-    "@project-serum/sol-wallet-adapter": "0.2.0",
+    "@project-serum/sol-wallet-adapter": "^0.2.5",
     "@project-serum/tokens": "0.0.7",
     "@sentry/react": "^6.2.1",
     "@sentry/tracing": "^6.2.1",
@@ -92,12 +91,14 @@
     "graphql": "^15.5.0",
     "graphql-subscriptions-client": "^0.16.0",
     "moment": "^2.29.1",
+    "next": "^11.1.2",
+    "next-compose-plugins": "^2.2.1",
+    "next-transpile-modules": "^8.0.0",
     "node-polyfill-webpack-plugin": "^1.0.2",
     "prettier": "^2.2.1",
     "prop-types": "^15.7.2",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
-    "react-router-dom": "^5.2.0",
     "styled-components": "^5.2.1",
     "superstruct": "^0.14.2",
     "throttle-debounce": "^3.0.1",
@@ -116,12 +117,13 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "lint-staged && yarn type-check"
+      "pre-commit": "lint-staged"
     }
   },
   "lint-staged": {
     "**/*.{js,jsx,ts,tsx}": [
-      "eslint"
+      "eslint --fix --plugin tsc --rule 'tsc/config: [2, {configFile: \"./tsconfig.json\"}]'",
+      "git add"
     ]
   }
 }

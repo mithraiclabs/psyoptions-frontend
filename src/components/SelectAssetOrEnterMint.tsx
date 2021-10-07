@@ -42,9 +42,8 @@ export const SelectAssetOrEnterMint: React.VFC<{
       supportedAssets.filter((item) => {
         const match = filterInput.toLowerCase();
         const shouldAppear =
-          (item.tokenName.toLowerCase().match(match) ||
-            item.tokenSymbol.toLowerCase().match(match)) &&
-          !item.tokenSymbol.toLowerCase().match('usdc');
+          item.tokenName.toLowerCase().match(match) ||
+          item.tokenSymbol.toLowerCase().match(match);
         return shouldAppear;
       }),
     [filterInput, supportedAssets],

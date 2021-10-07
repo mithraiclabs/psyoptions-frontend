@@ -6,6 +6,9 @@ OR run `touch .env.local` and add the following lines to it and fill in the blan
 
 **Next.js will read from .env.local. Only env variables prepended with `NEXT_PUBLIC_` will be shared in the browser**
 
+Please add environment variables into the CodePipeline Build configuration in order for them to be accessible
+when Next.js builds static pages.
+
 ```
 NEXT_PUBLIC_LOCAL_PROGRAM_ID=R2y9ip6mxmWUj4pt54jP2hz2dgvMozy9VTSwMWE7evs
 NEXT_PUBLIC_DEVNET_PROGRAM_ID=R2y9ip6mxmWUj4pt54jP2hz2dgvMozy9VTSwMWE7evs

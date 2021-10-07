@@ -6,13 +6,12 @@ import {
   useUnsettledFundsForMarket,
 } from '../../hooks/Serum';
 import TxButton from '../TxButton';
-import { useOptionMarketByKey } from '../../hooks/PsyOptionsAPI/useOptionMarketByKey';
+import useOptionsMarkets from '../../hooks/useOptionsMarkets';
 
 /**
  * UI for showing the user their unsettled funds for an single option market.
  */
 export const UnsettledFunds: React.VFC<{
-  optionMarketUiKey: string;
   qAssetSymbol: string;
   serumMarketAddress: string;
   qAssetDecimals: number;
@@ -20,10 +19,10 @@ export const UnsettledFunds: React.VFC<{
   qAssetSymbol,
   serumMarketAddress,
   qAssetDecimals,
-  optionMarketUiKey,
 }) => {
-  const optionMarket = useOptionMarketByKey(optionMarketUiKey);
+  const { marketsBySerumKey } = useOptionsMarkets();
   const unsettledFunds = useUnsettledFundsForMarket(serumMarketAddress);
+  const optionMarket = marketsBySerumKey[serumMarketAddress];
   const { settleFunds } = useSettleFunds(serumMarketAddress, optionMarket);
   const [loading, setLoading] = useState(false);
   const _settleFunds = useCallback(async () => {

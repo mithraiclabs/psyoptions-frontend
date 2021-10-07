@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import Box from '@material-ui/core/Box';
 import Table from '@material-ui/core/Table';
 import TableHead from '@material-ui/core/TableHead';
@@ -7,68 +7,17 @@ import TableBody from '@material-ui/core/TableBody';
 import TableContainer from '@material-ui/core/TableContainer';
 import useWallet from '../../hooks/useWallet';
 import {
-  SerumOpenOrders,
   useSerumOpenOrders,
 } from '../../context/SerumOpenOrdersContext';
 import ConnectButton from '../ConnectButton';
 import OpenOrdersForMarket from './OpenOrdersForMarket';
 import { TCell, THeadCell } from './OpenOrderStyles';
-import Loading from '../Loading';
-import { useOpenOrdersForOptionMarkets } from '../../hooks/useOpenOrdersForOptionMarkets';
-import useOptionsMarkets from '../../hooks/useOptionsMarkets';
-import { OptionMarket, OptionType, SerumMarketAndProgramId } from '../../types';
-import useSerum from '../../hooks/useSerum';
-import { OpenOrders as Orders } from '@mithraic-labs/serum';
-import { useSubscribeOpenOrders } from '../../hooks/Serum';
+import { OptionType } from '../../types';
 
 // Render all open orders for all optionMarkets specified in props
 const OpenOrders: React.FC = () => {
   const { connected } = useWallet();
-  const { fetchMultipleSerumMarkets } = useSerum();
-  const { openOrdersBySerumMarket: prevOpenOrders, setOpenOrdersBySerumMarket } = useSerumOpenOrders();
-  const [optionMarkets, setOptionMarkets] = useState([] as OptionMarket[]);
-  const { openOrders, loadingOpenOrders } = useOpenOrdersForOptionMarkets();
-  const { marketsBySerumKey } = useOptionsMarkets();
-
-  // fetch serum markets of the open orders
-  useEffect(() => {
-    const serumKeys: SerumMarketAndProgramId[] = [];
-    openOrders.forEach(order => {
-      serumKeys.push({
-        serumMarketKey: order.market,
-        serumProgramId: order.owner.toString(),
-      });
-    });
-
-    if (serumKeys.length) {
-      fetchMultipleSerumMarkets(serumKeys);
-    }
-
-  }, [openOrders, fetchMultipleSerumMarkets]);
-
-  // grab option markets of the open orders
-  useEffect(() => {
-    const newOpenOrders: SerumOpenOrders = prevOpenOrders;
-    const marketArray: OptionMarket[] = [];
-
-    openOrders.forEach(orders => {
-      const serumMarketKey = orders.market.toString();
-      const market: OptionMarket = marketsBySerumKey[serumMarketKey];
-      if (!newOpenOrders[serumMarketKey])
-        newOpenOrders[serumMarketKey] = [] as Orders[];
-
-      newOpenOrders[serumMarketKey].push(orders);
-
-      if (market)
-        marketArray.push({ ...market, serumProgramId: orders.owner.toString() });
-    });
-
-    setOptionMarkets(marketArray);
-    setOpenOrdersBySerumMarket(newOpenOrders);
-
-  }, [prevOpenOrders, setOpenOrdersBySerumMarket, openOrders, marketsBySerumKey]);
-
-  useSubscribeOpenOrders();
+  const { optionMarketsForOpenOrders } = useSerumOpenOrders();
 
   return (
     <Box mt={'20px'}>
@@ -105,15 +54,10 @@ const OpenOrders: React.FC = () => {
                   </Box>
                 </TCell>
               </TableRow>
-            ) : loadingOpenOrders ? (
-              <TCell colSpan={9}>
-                <Loading />
-              </TCell>
             ) : (
-              optionMarkets.map((optionMarket) => (
+              optionMarketsForOpenOrders.map((optionMarket) => (
                 <OpenOrdersForMarket
                   expiration={optionMarket.expiration}
-                  optionMarketUiKey={optionMarket.key}
                   contractSize={optionMarket.size}
                   // #TODO: change later, should have option type here
                   type={optionMarket.qAssetSymbol === "USDC" ? OptionType.CALL : OptionType.PUT}

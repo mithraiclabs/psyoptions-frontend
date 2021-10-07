@@ -5,63 +5,6 @@ import { useSerumOpenOrders } from '../../context/SerumOpenOrdersContext';
 import useConnection from '../useConnection';
 
 /**
- * Handle subscriptions to given serum OpenOrders
- */
-export const useSubscribeOpenOrders = (): void => {
-  const { connection, dexProgramId } = useConnection();
-  const { openOrdersBySerumMarket, setOpenOrdersBySerumMarket } = useSerumOpenOrders();
-
-  useEffect(() => {
-    let subscriptions: number[];
-    Object.keys(openOrdersBySerumMarket).map((serumMarketKey) => {
-      const openOrder = openOrdersBySerumMarket[serumMarketKey];
-      if (openOrder) {
-        openOrder.forEach(order => {
-          const subscription = connection.onAccountChange(order.address, (accountInfo) => {
-            const _openOrder = OpenOrders.fromAccountInfo(
-              order.address,
-              accountInfo,
-              dexProgramId,
-            );
-            setOpenOrdersBySerumMarket((prevSerumOpenOrders) => {
-              const orders = prevSerumOpenOrders[serumMarketKey] || [];
-    
-              // find the index of the OpenOrders instance that should be replaced
-              const index = orders.findIndex((prevOpenOrder) =>
-                prevOpenOrder.address.equals(order.address),
-              );
-              // immutably replace the OpenOrders instance with the matching address
-              const updatedOpenOrders = Object.assign([], orders, {
-                [index]: _openOrder,
-              });
-    
-              return {
-                ...prevSerumOpenOrders,
-                [serumMarketKey]: updatedOpenOrders
-              };
-            });
-          });
-          subscriptions.push(subscription);
-        });
-      }
-    });
-
-    return () => {
-      if (subscriptions) {
-        subscriptions.forEach((sub) =>
-          connection.removeAccountChangeListener(sub),
-        );
-      }
-    };
-  }, [
-    connection,
-    dexProgramId,
-    openOrdersBySerumMarket,
-    setOpenOrdersBySerumMarket,
-  ]);
-};
-
-/**
  * Create a subscription for an OpenOrders account that may not be in
  * application state yet. i.e. new OpenOrders account that will be created.
  */

@@ -7,9 +7,9 @@ import { useCancelOrder } from '../../hooks/Serum';
 import theme from '../../utils/theme';
 import { TCell } from './OpenOrderStyles';
 import TxButton from '../TxButton';
-import { useOptionMarketByKey } from '../../hooks/PsyOptionsAPI/useOptionMarketByKey';
 import { OptionType } from '../../types';
 import { useSerumOpenOrders } from '../../context/SerumOpenOrdersContext';
+import useOptionsMarkets from '../../hooks/useOptionsMarkets';
 
 type SerumBidOrAsk = {
   side: string;
@@ -84,7 +84,6 @@ const OrderRow = ({
 // Render all open orders for a given market as table rows
 const OpenOrdersForMarket: React.VFC<{
   expiration: number;
-  optionMarketUiKey: string;
   contractSize: string;
   type: OptionType;
   qAssetSymbol: string;
@@ -93,7 +92,6 @@ const OpenOrdersForMarket: React.VFC<{
   strikePrice: string;
 }> = ({
   expiration,
-  optionMarketUiKey,
   contractSize,
   type,
   qAssetSymbol,
@@ -101,17 +99,18 @@ const OpenOrdersForMarket: React.VFC<{
   serumMarketKey,
   strikePrice,
 }) => {
-  const optionMarket = useOptionMarketByKey(optionMarketUiKey);
+  const { marketsBySerumKey } = useOptionsMarkets();
   const [orderbooks] = useSerumOrderbooks();
   const [actualOpenOrders, setActualOpenOrders] = useState([] as SerumBidOrAsk[]);
   const serumMarketAddress = serumMarketKey.toString();
   const { openOrdersBySerumMarket } = useSerumOpenOrders();
   const openOrders = openOrdersBySerumMarket[serumMarketAddress];
-
+  const optionMarket = marketsBySerumKey[serumMarketAddress];
   const handleCancelOrder = useCancelOrder(serumMarketAddress, optionMarket);
 
   useEffect(() => {
     if (!orderbooks[serumMarketAddress] || !openOrders) {
+      setActualOpenOrders([]);
       return null;
     }
   

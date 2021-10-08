@@ -25,7 +25,7 @@ export const SerumOpenOrdersProvider: React.FC = ({ children }) => {
   const [optionMarketsForOpenOrders, setOptionMarketsForOpenOrders] = useState([] as OptionMarket[]);
   const { openOrders } = useOpenOrdersForOptionMarkets();
   const { marketsBySerumKey } = useOptionsMarkets();
-  const { connection, dexProgramId } = useConnection();
+  // const { connection, dexProgramId } = useConnection();
 
   // fetch serum markets of the open orders
   useEffect(() => {
@@ -66,53 +66,52 @@ export const SerumOpenOrdersProvider: React.FC = ({ children }) => {
   }, [openOrdersBySerumMarket, openOrders, marketsBySerumKey]);
 
   // handle subscriptions to given serum OpenOrders
-  useEffect(() => {
-    const subscriptions: number[] = [];
-    Object.keys(openOrdersBySerumMarket).map((serumMarketKey) => {
-      const openOrder = openOrdersBySerumMarket[serumMarketKey];
-      if (openOrder) {
-        openOrder.forEach(order => {
-          const subscription = connection.onAccountChange(order.address, (accountInfo) => {
-            const _openOrder = OpenOrders.fromAccountInfo(
-              order.address,
-              accountInfo,
-              dexProgramId,
-            );
-            setOpenOrdersBySerumMarket((prevSerumOpenOrders) => {
-              const orders = prevSerumOpenOrders[serumMarketKey] || [];
+  // useEffect(() => {
+  //   const subscriptions: number[] = [];
+  //   Object.keys(openOrdersBySerumMarket).map((serumMarketKey) => {
+  //     const openOrder = openOrdersBySerumMarket[serumMarketKey];
+  //     console.log('openOrder: ', openOrder)
+  //     if (openOrder) {
+  //       openOrder.forEach(order => {
+  //         const subscription = connection.onAccountChange(order.address, (accountInfo) => {
+  //           const _openOrder = OpenOrders.fromAccountInfo(
+  //             order.address,
+  //             accountInfo,
+  //             dexProgramId,
+  //           );
+  //           setOpenOrdersBySerumMarket((prevSerumOpenOrders) => {
+  //             const orders = prevSerumOpenOrders[serumMarketKey] || [];
     
-              // find the index of the OpenOrders instance that should be replaced
-              const index = orders.findIndex((prevOpenOrder) =>
-                prevOpenOrder.address.equals(order.address),
-              );
-              // immutably replace the OpenOrders instance with the matching address
-              const updatedOpenOrders = Object.assign([], orders, {
-                [index]: _openOrder,
-              });
+  //             // find the index of the OpenOrders instance that should be replaced
+  //             const index = orders.findIndex((prevOpenOrder) =>
+  //               prevOpenOrder.address.equals(order.address),
+  //             );
+  //             // immutably replace the OpenOrders instance with the matching address
+  //             orders.splice(index, index < 0 ? 0 : 1, _openOrder)
+  //             console.log('orders baby: ', orders)
+  //             return {
+  //               ...prevSerumOpenOrders,
+  //               [serumMarketKey]: orders
+  //             };
+  //           });
+  //         });
+  //         subscriptions.push(subscription);
+  //       });
+  //     }
+  //   });
 
-              return {
-                ...prevSerumOpenOrders,
-                [serumMarketKey]: updatedOpenOrders
-              };
-            });
-          });
-          subscriptions.push(subscription);
-        });
-      }
-    });
-
-    return () => {
-      if (subscriptions) {
-        subscriptions.forEach((sub) =>
-          connection.removeAccountChangeListener(sub),
-        );
-      }
-    };
-  }, [
-    connection,
-    dexProgramId,
-    openOrdersBySerumMarket,
-  ]);
+  //   return () => {
+  //     if (subscriptions) {
+  //       subscriptions.forEach((sub) =>
+  //         connection.removeAccountChangeListener(sub),
+  //       );
+  //     }
+  //   };
+  // }, [
+  //   connection,
+  //   dexProgramId,
+  //   openOrdersBySerumMarket,
+  // ]);
 
   return (
     <SerumOpenOrdersContext.Provider

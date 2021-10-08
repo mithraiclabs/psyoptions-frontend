@@ -79,13 +79,15 @@ const usePlaceBuyOrder = (
             ...orderArgs,
           }));
         } else {
-          placeOrderTx = await serumInstructions.newOrderInstruction(
+          const { openOrdersKey, tx } = await serumInstructions.newOrderInstruction(
             program,
             optionMarket.pubkey,
             new PublicKey(optionMarket.serumProgramId),
             optionMarket.serumMarketKey,
             orderArgs,
           );
+          placeOrderTx = tx;
+          openOrdersAddress = openOrdersKey;
         }
         transaction.add(placeOrderTx);
         signers = [...signers, ...placeOrderSigners];

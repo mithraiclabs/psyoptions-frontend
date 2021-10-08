@@ -1,4 +1,5 @@
 import BN from 'bn.js';
+import { useMemo } from 'react';
 import { useSerumOpenOrders } from '../../context/SerumOpenOrdersContext';
 
 const BN_ZERO = new BN(0);
@@ -12,11 +13,14 @@ export const useUnsettledFundsForMarket = (
   serumMarketAddress: string,
 ): { baseFree: BN; quoteFree: BN } => {
   const { openOrdersBySerumMarket } = useSerumOpenOrders();
-  const openOrders = openOrdersBySerumMarket[serumMarketAddress];
-  const initOpenOrders = openOrders?.[0];
 
-  return {
-    baseFree: initOpenOrders?.baseTokenFree ?? BN_ZERO,
-    quoteFree: initOpenOrders?.quoteTokenFree ?? BN_ZERO,
-  };
+  return useMemo(() => {
+    const openOrders = openOrdersBySerumMarket[serumMarketAddress];
+    const initOpenOrders = openOrders?.[0];
+  
+    return {
+      baseFree: initOpenOrders?.baseTokenFree ?? BN_ZERO,
+      quoteFree: initOpenOrders?.quoteTokenFree ?? BN_ZERO,
+    };
+  }, [openOrdersBySerumMarket, serumMarketAddress]);
 };

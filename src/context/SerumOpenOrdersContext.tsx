@@ -63,7 +63,7 @@ export const SerumOpenOrdersProvider: React.FC = ({ children }) => {
     setOptionMarketsForOpenOrders(marketArray);
     setOpenOrdersBySerumMarket(newOpenOrders);
 
-  }, [openOrdersBySerumMarket, setOpenOrdersBySerumMarket, openOrders, marketsBySerumKey]);
+  }, [openOrdersBySerumMarket, openOrders, marketsBySerumKey]);
 
   // handle subscriptions to given serum OpenOrders
   useEffect(() => {
@@ -112,7 +112,6 @@ export const SerumOpenOrdersProvider: React.FC = ({ children }) => {
     connection,
     dexProgramId,
     openOrdersBySerumMarket,
-    setOpenOrdersBySerumMarket,
   ]);
 
   return (

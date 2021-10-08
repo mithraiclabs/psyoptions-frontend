@@ -23,7 +23,7 @@ export const useCreateAdHocOpenOrdersSubscription = (
         connection.removeAccountChangeListener(_subRef.current);
       }
     };
-  }, [connection]);
+  }, [connection, subRef]);
 
   return useCallback(
     (publicKey: PublicKey) => {
@@ -39,25 +39,17 @@ export const useCreateAdHocOpenOrdersSubscription = (
           let index = orders.findIndex((prevOpenOrder) =>
             prevOpenOrder.address.equals(publicKey),
           );
-          // if used to listen to an account before it's initialized,
-          // then we must set the index to 0
-          if (index < 0) {
-            index = 0;
-          }
           // immutably replace the OpenOrders instance with the matching address
-          const updatedOpenOrders = Object.assign([], orders, {
-            [index]: _openOrder,
-          });
-
+          orders.splice(index < 0 ? 0 : index, index < 0 ? 0 : 1, _openOrder)
           return {
             ...prevSerumOpenOrders,
-            [key]: updatedOpenOrders
+            [key]: orders
           };
         });
       });
 
       subRef.current = sub;
     },
-    [connection, dexProgramId, key, setOpenOrdersBySerumMarket],
+    [connection, dexProgramId, key, setOpenOrdersBySerumMarket, subRef],
   );
 };

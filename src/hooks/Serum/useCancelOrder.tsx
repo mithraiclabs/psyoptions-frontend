@@ -51,7 +51,7 @@ export const useCancelOrder = (
           } else {
             const ix = await serumInstructions.cancelOrderInstructionV2(
               program,
-              optionMarket.pubkey,
+              optionMarket?.pubkey,
               new PublicKey(optionMarket.serumProgramId),
               serumMarket.address,
               order,

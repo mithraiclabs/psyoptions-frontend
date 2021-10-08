@@ -366,7 +366,7 @@ const useOptionsMarkets = () => {
       writerTokenDestinationKey: writerTokenDestAddress,
       numberOfContractsToMint: numberOfContracts,
     });
-    if (error) {
+    if (error || !response) {
       pushNotification(error);
       return {};
     }

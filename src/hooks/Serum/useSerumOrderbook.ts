@@ -22,7 +22,7 @@ export const useSerumOrderbook = (
   const { serumMarkets } = useSerum();
   const [loading, setLoading] = useState(false);
   const [orderbooks, setOrderbooks] = useSerumOrderbooks();
-  const serumMarket = serumMarkets[serumMarketAddress]?.serumMarket;
+  const serumMarket = serumMarkets[serumMarketAddress ?? '']?.serumMarket;
 
   useEffect(() => {
     if (serumMarket) {
@@ -32,27 +32,29 @@ export const useSerumOrderbook = (
         try {
           // We now batch load orderbooks, so there's likely no need to fetch again
           // if we successfully load and subscribe
-          if (!orderbooks[serumMarketAddress]) {
+          if (!orderbooks[serumMarketAddress ?? '']) {
             const {
               asks: _asks,
               bids: _bids,
               bidOrderbook,
               askOrderbook,
             } = await getOrderbook(connection, serumMarket);
-            setOrderbooks((prevOrderbooks) => ({
-              ...prevOrderbooks,
-              [serumMarketAddress]: {
-                // bidOrderbook and askOrderbook are the raw orderbook objects that come back from serum-ts
-                // These are not useable for displaying orders,
-                // But are needed for some other functionality such as finding open orders for an account
-                bidOrderbook,
-                askOrderbook,
+            if (serumMarketAddress) {
+              setOrderbooks((prevOrderbooks) => ({
+                ...prevOrderbooks,
+                [serumMarketAddress]: {
+                  // bidOrderbook and askOrderbook are the raw orderbook objects that come back from serum-ts
+                  // These are not useable for displaying orders,
+                  // But are needed for some other functionality such as finding open orders for an account
+                  bidOrderbook,
+                  askOrderbook,
 
-                // These are the human-readable orderbooks used to display data in the orderbook table
-                asks: _asks,
-                bids: _bids,
-              },
-            }));
+                  // These are the human-readable orderbooks used to display data in the orderbook table
+                  asks: _asks,
+                  bids: _bids,
+                } as OrderbookData,
+              }));
+            }
           }
         } catch (err) {
           pushNotification({
@@ -74,7 +76,7 @@ export const useSerumOrderbook = (
   ]);
 
   return {
-    orderbook: orderbooks[serumMarketAddress],
+    orderbook: orderbooks[serumMarketAddress ?? ''],
     loading,
   };
 };

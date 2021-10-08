@@ -1,6 +1,6 @@
 import React from 'react';
 import Box from '@material-ui/core/Box';
-import Link from '@material-ui/core/Link';
+import Link from 'next/link';
 import KeyboardArrowDown from '@material-ui/icons/KeyboardArrowDown';
 import useWallet from '../../hooks/useWallet';
 import { useSerumOpenOrders } from '../../context/SerumOpenOrdersContext';
@@ -31,19 +31,22 @@ const MarketsUnsettledBalances: React.FC = () => {
       <Box display="flex" px={[1, 1, 0]} pt={[0, 0, 1]}>
         <Box display="flex" flexDirection={'row'} alignItems="center" mr={1}>
           <span>You have&nbsp;</span>
-          <Link
-            href="#unsettled-balances-table"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-            }}
-          >
-            <span>unsettled balances</span>
-            <KeyboardArrowDown
-              viewBox="0 0 24 24"
-              style={{ width: '20px', height: '20px' }}
-            />
-          </Link>
+          <span>
+            <Link href="#unsettled-balances-table">
+              <Box
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+              >
+                <span>unsettled balances</span>
+                <KeyboardArrowDown
+                  viewBox="0 0 24 24"
+                  style={{ width: '20px', height: '20px' }}
+                />
+              </Box>
+            </Link>
+          </span>
         </Box>
       </Box>
     </Box>

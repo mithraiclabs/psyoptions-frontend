@@ -119,7 +119,7 @@ const usePlaceSellOrder = (
             mintTX.add(
               Token.createCloseAccountInstruction(
                 TOKEN_PROGRAM_ID,
-                _uAssetTokenAccount.pubKey,
+                _uAssetTokenAccount?.pubKey,
                 pubKey, // Send any remaining SOL to the owner
                 pubKey,
                 [],
@@ -152,7 +152,7 @@ const usePlaceSellOrder = (
         } else {
           const ix = await serumInstructions.newOrderInstruction(
             program,
-            optionMarket.pubkey,
+            optionMarket?.pubkey,
             new PublicKey(optionMarket.serumProgramId),
             optionMarket.serumMarketKey,
             { ...orderArgs, payer: _optionTokenSrcKey },

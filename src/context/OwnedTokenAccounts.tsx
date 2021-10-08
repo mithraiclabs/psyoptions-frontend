@@ -82,7 +82,7 @@ export const OwnedTokenAccountsProvider: React.FC = ({ children }) => {
             const mintAsString = listenerAccount.mint.toString();
             const prevMintState = prevOwnedTokenAccounts[mintAsString];
             let index = prevMintState?.findIndex((prevAccount) =>
-              prevAccount.pubKey.equals(publicKey),
+              prevAccount?.pubKey?.equals(publicKey),
             );
             // index may be -1 if the Token Account does not yet exist in our state.
             // In this case, we must set the index to 0 so it will be at the beginning of the array.

@@ -113,7 +113,7 @@ export const useSettleFunds = (
       } else {
         const ix = await serumInstructions.settleFundsInstruction(
           program,
-          optionMarket.pubkey,
+          optionMarket?.pubkey,
           new PublicKey(optionMarket.serumProgramId),
           serumMarket.address,
           _baseTokenAccountKey,

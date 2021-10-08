@@ -1,6 +1,6 @@
 import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
-import Link from '@material-ui/core/Link';
+import Link from 'next/link';
 import Paper from '@material-ui/core/Paper';
 import TextareaAutosize from '@material-ui/core/TextareaAutosize';
 import React, { useRef } from 'react';
@@ -55,12 +55,11 @@ export const InitializedMarkets: React.VFC = () => {
             </Box>
             <Box py={1} px={0} display="block" fontSize={'14px'}>
               After initializing a market, you may submit a pull request to our{' '}
-              <Link
-                href="https://github.com/mithraiclabs/psyoptions-ts/tree/master/packages/market-meta"
-                style={{ textDecoration: 'underline' }}
-              >
-                market meta package
-              </Link>{' '}
+              <span style={{ textDecoration: 'underline' }}>
+                <Link href="https://github.com/mithraiclabs/psyoptions-ts/tree/master/packages/market-meta">
+                  market meta package
+                </Link>
+              </span>{' '}
               for UI support.
             </Box>
           </Box>

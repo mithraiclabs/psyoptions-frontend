@@ -42,9 +42,12 @@ const usePlaceBuyOrder = (
       orderArgs,
       optionDestinationKey,
     }: PlaceBuyOrderArgs) => {
+      if (!pubKey || !program) {
+        return;
+      }
       try {
         const transaction = new Transaction();
-        let signers = [];
+        let signers: Signer[] = [];
         const _optionDestinationKey = optionDestinationKey;
         const optionsProgramId = new PublicKey(
           optionMarket.psyOptionsProgramId,
@@ -68,7 +71,7 @@ const usePlaceBuyOrder = (
         let placeOrderSigners: Signer[] = [];
         let openOrdersAddress: PublicKey;
         if (
-          PSY_AMERICAN_PROGRAM_IDS[optionsProgramId.toString()] ===
+          PSY_AMERICAN_PROGRAM_IDS[optionsProgramId.toString() ?? ''] ===
           ProgramVersions.V1
         ) {
           ({

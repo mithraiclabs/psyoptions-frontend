@@ -10,7 +10,7 @@ import { NotificationSeverity } from '../../types';
 import { buildSolanaExplorerUrl } from '../../utils/solanaExplorer';
 
 export const useInitializeSerumMarket = (): ((options: {
-  optionMarketKey: PublicKey;
+  optionMarketKey: PublicKey | undefined;
   baseMintKey: PublicKey;
   quoteMintKey: PublicKey;
   quoteLotSize: BN;
@@ -20,17 +20,10 @@ export const useInitializeSerumMarket = (): ((options: {
   const { pushErrorNotification, pushNotification } = useNotifications();
 
   return useCallback(
-    async ({
-      optionMarketKey,
-      baseMintKey,
-      quoteMintKey,
-      quoteLotSize,
-    }: {
-      optionMarketKey: PublicKey;
-      baseMintKey: PublicKey;
-      quoteMintKey: PublicKey;
-      quoteLotSize: BN;
-    }) => {
+    async ({ optionMarketKey, baseMintKey, quoteMintKey, quoteLotSize }) => {
+      if (!dexProgramId || !program || !optionMarketKey) {
+        return null;
+      }
       try {
         pushNotification({
           severity: NotificationSeverity.INFO,

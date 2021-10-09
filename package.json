@@ -16,7 +16,8 @@
     "type-check": "tsc --noEmit",
     "build-docker": "docker build -t solana-options-frontend:latest .",
     "start-docker": "docker run -p 3000:3000 solana-options-frontend:latest",
-    "wholeShebang": "ts-node ./scripts/wholeShebang.ts"
+    "wholeShebang": "ts-node ./scripts/wholeShebang.ts",
+    "serum": "ts-node ./scripts/serumManager.ts"
   },
   "author": "",
   "license": "ISC",

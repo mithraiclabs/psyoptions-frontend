@@ -265,6 +265,8 @@ const getBaseMint = () => new PublicKey(yargs.argv['base-mint']);
 
 const getQuoteMint = () => new PublicKey(yargs.argv['quote-mint']);
 
+const getMarketAddress = () => new PublicKey(yargs.argv['market-address']);
+
 const getBaseLotSize = () =>
   yargs.argv['base-lot-size']
     ? new BN(yargs.argv['base-lot-size'] as string)
@@ -293,9 +295,45 @@ const getPayer = () => {
   return Keypair.fromSecretKey(Buffer.from(JSON.parse(keyBuffer)));
 };
 
-console.log('*** yargs', yargs.argv);
+const readOrderBook = async (
+  connection: Connection,
+  dexProgramId: PublicKey,
+  marketAddress: PublicKey,
+) => {
+  const market = await Market.load(connection, marketAddress, {}, dexProgramId);
+  const asks = await market.loadAsks(connection);
+  const bids = await market.loadBids(connection);
+  console.log(`bids: ${bids.getL2(5)}\nasks: ${asks.getL2(5)}`);
+};
 
-// TODO: create | load 1 keypairs for management
+yargs.command(
+  'read',
+  'Read the order book for a serum market',
+  yargs
+    .option('rpc-url', {
+      type: 'string',
+      description: 'Solana RPC url',
+      default: 'http://localhost:8899',
+    })
+    .option('dex-program-id', {
+      alias: 'serum-id',
+      type: 'string',
+      description: 'The Serum program ID',
+      default: '9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin',
+    })
+    .option('market-address', {
+      type: 'string',
+      desciption: 'The addressof the serum market to read from',
+      requiresArg: true,
+    }),
+  async () => {
+    const marketAddress = getMarketAddress();
+    console.log(`Reading serum market ${marketAddress}`);
+    await readOrderBook(createConnection(), getDexId(), getMarketAddress());
+  },
+);
+
+console.log('*** yargs', yargs.argv);
 
 // TODO: add command to cancel all orders
 

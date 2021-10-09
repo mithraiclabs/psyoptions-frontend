@@ -206,6 +206,8 @@ const getMarketAddress = () => new PublicKey(yargs.argv['market-address']);
 
 const getMidpoint = () => new BN(yargs.argv['midpoint'] as string);
 
+const getClientId = () => new BN(yargs.argv['client-id'] as string);
+
 const getBaseLotSize = () =>
   yargs.argv['base-lot-size']
     ? new BN(yargs.argv['base-lot-size'] as string)
@@ -285,7 +287,7 @@ const placeOrderInstruction = (
       market.baseSizeNumberToLots(size).mul(market.priceNumberToLots(price)),
     ),
     orderType: 'limit',
-    clientId,
+    clientId: new BN(1),
     programId: dexProgramId,
     selfTradeBehavior: 'decrementTake',
     feeDiscountPubkey: null,
@@ -394,6 +396,37 @@ const placeTwoSidedOrders = async (
     },
   );
   console.log(`confirmed tx id: ${txId}`);
+};
+
+const cancelByClientId = async (
+  connection: Connection,
+  marketAddress: PublicKey,
+  dexProgramId: PublicKey,
+  cancelClientId: BN,
+  payer: Keypair,
+) => {
+  const market = await Market.load(connection, marketAddress, {}, dexProgramId);
+
+  const openOrdersAccounts = await market.findOpenOrdersAccountsForOwner(
+    connection,
+    payer.publicKey,
+    0,
+  );
+  const openOrdersAccount = openOrdersAccounts[0]
+    ? openOrdersAccounts[0].address
+    : null;
+  if (openOrdersAccount) {
+    const ix = await market.cancelOrderByClientId(
+      connection,
+      payer as unknown as Account,
+      openOrdersAccount,
+      cancelClientId,
+    );
+  } else {
+    console.error(
+      `Could not find OpenOrders account for owner ${payer.publicKey.toString()}`,
+    );
+  }
 };
 
 yargs
@@ -530,6 +563,48 @@ yargs
         getMarketAddress(),
         getPayer(),
         getMidpoint(),
+      );
+    },
+  )
+  .command(
+    'cancelOrders',
+    'Cancel all orders for client id Eaxmple: \n' +
+      `yarn serum cancelOrders --market-address Dzex62QZucacdDCxLcHnptYpCi37S16vWtaXSvwFPRcH --client-id 1`,
+    (yargs) =>
+      yargs
+        .option('rpc-url', {
+          type: 'string',
+          description: 'Solana RPC url',
+          default: 'http://localhost:8899',
+        })
+        .option('dex-program-id', {
+          alias: 'serum-id',
+          type: 'string',
+          description: 'The Serum program ID',
+          default: '9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin',
+        })
+        .option('market-address', {
+          type: 'string',
+          desciption: 'The addressof the serum market to read from',
+          requiresArg: true,
+        })
+        .option('client-id', {
+          type: 'string',
+          desciption: 'The client id of the orders to cancel',
+          requiresArg: false,
+        }),
+    async () => {
+      const marketAddress = getMarketAddress();
+      const cancelId = getClientId() || clientId;
+      console.log(
+        `Canceling orders for market ${marketAddress} and client id ${cancelId}`,
+      );
+      await cancelByClientId(
+        createConnection(),
+        marketAddress,
+        getDexId(),
+        cancelId,
+        getPayer(),
       );
     },
   ).argv;

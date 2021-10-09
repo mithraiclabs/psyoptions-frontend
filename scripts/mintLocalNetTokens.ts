@@ -1,5 +1,5 @@
-import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import { Account, Connection, Keypair } from '@solana/web3.js';
+import { Token, TOKEN_PROGRAM_ID, u64 } from '@solana/spl-token';
+import { Connection, Keypair, PublicKey } from '@solana/web3.js';
 const fs = require('fs');
 
 (async () => {
@@ -11,7 +11,7 @@ const fs = require('fs');
     throw new Error('Missing keypair file argument');
   }
   const keyBuffer = fs.readFileSync(keyPairFilePath);
-  payer = new Account(JSON.parse(keyBuffer));
+  payer = Keypair.fromSecretKey(Buffer.from(JSON.parse(keyBuffer)));
 
   const localSPLData = JSON.parse(fs.readFileSync('./tmp/localnetData.json'));
 
@@ -19,17 +19,22 @@ const fs = require('fs');
   localSPLData.forEach(async (splData, index) => {
     const token = new Token(
       connection,
-      splData.mintAddress,
+      new PublicKey(splData.mintAddress),
       TOKEN_PROGRAM_ID,
       payer,
     );
-    const newTokenAccount = await token.createAccount(
-      walletAddress || payer.publicKey,
+
+    const newTokenAccount = await token.getOrCreateAssociatedAccountInfo(
+      walletAddress ? new PublicKey(walletAddress) : payer.publicKey,
     );
+    const tokenAccountKey = newTokenAccount.address;
     // The tokens created by the seedLocalNet have 8 decimals
-    token.mintTo(newTokenAccount, payer, [], 1000 * 10 ** 8);
+    const amount = new u64(1_000_000_000).mul(new u64(10).pow(new u64(8)));
+    token.mintTo(tokenAccountKey, payer, [], amount);
     console.log(
-      `** created account ${newTokenAccount} with 1,000 ${splData.mintAddress} tokens\n`,
+      `** created account ${tokenAccountKey} with ${amount.toString()} ${
+        splData.mintAddress
+      } tokens\n`,
     );
   });
 })();

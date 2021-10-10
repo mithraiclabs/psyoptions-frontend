@@ -134,7 +134,7 @@ const ConfirmOrder = () => {
       const serumQuoteTokenAccounts =
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore: serum market._decoded
-        ownedTokenAccounts[serumMarket?._decoded.quoteMint.toString()] || [];
+        ownedTokenAccounts[serumMarket?._decoded?.quoteMint?.toString()] || [];
       const serumQuoteTokenKey = getHighestAccount(
         serumQuoteTokenAccounts,
       )?.pubKey;

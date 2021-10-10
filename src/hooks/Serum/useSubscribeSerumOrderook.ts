@@ -63,13 +63,12 @@ export const useSubscribeSerumOrderbook = (
       );
     }
 
-    // return () => {
-    //   if (asksSubscription) {
-    //     connection.removeAccountChangeListener(asksSubscription);
-    //   }
-    //   if (bidsSubscription) {
-    //     connection.removeAccountChangeListener(bidsSubscription);
-    //   }
-    // };
+    /**
+     * #TODO: Find best way to remove subscriptions here.
+     *  The problem with removing the subs with a return statement here
+     *  is then when user changes option expiration, they get removed,
+     *  but we still need them!
+     */
+
   }, [connection, serumMarketAddress, serumMarket, setOrderbooks]);
 };

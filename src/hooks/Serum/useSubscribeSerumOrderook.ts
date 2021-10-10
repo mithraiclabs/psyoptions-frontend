@@ -63,13 +63,13 @@ export const useSubscribeSerumOrderbook = (
       );
     }
 
-    return () => {
-      if (asksSubscription) {
-        connection.removeAccountChangeListener(asksSubscription);
-      }
-      if (bidsSubscription) {
-        connection.removeAccountChangeListener(bidsSubscription);
-      }
-    };
+    // return () => {
+    //   if (asksSubscription) {
+    //     connection.removeAccountChangeListener(asksSubscription);
+    //   }
+    //   if (bidsSubscription) {
+    //     connection.removeAccountChangeListener(bidsSubscription);
+    //   }
+    // };
   }, [connection, serumMarketAddress, serumMarket, setOrderbooks]);
 };

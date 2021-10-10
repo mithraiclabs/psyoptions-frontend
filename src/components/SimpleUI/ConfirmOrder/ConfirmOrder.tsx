@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import * as Sentry from '@sentry/react';
 import { useRouter } from 'next/router';
 import Box from '@material-ui/core/Box';
@@ -18,22 +18,20 @@ import useOwnedTokenAccounts from '../../../hooks/useOwnedTokenAccounts';
 import useFilteredOptionsChain from '../../../hooks/useFilteredOptionsChain';
 import useSerum from '../../../hooks/useSerum';
 import { useSerumOrderbooks } from '../../../context/SerumOrderbookContext';
-import useAssetList from '../../../hooks/useAssetList';
 import { useSerumFeeDiscountKey } from '../../../hooks/Serum/useSerumFeeDiscountKey';
-import { useOptionMarket } from '../../../hooks/useOptionMarket';
 import { calculatePriceWithSlippage } from '../../../utils/calculatePriceWithSlippage';
 import {
   calculateBreakevenForLimitOrder,
   calculateBreakevenForMarketOrder,
 } from '../../../utils/calculateBreakeven';
+import useOptionsMarkets from '../../../hooks/useOptionsMarkets';
 
 const ConfirmOrder = () => {
   const router = useRouter();
   const { connected, pubKey } = useWallet();
-  const { uAsset, qAsset } = useAssetList();
   const { pushErrorNotification } = useNotifications();
-  const [cost, setCost] = useState(null);
-  const [breakeven, setBreakeven] = useState(null);
+  const [cost, setCost] = useState(null as number | null);
+  const [breakeven, setBreakeven] = useState(null as number | null);
   const {
     tokenSymbol,
     direction,
@@ -47,27 +45,19 @@ const ConfirmOrder = () => {
   const [placeOrderLoading, setPlaceOrderLoading] = useState(false);
   const { lowestAskHighestBidPerStrike, optionRowForStrike } =
     useFilteredOptionsChain(direction === 'down' ? 'put' : 'call');
-  const optionRow = optionRowForStrike[strike];
-  const serumAddress = optionRow?.serumMarketKey?.toString();
+  const serumAddress = optionRowForStrike[strike]?.serumMarketKey?.toString();
   const placeBuyOrder = usePlaceBuyOrder(serumAddress);
   const { serumMarkets } = useSerum();
   const [orderbooks] = useSerumOrderbooks();
   const { feeRates: serumFeeRates, publicKey: serumDiscountFeeKey } =
     useSerumFeeDiscountKey();
   const { ownedTokenAccounts } = useOwnedTokenAccounts();
-  const optionMarket = useOptionMarket({
-    date: expirationUnixTimestamp,
-    uAssetSymbol: uAsset?.tokenSymbol,
-    qAssetSymbol: qAsset?.tokenSymbol,
-    size: contractSize.toString(),
-    amountPerContract: optionRow?.amountPerContract,
-    quoteAmountPerContract: optionRow?.quoteAmountPerContract,
-  });
+  const { marketsBySerumKey } = useOptionsMarkets();
+
+  const optionMarket = marketsBySerumKey[serumAddress];
 
   const serumMarketData = serumMarkets[serumAddress];
   const serumMarket = serumMarketData?.serumMarket;
-  const optionAccounts =
-    ownedTokenAccounts[`${optionRow?.optionMintKey}`] || [];
   const orderbook = orderbooks[serumAddress];
 
   // If previous form state didn't exist, send user back to first page (choose asset)
@@ -134,16 +124,21 @@ const ConfirmOrder = () => {
     orderbook?.asks,
   ]);
 
-  const handlePlaceOrderClicked = async () => {
+  const disabledPlaceOrder = !serumMarket || !pubKey || (orderType === "limit" && !limitPrice)
+
+  const handlePlaceOrderClicked = useCallback(async () => {
+    if (disabledPlaceOrder) return;
+
     setPlaceOrderLoading(true);
     try {
       const serumQuoteTokenAccounts =
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore: serum market._decoded
-        ownedTokenAccounts[serumMarket._decoded.quoteMint.toString()] || [];
+        ownedTokenAccounts[serumMarket?._decoded.quoteMint.toString()] || [];
       const serumQuoteTokenKey = getHighestAccount(
         serumQuoteTokenAccounts,
       )?.pubKey;
+      const optionAccounts = ownedTokenAccounts[`${optionRowForStrike[strike]?.optionMintKey}`] || [];
       const optionTokenKey = getHighestAccount(optionAccounts)?.pubKey;
 
       await placeBuyOrder({
@@ -158,9 +153,9 @@ const ConfirmOrder = () => {
           // Serum-ts handles adding the SPL Token decimals via their
           //  `maket.priceNumberToLots` function
           price:
-            orderType === 'market'
-              ? calculatePriceWithSlippage(orderSize, orderbook?.asks)
-              : limitPrice,
+            orderType === "limit"
+              ? limitPrice!
+              : calculatePriceWithSlippage(orderSize, orderbook?.asks),
           // Serum-ts handles adding the SPL Token decimals via their
           //  `maket.priceNumberToLots` function
           size: orderSize,
@@ -171,7 +166,7 @@ const ConfirmOrder = () => {
           feeDiscountPubkey: serumDiscountFeeKey,
           // serum fee rate. Should use the taker fee even if limit order if it's likely to match an order
           feeRate:
-            orderType === 'market' || limitPrice >= orderbook?.asks?.[0]?.price
+            orderType === 'market' || (limitPrice && limitPrice >= orderbook?.asks?.[0]?.price)
               ? serumFeeRates?.taker
               : undefined,
         },
@@ -182,7 +177,23 @@ const ConfirmOrder = () => {
       Sentry.captureException(err);
       pushErrorNotification(err);
     }
-  };
+  }, [
+    disabledPlaceOrder,
+    serumMarket,
+    ownedTokenAccounts,
+    optionRowForStrike,
+    strike,
+    optionMarket,
+    pubKey,
+    orderType,
+    limitPrice,
+    orderSize,
+    orderbook,
+    serumDiscountFeeKey,
+    serumFeeRates,
+    placeBuyOrder,
+    pushErrorNotification,
+  ]);
 
   return (
     <SimpleUIPage title={'Confirm Order'}>
@@ -235,8 +246,9 @@ const ConfirmOrder = () => {
               onClick={handlePlaceOrderClicked}
               variant="outlined"
               style={{ width: '100%' }}
+              disabled={disabledPlaceOrder}
             >
-              Place Order
+              {disabledPlaceOrder ?  'Loading Market Info...' : 'Place Order'}
             </Button>
           )}
         </Box>

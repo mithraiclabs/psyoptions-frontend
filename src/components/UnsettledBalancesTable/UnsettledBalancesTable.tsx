@@ -5,25 +5,18 @@ import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import TableBody from '@material-ui/core/TableBody';
 import TableContainer from '@material-ui/core/TableContainer';
-
 import useWallet from '../../hooks/useWallet';
-
 import ConnectButton from '../ConnectButton';
 import UnsettledBalancesRow from './UnsettledBalancesRow';
 import { TCell, THeadCell } from './UnsettledBalancesStyles';
-import { CallOrPut } from '../../types';
+import { OptionType } from '../../types';
+import { useSerumOpenOrders } from '../../context/SerumOpenOrdersContext';
 
 const UnsettledBalancesTable: React.FC<{
-  optionMarkets: CallOrPut[];
-  uAssetDecimals: number;
   qAssetDecimals: number;
-}> = ({ optionMarkets, uAssetDecimals, qAssetDecimals }) => {
+}> = ({ qAssetDecimals }) => {
   const { connected } = useWallet();
-
-  // filters out non-initialized serum markets
-  const existingMarketsArray = optionMarkets.filter(
-    (optionMarket) => !!optionMarket?.serumMarketKey,
-  );
+  const { optionMarketsForOpenOrders } = useSerumOpenOrders();
 
   return (
     <Box mt={'20px'}>
@@ -60,12 +53,17 @@ const UnsettledBalancesTable: React.FC<{
                 </TCell>
               </TableRow>
             ) : (
-              existingMarketsArray.map((optionMarket) => (
+              optionMarketsForOpenOrders.map((optionMarket) => (
                 <UnsettledBalancesRow
-                  {...optionMarket}
-                  uAssetDecimals={uAssetDecimals}
+                  expiration={optionMarket.expiration}
+                  contractSize={optionMarket.size}
+                  // #TODO: change later, should have option type here
+                  type={optionMarket.qAssetSymbol === "USDC" ? OptionType.CALL : OptionType.PUT}
+                  qAssetSymbol={optionMarket.qAssetSymbol}
+                  uAssetSymbol={optionMarket.uAssetSymbol}
+                  serumMarketKey={optionMarket.serumMarketKey}
+                  strikePrice={optionMarket.strikePrice ?? ''}
                   qAssetDecimals={qAssetDecimals}
-                  optionMarketUiKey={optionMarket.key}
                   key={`${optionMarket.serumMarketKey.toString()}-unsettled`}
                 />
               ))

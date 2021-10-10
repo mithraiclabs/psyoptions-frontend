@@ -18,13 +18,13 @@ import useOwnedTokenAccounts from './useOwnedTokenAccounts';
  * }
  */
 export const useWrittenOptions = (): Record<string, TokenAccount[]> => {
-  const { markets } = useOptionsMarkets();
+  const { marketsByUiKey } = useOptionsMarkets();
   const { ownedTokenAccounts } = useOwnedTokenAccounts();
 
   return useMemo(() => {
-    const positions = Object.keys(markets).reduce((acc, marketKey) => {
+    const positions = Object.keys(marketsByUiKey).reduce((acc, marketKey) => {
       const writerTokenMintAddress =
-        markets[marketKey].writerTokenMintKey.toString();
+      marketsByUiKey[marketKey].writerTokenMintKey.toString();
       const accountsWithHoldings = ownedTokenAccounts[
         writerTokenMintAddress
       ]?.filter((writerTokenAcct) => writerTokenAcct.amount > 0);
@@ -34,5 +34,5 @@ export const useWrittenOptions = (): Record<string, TokenAccount[]> => {
       return acc;
     }, {} as Record<string, TokenAccount[]>);
     return positions;
-  }, [markets, ownedTokenAccounts]);
+  }, [marketsByUiKey, ownedTokenAccounts]);
 };

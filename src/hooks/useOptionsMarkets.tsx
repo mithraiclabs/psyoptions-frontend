@@ -35,9 +35,14 @@ const useOptionsMarkets = () => {
   const { connection, dexProgramId, endpoint } = useConnection();
   const { splTokenAccountRentBalance } = useSolanaMeta();
   const { sendTransaction } = useSendTransaction();
-  const { markets, setMarkets, marketsLoading, setMarketsLoading } = useContext(
-    OptionsMarketsContext,
-  );
+  const {
+    marketsByUiKey,
+    setMarkets,
+    marketsLoading,
+    setMarketsLoading,
+    marketsBySerumKey,
+    setMarketsBySerumKey,
+  } = useContext(OptionsMarketsContext);
   const { supportedAssets } = useAssetList();
 
   /**
@@ -56,7 +61,8 @@ const useOptionsMarkets = () => {
       const res = await getAllOptionAccounts(program);
 
       // Transform the market data to our expectations
-      const newMarkets = {};
+      const newMarketsByUiKey = {};
+      const newMarketsBySerumKey = {};
       await Promise.all(
         res.map(async (optionMarket: AmericanOptionData) => {
           const uAssetMint = optionMarket.underlyingAssetMint;
@@ -140,12 +146,14 @@ const useOptionsMarkets = () => {
             10,
           )}/${quoteAmountPerContract.toString(10)}`;
 
-          newMarkets[key] = newMarket;
+          newMarketsByUiKey[key] = newMarket;
+          newMarketsBySerumKey[serumMarket.address.toString()] = newMarket;
         }),
       );
 
       // Not sure if we should replace the existing markets or merge them
-      setMarkets(newMarkets);
+      setMarkets(newMarketsByUiKey);
+      setMarketsBySerumKey(newMarketsBySerumKey);
       setMarketsLoading(false);
       return;
     } catch (err) {
@@ -161,8 +169,11 @@ const useOptionsMarkets = () => {
     try {
       setMarketsLoading(true);
       const supportedMarkets = getSupportedMarketsByNetwork(endpoint.name);
+
       // Transform the market data to our expectations
-      const newMarkets = {};
+      const newMarketsByUiKey = {};
+      const newMarketsBySerumKey = {};
+
       supportedMarkets.forEach((market) => {
         const uAsset = supportedAssets.filter(
           (asset) => asset.mintAddress === market.underlyingAssetMint,
@@ -224,12 +235,14 @@ const useOptionsMarkets = () => {
           10,
         )}/${quoteAmountPerContract.toString(10)}`;
 
-        newMarkets[key] = newMarket;
+        newMarketsByUiKey[key] = newMarket;
+        newMarketsBySerumKey[market.serumMarketAddress] = newMarket;
       });
       // Not sure if we should replace the existing markets or merge them
-      setMarkets(newMarkets);
+      setMarkets(newMarketsByUiKey);
+      setMarketsBySerumKey(newMarketsBySerumKey);
       setMarketsLoading(false);
-      return newMarkets;
+      return newMarketsByUiKey;
     } catch (err) {
       console.error(err);
       setMarketsLoading(false);
@@ -241,37 +254,37 @@ const useOptionsMarkets = () => {
     ({ uAssetSymbol, qAssetSymbol }) => {
       const keyPart = `-${uAssetSymbol}-${qAssetSymbol}-`;
 
-      const sizes = Object.keys(markets)
+      const sizes = Object.keys(marketsByUiKey)
         .filter((key) => key.match(keyPart))
-        .map((key) => markets[key].size);
+        .map((key) => marketsByUiKey[key].size);
 
       return [...new Set(sizes)];
     },
-    [markets],
+    [marketsByUiKey],
   );
 
   const getSizesWithDate = useCallback(
     ({ uAssetSymbol, qAssetSymbol, date }) => {
       const keyPart = `${date}-${uAssetSymbol}-${qAssetSymbol}-`;
 
-      const sizes = Object.keys(markets)
+      const sizes = Object.keys(marketsByUiKey)
         .filter((key) => key.match(keyPart))
-        .map((key) => markets[key].size);
+        .map((key) => marketsByUiKey[key].size);
 
       return [...new Set(sizes)];
     },
-    [markets],
+    [marketsByUiKey],
   );
 
   const getStrikePrices = ({ uAssetSymbol, qAssetSymbol, date, size }) => {
     const keyPart = `${date}-${uAssetSymbol}-${qAssetSymbol}-${size}-`;
-    return Object.keys(markets)
+    return Object.keys(marketsByUiKey)
       .filter((key) => key.match(keyPart))
-      .map((key) => markets[key].strikePrice);
+      .map((key) => marketsByUiKey[key].strikePrice);
   };
 
   const getDates = () => {
-    const dates = Object.values(markets).map((m: OptionMarket) => m.expiration);
+    const dates = Object.values(marketsByUiKey).map((m: OptionMarket) => m.expiration);
     const deduped = [...new Set(dates)];
     return deduped;
   };
@@ -348,7 +361,7 @@ const useOptionsMarkets = () => {
     const qAssetSymbol = qAsset.tokenSymbol;
 
     const marketData =
-      markets[`${date}-${uAssetSymbol}-${qAssetSymbol}-${size}-${price}`];
+      marketsByUiKey[`${date}-${uAssetSymbol}-${qAssetSymbol}-${size}-${price}`];
 
     // Fallback to first oowned minted option account
     const mintedOptionDestAddress =
@@ -389,9 +402,11 @@ const useOptionsMarkets = () => {
   };
 
   return {
-    markets,
+    marketsByUiKey,
     marketsLoading,
     setMarkets,
+    marketsBySerumKey,
+    setMarketsBySerumKey,
     setMarketsLoading,
     getStrikePrices,
     getSizes,

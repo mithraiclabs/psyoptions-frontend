@@ -76,7 +76,7 @@ const LandingCard = ({
 
 const Landing: React.VFC = () => {
   const router = useRouter();
-  const { markets } = useOptionsMarkets();
+  const { marketsByUiKey } = useOptionsMarkets();
   const positions = useOpenPositions();
   const { logoH1 } = useStyles();
   const { landingCard } = useStyles();
@@ -112,9 +112,9 @@ const Landing: React.VFC = () => {
         >
           <Box display="flex" flexDirection={['column', 'row', 'row']}>
             <LandingCard
-              title={`${Object.keys(markets).length}`}
+              title={`${Object.keys(marketsByUiKey).length}`}
               text={`Options Market${
-                Object.keys(markets).length === 1 ? '' : 's'
+                Object.keys(marketsByUiKey).length === 1 ? '' : 's'
               } Created`}
               button={
                 <Button

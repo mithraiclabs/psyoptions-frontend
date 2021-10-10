@@ -8,12 +8,12 @@ import Divider from '@material-ui/core/Divider';
 import { BN } from '@project-serum/anchor';
 import { PublicKey } from '@solana/web3.js';
 import React, { useCallback, useState } from 'react';
-import DialogFullscreenMobile from '../DialogFullscreenMobile';
-import { PlusMinusIntegerInput } from '../PlusMinusIntegerInput';
-import { useDecimalsForMint } from '../../hooks/useDecimalsForMint';
-import { useExchangeWriterTokenForQuote } from '../../hooks/useExchangeWriterTokenForQuote';
-import { OptionMarket, TokenAccount } from '../../types';
-import { getOptionNameByMarket } from '../../utils/format';
+import DialogFullscreenMobile from '../../DialogFullscreenMobile';
+import { PlusMinusIntegerInput } from '../../PlusMinusIntegerInput';
+import { useDecimalsForMint } from '../../../hooks/useDecimalsForMint';
+import { useExchangeWriterTokenForQuote } from '../../../hooks/useExchangeWriterTokenForQuote';
+import { OptionMarket, TokenAccount } from '../../../types';
+import { getOptionNameByMarket } from '../../../utils/format';
 
 export const ClaimQuoteDialog: React.VFC<{
   dismiss: () => void;

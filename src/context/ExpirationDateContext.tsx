@@ -21,8 +21,9 @@ const ExpirationDateContext = createContext<DateContextValue>({
 
 const ExpirationDateProvider: React.FC = ({ children }) => {
   const { uAsset, qAsset, assetListLoading } = useAssetList();
-  const { markets } = useOptionsMarkets();
+  const { marketsByUiKey } = useOptionsMarkets();
   const [dates, setDates] = useState<Moment[]>([]);
+
   const [_selectedDatesByAsset, _setSelectedDatesByAsset] =
     useLocalStorageState<Record<string, string>>('selectedDates', {});
   const setSelectedDate = useCallback(
@@ -44,15 +45,15 @@ const ExpirationDateProvider: React.FC = ({ children }) => {
     if (!assetListLoading && uAsset?.mintAddress && qAsset?.mintAddress) {
       const expirationsForAssetPair = Array.from(
         new Set(
-          Object.keys(markets)
+          Object.keys(marketsByUiKey)
             .filter(
               (marketKey) =>
-                markets[marketKey].underlyingAssetMintKey.toString() ===
-                  uAsset?.mintAddress &&
-                markets[marketKey].quoteAssetMintKey.toString() ===
-                  qAsset?.mintAddress,
+                marketsByUiKey[marketKey].underlyingAssetMintKey.toString() ===
+                uAsset?.mintAddress &&
+                marketsByUiKey[marketKey].quoteAssetMintKey.toString() ===
+                qAsset?.mintAddress,
             )
-            .map((marketKey) => markets[marketKey].expiration),
+            .map((marketKey) => marketsByUiKey[marketKey].expiration),
         ),
       );
 
@@ -66,7 +67,7 @@ const ExpirationDateProvider: React.FC = ({ children }) => {
 
       setDates(newDates);
     }
-  }, [assetListLoading, markets, uAsset?.mintAddress, qAsset?.mintAddress]);
+  }, [assetListLoading, marketsByUiKey, uAsset?.mintAddress, qAsset?.mintAddress]);
 
   useEffect(() => {
     // Set default date or load user's stored date for current asset

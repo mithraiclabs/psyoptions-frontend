@@ -1,1 +1,1 @@
-export { default } from '../../src/components/Portfolio/OpenPositions';
+export { default } from '../../src/components/Portfolio';

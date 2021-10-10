@@ -6,22 +6,20 @@ import BigNumber from 'bignumber.js';
 import { PublicKey } from '@solana/web3.js';
 import useSerum from '../../hooks/useSerum';
 import {
-  useSubscribeOpenOrders,
   useSettleFunds,
   useUnsettledFundsForMarket,
 } from '../../hooks/Serum';
 
 import { TCell } from './UnsettledBalancesStyles';
-import { OptionType, UnsettledRow as UnsettledRowProps } from '../../types';
+import { OptionType } from '../../types';
 import TxButton from '../TxButton';
-import { useOptionMarketByKey } from '../../hooks/PsyOptionsAPI/useOptionMarketByKey';
+import useOptionsMarkets from '../../hooks/useOptionsMarkets';
 
 const Empty = ({ children }) => (
   <span style={{ opacity: '0.3' }}>{children}</span>
 );
 
 const UnsettledRow = ({
-  optionMarketUiKey,
   serumMarketKey,
   type,
   expiration,
@@ -33,7 +31,6 @@ const UnsettledRow = ({
   settleFunds,
   qAssetDecimals,
 }: {
-  optionMarketUiKey: string;
   serumMarketKey: PublicKey;
   type: OptionType;
   expiration: number;
@@ -89,12 +86,18 @@ const UnsettledRow = ({
 };
 
 // Render all unsettled balances for a given market as table rows
-const UnsettledBalancesRow: React.FC<
-  UnsettledRowProps & { optionMarketUiKey: string }
-> = ({
+const UnsettledBalancesRow: React.FC<{
+  expiration: number;
+  contractSize: string;
+  type: OptionType;
+  qAssetSymbol: string;
+  uAssetSymbol: string;
+  serumMarketKey: PublicKey;
+  strikePrice: string;
+  qAssetDecimals: number;
+}> = ({
   expiration,
-  optionMarketUiKey,
-  size: contractSize,
+  contractSize,
   type,
   qAssetSymbol,
   uAssetSymbol,
@@ -102,17 +105,13 @@ const UnsettledBalancesRow: React.FC<
   strikePrice,
   qAssetDecimals,
 }) => {
-  const optionMarket = useOptionMarketByKey(optionMarketUiKey);
+  const { marketsBySerumKey } = useOptionsMarkets();
   const { serumMarkets } = useSerum();
   const serumMarketAddress = serumMarketKey.toString();
   const { serumMarket } = serumMarkets[serumMarketAddress] || {};
+  const optionMarket = marketsBySerumKey[serumMarketAddress];
   const { settleFunds } = useSettleFunds(serumMarketAddress, optionMarket);
-  const unsettledFunds = useUnsettledFundsForMarket(
-    serumMarketAddress,
-    optionMarketUiKey,
-  );
-
-  useSubscribeOpenOrders(serumMarketAddress);
+  const unsettledFunds = useUnsettledFundsForMarket(serumMarketAddress);
 
   if (
     !serumMarket ||
@@ -124,7 +123,6 @@ const UnsettledBalancesRow: React.FC<
 
   return (
     <UnsettledRow
-      optionMarketUiKey={optionMarketUiKey}
       serumMarketKey={serumMarketKey}
       type={type}
       expiration={expiration}

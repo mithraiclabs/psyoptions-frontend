@@ -132,11 +132,11 @@ const usePlaceSellOrder = (
         // Backwards compatability for V1
         let placeOrderTx: Transaction;
         let placeOrderSigners: Signer[] = [];
+        let openOrdersAddress: PublicKey;
         if (
           PSY_AMERICAN_PROGRAM_IDS[optionsProgramId.toString()] ===
           ProgramVersions.V1
         ) {
-          let openOrdersAddress: PublicKey;
           ({
             openOrdersAddress,
             transaction: placeOrderTx,
@@ -145,19 +145,20 @@ const usePlaceSellOrder = (
             ...orderArgs,
             payer: _optionTokenSrcKey,
           }));
-
-          if (openOrdersAddress) {
-            createAdHocOpenOrdersSub(openOrdersAddress);
-          }
         } else {
-          const ix = await serumInstructions.newOrderInstruction(
+          const { openOrdersKey, tx } = await serumInstructions.newOrderInstruction(
             program,
             optionMarket.pubkey,
             new PublicKey(optionMarket.serumProgramId),
             optionMarket.serumMarketKey,
             { ...orderArgs, payer: _optionTokenSrcKey },
           );
-          placeOrderTx = new Transaction().add(ix);
+          placeOrderTx = new Transaction().add(tx);
+          openOrdersAddress = openOrdersKey;
+        }
+
+        if (openOrdersAddress) {
+          createAdHocOpenOrdersSub(openOrdersAddress);
         }
 
         const { blockhash } = await connection.getRecentBlockhash();

@@ -13,11 +13,10 @@ import useOwnedTokenAccounts from '../useOwnedTokenAccounts';
 import useSerum from '../useSerum';
 import useWallet from '../useWallet';
 import useSendTransaction from '../useSendTransaction';
-import { useSerumOpenOrderAccounts } from './useSerumOpenOrderAccounts';
-import useAssetList from '../useAssetList';
 import { useAmericanPsyOptionsProgram } from '../useAmericanPsyOptionsProgram';
 import { OptionMarket } from '../../types';
 import { getReferralId } from '../../utils/networkInfo';
+import { useSerumOpenOrders } from '../../context/SerumOpenOrdersContext';
 
 /**
  * Returns function for settling the funds of a specific market
@@ -35,14 +34,10 @@ export const useSettleFunds = (
   const { serumMarkets } = useSerum();
   const { wallet, pubKey } = useWallet();
   const { sendTransaction } = useSendTransaction();
-  const { USDCPublicKey } = useAssetList();
   const { ownedTokenAccounts, subscribeToTokenAccount } =
     useOwnedTokenAccounts();
-  const openOrders = useSerumOpenOrderAccounts(
-    serumMarketAddress,
-    optionMarket?.key,
-    true,
-  );
+  const { openOrdersBySerumMarket } = useSerumOpenOrders();
+  const openOrders = openOrdersBySerumMarket[serumMarketAddress];
   const serumMarket = serumMarkets[serumMarketAddress]?.serumMarket;
   const baseMintAddress =
     serumMarket?.baseMintAddress && serumMarket.baseMintAddress.toString();
@@ -50,18 +45,17 @@ export const useSettleFunds = (
     serumMarket?.quoteMintAddress && serumMarket.quoteMintAddress.toString();
   const baseTokenAccounts = ownedTokenAccounts[baseMintAddress] ?? [];
   const quoteTokenAccounts = ownedTokenAccounts[quoteMintAddress] ?? [];
-  const { pubKey: baseTokenAccountKey } = getHighestAccount(baseTokenAccounts);
-  const { pubKey: quoteTokenAccountKey } =
-    getHighestAccount(quoteTokenAccounts);
+  const highestBaseTokenAccount = getHighestAccount(baseTokenAccounts);
+  const highestQuoteTokenAccount = getHighestAccount(quoteTokenAccounts);
 
   const makeSettleFundsTx = useCallback(async (): Promise<
     Transaction | undefined
   > => {
-    if (openOrders.length && serumMarket && optionMarket) {
+    if (openOrders?.length && serumMarket && optionMarket) {
       const transaction = new Transaction();
       let signers = [];
-      let _baseTokenAccountKey = baseTokenAccountKey;
-      let _quoteTokenAccountKey = quoteTokenAccountKey;
+      let _baseTokenAccountKey = highestBaseTokenAccount?.pubKey;
+      let _quoteTokenAccountKey = highestQuoteTokenAccount?.pubKey;
 
       if (!_baseTokenAccountKey) {
         // Create a SPL Token account for this base account if the wallet doesn't have one
@@ -77,7 +71,7 @@ export const useSettleFunds = (
         subscribeToTokenAccount(newTokenAccountKey);
       }
 
-      if (!quoteTokenAccountKey) {
+      if (!_quoteTokenAccountKey) {
         // Create a SPL Token account for this quote account if the wallet doesn't have one
         const [createOptAccountTx, newTokenAccountKey] =
           await createAssociatedTokenAccountInstruction({
@@ -142,8 +136,8 @@ export const useSettleFunds = (
     serumMarket,
     openOrders,
     program,
-    baseTokenAccountKey,
-    quoteTokenAccountKey,
+    highestBaseTokenAccount?.pubKey,
+    highestQuoteTokenAccount?.pubKey,
     connection,
     optionMarket,
     pubKey,

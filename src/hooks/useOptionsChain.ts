@@ -19,7 +19,7 @@ const callOrPutTemplate = {
 };
 const useOptionsChain = () => {
   const { pushNotification } = useNotifications();
-  const { markets: _markets, marketsLoading } = useOptionsMarkets();
+  const { marketsByUiKey, marketsLoading } = useOptionsMarkets();
   const { uAsset, qAsset } = useAssetList();
   const { chains, setChains } = useContext(OptionsChainContext);
 
@@ -31,7 +31,6 @@ const useOptionsChain = () => {
    */
   const buildOptionsChain = useCallback(
     (dateTimestamp: number, contractSize?: number) => {
-      const markets = _markets;
       try {
         if (marketsLoading) return;
 
@@ -39,8 +38,8 @@ const useOptionsChain = () => {
           !uAsset?.tokenSymbol ||
           !qAsset?.tokenSymbol ||
           !dateTimestamp ||
-          !markets ||
-          Object.keys(markets).length < 1
+          !marketsByUiKey ||
+          Object.keys(marketsByUiKey).length < 1
         ) {
           setChains([]);
           return;
@@ -55,19 +54,19 @@ const useOptionsChain = () => {
           fraction: string;
           reciprocalFraction: string;
         } => {
-          const amt = markets[k].amountPerContract.toString();
-          const qAmt = markets[k].quoteAmountPerContract.toString();
+          const amt = marketsByUiKey[k].amountPerContract.toString();
+          const qAmt = marketsByUiKey[k].quoteAmountPerContract.toString();
           return {
             fraction: `${amt}/${qAmt}`,
             reciprocalFraction: `${qAmt}/${amt}`,
-            ...markets[k],
+            ...marketsByUiKey[k],
           };
         };
 
-        const calls = Object.keys(markets)
+        const calls = Object.keys(marketsByUiKey)
           .filter((k) => k.match(callKeyPart))
           .map(callPutMap);
-        const puts = Object.keys(markets)
+        const puts = Object.keys(marketsByUiKey)
           .filter((k) => k.match(putKeyPart))
           .map(callPutMap);
 
@@ -144,7 +143,7 @@ const useOptionsChain = () => {
       }
     },
     [
-      _markets,
+      marketsByUiKey,
       marketsLoading,
       uAsset?.tokenSymbol,
       qAsset?.tokenSymbol,

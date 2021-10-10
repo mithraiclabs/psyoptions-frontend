@@ -8,15 +8,15 @@ import {
   withStyles,
 } from '@material-ui/core';
 import clsx from 'clsx';
-import { OptionType, TokenAccount } from '../../types';
-import { formatExpirationTimestamp } from '../../utils/format';
-import useOptionsMarkets from '../../hooks/useOptionsMarkets';
-import useOwnedTokenAccounts from '../../hooks/useOwnedTokenAccounts';
-import useAssetList from '../../hooks/useAssetList';
+import { OptionType, TokenAccount } from '../../../types';
+import { formatExpirationTimestamp } from '../../../utils/format';
+import useOptionsMarkets from '../../../hooks/useOptionsMarkets';
+import useOwnedTokenAccounts from '../../../hooks/useOwnedTokenAccounts';
+import useAssetList from '../../../hooks/useAssetList';
 import { ClaimQuoteDialog } from './ClaimQuoteDialog';
-import { WrittenOptionsClaimUnderlyingDialog } from '../WrittenOptionsClaimUnderlyingDialog';
-import { WrittenOptionsClosePositionPreExpiryDialog } from '../WrittenOptionsClosePositionPreExpiryDialog';
-import { useOptionVaultAmounts } from '../../hooks/useOptionVaultAmounts';
+import { WrittenOptionsClaimUnderlyingDialog } from '../../WrittenOptionsClaimUnderlyingDialog';
+import { WrittenOptionsClosePositionPreExpiryDialog } from '../../WrittenOptionsClosePositionPreExpiryDialog';
+import { useOptionVaultAmounts } from '../../../hooks/useOptionVaultAmounts';
 
 const StyledTooltip = withStyles((theme) => ({
   tooltip: {
@@ -82,7 +82,7 @@ const WrittenOptionRow: React.VFC<{
   const classes = useStyles();
   const { supportedAssets } = useAssetList();
   const { ownedTokenAccounts } = useOwnedTokenAccounts();
-  const { markets } = useOptionsMarkets();
+  const { marketsByUiKey } = useOptionsMarkets();
   const [claimQuoteVisible, setClaimQuoteVisible] = useState(false);
   const [closeWrittenOptionsVisible, setCloseWrittenOptionsVisible] =
     useState(false);
@@ -90,7 +90,7 @@ const WrittenOptionRow: React.VFC<{
     closeWrittenOptionsPreExpiryVisible,
     setCloseWrittenOptionsPreExpiryVisible,
   ] = useState(false);
-  const market = markets[marketKey];
+  const market = marketsByUiKey[marketKey];
   const [quoteVaultAmount, underlyingVaultAmount] = useOptionVaultAmounts(
     market.quoteAssetMintKey,
     market.quoteAssetPoolKey,

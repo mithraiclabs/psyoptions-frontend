@@ -3,20 +3,17 @@ import React, { useState, useMemo } from 'react';
 import clsx from 'clsx';
 import CreateIcon from '@material-ui/icons/Create';
 import BarChartIcon from '@material-ui/icons/BarChart';
-
+import { OptionMarket, TokenAccount } from "src/types";
+import { BigNumber } from "bignumber.js";
+import Page from '../pages/Page';
 import TabCustom from '../Tab';
-import PositionRow from './PositionRow';
-import OpenPositionsTableHeader from './OpenPositionsTableHeader';
-import { Heading } from './Heading';
-import EmptySvg from './EmptySvg';
-import useWallet from '../../hooks/useWallet';
 import useOpenPositions from '../../hooks/useOpenPositions';
 import useOptionsMarkets from '../../hooks/useOptionsMarkets';
+import WrittenOptionsTable from './WrittenOptionsTable';
 import { useWrittenOptions } from '../../hooks/useWrittenOptions';
-import { PricesProvider } from '../../context/PricesContext';
-import Page from '../pages/Page';
 import SupportedAssetBalances from '../SupportedAssetBalances';
-import WrittenOptionsTable from '../WrittenOptionsTable/WrittenOptionsTable';
+import { PricesProvider } from '../../context/PricesContext';
+import OpenPositionsTable from "./OpenPositionsTable";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -44,38 +41,30 @@ const useStyles = makeStyles((theme) => ({
     gridTemplateColumns: '2fr 1.5fr 1fr 1fr',
     alignItems: 'center',
   },
-  openPositionsContainer: {
-    display: 'flex',
-    flexDirection: 'column',
-    width: '100%',
-    backgroundColor: theme.palette.background.medium,
-    minHeight: '514px',
-  },
-  mainColor: {
-    color: theme.palette.border.main,
-  },
-  emptySVGContainer: {
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    flexDirection: 'column',
-    padding: theme.spacing(3),
-    flexGrow: 1,
-  },
-  writtenOptionsContainer: {
-    backgroundColor: theme.palette.background.medium,
-  },
 }));
 
-const OpenPositions: React.VFC = () => {
+export type Position = {
+  accounts: TokenAccount[];
+  assetPair: string;
+  expiration: number;
+  size: number;
+  strike: BigNumber;
+  strikePrice: string;
+  market: OptionMarket;
+  qAssetMintAddress: string;
+  uAssetMintAddress: string,
+  qAssetSymbol: string,
+  uAssetSymbol: string,
+  amountPerContract: BigNumber,
+  quoteAmountPerContract: BigNumber;
+};
+
+const Portfolio: React.VFC = () => {
   const classes = useStyles();
-  const mobileDevice = !useMediaQuery('(min-width:376px)');
-  const tabletDevice = !useMediaQuery('(min-width:881px)');
-  const { connected } = useWallet();
-  const [page] = useState(0);
-  const [rowsPerPage] = useState(10);
+  const mobileDevice = !useMediaQuery("(min-width:376px)");
+  const tabletDevice = !useMediaQuery("(min-width:881px)");
   const positions = useOpenPositions();
-  const { markets } = useOptionsMarkets();
+  const { marketsByUiKey } = useOptionsMarkets();
   const [selectedTab, setSelectedTab] = useState(0);
   const writtenOptions = useWrittenOptions();
 
@@ -83,34 +72,32 @@ const OpenPositions: React.VFC = () => {
   const isDesktop = !mobileDevice && !tabletDevice;
   const formFactor = isDesktop ? 'desktop' : mobileDevice ? 'mobile' : 'tablet';
 
-  const positionRows = useMemo(
+  const positionRows: Position[] = useMemo(
     () =>
       Object.keys(positions)
         .map((key) => ({
           accounts: positions[key],
-          assetPair: `${markets[key]?.uAssetSymbol}-${markets[key]?.qAssetSymbol}`,
-          expiration: markets[key]?.expiration,
+          assetPair: `${marketsByUiKey[key]?.uAssetSymbol}-${marketsByUiKey[key]?.qAssetSymbol}`,
+          expiration: marketsByUiKey[key]?.expiration,
           size: positions[key]?.reduce(
             (acc, tokenAccount) => acc + tokenAccount.amount,
             0,
           ),
-          strike: markets[key]?.strike,
-          strikePrice: markets[key]?.strikePrice,
-          market: markets[key],
-          qAssetMintAddress: markets[key]?.qAssetMint,
-          uAssetMintAddress: markets[key]?.uAssetMint,
-          qAssetSymbol: markets[key]?.qAssetSymbol,
-          uAssetSymbol: markets[key]?.uAssetSymbol,
-          amountPerContract: markets[key]?.amountPerContract,
-          quoteAmountPerContract: markets[key]?.quoteAmountPerContract,
+          strike: marketsByUiKey[key]?.strike,
+          strikePrice: marketsByUiKey[key]?.strikePrice,
+          market: marketsByUiKey[key],
+          qAssetMintAddress: marketsByUiKey[key]?.qAssetMint,
+          uAssetMintAddress: marketsByUiKey[key]?.uAssetMint,
+          qAssetSymbol: marketsByUiKey[key]?.qAssetSymbol,
+          uAssetSymbol: marketsByUiKey[key]?.uAssetSymbol,
+          amountPerContract: marketsByUiKey[key]?.amountPerContract,
+          quoteAmountPerContract: marketsByUiKey[key]?.quoteAmountPerContract,
         }))
         .sort((rowA, rowB) => {
           return rowB?.expiration - rowA?.expiration;
         }),
-    [positions, markets],
+    [positions, marketsByUiKey],
   );
-
-  const hasOpenPositions = positionRows.length > 0;
 
   const writtenOptionKeys = useMemo(
     () => Object.keys(writtenOptions),
@@ -167,51 +154,19 @@ const OpenPositions: React.VFC = () => {
             </TabCustom>
           </Box>
           {selectedTab === 0 && (
-            <Box className={classes.openPositionsContainer}>
-              <Heading>Open Positions</Heading>
-              <OpenPositionsTableHeader
-                formFactor={formFactor}
-                className={clsx(
-                  classes.desktopColumns,
-                  !isDesktop && classes.mobileColumns,
-                )}
-              />
-              {hasOpenPositions && connected ? (
-                positionRows
-                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                  .map((row) => (
-                    <PositionRow
-                      key={row.market.optionMintKey.toString()}
-                      row={row}
-                      formFactor={formFactor}
-                      className={clsx(
-                        classes.desktopColumns,
-                        !isDesktop && classes.mobileColumns,
-                      )}
-                    />
-                  ))
-              ) : (
-                <Box className={classes.emptySVGContainer}>
-                  <EmptySvg />
-                  <Box className={classes.mainColor}>
-                    {connected
-                      ? 'You have no open positions'
-                      : 'Wallet not connected'}
-                  </Box>
-                </Box>
-              )}
-            </Box>
+            <OpenPositionsTable
+              positions={positionRows}
+              formFactor={formFactor}
+              className={clsx(classes.desktopColumns,
+                !isDesktop && classes.mobileColumns)}
+            />
           )}
           {selectedTab === 1 && (
-            <Box className={classes.writtenOptionsContainer}>
-              <WrittenOptionsTable
-                formFactor={formFactor}
-                className={clsx(
-                  classes.desktopColumns,
-                  !isDesktop && classes.mobileColumns,
-                )}
-              />
-            </Box>
+            <WrittenOptionsTable
+              formFactor={formFactor}
+              className={clsx(classes.desktopColumns,
+                !isDesktop && classes.mobileColumns)}
+            />
           )}
         </Box>
       </Page>
@@ -219,4 +174,4 @@ const OpenPositions: React.VFC = () => {
   );
 };
 
-export default OpenPositions;
+export default Portfolio;

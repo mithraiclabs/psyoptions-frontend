@@ -1,99 +1,23 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { PublicKey } from '@solana/web3.js';
+import React from 'react';
 import Box from '@material-ui/core/Box';
 import Table from '@material-ui/core/Table';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import TableBody from '@material-ui/core/TableBody';
 import TableContainer from '@material-ui/core/TableContainer';
-import { OpenOrders as SerumOpenOrdersClass } from '@mithraic-labs/serum';
-
-import useSerum from '../../hooks/useSerum';
 import useWallet from '../../hooks/useWallet';
-import useConnection from '../../hooks/useConnection';
 import {
-  SerumOpenOrders,
   useSerumOpenOrders,
 } from '../../context/SerumOpenOrdersContext';
-import { hasUnsettled } from '../../utils/hasUnsettled';
-
 import ConnectButton from '../ConnectButton';
 import OpenOrdersForMarket from './OpenOrdersForMarket';
 import { TCell, THeadCell } from './OpenOrderStyles';
-import { CallOrPut } from '../../types';
-import Loading from '../Loading';
+import { OptionType } from '../../types';
 
 // Render all open orders for all optionMarkets specified in props
-const OpenOrders: React.FC<{
-  optionMarkets: CallOrPut[];
-}> = ({ optionMarkets }) => {
-  const { connection } = useConnection();
-  const { wallet, pubKey, connected } = useWallet();
-  const { serumMarkets } = useSerum();
-  const [, setOpenOrders] = useSerumOpenOrders();
-  const [loading, setLoading] = useState(false);
-
-  /**
-   * Load open orders for each serum market
-   */
-  useEffect(() => {
-    if (connection && serumMarkets && pubKey) {
-      const serumProgramIds = Array.from(
-        new Set(
-          Object.values(serumMarkets)
-            .filter((market) => market.serumProgramId)
-            .map((market) => market.serumProgramId),
-        ),
-      );
-
-      (async () => {
-        setLoading(true);
-        const newOpenOrders: SerumOpenOrders = {};
-        await Promise.all(
-          serumProgramIds.map(async (programId) => {
-            const openOrdersRes = await SerumOpenOrdersClass.findForOwner(
-              connection,
-              pubKey,
-              new PublicKey(programId),
-            );
-            Object.keys(serumMarkets)
-              .filter((key) => serumMarkets[key].serumProgramId === programId)
-              .forEach((serumMarketAddress) => {
-                const orders = openOrdersRes.filter(
-                  (openOrder) =>
-                    openOrder.market.toString() === serumMarketAddress,
-                );
-                const containsUnsettled = hasUnsettled(orders);
-                newOpenOrders[serumMarketAddress] = {
-                  loading: false,
-                  error: null,
-                  orders,
-                  hasUnsettled: containsUnsettled,
-                };
-              });
-          }),
-        );
-        setOpenOrders((prevOpenOrders) => ({
-          ...prevOpenOrders,
-          ...newOpenOrders,
-        }));
-        setLoading(false);
-      })();
-    }
-  }, [connection, serumMarkets, wallet, pubKey, setOpenOrders]);
-
-  const optionMarketsArray = useMemo(
-    () =>
-      optionMarkets
-        .map((optionMarket) => {
-          if (optionMarket?.serumMarketKey) {
-            return optionMarket;
-          }
-          return undefined;
-        })
-        .filter((item) => !!item),
-    [optionMarkets],
-  );
+const OpenOrders: React.FC = () => {
+  const { connected } = useWallet();
+  const { optionMarketsForOpenOrders } = useSerumOpenOrders();
 
   return (
     <Box mt={'20px'}>
@@ -130,15 +54,17 @@ const OpenOrders: React.FC<{
                   </Box>
                 </TCell>
               </TableRow>
-            ) : loading ? (
-              <TCell colSpan={9}>
-                <Loading />
-              </TCell>
             ) : (
-              optionMarketsArray.map((optionMarket) => (
+              optionMarketsForOpenOrders.map((optionMarket) => (
                 <OpenOrdersForMarket
-                  {...optionMarket}
-                  optionMarketUiKey={optionMarket.key}
+                  expiration={optionMarket.expiration}
+                  contractSize={optionMarket.size}
+                  // #TODO: change later, should have option type here
+                  type={optionMarket.qAssetSymbol === "USDC" ? OptionType.CALL : OptionType.PUT}
+                  qAssetSymbol={optionMarket.qAssetSymbol}
+                  uAssetSymbol={optionMarket.uAssetSymbol}
+                  serumMarketKey={optionMarket.serumMarketKey}
+                  strikePrice={optionMarket.strike.toString()}
                   key={optionMarket.serumMarketKey.toString()}
                 />
               ))

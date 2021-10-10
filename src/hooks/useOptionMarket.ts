@@ -19,20 +19,20 @@ export const useOptionMarket = ({
   amountPerContract: BigNumber;
   quoteAmountPerContract: BigNumber;
 }): OptionMarket | undefined => {
-  const { markets } = useOptionsMarkets();
+  const { marketsByUiKey } = useOptionsMarkets();
 
   return useMemo(
     () =>
       amountPerContract &&
       quoteAmountPerContract &&
-      markets[
+      marketsByUiKey[
         `${date}-${uAssetSymbol}-${qAssetSymbol}-${size}-${amountPerContract.toString(
           10,
         )}/${quoteAmountPerContract.toString(10)}`
       ],
     [
       date,
-      markets,
+      marketsByUiKey,
       qAssetSymbol,
       size,
       uAssetSymbol,

@@ -18,7 +18,16 @@ type SerumBidOrAsk = {
   openOrdersAddress: PublicKey;
 };
 
-const OrderRow = ({
+const OrderRow: React.VFC<{
+  order: SerumBidOrAsk;
+  type: OptionType;
+  expiration: number;
+  uAssetSymbol: string;
+  qAssetSymbol: string;
+  strikePrice: string;
+  contractSize: string;
+  handleCancelOrder: (order: any) => Promise<void>;
+}> = ({
   order,
   type,
   expiration,

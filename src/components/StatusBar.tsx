@@ -28,7 +28,6 @@ const NavOptions: React.VFC = () => {
     <>
       <Box mx={2}>
         <Button
-          href="/"
           onClick={(e) => {
             e.preventDefault();
             router.push('/');
@@ -40,7 +39,6 @@ const NavOptions: React.VFC = () => {
       </Box>
       <Box mx={2}>
         <Button
-          href="/markets"
           onClick={(e) => {
             e.preventDefault();
             router.push('/markets');
@@ -51,7 +49,6 @@ const NavOptions: React.VFC = () => {
       </Box>
       <Box mx={2}>
         <Button
-          href="/simple/choose-asset"
           onClick={(e) => {
             e.preventDefault();
             router.push('/simple/choose-asset');
@@ -64,7 +61,6 @@ const NavOptions: React.VFC = () => {
         <>
           <Box mx={2}>
             <Button
-              href="/initialize-market"
               onClick={(e) => {
                 e.preventDefault();
                 router.push('/initialize-market');
@@ -75,7 +71,6 @@ const NavOptions: React.VFC = () => {
           </Box>
           <Box mx={2}>
             <Button
-              href="/mint"
               onClick={(e) => {
                 e.preventDefault();
                 router.push('/mint');
@@ -88,7 +83,6 @@ const NavOptions: React.VFC = () => {
       )}
       <Box mx={2}>
         <Button
-          href="/portfolio"
           onClick={(e) => {
             e.preventDefault();
             router.push('/portfolio');
@@ -100,7 +94,6 @@ const NavOptions: React.VFC = () => {
       {endpoint?.name === 'Devnet' && (
         <Box mx={2}>
           <Button
-            href="/faucets"
             onClick={(e) => {
               e.preventDefault();
               router.push('/faucets');

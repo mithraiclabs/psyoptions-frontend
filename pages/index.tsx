@@ -121,7 +121,6 @@ const Landing: React.VFC = () => {
                   color="primary"
                   variant="outlined"
                   style={{ whiteSpace: 'nowrap' }}
-                  href="/markets"
                   onClick={(e) => {
                     e.preventDefault();
                     router.push('/markets');

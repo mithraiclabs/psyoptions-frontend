@@ -91,7 +91,7 @@ const OrderRow: React.VFC<{
 };
 
 // Render all open orders for a given market as table rows
-const OpenOrdersForMarket: React.VFC<{
+const OpenOrdersRow: React.VFC<{
   expiration: number;
   contractSize: string;
   type: OptionType;
@@ -195,4 +195,4 @@ const OpenOrdersForMarket: React.VFC<{
   );
 };
 
-export default React.memo(OpenOrdersForMarket);
+export default React.memo(OpenOrdersRow);

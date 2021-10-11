@@ -10,7 +10,7 @@ import {
   useSerumOpenOrders,
 } from '../../context/SerumOpenOrdersContext';
 import ConnectButton from '../ConnectButton';
-import OpenOrdersForMarket from './OpenOrdersForMarket';
+import OpenOrdersRow from './OpenOrdersRow';
 import { TCell, THeadCell } from './OpenOrderStyles';
 import { OptionType } from '../../types';
 
@@ -57,7 +57,7 @@ const OpenOrders: React.FC = () => {
             ) : (
               optionMarketsForOpenOrders.map((optionMarket) => (
                 optionMarket.serumMarketKey ?
-                <OpenOrdersForMarket
+                <OpenOrdersRow
                   expiration={optionMarket.expiration}
                   contractSize={optionMarket.size}
                   // #TODO: change later, should have option type here

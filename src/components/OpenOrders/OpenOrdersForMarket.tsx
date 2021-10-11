@@ -120,14 +120,14 @@ const OpenOrdersForMarket: React.VFC<{
   useEffect(() => {
     if (!orderbooks[serumMarketAddress] || !openOrders) {
       setActualOpenOrders([]);
-      return null;
+      return;
     }
   
     const { bidOrderbook, askOrderbook } = orderbooks[serumMarketAddress];
     const bids = [...(bidOrderbook || [])] as SerumBidOrAsk[];
     const asks = [...(askOrderbook || [])] as SerumBidOrAsk[];
-    const bidPrices = {};
-    const askPrices = {};
+    const bidPrices = {} as any;
+    const askPrices = {} as any;
   
     // Some manual bugfixing:
     // If this wallet has multiple open orders of same price

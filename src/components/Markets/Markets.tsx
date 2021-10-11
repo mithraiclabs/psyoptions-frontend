@@ -41,20 +41,16 @@ const dblsp = `${'\u00A0'}${'\u00A0'}`;
 
 const defaultSizeOptions = [
   {
-    value: 100,
-    text: '100',
-  },
-  {
-    value: 10,
-    text: '10',
-  },
-  {
     value: 1,
     text: '1',
   },
   {
     value: 0.1,
     text: '0.1',
+  },
+  {
+    value: 0.01,
+    text: '0.01',
   },
 ];
 
@@ -86,7 +82,7 @@ const rowTemplate = {
 const Markets: React.VFC = () => {
   const { uAsset, qAsset, setUAsset, assetListLoading } = useAssetList();
   const { selectedDate: date, setSelectedDate, dates } = useExpirationDate();
-  const [contractSize, setContractSize] = useState(100);
+  const [contractSize, setContractSize] = useState(0.01);
   const { chains, buildOptionsChain } = useOptionsChain();
   const { getSizes, marketsLoading } = useOptionsMarkets();
   const { serumMarkets, fetchMultipleSerumMarkets } = useSerum();

@@ -56,6 +56,7 @@ const OpenOrders: React.FC = () => {
               </TableRow>
             ) : (
               optionMarketsForOpenOrders.map((optionMarket) => (
+                optionMarket.serumMarketKey ?
                 <OpenOrdersForMarket
                   expiration={optionMarket.expiration}
                   contractSize={optionMarket.size}
@@ -65,8 +66,8 @@ const OpenOrders: React.FC = () => {
                   uAssetSymbol={optionMarket.uAssetSymbol}
                   serumMarketKey={optionMarket.serumMarketKey}
                   strikePrice={optionMarket.strike.toString()}
-                  key={optionMarket.serumMarketKey.toString()}
-                />
+                  key={optionMarket.serumMarketKey?.toString()}
+                /> : null
               ))
             )}
           </TableBody>

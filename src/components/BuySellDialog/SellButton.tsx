@@ -54,8 +54,8 @@ const SellButton = ({
       <StyledSellButton
         fullWidth
         onClick={isSellDisabled ? null : onClick}
-        fakeDisabled={isSellDisabled}
         disableRipple={isSellDisabled}
+        fakedisabled={+isSellDisabled}
       >
         {openPositionSize >= parsedOrderSize ? 'Sell' : 'Mint/Sell'}
       </StyledSellButton>

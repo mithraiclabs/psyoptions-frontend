@@ -41,8 +41,8 @@ const BuyButton = ({
       <StyledBuyButton
         fullWidth
         onClick={isBuyDisabled ? null : onClick}
-        fakeDisabled={isBuyDisabled}
         disableRipple={isBuyDisabled}
+        fakedisabled={+isBuyDisabled}
       >
         Buy
       </StyledBuyButton>

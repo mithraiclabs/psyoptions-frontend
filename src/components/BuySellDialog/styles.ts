@@ -30,15 +30,15 @@ export const PlusMinusButton = withStyles({
 })(Button);
 
 type FakeButtonProps = ButtonProps & {
-  fakeDisabled: boolean;
+  fakedisabled: number;
 };
 
 export const StyledSellButton = withStyles({
-  // The fakeDisabled prop is a hack/workaround
+  // The fakedisabled prop is a hack/workaround
   // to make the button look disabled but still show tooltips on hover
   // Make sure to remove the onClick handler via props
-  root: ({ fakeDisabled }: FakeButtonProps) =>
-    fakeDisabled
+  root: ({ fakedisabled }: FakeButtonProps) =>
+    fakedisabled
       ? {
           backgroundColor: theme.palette.error.dark,
           color: 'rgba(255, 255, 255, 0.3)',
@@ -55,11 +55,11 @@ export const StyledSellButton = withStyles({
 })(Button);
 
 export const StyledBuyButton = withStyles({
-  // The fakeDisabled prop is a hack/workaround
+  // The fakedisabled prop is a hack/workaround
   // to make the button look disabled but still show tooltips on hover
   // Make sure to remove the onClick handler via props
-  root: ({ fakeDisabled }: FakeButtonProps) =>
-    fakeDisabled
+  root: ({ fakedisabled }: FakeButtonProps) =>
+    fakedisabled
       ? {
           backgroundColor: theme.palette.success.dark,
           color: 'rgba(255, 255, 255, 0.3)',

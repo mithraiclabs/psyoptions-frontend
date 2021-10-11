@@ -3,7 +3,7 @@ import React, { useState, useMemo } from 'react';
 import clsx from 'clsx';
 import CreateIcon from '@material-ui/icons/Create';
 import BarChartIcon from '@material-ui/icons/BarChart';
-import { OptionMarket, TokenAccount } from "src/types";
+import { OptionMarket, TokenAccount } from "../../types";
 import { BigNumber } from "bignumber.js";
 import Page from '../pages/Page';
 import TabCustom from '../Tab';
@@ -49,7 +49,7 @@ export type Position = {
   expiration: number;
   size: number;
   strike: BigNumber;
-  strikePrice: string;
+  strikePrice: string | undefined;
   market: OptionMarket;
   qAssetMintAddress: string;
   uAssetMintAddress: string,
@@ -72,30 +72,31 @@ const Portfolio: React.VFC = () => {
   const isDesktop = !mobileDevice && !tabletDevice;
   const formFactor = isDesktop ? 'desktop' : mobileDevice ? 'mobile' : 'tablet';
 
-  const positionRows: Position[] = useMemo(
-    () =>
-      Object.keys(positions)
-        .map((key) => ({
-          accounts: positions[key],
-          assetPair: `${marketsByUiKey[key]?.uAssetSymbol}-${marketsByUiKey[key]?.qAssetSymbol}`,
-          expiration: marketsByUiKey[key]?.expiration,
-          size: positions[key]?.reduce(
-            (acc, tokenAccount) => acc + tokenAccount.amount,
-            0,
-          ),
-          strike: marketsByUiKey[key]?.strike,
-          strikePrice: marketsByUiKey[key]?.strikePrice,
-          market: marketsByUiKey[key],
-          qAssetMintAddress: marketsByUiKey[key]?.qAssetMint,
-          uAssetMintAddress: marketsByUiKey[key]?.uAssetMint,
-          qAssetSymbol: marketsByUiKey[key]?.qAssetSymbol,
-          uAssetSymbol: marketsByUiKey[key]?.uAssetSymbol,
-          amountPerContract: marketsByUiKey[key]?.amountPerContract,
-          quoteAmountPerContract: marketsByUiKey[key]?.quoteAmountPerContract,
-        }))
-        .sort((rowA, rowB) => {
-          return rowB?.expiration - rowA?.expiration;
-        }),
+  const positionRows: Position[] = useMemo(() =>
+    Object.keys(positions).map((key) => {
+      const market = marketsByUiKey[key];
+      return {
+        accounts: positions[key],
+        assetPair: `${market?.uAssetSymbol}-${market?.qAssetSymbol}`,
+        expiration: market?.expiration,
+        size: positions[key]?.reduce(
+          (acc, tokenAccount) => acc + tokenAccount.amount,
+          0,
+        ),
+        strike: market?.strike,
+        strikePrice: market?.strikePrice,
+        market: market,
+        qAssetMintAddress: market?.qAssetMint,
+        uAssetMintAddress: market?.uAssetMint,
+        qAssetSymbol: market?.qAssetSymbol,
+        uAssetSymbol: market?.uAssetSymbol,
+        amountPerContract: market?.amountPerContract,
+        quoteAmountPerContract: market?.quoteAmountPerContract,
+      }
+    })
+    .sort((rowA, rowB) => {
+      return rowB?.expiration - rowA?.expiration;
+    }),
     [positions, marketsByUiKey],
   );
 

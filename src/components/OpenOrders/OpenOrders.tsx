@@ -22,7 +22,7 @@ const OpenOrders: React.FC<{
   const { optionMarketsForOpenOrders } = useSerumOpenOrders();
 
   return (
-    <Box mt={'20px'}>
+    <Box>
       <TableContainer>
         <Table stickyHeader aria-label="sticky table">
           <TableHead>

@@ -3,6 +3,8 @@ import React, { useState, useMemo } from 'react';
 import clsx from 'clsx';
 import CreateIcon from '@material-ui/icons/Create';
 import BarChartIcon from '@material-ui/icons/BarChart';
+import AttachMoney from '@material-ui/icons/AttachMoney';
+import ShoppingCart from '@material-ui/icons/ShoppingCart';
 import { OptionMarket, TokenAccount } from "../../types";
 import { BigNumber } from "bignumber.js";
 import Page from '../pages/Page';
@@ -14,6 +16,8 @@ import { useWrittenOptions } from '../../hooks/useWrittenOptions';
 import SupportedAssetBalances from '../SupportedAssetBalances';
 import { PricesProvider } from '../../context/PricesContext';
 import OpenPositionsTable from "./OpenPositionsTable";
+import OpenOrders from '../OpenOrders';
+import UnsettledBalancesTable from '../UnsettledBalancesTable';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -117,7 +121,8 @@ const Portfolio: React.VFC = () => {
               selected={selectedTab === 0}
               onClick={() => setSelectedTab(0)}
             >
-              <Box display="flex" flexDirection="row" alignItems="center">
+              <Box display="flex" flexDirection="row" alignItems="center"
+                style={{ minHeight: "66px" }}>
                 {formFactor === 'desktop' && (
                   <Box px={1}>
                     <BarChartIcon />
@@ -137,7 +142,8 @@ const Portfolio: React.VFC = () => {
               selected={selectedTab === 1}
               onClick={() => setSelectedTab(1)}
             >
-              <Box display="flex" flexDirection="row" alignItems="center">
+              <Box display="flex" flexDirection="row" alignItems="center"
+                style={{ minHeight: "66px" }}>
                 {formFactor === 'desktop' && (
                   <Box px={1}>
                     <CreateIcon fontSize="small" />
@@ -149,6 +155,42 @@ const Portfolio: React.VFC = () => {
                   </Box>
                   <Box fontSize={'13px'}>
                     {writtenOptionKeys.length} currently written
+                  </Box>
+                </Box>
+              </Box>
+            </TabCustom>
+            <TabCustom
+              selected={selectedTab === 2}
+              onClick={() => setSelectedTab(2)}
+            >
+              <Box display="flex" flexDirection="row" alignItems="center"
+                style={{ minHeight: "66px" }}>
+                {formFactor === 'desktop' && (
+                  <Box px={1}>
+                    <ShoppingCart fontSize="small" />
+                  </Box>
+                )}
+                <Box px={1} textAlign="left" lineHeight={'22px'}>
+                  <Box fontSize={'16px'} fontWeight={700}>
+                    Open Orders
+                  </Box>
+                </Box>
+              </Box>
+            </TabCustom>
+            <TabCustom
+              selected={selectedTab === 3}
+              onClick={() => setSelectedTab(3)}
+            >
+              <Box display="flex" flexDirection="row" alignItems="center"
+                style={{ minHeight: "66px" }}>
+                {formFactor === 'desktop' && (
+                  <Box px={1}>
+                    <AttachMoney fontSize="small" />
+                  </Box>
+                )}
+                <Box px={1} textAlign="left" lineHeight={'22px'}>
+                  <Box fontSize={'16px'} fontWeight={700}>
+                    Unsettled Funds
                   </Box>
                 </Box>
               </Box>
@@ -167,6 +209,16 @@ const Portfolio: React.VFC = () => {
               formFactor={formFactor}
               className={clsx(classes.desktopColumns,
                 !isDesktop && classes.mobileColumns)}
+            />
+          )}
+          {selectedTab === 2 && (
+            <OpenOrders
+              formFactor={formFactor}
+            />
+          )}
+          {selectedTab === 3 && (
+            <UnsettledBalancesTable
+              formFactor={formFactor}
             />
           )}
         </Box>

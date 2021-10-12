@@ -494,13 +494,12 @@ const Markets: React.VFC = () => {
                 </TableBody>
               </Table>
             </TableContainer>
-            <Box>
+            <Box mt={'20px'}>
               <OpenOrders formFactor={formFactor} />
             </Box>
-            <Box id="unsettled-balances-table">
+            <Box id="unsettled-balances-table" mt={'20px'}>
               <UnsettledBalancesTable
                 formFactor={formFactor}
-                qAssetDecimals={qAsset?.decimals}
               />
             </Box>
           </Box>

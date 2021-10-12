@@ -11,16 +11,17 @@ import UnsettledBalancesRow from './UnsettledBalancesRow';
 import { TCell, THeadCell } from './UnsettledBalancesStyles';
 import { OptionType } from '../../types';
 import { useSerumOpenOrders } from '../../context/SerumOpenOrdersContext';
+import useAssetList from '../../hooks/useAssetList';
 
 const UnsettledBalancesTable: React.FC<{
   formFactor: "desktop" | "tablet" | "mobile";
-  qAssetDecimals: number;
-}> = ({ formFactor, qAssetDecimals }) => {
+}> = ({ formFactor }) => {
   const { connected } = useWallet();
   const { optionMarketsForOpenOrders } = useSerumOpenOrders();
+  const { qAsset } = useAssetList();
 
   return (
-    <Box mt={'20px'}>
+    <Box>
       <TableContainer>
         <Table stickyHeader aria-label="sticky table">
           <TableHead>
@@ -63,9 +64,9 @@ const UnsettledBalancesTable: React.FC<{
               </TableRow>
             ) : (
               optionMarketsForOpenOrders.map((optionMarket) => (
-                optionMarket.serumMarketKey ?
+                (optionMarket.serumMarketKey && qAsset) ?
                 <UnsettledBalancesRow
-                formFactor={formFactor}
+                  formFactor={formFactor}
                   expiration={optionMarket.expiration}
                   contractSize={optionMarket.size}
                   // #TODO: change later, should have option type here
@@ -74,7 +75,7 @@ const UnsettledBalancesTable: React.FC<{
                   uAssetSymbol={optionMarket.uAssetSymbol}
                   serumMarketKey={optionMarket.serumMarketKey}
                   strikePrice={optionMarket.strikePrice ?? ''}
-                  qAssetDecimals={qAssetDecimals}
+                  qAssetDecimals={qAsset.decimals}
                   key={`${optionMarket.serumMarketKey.toString()}-unsettled`}
                 /> : null
               ))

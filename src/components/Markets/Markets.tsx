@@ -1,17 +1,19 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import Box from '@material-ui/core/Box';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
-import Switch from '@material-ui/core/Switch';
-import Table from '@material-ui/core/Table';
-import TableBody from '@material-ui/core/TableBody';
-import TableContainer from '@material-ui/core/TableContainer';
-import TableRow from '@material-ui/core/TableRow';
+import {
+  Box,
+  FormControlLabel,
+  Switch,
+  Table,
+  TableBody,
+  TableContainer,
+  TableRow,
+  useMediaQuery
+} from '@material-ui/core';
 import ChevronLeft from '@material-ui/icons/ChevronLeft';
 import ChevronRight from '@material-ui/icons/ChevronRight';
 import { PublicKey } from '@solana/web3.js';
 import moment from 'moment';
-
 import { TCellLoading, THeadCell, TCellStrike, PageButton } from './styles';
 import Balances from './MarketsBalances';
 import MarketsUnsettledBalances from './MarketsUnsettledBalances';
@@ -100,6 +102,12 @@ const Markets: React.VFC = () => {
   const [showVolume, setShowVolume] = useState(true);
   const [showOI, setShowOI] = useState(true);
   const [currentColumnsCount, setColumnsCount] = useState(19); // 19 columns
+
+  const mobileDevice = !useMediaQuery("(min-width:376px)");
+  const tabletDevice = !useMediaQuery("(min-width:881px)");
+  // #TODO: move this to context
+  const isDesktop = !mobileDevice && !tabletDevice;
+  const formFactor = isDesktop ? 'desktop' : mobileDevice ? 'mobile' : 'tablet';
 
   useEffect(() => {
     const availableSizes = getSizes({
@@ -487,7 +495,7 @@ const Markets: React.VFC = () => {
               </Table>
             </TableContainer>
             <Box>
-              <OpenOrders />
+              <OpenOrders formFactor={formFactor} />
             </Box>
             <Box id="unsettled-balances-table">
               <UnsettledBalancesTable

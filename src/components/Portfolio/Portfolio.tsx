@@ -68,7 +68,7 @@ const Portfolio: React.VFC = () => {
   const [selectedTab, setSelectedTab] = useState(0);
   const writtenOptions = useWrittenOptions();
 
-  // #TODO: move this all the way up in the tree
+  // #TODO: move this to context
   const isDesktop = !mobileDevice && !tabletDevice;
   const formFactor = isDesktop ? 'desktop' : mobileDevice ? 'mobile' : 'tablet';
 

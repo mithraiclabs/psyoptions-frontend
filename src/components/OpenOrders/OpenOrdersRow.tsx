@@ -1,15 +1,53 @@
 import React, { useState, useEffect } from 'react';
-import TableRow from '@material-ui/core/TableRow';
+import {
+  Box,
+  TableRow,
+  makeStyles,
+} from '@material-ui/core';
 import moment from 'moment';
+import clsx from 'clsx';
 import { PublicKey } from '@solana/web3.js';
 import { useSerumOrderbooks } from '../../context/SerumOrderbookContext';
 import { useCancelOrder } from '../../hooks/Serum';
-import theme from '../../utils/theme';
 import { TCell } from './OpenOrderStyles';
 import TxButton from '../TxButton';
 import { OptionType } from '../../types';
 import { useSerumOpenOrders } from '../../context/SerumOpenOrdersContext';
 import useOptionsMarkets from '../../hooks/useOptionsMarkets';
+
+const useStyles = makeStyles((theme) => ({
+  root: {},
+  mobile: {
+    fontSize: "10px",
+  },
+  tablet: {
+    fontSize: "12px",
+  },
+  row: {
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  rowWrap: {
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    flexFlow: "wrap"
+  },
+  uppercase: {
+    textTransform: "uppercase",
+  },
+  column: {
+    display: "flex",
+    flexDirection: "column",
+  },
+  successTextColor: {
+    color: theme.palette.success.main,
+  },
+  errorTextColor: {
+    color: theme.palette.error.main,
+  }
+}));
 
 type SerumBidOrAsk = {
   side: string;
@@ -19,6 +57,7 @@ type SerumBidOrAsk = {
 };
 
 const OrderRow: React.VFC<{
+  formFactor: "desktop" | "tablet" | "mobile";
   order: SerumBidOrAsk;
   type: OptionType;
   expiration: number;
@@ -28,6 +67,7 @@ const OrderRow: React.VFC<{
   contractSize: string;
   handleCancelOrder: (order: any) => Promise<void>;
 }> = ({
+  formFactor,
   order,
   type,
   expiration,
@@ -37,6 +77,7 @@ const OrderRow: React.VFC<{
   contractSize,
   handleCancelOrder,
 }) => {
+  const classes = useStyles();
   const [loading, setLoading] = useState(false);
 
   const cancelOrder = async () => {
@@ -46,52 +87,88 @@ const OrderRow: React.VFC<{
   };
 
   return (
-    <TableRow hover>
-      <TCell
-        style={{
-          color:
-            order?.side === 'buy'
-              ? theme.palette.success.main
-              : theme.palette.error.main,
-        }}
-      >
-        {order?.side}
-      </TCell>
-      <TCell>{type}</TCell>
-      <TCell>{`${qAssetSymbol}/${uAssetSymbol}`}</TCell>
-      <TCell>
-        {`${moment.utc(expiration * 1000).format('LL')} 23:59:59 UTC`}
-      </TCell>
-      <TCell>{strikePrice}</TCell>
-      <TCell>{`${contractSize} ${uAssetSymbol}`}</TCell>
-      <TCell>{order?.size}</TCell>
-      <TCell
-        style={{
-          color:
-            order?.side === 'buy'
-              ? theme.palette.success.main
-              : theme.palette.error.main,
-        }}
-      >
-        {order?.price}
-      </TCell>
-      {/* <TCell>TODO</TCell> */}
-      <TCell align="right">
-        <TxButton
-          variant="outlined"
-          color="primary"
-          onClick={cancelOrder}
-          loading={loading}
+    <TableRow>
+      {formFactor === 'desktop' ?
+      <>
+        <TCell
+          className={order?.side === 'buy' ?
+            classes.successTextColor :
+            classes.errorTextColor}
         >
-          {loading ? 'Canceling' : 'Cancel'}
-        </TxButton>
-      </TCell>
+          {order?.side}
+        </TCell>
+        <TCell>{type}</TCell>
+        <TCell>{`${qAssetSymbol}/${uAssetSymbol}`}</TCell>
+        <TCell>
+          {`${moment.utc(expiration * 1000).format('LL')} 23:59:59 UTC`}
+        </TCell>
+        <TCell>{strikePrice}</TCell>
+        <TCell>{`${contractSize} ${uAssetSymbol}`}</TCell>
+        <TCell>{order?.size}</TCell>
+        <TCell
+          className={order?.side === 'buy' ?
+            classes.successTextColor :
+            classes.errorTextColor}
+        >
+          {order?.price}
+        </TCell>
+        <TCell align="right">
+          <TxButton
+            variant="outlined"
+            color="primary"
+            onClick={cancelOrder}
+            loading={loading}
+          >
+            {loading ? 'Canceling' : 'Cancel'}
+          </TxButton>
+        </TCell>
+      </> :
+      <>
+        <TCell className={classes.rowWrap}>
+          <Box pl={formFactor === "mobile" ? 1 : 2} className={classes.column}>
+            <Box className={clsx(classes.uppercase,
+                order?.side === 'buy' ?
+                classes.successTextColor :
+                classes.errorTextColor)}
+            >
+                {`${order?.side} ${type}`}
+            </Box>
+            <Box>{`${qAssetSymbol}/${uAssetSymbol}`}</Box>
+          </Box>
+          <Box pl={formFactor === "mobile" ? 1 : 2} className={classes.column}>
+            <Box>{`Strike: ${strikePrice}`}</Box>
+            <Box>{`${contractSize} ${uAssetSymbol}`}</Box>
+            <Box>{`Qty: ${order?.size}`}</Box>
+          </Box>
+        </TCell>
+        <TCell>
+          {`${moment.utc(expiration * 1000).format('LL')} 23:59:59 UTC`}
+        </TCell>
+        <TCell
+          className={order?.side === 'buy' ?
+            classes.successTextColor :
+            classes.errorTextColor}
+        >
+          {order?.price}
+        </TCell>
+        <TCell align="right">
+          <TxButton
+            variant="outlined"
+            color="primary"
+            onClick={cancelOrder}
+            loading={loading}
+          >
+            {loading ? 'Canceling' : 'Cancel'}
+          </TxButton>
+        </TCell>
+      </>}
     </TableRow>
   );
 };
 
 // Render all open orders for a given market as table rows
 const OpenOrdersRow: React.VFC<{
+  formFactor: "desktop" | "tablet" | "mobile";
   expiration: number;
   contractSize: string;
   type: OptionType;
@@ -100,6 +177,7 @@ const OpenOrdersRow: React.VFC<{
   serumMarketKey: PublicKey;
   strikePrice: string;
 }> = ({
+  formFactor,
   expiration,
   contractSize,
   type,
@@ -179,6 +257,7 @@ const OpenOrdersRow: React.VFC<{
         actualOpenOrders.map((order) => {
           return (
             <OrderRow
+              formFactor={formFactor}
               order={order}
               type={type}
               expiration={expiration}

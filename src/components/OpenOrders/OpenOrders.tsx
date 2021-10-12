@@ -15,7 +15,9 @@ import { TCell, THeadCell } from './OpenOrderStyles';
 import { OptionType } from '../../types';
 
 // Render all open orders for all optionMarkets specified in props
-const OpenOrders: React.FC = () => {
+const OpenOrders: React.FC<{
+  formFactor: "desktop" | "tablet" | "mobile";
+}> = ({ formFactor }) => {
   const { connected } = useWallet();
   const { optionMarketsForOpenOrders } = useSerumOpenOrders();
 
@@ -33,16 +35,24 @@ const OpenOrders: React.FC = () => {
               </THeadCell>
             </TableRow>
             <TableRow>
-              <THeadCell>Side</THeadCell>
-              <THeadCell>Option Type</THeadCell>
-              <THeadCell>Asset Pair</THeadCell>
-              <THeadCell>Expiration</THeadCell>
-              <THeadCell>Strike Price</THeadCell>
-              <THeadCell>Contract Size</THeadCell>
-              <THeadCell>Order Size</THeadCell>
-              <THeadCell>Limit Price</THeadCell>
-              {/* <THeadCell>Filled</THeadCell> */}
-              <THeadCell align="right">Action</THeadCell>
+              { formFactor === 'desktop' ?
+              <>
+                <THeadCell>Side</THeadCell>
+                <THeadCell>Option Type</THeadCell>
+                <THeadCell>Asset Pair</THeadCell>
+                <THeadCell>Expiration</THeadCell>
+                <THeadCell>Strike Price</THeadCell>
+                <THeadCell>Contract Size</THeadCell>
+                <THeadCell>Order Size</THeadCell>
+                <THeadCell>Limit Price</THeadCell>
+                <THeadCell align="right">Action</THeadCell>
+              </> : 
+              <>
+                <THeadCell>Asset</THeadCell>
+                <THeadCell>Expiration</THeadCell>
+                <THeadCell>Limit Price</THeadCell>
+                <THeadCell align="right">Action</THeadCell>
+              </>}
             </TableRow>
           </TableHead>
           <TableBody>
@@ -58,6 +68,7 @@ const OpenOrders: React.FC = () => {
               optionMarketsForOpenOrders.map((optionMarket) => (
                 optionMarket.serumMarketKey ?
                 <OpenOrdersRow
+                  formFactor={formFactor}
                   expiration={optionMarket.expiration}
                   contractSize={optionMarket.size}
                   // #TODO: change later, should have option type here

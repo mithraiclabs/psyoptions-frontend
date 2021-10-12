@@ -17,6 +17,7 @@ import ConnectButton from '../../src/components/ConnectButton';
 import theme from '../../src/utils/theme';
 import { useMintOptions } from '../../src/hooks/PsyOptionsAPI/useMintOptions';
 import { MintInfo } from '../../src/components/Mint/MintInfo';
+import { MintParamInput } from '../../src/components/Mint/MintParamInput';
 
 /**
  * Page to allow users to mint options that have been initialized.
@@ -92,10 +93,15 @@ const Mint: React.VFC = () => {
               mb={2}
               mx={2}
             >
+              <Box mb={1}>
+                Enter the public key for the option or enter the params below to
+                derive the address.
+              </Box>
               <TextField
                 label="Option public key (optionMarketKey)"
                 variant="filled"
                 onChange={onTextChange}
+                value={optionMarketAddress}
                 style={{
                   width: '100%',
                 }}
@@ -106,6 +112,7 @@ const Mint: React.VFC = () => {
                 </span>
               )}
             </Box>
+            <MintParamInput onUpdateDerivedAddress={setOptionMarketAddress} />
             <Box m={2}>
               Quantity
               <PlusMinusIntegerInput

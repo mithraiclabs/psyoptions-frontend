@@ -25,6 +25,10 @@ export const useCheckIfMarketExists = (): ((obj: {
       underlyingAmountPerContract,
       underlyingAssetMintKey,
     }) => {
+      if (!program) {
+        return null;
+      }
+
       const [optionMarketKey] = await deriveOptionKeyFromParams({
         programId: program.programId,
         underlyingMint: underlyingAssetMintKey,

@@ -1,6 +1,5 @@
 import React, { useCallback, useState } from 'react';
 import { PublicKey } from '@solana/web3.js';
-import DateFnsUtils from '@date-io/date-fns';
 import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
 import Checkbox from '@material-ui/core/Checkbox';
@@ -10,9 +9,6 @@ import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Paper from '@material-ui/core/Paper';
 import RadioGroup from '@material-ui/core/RadioGroup';
 import TextField from '@material-ui/core/TextField';
-import { KeyboardDatePicker } from '@material-ui/pickers/DatePicker';
-import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
-import MuiPickersUtilsProvider from '@material-ui/pickers/MuiPickersUtilsProvider';
 import Radio from '@material-ui/core/Radio';
 import { OptionMarketWithKey } from '@mithraic-labs/psy-american';
 import { BigNumber } from 'bignumber.js';
@@ -27,11 +23,11 @@ import useConnection from '../../hooks/useConnection';
 import { useInitializeSerumMarket } from '../../hooks/Serum/useInitializeSerumMarket';
 import { useInitializedMarkets } from '../../context/LocalStorage';
 import { useCheckIfMarketExists } from '../../hooks/PsyOptionsAPI/useCheckIfMarketExists';
-import { StyledTooltip } from '../Markets/styles';
 import ConnectButton from '../ConnectButton';
 import { useTokenMintInfo } from '../../hooks/useTokenMintInfo';
 import { SelectAssetOrEnterMint } from '../SelectAssetOrEnterMint';
 import useAssetList from '../../hooks/useAssetList';
+import { ExpirationInput } from '../Inputs/ExpirationInput';
 
 const darkBorder = `1px solid ${theme.palette.background.main}`;
 
@@ -252,44 +248,10 @@ export const InitOptionMarket: React.VFC = () => {
           <h2 style={{ margin: '10px 0 0' }}>Initialize New Market</h2>
         </Box>
 
-        <Box p={2} borderBottom={darkBorder} display="flex" alignItems="center">
-          Expires On:
-          <Box
-            display="flex"
-            flexWrap="wrap"
-            flexDirection="row"
-            alignItems="center"
-          >
-            <MuiPickersUtilsProvider utils={DateFnsUtils}>
-              <KeyboardDatePicker
-                autoOk
-                disablePast
-                variant="inline"
-                format="MM/dd/yyyy"
-                inputVariant="filled"
-                id="date-picker-inline"
-                label="MM/DD/YYYY"
-                value={selectorDate}
-                onChange={handleSelectedDateChange}
-                KeyboardButtonProps={{
-                  'aria-label': 'change date',
-                }}
-                style={{ marginLeft: theme.spacing(4) }}
-              />
-            </MuiPickersUtilsProvider>
-            <StyledTooltip
-              title={
-                <Box p={1}>
-                  All expirations occur at 23:59:59 UTC on any selected date.
-                </Box>
-              }
-            >
-              <Box p={2}>
-                <HelpOutlineIcon />
-              </Box>
-            </StyledTooltip>
-          </Box>
-        </Box>
+        <ExpirationInput
+          onChange={handleSelectedDateChange}
+          value={selectorDate}
+        />
 
         <Box display="flex" borderBottom={darkBorder}>
           <Box width="50%" p={2} borderRight={darkBorder}>

@@ -1,25 +1,50 @@
 import React, { useState, useCallback } from 'react';
-import TableRow from '@material-ui/core/TableRow';
+import {
+  Box,
+  TableRow,
+  makeStyles,
+} from '@material-ui/core';
 import moment from 'moment';
 import BigNumber from 'bignumber.js';
-
 import { PublicKey } from '@solana/web3.js';
 import useSerum from '../../hooks/useSerum';
 import {
   useSettleFunds,
   useUnsettledFundsForMarket,
 } from '../../hooks/Serum';
-
 import { TCell } from './UnsettledBalancesStyles';
 import { OptionType } from '../../types';
 import TxButton from '../TxButton';
 import useOptionsMarkets from '../../hooks/useOptionsMarkets';
+
+const useStyles = makeStyles((theme) => ({
+  root: {},
+  row: {
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  rowWrap: {
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    flexFlow: "wrap"
+  },
+  uppercase: {
+    textTransform: "uppercase",
+  },
+  column: {
+    display: "flex",
+    flexDirection: "column",
+  },
+}));
 
 const Empty = ({ children }) => (
   <span style={{ opacity: '0.3' }}>{children}</span>
 );
 
 const UnsettledRow = ({
+  formFactor,
   serumMarketKey,
   type,
   expiration,
@@ -31,6 +56,7 @@ const UnsettledRow = ({
   settleFunds,
   qAssetDecimals,
 }: {
+  formFactor: "desktop" | "tablet" | "mobile";
   serumMarketKey: PublicKey;
   type: OptionType;
   expiration: number;
@@ -42,6 +68,7 @@ const UnsettledRow = ({
   settleFunds: any;
   qAssetDecimals: number;
 }) => {
+  const classes = useStyles();
   const [loading, setLoading] = useState(false);
 
   const handleSettleFunds = useCallback(async () => {
@@ -61,32 +88,63 @@ const UnsettledRow = ({
   };
 
   return (
-    <TableRow hover key={`tr-unsettled-${serumMarketKey}`}>
-      <TCell>{type}</TCell>
-      <TCell>{`${qAssetSymbol}/${uAssetSymbol}`}</TCell>
-      <TCell>
-        {`${moment.utc(expiration * 1000).format('LL')} 23:59:59 UTC`}
-      </TCell>
-      <TCell>{strikePrice}</TCell>
-      <TCell>{`${contractSize} ${uAssetSymbol}`}</TCell>
-      <TCell>{unsettledFunds.baseFree.toString()}</TCell>
-      <TCell>{unsettledAssets()}</TCell>
-      <TCell align="right">
-        <TxButton
-          variant="outlined"
-          color="primary"
-          onClick={handleSettleFunds}
-          loading={loading}
-        >
-          {loading ? 'Settling Funds' : 'Settle Funds'}
-        </TxButton>
-      </TCell>
+    <TableRow key={`tr-unsettled-${serumMarketKey}`}>
+      {formFactor === 'desktop' ?
+      <>
+        <TCell>{type}</TCell>
+        <TCell>{`${qAssetSymbol}/${uAssetSymbol}`}</TCell>
+        <TCell>
+          {`${moment.utc(expiration * 1000).format('LL')} 23:59:59 UTC`}
+        </TCell>
+        <TCell>{strikePrice}</TCell>
+        <TCell>{`${contractSize} ${uAssetSymbol}`}</TCell>
+        <TCell>{unsettledFunds.baseFree.toString()}</TCell>
+        <TCell>{unsettledAssets()}</TCell>
+        <TCell align="right">
+          <TxButton
+            variant="outlined"
+            color="primary"
+            onClick={handleSettleFunds}
+            loading={loading}
+          >
+            {loading ? 'Settling Funds' : 'Settle Funds'}
+          </TxButton>
+        </TCell>
+      </> :
+      <>
+        <TCell className={classes.rowWrap}>
+          <Box pl={formFactor === "mobile" ? 1 : 2} className={classes.column}>
+            <Box className={classes.uppercase}>{type}</Box>
+            <Box>{`${qAssetSymbol}/${uAssetSymbol}`}</Box>
+          </Box>
+          <Box pl={formFactor === "mobile" ? 1 : 2} className={classes.column}>
+            <Box>{`Strike: ${strikePrice}`}</Box>
+            <Box>{`${contractSize} ${uAssetSymbol}`}</Box>
+            <Box>{`Qty: ${unsettledFunds.baseFree.toString()}`}</Box>
+          </Box>
+        </TCell>
+        <TCell>
+          {`${moment.utc(expiration * 1000).format('LL')} 23:59:59 UTC`}
+        </TCell>
+        <TCell>{unsettledAssets()}</TCell>
+        <TCell align="right">
+          <TxButton
+            variant="outlined"
+            color="primary"
+            onClick={handleSettleFunds}
+            loading={loading}
+          >
+            {loading ? 'Settling...' : 'Settle Funds'}
+          </TxButton>
+        </TCell>
+      </>}
     </TableRow>
   );
 };
 
 // Render all unsettled balances for a given market as table rows
 const UnsettledBalancesRow: React.FC<{
+  formFactor: "desktop" | "tablet" | "mobile";
   expiration: number;
   contractSize: string;
   type: OptionType;
@@ -96,6 +154,7 @@ const UnsettledBalancesRow: React.FC<{
   strikePrice: string;
   qAssetDecimals: number;
 }> = ({
+  formFactor,
   expiration,
   contractSize,
   type,
@@ -123,6 +182,7 @@ const UnsettledBalancesRow: React.FC<{
 
   return (
     <UnsettledRow
+      formFactor={formFactor}
       serumMarketKey={serumMarketKey}
       type={type}
       expiration={expiration}

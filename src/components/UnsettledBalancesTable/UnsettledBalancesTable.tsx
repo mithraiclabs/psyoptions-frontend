@@ -13,8 +13,9 @@ import { OptionType } from '../../types';
 import { useSerumOpenOrders } from '../../context/SerumOpenOrdersContext';
 
 const UnsettledBalancesTable: React.FC<{
+  formFactor: "desktop" | "tablet" | "mobile";
   qAssetDecimals: number;
-}> = ({ qAssetDecimals }) => {
+}> = ({ formFactor, qAssetDecimals }) => {
   const { connected } = useWallet();
   const { optionMarketsForOpenOrders } = useSerumOpenOrders();
 
@@ -32,15 +33,23 @@ const UnsettledBalancesTable: React.FC<{
               </THeadCell>
             </TableRow>
             <TableRow>
-              <THeadCell>Option Type</THeadCell>
-              <THeadCell>Asset Pair</THeadCell>
-              <THeadCell>Expiration</THeadCell>
-              <THeadCell>Strike Price</THeadCell>
-              <THeadCell>Contract Size</THeadCell>
-              <THeadCell>Options</THeadCell>
-              <THeadCell>Assets</THeadCell>
-              {/* <THeadCell>Filled</THeadCell> */}
-              <THeadCell align="right">Action</THeadCell>
+              { formFactor === 'desktop' ?
+              <>
+                <THeadCell>Option Type</THeadCell>
+                <THeadCell>Asset Pair</THeadCell>
+                <THeadCell>Expiration</THeadCell>
+                <THeadCell>Strike Price</THeadCell>
+                <THeadCell>Contract Size</THeadCell>
+                <THeadCell>Options</THeadCell>
+                <THeadCell>Assets</THeadCell>
+                <THeadCell align="right">Action</THeadCell>
+              </> :
+              <>
+                <THeadCell>Asset</THeadCell>
+                <THeadCell>Expiration</THeadCell>
+                <THeadCell>Funds</THeadCell>
+                <THeadCell align="right">Action</THeadCell>
+              </>}
             </TableRow>
           </TableHead>
           <TableBody>
@@ -54,7 +63,9 @@ const UnsettledBalancesTable: React.FC<{
               </TableRow>
             ) : (
               optionMarketsForOpenOrders.map((optionMarket) => (
+                optionMarket.serumMarketKey ?
                 <UnsettledBalancesRow
+                formFactor={formFactor}
                   expiration={optionMarket.expiration}
                   contractSize={optionMarket.size}
                   // #TODO: change later, should have option type here
@@ -65,7 +76,7 @@ const UnsettledBalancesTable: React.FC<{
                   strikePrice={optionMarket.strikePrice ?? ''}
                   qAssetDecimals={qAssetDecimals}
                   key={`${optionMarket.serumMarketKey.toString()}-unsettled`}
-                />
+                /> : null
               ))
             )}
           </TableBody>

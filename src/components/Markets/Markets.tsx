@@ -499,6 +499,7 @@ const Markets: React.VFC = () => {
             </Box>
             <Box id="unsettled-balances-table">
               <UnsettledBalancesTable
+                formFactor={formFactor}
                 qAssetDecimals={qAsset?.decimals}
               />
             </Box>

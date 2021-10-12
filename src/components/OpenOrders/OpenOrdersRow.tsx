@@ -17,12 +17,6 @@ import useOptionsMarkets from '../../hooks/useOptionsMarkets';
 
 const useStyles = makeStyles((theme) => ({
   root: {},
-  mobile: {
-    fontSize: "10px",
-  },
-  tablet: {
-    fontSize: "12px",
-  },
   row: {
     display: "flex",
     flexDirection: "row",

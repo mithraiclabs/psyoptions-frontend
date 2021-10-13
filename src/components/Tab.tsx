@@ -18,7 +18,7 @@ const Tab = ({ children, selected, theme, onClick }) => {
       <Box
         pt={1}
         pb={selected ? '14px' : '6px'}
-        pr={2}
+        pr={1}
         pl={1}
         style={{ borderRadius: '4px 4px 0px 0px' }}
         bgcolor={theme.palette.background[selected ? 'tabHighlight' : 'medium']}

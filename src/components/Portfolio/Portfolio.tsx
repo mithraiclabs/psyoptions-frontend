@@ -46,6 +46,22 @@ const useStyles = makeStyles((theme) => ({
     gridTemplateColumns: '2fr 1.5fr 1fr 1fr',
     alignItems: 'center',
   },
+  desktopTab: {
+    padding: '0 8px 0 8px',
+    lineHeight: '22px',
+  },
+  mobileTab: {
+    padding: '0 4px 0 4px',
+    lineHeight: '16px',
+  },
+  desktopTabHeader: {
+    fontSize: 16,
+    fontWeight: 700,
+  },
+  mobileTabHeader: {
+    fontSize: 13,
+    fontWeight: 600,
+  },
 }));
 
 export type Position = {
@@ -71,6 +87,8 @@ const Portfolio: React.VFC = () => {
   const [selectedTab, setSelectedTab] = useState(0);
   const writtenOptions = useWrittenOptions();
   const { formFactor } = useScreenSize();
+  const isDesktop = formFactor === 'desktop';
+  const isMobile = formFactor === 'mobile';
 
   const positionRows: Position[] = useMemo(() =>
     Object.keys(positions).map((key) => {
@@ -119,17 +137,13 @@ const Portfolio: React.VFC = () => {
             >
               <Box display="flex" flexDirection="row" alignItems="center"
                 style={{ minHeight: "66px" }}>
-                {formFactor === 'desktop' && (
-                  <Box px={1}>
-                    <BarChartIcon />
-                  </Box>
-                )}
-                <Box px={1} textAlign="left" lineHeight={'22px'}>
-                  <Box fontSize={'16px'} fontWeight={700}>
+                {isDesktop && <BarChartIcon />}
+                <Box className={isMobile ? classes.mobileTab : classes.desktopTab} textAlign="left">
+                  <Box className={isMobile ? classes.mobileTabHeader : classes.desktopTabHeader}>
                     Open Positions
                   </Box>
-                  <Box fontSize={'13px'}>
-                    {positionRows.length} currently open
+                  <Box fontSize={isMobile ? '10px' : '13px'}>
+                    {positionRows.length} open
                   </Box>
                 </Box>
               </Box>
@@ -140,17 +154,13 @@ const Portfolio: React.VFC = () => {
             >
               <Box display="flex" flexDirection="row" alignItems="center"
                 style={{ minHeight: "66px" }}>
-                {formFactor === 'desktop' && (
-                  <Box px={1}>
-                    <CreateIcon fontSize="small" />
-                  </Box>
-                )}
-                <Box px={1} textAlign="left" lineHeight={'22px'}>
-                  <Box fontSize={'16px'} fontWeight={700}>
+                {isDesktop && <CreateIcon fontSize="small" />}
+                <Box className={isMobile ? classes.mobileTab : classes.desktopTab} textAlign="left">
+                  <Box className={isMobile ? classes.mobileTabHeader : classes.desktopTabHeader}>
                     Written Options
                   </Box>
-                  <Box fontSize={'13px'}>
-                    {writtenOptionKeys.length} currently written
+                  <Box fontSize={isMobile ? '10px' : '13px'}>
+                    {writtenOptionKeys.length} written
                   </Box>
                 </Box>
               </Box>
@@ -161,13 +171,9 @@ const Portfolio: React.VFC = () => {
             >
               <Box display="flex" flexDirection="row" alignItems="center"
                 style={{ minHeight: "66px" }}>
-                {formFactor === 'desktop' && (
-                  <Box px={1}>
-                    <ShoppingCart fontSize="small" />
-                  </Box>
-                )}
-                <Box px={1} textAlign="left" lineHeight={'22px'}>
-                  <Box fontSize={'16px'} fontWeight={700}>
+                {isDesktop && <ShoppingCart fontSize="small" />}
+                <Box className={isMobile ? classes.mobileTab : classes.desktopTab} textAlign="left">
+                  <Box className={isMobile ? classes.mobileTabHeader : classes.desktopTabHeader}>
                     Open Orders
                   </Box>
                 </Box>
@@ -179,13 +185,9 @@ const Portfolio: React.VFC = () => {
             >
               <Box display="flex" flexDirection="row" alignItems="center"
                 style={{ minHeight: "66px" }}>
-                {formFactor === 'desktop' && (
-                  <Box px={1}>
-                    <AttachMoney fontSize="small" />
-                  </Box>
-                )}
-                <Box px={1} textAlign="left" lineHeight={'22px'}>
-                  <Box fontSize={'16px'} fontWeight={700}>
+                {isDesktop && <AttachMoney fontSize="small" />}
+                <Box className={isMobile ? classes.mobileTab : classes.desktopTab} textAlign="left">
+                  <Box className={isMobile ? classes.mobileTabHeader : classes.desktopTabHeader}>
                     Unsettled Funds
                   </Box>
                 </Box>
@@ -196,13 +198,13 @@ const Portfolio: React.VFC = () => {
             <OpenPositionsTable
               positions={positionRows}
               className={clsx(classes.desktopColumns,
-                formFactor !== 'desktop' && classes.mobileColumns)}
+                !isDesktop && classes.mobileColumns)}
             />
           )}
           {selectedTab === 1 && (
             <WrittenOptionsTable
               className={clsx(classes.desktopColumns,
-                formFactor !== 'desktop' && classes.mobileColumns)}
+                !isDesktop && classes.mobileColumns)}
             />
           )}
           {selectedTab === 2 && (

@@ -12,13 +12,13 @@ import { TCell, THeadCell } from './UnsettledBalancesStyles';
 import { OptionType } from '../../types';
 import { useSerumOpenOrders } from '../../context/SerumOpenOrdersContext';
 import useAssetList from '../../hooks/useAssetList';
+import useScreenSize from '../../hooks/useScreenSize';
 
-const UnsettledBalancesTable: React.FC<{
-  formFactor: "desktop" | "tablet" | "mobile";
-}> = ({ formFactor }) => {
+const UnsettledBalancesTable = () => {
   const { connected } = useWallet();
   const { optionMarketsForOpenOrders } = useSerumOpenOrders();
   const { qAsset } = useAssetList();
+  const { formFactor } = useScreenSize();
 
   return (
     <Box>
@@ -66,7 +66,6 @@ const UnsettledBalancesTable: React.FC<{
               optionMarketsForOpenOrders.map((optionMarket) => (
                 (optionMarket.serumMarketKey && qAsset) ?
                 <UnsettledBalancesRow
-                  formFactor={formFactor}
                   expiration={optionMarket.expiration}
                   contractSize={optionMarket.size}
                   // #TODO: change later, should have option type here

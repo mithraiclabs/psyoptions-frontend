@@ -13,13 +13,13 @@ import ConnectButton from '../ConnectButton';
 import OpenOrdersRow from './OpenOrdersRow';
 import { TCell, THeadCell } from './OpenOrderStyles';
 import { OptionType } from '../../types';
+import useScreenSize from '../../hooks/useScreenSize';
 
 // Render all open orders for all optionMarkets specified in props
-const OpenOrders: React.FC<{
-  formFactor: "desktop" | "tablet" | "mobile";
-}> = ({ formFactor }) => {
+const OpenOrders = () => {
   const { connected } = useWallet();
   const { optionMarketsForOpenOrders } = useSerumOpenOrders();
+  const { formFactor } = useScreenSize();
 
   return (
     <Box>
@@ -68,7 +68,6 @@ const OpenOrders: React.FC<{
               optionMarketsForOpenOrders.map((optionMarket) => (
                 optionMarket.serumMarketKey ?
                 <OpenOrdersRow
-                  formFactor={formFactor}
                   expiration={optionMarket.expiration}
                   contractSize={optionMarket.size}
                   // #TODO: change later, should have option type here

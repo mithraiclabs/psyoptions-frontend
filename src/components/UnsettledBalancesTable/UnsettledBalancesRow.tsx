@@ -16,6 +16,7 @@ import { TCell } from './UnsettledBalancesStyles';
 import { OptionType } from '../../types';
 import TxButton from '../TxButton';
 import useOptionsMarkets from '../../hooks/useOptionsMarkets';
+import useScreenSize from '../../hooks/useScreenSize';
 
 const useStyles = makeStyles((theme) => ({
   root: {},
@@ -44,7 +45,6 @@ const Empty = ({ children }) => (
 );
 
 const UnsettledRow = ({
-  formFactor,
   serumMarketKey,
   type,
   expiration,
@@ -56,7 +56,6 @@ const UnsettledRow = ({
   settleFunds,
   qAssetDecimals,
 }: {
-  formFactor: "desktop" | "tablet" | "mobile";
   serumMarketKey: PublicKey;
   type: OptionType;
   expiration: number;
@@ -70,6 +69,7 @@ const UnsettledRow = ({
 }) => {
   const classes = useStyles();
   const [loading, setLoading] = useState(false);
+  const { formFactor } = useScreenSize();
 
   const handleSettleFunds = useCallback(async () => {
     setLoading(true);
@@ -144,7 +144,6 @@ const UnsettledRow = ({
 
 // Render all unsettled balances for a given market as table rows
 const UnsettledBalancesRow: React.FC<{
-  formFactor: "desktop" | "tablet" | "mobile";
   expiration: number;
   contractSize: string;
   type: OptionType;
@@ -154,7 +153,6 @@ const UnsettledBalancesRow: React.FC<{
   strikePrice: string;
   qAssetDecimals: number;
 }> = ({
-  formFactor,
   expiration,
   contractSize,
   type,
@@ -182,7 +180,6 @@ const UnsettledBalancesRow: React.FC<{
 
   return (
     <UnsettledRow
-      formFactor={formFactor}
       serumMarketKey={serumMarketKey}
       type={type}
       expiration={expiration}

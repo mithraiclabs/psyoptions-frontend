@@ -17,6 +17,7 @@ import {
 } from '../../../utils/format';
 import { OptionMarket, OptionType, TokenAccount } from '../../../types';
 import { usePrices } from '../../../context/PricesContext';
+import useScreenSize from '../../../hooks/useScreenSize';
 
 const useStyles = makeStyles((theme) => ({
   root: {},
@@ -72,13 +73,13 @@ const PositionRow: React.VFC<{
     quoteAmountPerContract: BigNumber;
   };
   className: string;
-  formFactor: "desktop" | "tablet" | "mobile";
-}> = ({ row, className, formFactor }) => {
+}> = ({ row, className }) => {
   const classes = useStyles();
   const [visible, setVisible] = useState(false);
   const { supportedAssets } = useAssetList();
   const { prices } = usePrices();
   const [exerciseDialogOpen, setExerciseDialogOpen] = useState(false);
+  const { formFactor } = useScreenSize();
 
   const nowInSeconds = Date.now() / 1000;
   const expired = row.expiration <= nowInSeconds;

@@ -8,7 +8,6 @@ import {
   TableBody,
   TableContainer,
   TableRow,
-  useMediaQuery
 } from '@material-ui/core';
 import ChevronLeft from '@material-ui/icons/ChevronLeft';
 import ChevronRight from '@material-ui/icons/ChevronRight';
@@ -102,12 +101,6 @@ const Markets: React.VFC = () => {
   const [showVolume, setShowVolume] = useState(true);
   const [showOI, setShowOI] = useState(true);
   const [currentColumnsCount, setColumnsCount] = useState(19); // 19 columns
-
-  const mobileDevice = !useMediaQuery("(min-width:376px)");
-  const tabletDevice = !useMediaQuery("(min-width:881px)");
-  // #TODO: move this to context
-  const isDesktop = !mobileDevice && !tabletDevice;
-  const formFactor = isDesktop ? 'desktop' : mobileDevice ? 'mobile' : 'tablet';
 
   useEffect(() => {
     const availableSizes = getSizes({
@@ -495,12 +488,10 @@ const Markets: React.VFC = () => {
               </Table>
             </TableContainer>
             <Box mt={'20px'}>
-              <OpenOrders formFactor={formFactor} />
+              <OpenOrders />
             </Box>
             <Box id="unsettled-balances-table" mt={'20px'}>
-              <UnsettledBalancesTable
-                formFactor={formFactor}
-              />
+              <UnsettledBalancesTable />
             </Box>
           </Box>
         </Box>

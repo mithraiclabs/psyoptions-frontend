@@ -1,4 +1,4 @@
-import { Box, makeStyles, useMediaQuery } from '@material-ui/core';
+import { Box, makeStyles } from '@material-ui/core';
 import React, { useState, useMemo } from 'react';
 import clsx from 'clsx';
 import CreateIcon from '@material-ui/icons/Create';
@@ -18,6 +18,7 @@ import { PricesProvider } from '../../context/PricesContext';
 import OpenPositionsTable from "./OpenPositionsTable";
 import OpenOrders from '../OpenOrders';
 import UnsettledBalancesTable from '../UnsettledBalancesTable';
+import useScreenSize from '../../hooks/useScreenSize';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -65,16 +66,11 @@ export type Position = {
 
 const Portfolio: React.VFC = () => {
   const classes = useStyles();
-  const mobileDevice = !useMediaQuery("(min-width:376px)");
-  const tabletDevice = !useMediaQuery("(min-width:881px)");
   const positions = useOpenPositions();
   const { marketsByUiKey } = useOptionsMarkets();
   const [selectedTab, setSelectedTab] = useState(0);
   const writtenOptions = useWrittenOptions();
-
-  // #TODO: move this to context
-  const isDesktop = !mobileDevice && !tabletDevice;
-  const formFactor = isDesktop ? 'desktop' : mobileDevice ? 'mobile' : 'tablet';
+  const { formFactor } = useScreenSize();
 
   const positionRows: Position[] = useMemo(() =>
     Object.keys(positions).map((key) => {
@@ -199,27 +195,21 @@ const Portfolio: React.VFC = () => {
           {selectedTab === 0 && (
             <OpenPositionsTable
               positions={positionRows}
-              formFactor={formFactor}
               className={clsx(classes.desktopColumns,
-                !isDesktop && classes.mobileColumns)}
+                formFactor !== 'desktop' && classes.mobileColumns)}
             />
           )}
           {selectedTab === 1 && (
             <WrittenOptionsTable
-              formFactor={formFactor}
               className={clsx(classes.desktopColumns,
-                !isDesktop && classes.mobileColumns)}
+                formFactor !== 'desktop' && classes.mobileColumns)}
             />
           )}
           {selectedTab === 2 && (
-            <OpenOrders
-              formFactor={formFactor}
-            />
+            <OpenOrders />
           )}
           {selectedTab === 3 && (
-            <UnsettledBalancesTable
-              formFactor={formFactor}
-            />
+            <UnsettledBalancesTable />
           )}
         </Box>
       </Page>

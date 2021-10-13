@@ -14,6 +14,7 @@ import TxButton from '../TxButton';
 import { OptionType } from '../../types';
 import { useSerumOpenOrders } from '../../context/SerumOpenOrdersContext';
 import useOptionsMarkets from '../../hooks/useOptionsMarkets';
+import useScreenSize from '../../hooks/useScreenSize';
 
 const useStyles = makeStyles((theme) => ({
   root: {},
@@ -51,7 +52,6 @@ type SerumBidOrAsk = {
 };
 
 const OrderRow: React.VFC<{
-  formFactor: "desktop" | "tablet" | "mobile";
   order: SerumBidOrAsk;
   type: OptionType;
   expiration: number;
@@ -61,7 +61,6 @@ const OrderRow: React.VFC<{
   contractSize: string;
   handleCancelOrder: (order: any) => Promise<void>;
 }> = ({
-  formFactor,
   order,
   type,
   expiration,
@@ -73,6 +72,7 @@ const OrderRow: React.VFC<{
 }) => {
   const classes = useStyles();
   const [loading, setLoading] = useState(false);
+  const { formFactor } = useScreenSize();
 
   const cancelOrder = async () => {
     setLoading(true);
@@ -162,7 +162,6 @@ const OrderRow: React.VFC<{
 
 // Render all open orders for a given market as table rows
 const OpenOrdersRow: React.VFC<{
-  formFactor: "desktop" | "tablet" | "mobile";
   expiration: number;
   contractSize: string;
   type: OptionType;
@@ -171,7 +170,6 @@ const OpenOrdersRow: React.VFC<{
   serumMarketKey: PublicKey;
   strikePrice: string;
 }> = ({
-  formFactor,
   expiration,
   contractSize,
   type,
@@ -251,7 +249,6 @@ const OpenOrdersRow: React.VFC<{
         actualOpenOrders.map((order) => {
           return (
             <OrderRow
-              formFactor={formFactor}
               order={order}
               type={type}
               expiration={expiration}

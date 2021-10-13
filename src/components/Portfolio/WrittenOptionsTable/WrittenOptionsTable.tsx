@@ -8,6 +8,7 @@ import useOptionsMarkets from '../../../hooks/useOptionsMarkets';
 import { Heading } from '../../Portfolio/Heading';
 import EmptySvg from '../../Portfolio/EmptySvg';
 import WrittenOptionRow from './WrittenOptionRow';
+import useScreenSize from '../../../hooks/useScreenSize';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -41,14 +42,14 @@ const useStyles = makeStyles((theme) => ({
 // TODO handle the case where the writer has multiple underlying asset accounts
 const WrittenOptionsTable: React.VFC<{
   className: string;
-  formFactor: 'desktop' | 'tablet' | 'mobile';
-}> = ({ className, formFactor }) => {
+}> = ({ className }) => {
   const classes = useStyles();
   const { connected } = useWallet();
   const positions = useOpenPositions();
   const writtenOptions = useWrittenOptions();
   const { marketsByUiKey } = useOptionsMarkets();
   const nowInSeconds = Date.now() / 1000;
+  const { formFactor } = useScreenSize();
 
   // TODO - Add user-configurable sort order
   // For now just sort by expiration to make sure the expired options are below the active ones
@@ -109,7 +110,6 @@ const WrittenOptionsTable: React.VFC<{
                 marketKey={marketKey}
                 writerTokenAccounts={writtenOptions[marketKey]}
                 heldContracts={heldContracts}
-                formFactor={formFactor}
                 className={className}
               />
             );

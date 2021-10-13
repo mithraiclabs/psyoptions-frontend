@@ -17,6 +17,7 @@ import { ClaimQuoteDialog } from './ClaimQuoteDialog';
 import { WrittenOptionsClaimUnderlyingDialog } from '../../WrittenOptionsClaimUnderlyingDialog';
 import { WrittenOptionsClosePositionPreExpiryDialog } from '../../WrittenOptionsClosePositionPreExpiryDialog';
 import { useOptionVaultAmounts } from '../../../hooks/useOptionVaultAmounts';
+import useScreenSize from '../../../hooks/useScreenSize';
 
 const StyledTooltip = withStyles((theme) => ({
   tooltip: {
@@ -69,18 +70,17 @@ const WrittenOptionRow: React.VFC<{
   marketKey: string;
   writerTokenAccounts: TokenAccount[];
   heldContracts: TokenAccount[];
-  formFactor: 'desktop' | 'tablet' | 'mobile';
   className: string;
 }> = ({
   expired,
   marketKey,
   writerTokenAccounts,
   heldContracts,
-  formFactor,
   className,
 }) => {
   const classes = useStyles();
   const { supportedAssets } = useAssetList();
+  const { formFactor } = useScreenSize();
   const { ownedTokenAccounts } = useOwnedTokenAccounts();
   const { marketsByUiKey } = useOptionsMarkets();
   const [claimQuoteVisible, setClaimQuoteVisible] = useState(false);

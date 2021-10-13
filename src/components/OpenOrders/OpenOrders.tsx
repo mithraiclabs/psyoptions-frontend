@@ -11,7 +11,7 @@ import {
 } from '../../context/SerumOpenOrdersContext';
 import ConnectButton from '../ConnectButton';
 import OpenOrdersRow from './OpenOrdersRow';
-import { TCell, THeadCell } from './OpenOrderStyles';
+import { TCell, THeadCell } from '../StyledComponents/Table/TableStyles';
 import { OptionType } from '../../types';
 import useScreenSize from '../../hooks/useScreenSize';
 

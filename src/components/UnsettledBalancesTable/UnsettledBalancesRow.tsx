@@ -12,7 +12,7 @@ import {
   useSettleFunds,
   useUnsettledFundsForMarket,
 } from '../../hooks/Serum';
-import { TCell } from './UnsettledBalancesStyles';
+import { TCell } from '../StyledComponents/Table/TableStyles';
 import { OptionType } from '../../types';
 import TxButton from '../TxButton';
 import useOptionsMarkets from '../../hooks/useOptionsMarkets';

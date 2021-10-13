@@ -8,7 +8,7 @@ import TableContainer from '@material-ui/core/TableContainer';
 import useWallet from '../../hooks/useWallet';
 import ConnectButton from '../ConnectButton';
 import UnsettledBalancesRow from './UnsettledBalancesRow';
-import { TCell, THeadCell } from './UnsettledBalancesStyles';
+import { TCell, THeadCell } from '../StyledComponents/Table/TableStyles';
 import { OptionType } from '../../types';
 import { useSerumOpenOrders } from '../../context/SerumOpenOrdersContext';
 import useAssetList from '../../hooks/useAssetList';

@@ -1,6 +1,6 @@
 import TableCell from '@material-ui/core/TableCell';
 import { withStyles } from '@material-ui/core/styles';
-import theme from '../../utils/theme';
+import theme from '../../../utils/theme';
 
 const borderLight = `1px solid ${theme.palette.background.paper}`;
 

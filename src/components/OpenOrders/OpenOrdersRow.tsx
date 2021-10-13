@@ -9,7 +9,7 @@ import clsx from 'clsx';
 import { PublicKey } from '@solana/web3.js';
 import { useSerumOrderbooks } from '../../context/SerumOrderbookContext';
 import { useCancelOrder } from '../../hooks/Serum';
-import { TCell } from './OpenOrderStyles';
+import { TCell } from '../StyledComponents/Table/TableStyles';
 import TxButton from '../TxButton';
 import { OptionType } from '../../types';
 import { useSerumOpenOrders } from '../../context/SerumOpenOrdersContext';

@@ -25,7 +25,7 @@ const useStyles = makeStyles((theme) => ({
     fontSize: "10px",
   },
   tablet: {
-    fontSize: "12px",
+    fontSize: "14px",
   },
   row: {
     display: "flex",

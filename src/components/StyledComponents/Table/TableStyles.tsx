@@ -4,6 +4,14 @@ import theme from '../../../utils/theme';
 
 const borderLight = `1px solid ${theme.palette.background.paper}`;
 
+export const TMobileCell = withStyles({
+    root: {
+      padding: '4px 6px',
+      border: 'none',
+      background: (theme.palette.background as any).medium, // Todo fix this type
+    },
+  })(TableCell);
+
 export const TCell = withStyles({
   root: {
     padding: '8px 12px',

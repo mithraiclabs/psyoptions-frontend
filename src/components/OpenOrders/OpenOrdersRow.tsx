@@ -9,7 +9,7 @@ import clsx from 'clsx';
 import { PublicKey } from '@solana/web3.js';
 import { useSerumOrderbooks } from '../../context/SerumOrderbookContext';
 import { useCancelOrder } from '../../hooks/Serum';
-import { TCell } from '../StyledComponents/Table/TableStyles';
+import { TCell, TMobileCell } from '../StyledComponents/Table/TableStyles';
 import TxButton from '../TxButton';
 import { OptionType } from '../../types';
 import { useSerumOpenOrders } from '../../context/SerumOpenOrdersContext';
@@ -41,7 +41,13 @@ const useStyles = makeStyles((theme) => ({
   },
   errorTextColor: {
     color: theme.palette.error.main,
-  }
+  },
+  tabletFont: {
+    fontSize: "14px !important",
+  },
+  mobileFont: {
+    fontSize: "10px !important",
+  },
 }));
 
 type SerumBidOrAsk = {
@@ -118,7 +124,9 @@ const OrderRow: React.VFC<{
         </TCell>
       </> :
       <>
-        <TCell className={classes.rowWrap}>
+        <TMobileCell className={clsx(classes.rowWrap,
+          formFactor === "tablet" && classes.tabletFont,
+          formFactor === "mobile" && classes.mobileFont)}>
           <Box pl={formFactor === "mobile" ? 1 : 2} className={classes.column}>
             <Box className={clsx(classes.uppercase,
                 order?.side === 'buy' ?
@@ -134,18 +142,24 @@ const OrderRow: React.VFC<{
             <Box>{`${contractSize} ${uAssetSymbol}`}</Box>
             <Box>{`Qty: ${order?.size}`}</Box>
           </Box>
-        </TCell>
-        <TCell>
+        </TMobileCell>
+        <TMobileCell className={clsx(
+          formFactor === "tablet" && classes.tabletFont,
+          formFactor === "mobile" && classes.mobileFont)}>
           {`${moment.utc(expiration * 1000).format('LL')} 23:59:59 UTC`}
-        </TCell>
-        <TCell
-          className={order?.side === 'buy' ?
+        </TMobileCell>
+        <TMobileCell
+          className={clsx(order?.side === 'buy' ?
             classes.successTextColor :
-            classes.errorTextColor}
+            classes.errorTextColor,
+            formFactor === "tablet" && classes.tabletFont,
+            formFactor === "mobile" && classes.mobileFont)}
         >
           {order?.price}
-        </TCell>
-        <TCell align="right">
+        </TMobileCell>
+        <TMobileCell align="right" className={clsx(
+          formFactor === "tablet" && classes.tabletFont,
+          formFactor === "mobile" && classes.mobileFont)}>
           <TxButton
             variant="outlined"
             color="primary"
@@ -154,7 +168,7 @@ const OrderRow: React.VFC<{
           >
             {loading ? 'Canceling' : 'Cancel'}
           </TxButton>
-        </TCell>
+        </TMobileCell>
       </>}
     </TableRow>
   );

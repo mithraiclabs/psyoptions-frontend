@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import clsx from "clsx";
 import {
   Box,
   TableRow,
@@ -12,7 +13,7 @@ import {
   useSettleFunds,
   useUnsettledFundsForMarket,
 } from '../../hooks/Serum';
-import { TCell } from '../StyledComponents/Table/TableStyles';
+import { TCell, TMobileCell } from '../StyledComponents/Table/TableStyles';
 import { OptionType } from '../../types';
 import TxButton from '../TxButton';
 import useOptionsMarkets from '../../hooks/useOptionsMarkets';
@@ -37,6 +38,12 @@ const useStyles = makeStyles((theme) => ({
   column: {
     display: "flex",
     flexDirection: "column",
+  },
+  tabletFont: {
+    fontSize: "14px !important",
+  },
+  mobileFont: {
+    fontSize: "10px !important",
   },
 }));
 
@@ -70,6 +77,7 @@ const UnsettledRow = ({
   const classes = useStyles();
   const [loading, setLoading] = useState(false);
   const { formFactor } = useScreenSize();
+  const isMobile = formFactor === "mobile";
 
   const handleSettleFunds = useCallback(async () => {
     setLoading(true);
@@ -88,7 +96,9 @@ const UnsettledRow = ({
   };
 
   return (
-    <TableRow key={`tr-unsettled-${serumMarketKey}`}>
+    <TableRow key={`tr-unsettled-${serumMarketKey}`}
+      className={formFactor === 'tablet' ? classes.tabletFont :
+      formFactor === 'mobile' ? classes.mobileFont : ''}>
       {formFactor === 'desktop' ?
       <>
         <TCell>{type}</TCell>
@@ -112,31 +122,42 @@ const UnsettledRow = ({
         </TCell>
       </> :
       <>
-        <TCell className={classes.rowWrap}>
-          <Box pl={formFactor === "mobile" ? 1 : 2} className={classes.column}>
+        <TMobileCell className={clsx(classes.rowWrap,
+          formFactor === "tablet" && classes.tabletFont,
+          formFactor === "mobile" && classes.mobileFont)}>
+          <Box pl={isMobile ? 1 : 2} className={classes.column}>
             <Box className={classes.uppercase}>{type}</Box>
             <Box>{`${qAssetSymbol}/${uAssetSymbol}`}</Box>
           </Box>
-          <Box pl={formFactor === "mobile" ? 1 : 2} className={classes.column}>
+          <Box pl={isMobile ? 1 : 2} className={classes.column}>
             <Box>{`Strike: ${strikePrice}`}</Box>
             <Box>{`${contractSize} ${uAssetSymbol}`}</Box>
             <Box>{`Qty: ${unsettledFunds.baseFree.toString()}`}</Box>
           </Box>
-        </TCell>
-        <TCell>
+        </TMobileCell>
+        <TMobileCell className={clsx(
+          formFactor === "tablet" && classes.tabletFont,
+          formFactor === "mobile" && classes.mobileFont)}>
           {`${moment.utc(expiration * 1000).format('LL')} 23:59:59 UTC`}
-        </TCell>
-        <TCell>{unsettledAssets()}</TCell>
-        <TCell align="right">
+        </TMobileCell>
+        <TMobileCell className={clsx(
+          formFactor === "tablet" && classes.tabletFont,
+          formFactor === "mobile" && classes.mobileFont)}>
+          {unsettledAssets()}
+        </TMobileCell>
+        <TMobileCell align="right" className={clsx(
+          formFactor === "tablet" && classes.tabletFont,
+          formFactor === "mobile" && classes.mobileFont)}>
           <TxButton
             variant="outlined"
             color="primary"
             onClick={handleSettleFunds}
             loading={loading}
+            size={isMobile ? 'small' : 'large'}
           >
             {loading ? 'Settling...' : 'Settle Funds'}
           </TxButton>
-        </TCell>
+        </TMobileCell>
       </>}
     </TableRow>
   );

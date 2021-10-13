@@ -1,15 +1,54 @@
 import React, { useState, useEffect } from 'react';
-import TableRow from '@material-ui/core/TableRow';
+import {
+  Box,
+  TableRow,
+  makeStyles,
+} from '@material-ui/core';
 import moment from 'moment';
+import clsx from 'clsx';
 import { PublicKey } from '@solana/web3.js';
 import { useSerumOrderbooks } from '../../context/SerumOrderbookContext';
 import { useCancelOrder } from '../../hooks/Serum';
-import theme from '../../utils/theme';
-import { TCell } from './OpenOrderStyles';
+import { TCell, TMobileCell } from '../StyledComponents/Table/TableStyles';
 import TxButton from '../TxButton';
 import { OptionType } from '../../types';
 import { useSerumOpenOrders } from '../../context/SerumOpenOrdersContext';
 import useOptionsMarkets from '../../hooks/useOptionsMarkets';
+import useScreenSize from '../../hooks/useScreenSize';
+
+const useStyles = makeStyles((theme) => ({
+  root: {},
+  row: {
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  rowWrap: {
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    flexFlow: "wrap"
+  },
+  uppercase: {
+    textTransform: "uppercase",
+  },
+  column: {
+    display: "flex",
+    flexDirection: "column",
+  },
+  successTextColor: {
+    color: theme.palette.success.main,
+  },
+  errorTextColor: {
+    color: theme.palette.error.main,
+  },
+  tabletFont: {
+    fontSize: "14px !important",
+  },
+  mobileFont: {
+    fontSize: "10px !important",
+  },
+}));
 
 type SerumBidOrAsk = {
   side: string;
@@ -18,7 +57,16 @@ type SerumBidOrAsk = {
   openOrdersAddress: PublicKey;
 };
 
-const OrderRow = ({
+const OrderRow: React.VFC<{
+  order: SerumBidOrAsk;
+  type: OptionType;
+  expiration: number;
+  uAssetSymbol: string;
+  qAssetSymbol: string;
+  strikePrice: string;
+  contractSize: string;
+  handleCancelOrder: (order: any) => Promise<void>;
+}> = ({
   order,
   type,
   expiration,
@@ -28,7 +76,9 @@ const OrderRow = ({
   contractSize,
   handleCancelOrder,
 }) => {
+  const classes = useStyles();
   const [loading, setLoading] = useState(false);
+  const { formFactor } = useScreenSize();
 
   const cancelOrder = async () => {
     setLoading(true);
@@ -37,52 +87,95 @@ const OrderRow = ({
   };
 
   return (
-    <TableRow hover>
-      <TCell
-        style={{
-          color:
-            order?.side === 'buy'
-              ? theme.palette.success.main
-              : theme.palette.error.main,
-        }}
-      >
-        {order?.side}
-      </TCell>
-      <TCell>{type}</TCell>
-      <TCell>{`${qAssetSymbol}/${uAssetSymbol}`}</TCell>
-      <TCell>
-        {`${moment.utc(expiration * 1000).format('LL')} 23:59:59 UTC`}
-      </TCell>
-      <TCell>{strikePrice}</TCell>
-      <TCell>{`${contractSize} ${uAssetSymbol}`}</TCell>
-      <TCell>{order?.size}</TCell>
-      <TCell
-        style={{
-          color:
-            order?.side === 'buy'
-              ? theme.palette.success.main
-              : theme.palette.error.main,
-        }}
-      >
-        {order?.price}
-      </TCell>
-      {/* <TCell>TODO</TCell> */}
-      <TCell align="right">
-        <TxButton
-          variant="outlined"
-          color="primary"
-          onClick={cancelOrder}
-          loading={loading}
+    <TableRow>
+      {formFactor === 'desktop' ?
+      <>
+        <TCell
+          className={order?.side === 'buy' ?
+            classes.successTextColor :
+            classes.errorTextColor}
         >
-          {loading ? 'Canceling' : 'Cancel'}
-        </TxButton>
-      </TCell>
+          {order?.side}
+        </TCell>
+        <TCell>{type}</TCell>
+        <TCell>{`${qAssetSymbol}/${uAssetSymbol}`}</TCell>
+        <TCell>
+          {`${moment.utc(expiration * 1000).format('LL')} 23:59:59 UTC`}
+        </TCell>
+        <TCell>{strikePrice}</TCell>
+        <TCell>{`${contractSize} ${uAssetSymbol}`}</TCell>
+        <TCell>{order?.size}</TCell>
+        <TCell
+          className={order?.side === 'buy' ?
+            classes.successTextColor :
+            classes.errorTextColor}
+        >
+          {order?.price}
+        </TCell>
+        <TCell align="right">
+          <TxButton
+            variant="outlined"
+            color="primary"
+            onClick={cancelOrder}
+            loading={loading}
+          >
+            {loading ? 'Canceling' : 'Cancel'}
+          </TxButton>
+        </TCell>
+      </> :
+      <>
+        <TMobileCell className={clsx(classes.rowWrap,
+          formFactor === "tablet" && classes.tabletFont,
+          formFactor === "mobile" && classes.mobileFont)}>
+          <Box pl={formFactor === "mobile" ? 1 : 2} className={classes.column}>
+            <Box className={clsx(classes.uppercase,
+                order?.side === 'buy' ?
+                classes.successTextColor :
+                classes.errorTextColor)}
+            >
+                {`${order?.side} ${type}`}
+            </Box>
+            <Box>{`${qAssetSymbol}/${uAssetSymbol}`}</Box>
+          </Box>
+          <Box pl={formFactor === "mobile" ? 1 : 2} className={classes.column}>
+            <Box>{`Strike: ${strikePrice}`}</Box>
+            <Box>{`${contractSize} ${uAssetSymbol}`}</Box>
+            <Box>{`Qty: ${order?.size}`}</Box>
+          </Box>
+        </TMobileCell>
+        <TMobileCell className={clsx(
+          formFactor === "tablet" && classes.tabletFont,
+          formFactor === "mobile" && classes.mobileFont)}>
+          {`${moment.utc(expiration * 1000).format('LL')} 23:59:59 UTC`}
+        </TMobileCell>
+        <TMobileCell
+          className={clsx(order?.side === 'buy' ?
+            classes.successTextColor :
+            classes.errorTextColor,
+            formFactor === "tablet" && classes.tabletFont,
+            formFactor === "mobile" && classes.mobileFont)}
+        >
+          {order?.price}
+        </TMobileCell>
+        <TMobileCell align="right" className={clsx(
+          formFactor === "tablet" && classes.tabletFont,
+          formFactor === "mobile" && classes.mobileFont)}>
+          <TxButton
+            variant="outlined"
+            color="primary"
+            onClick={cancelOrder}
+            loading={loading}
+          >
+            {loading ? 'Canceling' : 'Cancel'}
+          </TxButton>
+        </TMobileCell>
+      </>}
     </TableRow>
   );
 };
 
 // Render all open orders for a given market as table rows
-const OpenOrdersForMarket: React.VFC<{
+const OpenOrdersRow: React.VFC<{
   expiration: number;
   contractSize: string;
   type: OptionType;
@@ -111,14 +204,14 @@ const OpenOrdersForMarket: React.VFC<{
   useEffect(() => {
     if (!orderbooks[serumMarketAddress] || !openOrders) {
       setActualOpenOrders([]);
-      return null;
+      return;
     }
   
     const { bidOrderbook, askOrderbook } = orderbooks[serumMarketAddress];
     const bids = [...(bidOrderbook || [])] as SerumBidOrAsk[];
     const asks = [...(askOrderbook || [])] as SerumBidOrAsk[];
-    const bidPrices = {};
-    const askPrices = {};
+    const bidPrices = {} as any;
+    const askPrices = {} as any;
   
     // Some manual bugfixing:
     // If this wallet has multiple open orders of same price
@@ -186,4 +279,4 @@ const OpenOrdersForMarket: React.VFC<{
   );
 };
 
-export default React.memo(OpenOrdersForMarket);
+export default React.memo(OpenOrdersRow);

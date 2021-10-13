@@ -10,17 +10,19 @@ import {
   useSerumOpenOrders,
 } from '../../context/SerumOpenOrdersContext';
 import ConnectButton from '../ConnectButton';
-import OpenOrdersForMarket from './OpenOrdersForMarket';
-import { TCell, THeadCell } from './OpenOrderStyles';
+import OpenOrdersRow from './OpenOrdersRow';
+import { TCell, THeadCell } from '../StyledComponents/Table/TableStyles';
 import { OptionType } from '../../types';
+import useScreenSize from '../../hooks/useScreenSize';
 
 // Render all open orders for all optionMarkets specified in props
-const OpenOrders: React.FC = () => {
+const OpenOrders = () => {
   const { connected } = useWallet();
   const { optionMarketsForOpenOrders } = useSerumOpenOrders();
+  const { formFactor } = useScreenSize();
 
   return (
-    <Box mt={'20px'}>
+    <Box>
       <TableContainer>
         <Table stickyHeader aria-label="sticky table">
           <TableHead>
@@ -33,16 +35,24 @@ const OpenOrders: React.FC = () => {
               </THeadCell>
             </TableRow>
             <TableRow>
-              <THeadCell>Side</THeadCell>
-              <THeadCell>Option Type</THeadCell>
-              <THeadCell>Asset Pair</THeadCell>
-              <THeadCell>Expiration</THeadCell>
-              <THeadCell>Strike Price</THeadCell>
-              <THeadCell>Contract Size</THeadCell>
-              <THeadCell>Order Size</THeadCell>
-              <THeadCell>Limit Price</THeadCell>
-              {/* <THeadCell>Filled</THeadCell> */}
-              <THeadCell align="right">Action</THeadCell>
+              { formFactor === 'desktop' ?
+              <>
+                <THeadCell>Side</THeadCell>
+                <THeadCell>Option Type</THeadCell>
+                <THeadCell>Asset Pair</THeadCell>
+                <THeadCell>Expiration</THeadCell>
+                <THeadCell>Strike Price</THeadCell>
+                <THeadCell>Contract Size</THeadCell>
+                <THeadCell>Order Size</THeadCell>
+                <THeadCell>Limit Price</THeadCell>
+                <THeadCell align="right">Action</THeadCell>
+              </> : 
+              <>
+                <THeadCell>Asset</THeadCell>
+                <THeadCell>Expiration</THeadCell>
+                <THeadCell>Limit Price</THeadCell>
+                <THeadCell align="right">Action</THeadCell>
+              </>}
             </TableRow>
           </TableHead>
           <TableBody>
@@ -56,7 +66,8 @@ const OpenOrders: React.FC = () => {
               </TableRow>
             ) : (
               optionMarketsForOpenOrders.map((optionMarket) => (
-                <OpenOrdersForMarket
+                optionMarket.serumMarketKey ?
+                <OpenOrdersRow
                   expiration={optionMarket.expiration}
                   contractSize={optionMarket.size}
                   // #TODO: change later, should have option type here
@@ -65,8 +76,8 @@ const OpenOrders: React.FC = () => {
                   uAssetSymbol={optionMarket.uAssetSymbol}
                   serumMarketKey={optionMarket.serumMarketKey}
                   strikePrice={optionMarket.strike.toString()}
-                  key={optionMarket.serumMarketKey.toString()}
-                />
+                  key={optionMarket.serumMarketKey?.toString()}
+                /> : null
               ))
             )}
           </TableBody>

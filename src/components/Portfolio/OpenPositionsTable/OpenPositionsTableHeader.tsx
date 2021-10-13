@@ -4,6 +4,7 @@ import {
 } from "@material-ui/core";
 import React, { Fragment } from "react";
 import clsx from "clsx";
+import useScreenSize from "../../../hooks/useScreenSize";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -18,9 +19,9 @@ const useStyles = makeStyles((theme) => ({
 
 const OpenPositionsTableHeader: React.VFC<{
   className: string;
-  formFactor: "desktop" | "tablet" | "mobile";
-}> = ({ className, formFactor }) => {
+}> = ({ className }) => {
   const classes = useStyles();
+  const { formFactor } = useScreenSize();
 
   return (
     <Box className={clsx(

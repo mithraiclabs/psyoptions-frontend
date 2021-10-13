@@ -8,18 +8,20 @@ import TableContainer from '@material-ui/core/TableContainer';
 import useWallet from '../../hooks/useWallet';
 import ConnectButton from '../ConnectButton';
 import UnsettledBalancesRow from './UnsettledBalancesRow';
-import { TCell, THeadCell } from './UnsettledBalancesStyles';
+import { TCell, THeadCell } from '../StyledComponents/Table/TableStyles';
 import { OptionType } from '../../types';
 import { useSerumOpenOrders } from '../../context/SerumOpenOrdersContext';
+import useAssetList from '../../hooks/useAssetList';
+import useScreenSize from '../../hooks/useScreenSize';
 
-const UnsettledBalancesTable: React.FC<{
-  qAssetDecimals: number;
-}> = ({ qAssetDecimals }) => {
+const UnsettledBalancesTable = () => {
   const { connected } = useWallet();
   const { optionMarketsForOpenOrders } = useSerumOpenOrders();
+  const { qAsset } = useAssetList();
+  const { formFactor } = useScreenSize();
 
   return (
-    <Box mt={'20px'}>
+    <Box>
       <TableContainer>
         <Table stickyHeader aria-label="sticky table">
           <TableHead>
@@ -32,15 +34,23 @@ const UnsettledBalancesTable: React.FC<{
               </THeadCell>
             </TableRow>
             <TableRow>
-              <THeadCell>Option Type</THeadCell>
-              <THeadCell>Asset Pair</THeadCell>
-              <THeadCell>Expiration</THeadCell>
-              <THeadCell>Strike Price</THeadCell>
-              <THeadCell>Contract Size</THeadCell>
-              <THeadCell>Options</THeadCell>
-              <THeadCell>Assets</THeadCell>
-              {/* <THeadCell>Filled</THeadCell> */}
-              <THeadCell align="right">Action</THeadCell>
+              { formFactor === 'desktop' ?
+              <>
+                <THeadCell>Option Type</THeadCell>
+                <THeadCell>Asset Pair</THeadCell>
+                <THeadCell>Expiration</THeadCell>
+                <THeadCell>Strike Price</THeadCell>
+                <THeadCell>Contract Size</THeadCell>
+                <THeadCell>Options</THeadCell>
+                <THeadCell>Assets</THeadCell>
+                <THeadCell align="right">Action</THeadCell>
+              </> :
+              <>
+                <THeadCell>Asset</THeadCell>
+                <THeadCell>Expiration</THeadCell>
+                <THeadCell>Funds</THeadCell>
+                <THeadCell align="right">Action</THeadCell>
+              </>}
             </TableRow>
           </TableHead>
           <TableBody>
@@ -54,6 +64,7 @@ const UnsettledBalancesTable: React.FC<{
               </TableRow>
             ) : (
               optionMarketsForOpenOrders.map((optionMarket) => (
+                (optionMarket.serumMarketKey && qAsset) ?
                 <UnsettledBalancesRow
                   expiration={optionMarket.expiration}
                   contractSize={optionMarket.size}
@@ -63,9 +74,9 @@ const UnsettledBalancesTable: React.FC<{
                   uAssetSymbol={optionMarket.uAssetSymbol}
                   serumMarketKey={optionMarket.serumMarketKey}
                   strikePrice={optionMarket.strikePrice ?? ''}
-                  qAssetDecimals={qAssetDecimals}
+                  qAssetDecimals={qAsset.decimals}
                   key={`${optionMarket.serumMarketKey.toString()}-unsettled`}
-                />
+                /> : null
               ))
             )}
           </TableBody>

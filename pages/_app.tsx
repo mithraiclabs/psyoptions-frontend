@@ -1,4 +1,8 @@
-import { StylesProvider, ThemeProvider } from '@material-ui/core/styles';
+import {
+  ThemeProvider,
+  StylesProvider,
+  useMediaQuery,
+} from '@material-ui/core';
 import type { AppProps } from 'next/app';
 import Head from 'next/head';
 import React, { useEffect, useState } from 'react';
@@ -7,9 +11,21 @@ import Store from '../src/context/store';
 import { DISALLOWED_COUNTRIES, useCountry } from '../src/hooks/useCountry';
 import useOptionsMarkets from '../src/hooks/useOptionsMarkets';
 import theme from '../src/utils/theme';
+import useScreenSize from '../src/hooks/useScreenSize';
+import {
+  MOBILE_DEVICE_MEDIA_QUERY,
+  TABLET_DEVICE_MEDIA_QUERY,
+} from '../src/context/ScreenSizeContext';
 
 const AppWithStore: React.FC = ({ children }) => {
   const { packagedMarkets } = useOptionsMarkets();
+  const { updateFormFactor } = useScreenSize();
+  const mobileDevice = !useMediaQuery(MOBILE_DEVICE_MEDIA_QUERY);
+  const tabletDevice = !useMediaQuery(TABLET_DEVICE_MEDIA_QUERY);
+
+  useEffect(() => {
+    updateFormFactor(mobileDevice, tabletDevice);
+  }, [updateFormFactor, mobileDevice, tabletDevice]);
 
   useEffect(() => {
     packagedMarkets();

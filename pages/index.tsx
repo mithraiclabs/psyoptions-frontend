@@ -1,9 +1,11 @@
 import React from 'react';
+import {
+  Box,
+  Button,
+  makeStyles,
+} from '@material-ui/core';
 import { useRouter } from 'next/router';
 import Image from 'next/image';
-import Box from '@material-ui/core/Box';
-import Button from '@material-ui/core/Button';
-import { makeStyles } from '@material-ui/core/styles';
 import logo from '../public/psyoptions-logo-light.png';
 import Page from '../src/components/pages/Page';
 import theme from '../src/utils/theme';

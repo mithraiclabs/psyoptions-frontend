@@ -1,17 +1,18 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import Box from '@material-ui/core/Box';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
-import Switch from '@material-ui/core/Switch';
-import Table from '@material-ui/core/Table';
-import TableBody from '@material-ui/core/TableBody';
-import TableContainer from '@material-ui/core/TableContainer';
-import TableRow from '@material-ui/core/TableRow';
+import {
+  Box,
+  FormControlLabel,
+  Switch,
+  Table,
+  TableBody,
+  TableContainer,
+  TableRow,
+} from '@material-ui/core';
 import ChevronLeft from '@material-ui/icons/ChevronLeft';
 import ChevronRight from '@material-ui/icons/ChevronRight';
 import { PublicKey } from '@solana/web3.js';
 import moment from 'moment';
-
 import { TCellLoading, THeadCell, TCellStrike, PageButton } from './styles';
 import Balances from './MarketsBalances';
 import MarketsUnsettledBalances from './MarketsUnsettledBalances';
@@ -486,13 +487,11 @@ const Markets: React.VFC = () => {
                 </TableBody>
               </Table>
             </TableContainer>
-            <Box>
+            <Box mt={'20px'}>
               <OpenOrders />
             </Box>
-            <Box id="unsettled-balances-table">
-              <UnsettledBalancesTable
-                qAssetDecimals={qAsset?.decimals}
-              />
+            <Box id="unsettled-balances-table" mt={'20px'}>
+              <UnsettledBalancesTable />
             </Box>
           </Box>
         </Box>

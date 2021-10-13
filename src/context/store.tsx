@@ -18,6 +18,7 @@ import { SerumOpenOrdersProvider } from './SerumOpenOrdersContext';
 import { ExpirationDateProvider } from './ExpirationDateContext';
 import { GraphQLProvider } from './GraphQLProvider';
 import { SimpleUIFormProvider } from './SimpleUIContext';
+import { ScreenSizeProvider } from './ScreenSizeContext';
 
 const _providers: React.ReactElement[] = [
   // eslint-disable-next-line react/no-children-prop
@@ -37,6 +38,7 @@ const _providers: React.ReactElement[] = [
   <SerumOpenOrdersProvider key="SerumOpenOrdersProvider" />,
   <PasswordProvider key="PasswordProvider" />,
   <ExpirationDateProvider key="ExpirationDateProvider" />,
+  <ScreenSizeProvider key="ScreenSizeProvider" />,
   <SimpleUIFormProvider key="SimpleUIFormProvider" />,
 ];
 

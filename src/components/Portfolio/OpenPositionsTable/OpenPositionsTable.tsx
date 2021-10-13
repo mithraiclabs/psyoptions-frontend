@@ -35,8 +35,7 @@ const useStyles = makeStyles((theme) => ({
 const OpenPositionsTable: React.VFC<{
   positions: Position[];
   className: string;
-  formFactor: "desktop" | "tablet" | "mobile";
-}> = ({ className, positions, formFactor }) => {
+}> = ({ className, positions }) => {
   const classes = useStyles();
   const { connected } = useWallet();
   const [page] = useState(0);
@@ -48,7 +47,6 @@ const OpenPositionsTable: React.VFC<{
     <Box className={classes.root}>
       <Heading>Open Positions</Heading>
       <OpenPositionsTableHeader
-        formFactor={formFactor}
         className={className}
       />
       {hasOpenPositions && connected ? (
@@ -58,7 +56,6 @@ const OpenPositionsTable: React.VFC<{
             <PositionRow
               key={row.market.optionMintKey.toString()}
               row={row}
-              formFactor={formFactor}
               className={className}
             />
           ))

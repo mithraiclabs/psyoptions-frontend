@@ -1,11 +1,13 @@
 import React, { Fragment, useCallback, useState } from 'react';
 import clsx from "clsx";
 import KeyboardArrowDown from '@material-ui/icons/KeyboardArrowDown';
+import KeyboardArrowUp from '@material-ui/icons/KeyboardArrowUp';
 import {
   Avatar,
   Box,
   Button,
   Collapse,
+  IconButton,
   makeStyles,
   TableRow,
 } from '@material-ui/core';
@@ -34,6 +36,12 @@ const useStyles = makeStyles((theme) => ({
     flexDirection: "row",
     alignItems: "center",
   },
+  minRow: {
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    width: "min-content"
+  },
   rowWrap: {
     display: "flex",
     flexDirection: "row",
@@ -48,11 +56,8 @@ const useStyles = makeStyles((theme) => ({
     width: 24,
     height: 24,
   },
-  dropdownOpen: {
-    transform: 'rotate(-180deg)',
-  },
-  dropdownClosed: {
-    transform: 'rotate(0)',
+  centerText: {
+    textAlign: "center",
   },
   errorColor: {
     color: theme.palette.error.main,
@@ -145,7 +150,6 @@ const PositionRow: React.VFC<{
         option={row.market}
       />
       <TableRow
-        onClick={onRowClick}
         tabIndex={-1}
         key={row.market.optionMintKey.toString()}
       >
@@ -178,26 +182,26 @@ const PositionRow: React.VFC<{
             {formatExpirationTimestamp(row.expiration)}
           </TCell>
           <TCell>{`+$0.00`}</TCell>
-          <TCell>
-            {expired ? <Box className={classes.errorColor}>Expired</Box> :
-              <Box>
-                <Button
-                  color="primary"
-                  variant="outlined"
-                  onClick={openExerciseDialog}
-                  size="large"
-                >
-                  Exercise
-                </Button>
-              </Box>
-            }
-            {row.accounts.length > 1 && (
-              <KeyboardArrowDown
-                className={
-                  visible ? classes.dropdownOpen : classes.dropdownClosed
-                }
-              />
-            )}
+          <TCell style={{ width: "0.1%", whiteSpace: "nowrap" }}>
+            <Box className={classes.minRow}>
+              {expired ? <Box className={classes.errorColor}>Expired</Box> :
+                <Box>
+                  <Button
+                    color="primary"
+                    variant="outlined"
+                    onClick={openExerciseDialog}
+                    size="large"
+                  >
+                    Exercise
+                  </Button>
+                </Box>
+              }
+              {row.accounts.length > 1 && (
+                <IconButton onClick={onRowClick}>
+                  {visible ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
+                </IconButton>
+              )}
+            </Box>
           </TCell>
         </> :
         <>
@@ -222,26 +226,26 @@ const PositionRow: React.VFC<{
             {formatExpirationTimestamp(row.expiration)}
           </TMobileCell>
           <TMobileCell>{`+$0.00`}</TMobileCell>
-          <TMobileCell>
-            {expired ? <Box className={classes.errorColor}>Expired</Box> :
-              <Box>
-                <Button
-                  color="primary"
-                  variant="outlined"
-                  onClick={openExerciseDialog}
-                  size={formFactor === "mobile" ? "small" : "large"}
-                >
-                  Exercise
-                </Button>
-              </Box>
-            }
-            {row.accounts.length > 1 && (
-              <KeyboardArrowDown
-                className={
-                  visible ? classes.dropdownOpen : classes.dropdownClosed
-                }
-              />
-            )}
+          <TMobileCell style={{ width: "0.1%", whiteSpace: "nowrap" }}>
+            <Box className={formFactor === "mobile" ? classes.centerText : classes.minRow}>
+              {expired ? <Box className={classes.errorColor}>Expired</Box> :
+                <Box>
+                  <Button
+                    color="primary"
+                    variant="outlined"
+                    onClick={openExerciseDialog}
+                    size={formFactor === "mobile" ? "small" : "large"}
+                  >
+                    Exercise
+                  </Button>
+                </Box>
+              }
+              {row.accounts.length > 1 && (
+                <IconButton onClick={onRowClick}>
+                  {visible ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
+                </IconButton>
+              )}
+            </Box>
           </TMobileCell>
         </>}
       </TableRow>
@@ -253,7 +257,7 @@ const PositionRow: React.VFC<{
         component="tr"
         style={{ display: "block" }}
       >
-        <Box>
+        <td>
           {row.accounts.map((account) => (
             <Box
               key={`${account?.pubKey}`}
@@ -297,7 +301,7 @@ const PositionRow: React.VFC<{
               </Box>
             </Box>
           ))}
-        </Box>
+        </td>
       </Collapse>
     </>
   );

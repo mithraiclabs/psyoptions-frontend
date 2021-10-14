@@ -1,74 +1,55 @@
 import React, { memo, useState } from 'react';
 import {
   Box,
-  makeStyles,
+  TableContainer,
+  TableRow,
+  TableBody,
+  Table,
 } from "@material-ui/core";
 import useWallet from '../../../hooks/useWallet';
-import { Heading } from '../Heading';
-import EmptySvg from '../EmptySvg';
 import OpenPositionsTableHeader from './OpenPositionsTableHeader';
 import PositionRow from './PositionRow';
 import { Position } from '../Portfolio';
-
-const useStyles = makeStyles((theme) => ({
-  root: {
-    display: "flex",
-    flexDirection: "column",
-    width: "100%",
-    backgroundColor: theme.palette.background.medium,
-    minHeight: "514px",
-  },
-  emptySVGContainer: {
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    flexDirection: "column",
-    padding: theme.spacing(3),
-    flexGrow: 1,
-  },
-  mainColor: {
-    color: theme.palette.border.main,
-  },
-}));
+import { TCell } from '../../StyledComponents/Table/TableStyles';
+import ConnectButton from '../../ConnectButton';
 
 // TODO handle the case where the writer has multiple underlying asset accounts
 const OpenPositionsTable: React.VFC<{
   positions: Position[];
   className: string;
 }> = ({ className, positions }) => {
-  const classes = useStyles();
   const { connected } = useWallet();
   const [page] = useState(0);
   const [rowsPerPage] = useState(10);
 
-  const hasOpenPositions = positions.length > 0;
-
   return (
-    <Box className={classes.root}>
-      <Heading>Open Positions</Heading>
-      <OpenPositionsTableHeader
-        className={className}
-      />
-      {hasOpenPositions && connected ? (
-        positions
-          .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-          .map((row) => (
-            <PositionRow
-              key={row.market.optionMintKey.toString()}
-              row={row}
-              className={className}
-            />
-          ))
-      ) : (
-        <Box className={classes.emptySVGContainer}>
-          <EmptySvg />
-          <Box className={classes.mainColor}>
-            {connected
-              ? 'You have no open positions'
-              : 'Wallet not connected'}
-          </Box>
-        </Box>
-      )}
+    <Box>
+      <TableContainer>
+        <Table stickyHeader aria-label="sticky table">
+          <OpenPositionsTableHeader />
+          <TableBody>
+            {!connected ? (
+              <TableRow>
+                <TCell align="center" colSpan={10}>
+                  <Box p={1}>
+                    <ConnectButton>Connect Wallet</ConnectButton>
+                  </Box>
+                </TCell>
+              </TableRow>
+            ) : (
+              positions
+              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+              .map((row) => (
+                <PositionRow
+                  key={row.market.optionMintKey.toString()}
+                  row={row}
+                  className={className}
+                />
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
     </Box>
   );
 };

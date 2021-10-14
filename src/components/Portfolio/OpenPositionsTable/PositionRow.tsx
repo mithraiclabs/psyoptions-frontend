@@ -9,6 +9,7 @@ import {
   Collapse,
   IconButton,
   makeStyles,
+  TableCell,
   TableRow,
 } from '@material-ui/core';
 import BigNumber from 'bignumber.js';
@@ -249,60 +250,64 @@ const PositionRow: React.VFC<{
           </TMobileCell>
         </>}
       </TableRow>
-      <Collapse
-        key={`${row.market.optionMintKey}Collapsible`}
-        in={visible}
-        timeout="auto"
-        unmountOnExit
-        component="tr"
-        style={{ display: "block" }}
-      >
-        <td>
-          {row.accounts.map((account) => (
-            <Box
-              key={`${account?.pubKey}`}
-              className={clsx(classes.root,
-                className,
-                formFactor === "mobile" && classes.mobile,
-                formFactor === "tablet" && classes.tablet)}
-              p={1}
-            >
-              {formFactor === "desktop" && <Fragment><Box/>
-                <Box/>
-                <Box/>
-                <Box/>
-              </Fragment>}
-              <Box pr={1}>
-                {formFactor === "desktop" ? contractSize : `Size: ${contractSize}`}
-              </Box>
-              <Box pr={1}>
-              {formFactor === "desktop" ? account.amount : `Qty: ${account.amount}`}
-              </Box>
-              {formFactor === "desktop" && <Fragment>
-                <Box/>
-              </Fragment>}
-              <Box pr={1}>{`+$0.00`}</Box>
-              <Box justifySelf="center">
-                {expired && (
-                  <Box className={classes.errorColor}>Expired</Box>
-                )}
-                {!expired && (
+      <TableRow>
+        <TableCell colSpan={formFactor === "mobile" ? 4 : 9} style={{ padding: 0 }}>
+          <Collapse
+            key={`${row.market.optionMintKey}Collapsible`}
+            in={visible}
+            timeout="auto"
+            unmountOnExit
+            component="tr"
+            style={{ display: "block" }}
+          >
+            <td>
+              {row.accounts.map((account) => (
+                <Box
+                  key={`${account?.pubKey}`}
+                  className={clsx(classes.root,
+                    className,
+                    formFactor === "mobile" && classes.mobile,
+                    formFactor === "tablet" && classes.tablet)}
+                  p={1}
+                >
+                  {formFactor === "desktop" && <Fragment><Box/>
+                    <Box/>
+                    <Box/>
+                    <Box/>
+                  </Fragment>}
                   <Box>
-                    <Button
-                      color="primary"
-                      variant="outlined"
-                      onClick={openExerciseDialog}
-                      size={formFactor === "mobile" ? "small" : "large"}
-                    >
-                      Exercise
-                    </Button>
+                    {formFactor === "desktop" ? contractSize : `Size: ${contractSize}`}
                   </Box>
-                )}
-              </Box>
-            </Box>
-          ))}
-        </td>
-      </Collapse>
+                  <Box>
+                  {formFactor === "desktop" ? account.amount : `Qty: ${account.amount}`}
+                  </Box>
+                  {formFactor === "desktop" && <Fragment>
+                    <Box/>
+                  </Fragment>}
+                  <Box>{`+$0.00`}</Box>
+                  <Box>
+                    {expired && (
+                      <Box className={classes.errorColor}>Expired</Box>
+                    )}
+                    {!expired && (
+                      <Box>
+                        <Button
+                          color="primary"
+                          variant="outlined"
+                          onClick={openExerciseDialog}
+                          size={formFactor === "mobile" ? "small" : "large"}
+                        >
+                          Exercise
+                        </Button>
+                      </Box>
+                    )}
+                  </Box>
+                </Box>
+              ))}
+            </td>
+          </Collapse>
+        </TableCell>
+      </TableRow>
     </>
   );
 };

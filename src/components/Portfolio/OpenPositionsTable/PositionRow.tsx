@@ -202,7 +202,7 @@ const PositionRow: React.VFC<{
         </> :
         <>
           <TMobileCell>
-          <Box className={classes.row}>
+            <Box className={classes.row}>
               <Avatar className={classes.avatar} src={uAssetImage}>
                 {uAssetSymbol.slice(0, 1)}
               </Avatar>

@@ -26,12 +26,6 @@ import { TCell, TMobileCell } from '../../StyledComponents/Table/TableStyles';
 
 const useStyles = makeStyles((theme) => ({
   root: {},
-  mobile: {
-    fontSize: "10px",
-  },
-  tablet: {
-    fontSize: "14px",
-  },
   row: {
     display: "flex",
     flexDirection: "row",
@@ -62,6 +56,12 @@ const useStyles = makeStyles((theme) => ({
   },
   errorColor: {
     color: theme.palette.error.main,
+  },
+  tabletFont: {
+    fontSize: "14px !important",
+  },
+  mobileFont: {
+    fontSize: "10px !important",
   },
 }));
 
@@ -207,7 +207,9 @@ const PositionRow: React.VFC<{
         </> :
         <>
           <TMobileCell>
-            <Box className={classes.row}>
+            <Box className={clsx(classes.row,
+                formFactor === "tablet" && classes.tabletFont,
+                formFactor === "mobile" && classes.mobileFont)}>
               <Avatar className={classes.avatar} src={uAssetImage}>
                 {uAssetSymbol.slice(0, 1)}
               </Avatar>
@@ -223,11 +225,19 @@ const PositionRow: React.VFC<{
               </Box>
             </Box>
           </TMobileCell>
-          <TMobileCell>
+          <TMobileCell className={clsx(
+              formFactor === "tablet" && classes.tabletFont,
+              formFactor === "mobile" && classes.mobileFont)}>
             {formatExpirationTimestamp(row.expiration)}
           </TMobileCell>
-          <TMobileCell>{`+$0.00`}</TMobileCell>
-          <TMobileCell style={{ width: "0.1%", whiteSpace: "nowrap" }}>
+          <TMobileCell className={clsx(
+              formFactor === "tablet" && classes.tabletFont,
+              formFactor === "mobile" && classes.mobileFont)}>
+            {`+$0.00`}
+          </TMobileCell>
+          <TMobileCell style={{ width: "0.1%", whiteSpace: "nowrap" }} className={clsx(
+              formFactor === "tablet" && classes.tabletFont,
+              formFactor === "mobile" && classes.mobileFont)}>
             <Box className={formFactor === "mobile" ? classes.centerText : classes.minRow}>
               {expired ? <Box className={classes.errorColor}>Expired</Box> :
                 <Box>
@@ -266,8 +276,8 @@ const PositionRow: React.VFC<{
                   key={`${account?.pubKey}`}
                   className={clsx(classes.root,
                     className,
-                    formFactor === "mobile" && classes.mobile,
-                    formFactor === "tablet" && classes.tablet)}
+                    formFactor === "mobile" && classes.mobileFont,
+                    formFactor === "tablet" && classes.tabletFont)}
                   p={1}
                 >
                   {formFactor === "desktop" && <Fragment><Box/>

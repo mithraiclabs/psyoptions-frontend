@@ -8,6 +8,7 @@ import {
   withStyles,
   TableRow,
 } from '@material-ui/core';
+import clsx from 'clsx';
 import { OptionType, TokenAccount } from '../../../types';
 import { formatExpirationTimestamp } from '../../../utils/format';
 import useOptionsMarkets from '../../../hooks/useOptionsMarkets';
@@ -58,6 +59,12 @@ const useStyles = makeStyles((theme) => ({
   },
   errorColor: {
     color: theme.palette.error.main,
+  },
+  tabletFont: {
+    fontSize: "14px !important",
+  },
+  mobileFont: {
+    fontSize: "10px !important",
   },
 }));
 
@@ -305,7 +312,9 @@ const WrittenOptionRow: React.VFC<{
             <TCell>{ActionFragment}</TCell>
           </> : <>
             <TMobileCell>
-              <Box className={classes.row}>
+              <Box className={clsx(classes.row,
+                formFactor === "tablet" && classes.tabletFont,
+                formFactor === "mobile" && classes.mobileFont)}>
                 <Avatar className={classes.avatar} src={uAssetImage}>
                   {uAssetSymbol.slice(0, 1)}
                 </Avatar>
@@ -332,15 +341,25 @@ const WrittenOptionRow: React.VFC<{
                 </Box>
               </Box>
             </TMobileCell>
-            <TMobileCell>
+            <TMobileCell className={clsx(
+              formFactor === "tablet" && classes.tabletFont,
+              formFactor === "mobile" && classes.mobileFont)}>
               {expired ? (
                 <Box className={classes.errorColor}>Expired</Box>
               ) : (
                 formatExpirationTimestamp(market.expiration)
               )}
             </TMobileCell>
-            <TMobileCell>{lockedAmountDisplay} {market.uAssetSymbol}</TMobileCell>
-            <TMobileCell>{ActionFragment}</TMobileCell>
+            <TMobileCell className={clsx(
+              formFactor === "tablet" && classes.tabletFont,
+              formFactor === "mobile" && classes.mobileFont)}>
+              {lockedAmountDisplay} {market.uAssetSymbol}
+            </TMobileCell>
+            <TMobileCell className={clsx(
+              formFactor === "tablet" && classes.tabletFont,
+              formFactor === "mobile" && classes.mobileFont)}>
+              {ActionFragment}
+            </TMobileCell>
           </>}
       </TableRow>
       <ClaimQuoteDialog

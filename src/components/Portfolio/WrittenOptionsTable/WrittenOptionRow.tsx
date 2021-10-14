@@ -1,4 +1,4 @@
-import React, { memo, useState, Fragment } from 'react';
+import React, { memo, useState } from 'react';
 import {
   Avatar,
   Box,
@@ -6,8 +6,8 @@ import {
   Tooltip,
   makeStyles,
   withStyles,
+  TableRow,
 } from '@material-ui/core';
-import clsx from 'clsx';
 import { OptionType, TokenAccount } from '../../../types';
 import { formatExpirationTimestamp } from '../../../utils/format';
 import useOptionsMarkets from '../../../hooks/useOptionsMarkets';
@@ -18,6 +18,7 @@ import { WrittenOptionsClaimUnderlyingDialog } from '../../WrittenOptionsClaimUn
 import { WrittenOptionsClosePositionPreExpiryDialog } from '../../WrittenOptionsClosePositionPreExpiryDialog';
 import { useOptionVaultAmounts } from '../../../hooks/useOptionVaultAmounts';
 import useScreenSize from '../../../hooks/useScreenSize';
+import { TCell, TMobileCell } from '../../StyledComponents/Table/TableStyles';
 
 const StyledTooltip = withStyles((theme) => ({
   tooltip: {
@@ -273,80 +274,75 @@ const WrittenOptionRow: React.VFC<{
 
   return (
     <>
-      <Box
-        key={marketKey}
-        p={1}
-        className={clsx(
-          classes.root,
-          className,
-          formFactor === 'tablet' && classes.tablet,
-          formFactor === 'mobile' && classes.mobile,
-        )}
-      >
-        <Box pr={1} pl={1} className={classes.row}>
-          {formFactor === 'desktop' ? (
-            <Fragment>
-              <Avatar className={classes.avatar} src={uAssetImage}>
-                {uAssetSymbol.slice(0, 1)}
-              </Avatar>
-              <Box pl={1}>{uAssetSymbol}</Box>
-            </Fragment>
-          ) : (
-            <Fragment>
-              <Avatar className={classes.avatar} src={uAssetImage}>
-                {uAssetSymbol.slice(0, 1)}
-              </Avatar>
-              <Box className={classes.rowWrap}>
-                <Box
-                  pl={formFactor === 'mobile' ? 1 : 2}
-                  className={classes.column}
-                >
-                  <Box>{`${uAssetSymbol} | ${optionType}`}</Box>
-                  <Box>{`Strike: ${strike}`}</Box>
-                  <Box>{`Available: ${ownedOptionTokenAccounts?.[0]?.amount}`}</Box>
-                </Box>
-                <Box
-                  pl={formFactor === 'mobile' ? 1 : 2}
-                  className={classes.column}
-                >
-                  <Box>{`Size: ${
-                    optionType === 'call'
-                      ? market.amountPerContract.toString()
-                      : market.quoteAmountPerContract.toString()
-                  }`}</Box>
-                  <Box>{`Written: ${writerTokenAccount.amount}`}</Box>
-                </Box>
+      <TableRow key={marketKey} style={{ borderBottom: "1pt solid #ff000d" }}>
+        {formFactor === "desktop" ?
+          <>
+            <TCell>
+              <Box className={classes.row}>
+                <Avatar className={classes.avatar} src={uAssetImage}>
+                  {uAssetSymbol.slice(0, 1)}
+                </Avatar>
+                <Box pl={1}>{uAssetSymbol}</Box>
               </Box>
-            </Fragment>
-          )}
-        </Box>
-        {formFactor === 'desktop' && (
-          <Fragment>
-            <Box pl={1} pr={1}>
-              {optionType}
-            </Box>
-            <Box pr={1}>{strike}</Box>
-            <Box pr={1}>{ownedOptionTokenAccounts?.[0]?.amount}</Box>
-            <Box pr={1}>
+            </TCell>
+            <TCell>{optionType}</TCell>
+            <TCell>{strike}</TCell>
+            <TCell>{ownedOptionTokenAccounts?.[0]?.amount}</TCell>
+            <TCell>
               {optionType === 'call'
                 ? market.amountPerContract.toString()
                 : market.quoteAmountPerContract.toString()}
-            </Box>
-            <Box pr={1}>{writerTokenAccount.amount}</Box>
-          </Fragment>
-        )}
-        <Box pr={1}>
-          {expired ? (
-            <Box className={classes.errorColor}>Expired</Box>
-          ) : (
-            formatExpirationTimestamp(market.expiration)
-          )}
-        </Box>
-        <Box pr={1}>
-          {lockedAmountDisplay} {market.uAssetSymbol}
-        </Box>
-        <Box justifySelf="center">{ActionFragment}</Box>
-      </Box>
+            </TCell>
+            <TCell>{writerTokenAccount.amount}</TCell>
+            <TCell>
+              {expired ? (
+                <Box className={classes.errorColor}>Expired</Box>
+              ) : (
+                formatExpirationTimestamp(market.expiration)
+              )}
+            </TCell>
+            <TCell>{lockedAmountDisplay} {market.uAssetSymbol}</TCell>
+            <TCell>{ActionFragment}</TCell>
+          </> : <>
+            <TMobileCell>
+              <Box className={classes.row}>
+                <Avatar className={classes.avatar} src={uAssetImage}>
+                  {uAssetSymbol.slice(0, 1)}
+                </Avatar>
+                <Box className={classes.rowWrap}>
+                  <Box
+                    pl={formFactor === 'mobile' ? 1 : 2}
+                    className={classes.column}
+                  >
+                    <Box>{`${uAssetSymbol} | ${optionType}`}</Box>
+                    <Box>{`Strike: ${strike}`}</Box>
+                    <Box>{`Available: ${ownedOptionTokenAccounts?.[0]?.amount}`}</Box>
+                  </Box>
+                  <Box
+                    pl={formFactor === 'mobile' ? 1 : 2}
+                    className={classes.column}
+                  >
+                    <Box>{`Size: ${
+                      optionType === 'call'
+                        ? market.amountPerContract.toString()
+                        : market.quoteAmountPerContract.toString()
+                    }`}</Box>
+                    <Box>{`Written: ${writerTokenAccount.amount}`}</Box>
+                  </Box>
+                </Box>
+              </Box>
+            </TMobileCell>
+            <TMobileCell>
+              {expired ? (
+                <Box className={classes.errorColor}>Expired</Box>
+              ) : (
+                formatExpirationTimestamp(market.expiration)
+              )}
+            </TMobileCell>
+            <TMobileCell>{lockedAmountDisplay} {market.uAssetSymbol}</TMobileCell>
+            <TMobileCell>{ActionFragment}</TMobileCell>
+          </>}
+      </TableRow>
       <ClaimQuoteDialog
         dismiss={() => setClaimQuoteVisible(false)}
         option={market}

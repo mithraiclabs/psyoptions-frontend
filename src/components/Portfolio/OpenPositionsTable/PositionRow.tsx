@@ -251,7 +251,7 @@ const PositionRow: React.VFC<{
         </>}
       </TableRow>
       <TableRow>
-        <TableCell colSpan={formFactor === "mobile" ? 4 : 9} style={{ padding: 0 }}>
+        <TableCell colSpan={formFactor === "mobile" ? 4 : 9} style={{ padding: 0, border: "none" }}>
           <Collapse
             key={`${row.market.optionMintKey}Collapsible`}
             in={visible}

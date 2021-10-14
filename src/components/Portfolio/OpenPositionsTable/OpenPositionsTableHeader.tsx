@@ -1,64 +1,45 @@
 import {
-  Box,
-  makeStyles,
+  TableHead,
+  TableRow,
 } from "@material-ui/core";
-import React, { Fragment } from "react";
-import clsx from "clsx";
+import React from "react";
 import useScreenSize from "../../../hooks/useScreenSize";
+import { THeadCell } from "../../StyledComponents/Table/TableStyles";
 
-const useStyles = makeStyles((theme) => ({
-  root: {
-    backgroundColor: theme.palette.background.paper,
-    padding: "20px",
-    fontSize: "14px",
-  },
-  mobile: {
-    fontSize: "12px !important",
-  },
-}));
-
-const OpenPositionsTableHeader: React.VFC<{
-  className: string;
-}> = ({ className }) => {
-  const classes = useStyles();
+const OpenPositionsTableHeader: React.VFC = () => {
   const { formFactor } = useScreenSize();
 
   return (
-    <Box className={clsx(
-      classes.root,
-      className,
-      formFactor === "mobile" && classes.mobile
-    )}>
-      <Box pl={formFactor === "mobile" ? 2 : formFactor === "tablet" ? 6 : 0}>
-        Asset
-      </Box>
-      {formFactor === "desktop" && <Fragment>
-        <Box>
-          Type
-        </Box>
-        <Box>
-          Strike ($)
-        </Box>
-        <Box>
-          Spot Price ($)
-        </Box>
-        <Box>
-          Contract Size
-        </Box>
-        <Box>
-          Position Size
-        </Box>
-      </Fragment>}
-      <Box>
-        Expiration
-      </Box>
-      <Box>
-        PNL
-      </Box>
-      <Box pl={formFactor === "mobile" ? 2 : 6}>
-        Action
-      </Box>
-    </Box>
+    <TableHead>
+      <TableRow>
+        <THeadCell
+          colSpan={10}
+          style={{ borderTop: 'none', padding: '16px 20px' }}
+        >
+          <h3 style={{ margin: 0 }}>Open Positions</h3>
+        </THeadCell>
+      </TableRow>
+      <TableRow>
+        { formFactor === 'desktop' ?
+        <>
+          <THeadCell>Asset</THeadCell>
+          <THeadCell>Type</THeadCell>
+          <THeadCell>Strike ($)</THeadCell>
+          <THeadCell>Spot Price ($)</THeadCell>
+          <THeadCell>Contract Size</THeadCell>
+          <THeadCell>Position Size</THeadCell>
+          <THeadCell>Expiration</THeadCell>
+          <THeadCell>PNL</THeadCell>
+          <THeadCell>Action</THeadCell>
+        </> : 
+        <>
+          <THeadCell>Asset</THeadCell>
+          <THeadCell>Expiration</THeadCell>
+          <THeadCell>PNL</THeadCell>
+          <THeadCell>Action</THeadCell>
+        </>}
+      </TableRow>
+    </TableHead>
   );
 };
 

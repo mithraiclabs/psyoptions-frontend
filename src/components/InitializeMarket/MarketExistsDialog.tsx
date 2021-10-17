@@ -88,12 +88,7 @@ export const MarketExistsDialog: React.VFC<{
   ]);
 
   return (
-    <Dialog
-      disableBackdropClick
-      disableEscapeKeyDown
-      onClose={dismiss}
-      open={!!optionMarket}
-    >
+    <Dialog disableEscapeKeyDown onClose={dismiss} open={!!optionMarket}>
       <DialogTitle>Option already exists</DialogTitle>
       <DialogContent>
         <DialogContentText>

@@ -1546,15 +1546,15 @@
     prop-types "^15.7.2"
     react-is "^16.8.0 || ^17.0.0"
 
-"@mithraic-labs/market-meta@^0.0.17":
-  version "0.0.17"
-  resolved "https://registry.yarnpkg.com/@mithraic-labs/market-meta/-/market-meta-0.0.17.tgz#6b81e7977b68fc85daa13b0eb9d09f926412980a"
-  integrity sha512-8xTOStvtdUOxBZrrVslrfKYwcmhCb2DzGPZe/I5x/eGh8IqZF6zndxGo8WHwHAgMy9b3Z2nTfTzy6uuDMQxweA==
+"@mithraic-labs/market-meta@^0.0.18":
+  version "0.0.18"
+  resolved "https://registry.yarnpkg.com/@mithraic-labs/market-meta/-/market-meta-0.0.18.tgz#212784677754683144d489f301bda3908cf4b58a"
+  integrity sha512-8mUZfHFlGLaKBUPuRJISWb4KkRir2kiMTFX2Qe2RHgAOEaeGuk6s2xJoCOpCriUne85UcS4G5NMkPbsaGixBkQ==
 
-"@mithraic-labs/psy-american@^0.0.9":
-  version "0.0.9"
-  resolved "https://registry.yarnpkg.com/@mithraic-labs/psy-american/-/psy-american-0.0.9.tgz#3fa17c32b4ddb211b35c7ff467903154f8283b42"
-  integrity sha512-FnctglHUqNvOWxMGdulzhXzha4FoMUPY9e6Ovk3VTmEeF1yKB8EZWPLVgv4AqmSFHG9kkZmXDr6D0lOF23DPWA==
+"@mithraic-labs/psy-american@^0.0.10":
+  version "0.0.10"
+  resolved "https://registry.yarnpkg.com/@mithraic-labs/psy-american/-/psy-american-0.0.10.tgz#cd38be9f3b0a8fe7a9bb437b793022e92ced3813"
+  integrity sha512-MmnqxfkcrVu1H/Z9bHXlesaT9OwbEPWD3XuUgOuwQat22flFbxQPH4oF5mk/kt4O10+aR0R2qQcRz22xIpdzLQ==
   dependencies:
     "@project-serum/anchor" "^0.16.1"
     "@project-serum/serum" "^0.13.60"

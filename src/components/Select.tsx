@@ -4,9 +4,10 @@ import InputLabel from '@material-ui/core/InputLabel';
 import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
 import NoSsr from '@material-ui/core/NoSsr';
+import { BN } from '@project-serum/anchor';
 
 type Option = {
-  value: string | number;
+  value: BN | string | number;
   text: string;
 };
 

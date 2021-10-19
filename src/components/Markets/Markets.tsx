@@ -27,7 +27,7 @@ import Page from '../pages/Page';
 import BuySellDialog from '../BuySellDialog';
 import Select from '../Select';
 import { ContractSizeSelector } from '../ContractSizeSelector';
-import SelectAsset from '../SelectAsset';
+import SelectAssetOld from '../SelectAssetOld';
 import theme from '../../utils/theme';
 import Loading from '../Loading';
 import CallPutRow from './CallPutRow';
@@ -37,6 +37,16 @@ import { calculateStrikePrecision } from '../../utils/getStrikePrices';
 import { useSerumPriceByAssets } from '../../hooks/Serum/useSerumPriceByAssets';
 import { useBatchLoadMints } from '../../hooks/SPLToken';
 import { CallOrPut, SerumMarketAndProgramId } from '../../types';
+import { useRecoilState, useRecoilValue } from 'recoil';
+import {
+  expirationUnixTimestamp,
+  selectExpirationAsDate,
+  selectFutureExpirationsByUnderlyingAndQuote,
+  selectUnderlyingMintsOfFutureOptions,
+  underlyingMint,
+} from '../../recoil';
+import { SelectAsset } from '../SelectAsset';
+import { BN } from '@project-serum/anchor';
 
 const dblsp = `${'\u00A0'}${'\u00A0'}`;
 
@@ -81,11 +91,18 @@ const rowTemplate = {
 };
 
 const Markets: React.VFC = () => {
-  const { uAsset, qAsset, setUAsset, assetListLoading } = useAssetList();
+  const { uAsset, qAsset, assetListLoading } = useAssetList();
   const { selectedDate: date, setSelectedDate, dates } = useExpirationDate();
   const [contractSize, setContractSize] = useState(0.01);
   const { chains, buildOptionsChain } = useOptionsChain();
   const { getSizes, marketsLoading } = useOptionsMarkets();
+  const [_underlyingMint, setUnderlyingMint] = useRecoilState(underlyingMint);
+  const underlyingMints = useRecoilValue(selectUnderlyingMintsOfFutureOptions);
+  const expirationDateString = useRecoilValue(selectExpirationAsDate);
+  const [expiration, setExpiration] = useRecoilState(expirationUnixTimestamp);
+  const expirations = useRecoilValue(
+    selectFutureExpirationsByUnderlyingAndQuote,
+  );
   const { serumMarkets, fetchMultipleSerumMarkets } = useSerum();
   const [round, setRound] = useState(true);
   const [buySellDialogOpen, setBuySellDialogOpen] = useState(false);
@@ -291,12 +308,15 @@ const Markets: React.VFC = () => {
                     },
                   }}
                   label="Expiration Date"
-                  value={date?.toISOString() ?? ''}
-                  onChange={(e) => setSelectedDate(moment.utc(e.target.value))}
-                  options={dates.map((d) => ({
-                    value: d.toISOString(),
-                    text: `${d.format('ll')} | 23:59:59 UTC`,
-                  }))}
+                  value={expiration}
+                  onChange={(e) => setExpiration(e.target.value as BN)}
+                  options={expirations.map((e) => {
+                    const _date = moment(e.toNumber() * 1000);
+                    return {
+                      value: e,
+                      text: `${_date.format('ll')} | 23:59:59 UTC`,
+                    };
+                  })}
                 />
               </Box>
               <Box
@@ -333,17 +353,15 @@ const Markets: React.VFC = () => {
                 <Box pr={1}>
                   <Box>
                     <SelectAsset
-                      disabled={false}
-                      selectedAsset={uAsset}
-                      onSelectAsset={(asset) => {
-                        setUAsset(asset);
-                      }}
+                      onChange={setUnderlyingMint}
+                      mints={underlyingMints}
+                      value={_underlyingMint}
                     />
                   </Box>
                 </Box>
                 <h3 style={{ margin: 0 }}>/</h3>
                 <Box pl={'4px'}>
-                  <SelectAsset disabled selectedAsset={qAsset} />
+                  <SelectAssetOld disabled selectedAsset={qAsset} />
                 </Box>
               </Box>
             </Box>

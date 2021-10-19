@@ -4,15 +4,10 @@ import Chip from '@material-ui/core/Chip';
 import Box from '@material-ui/core/Box';
 import TextField from '@material-ui/core/TextField';
 import ListItem from '@material-ui/core/ListItem';
-import ListItemAvatar from '@material-ui/core/ListItemAvatar';
-import Avatar from '@material-ui/core/Avatar';
 import ListItemText from '@material-ui/core/ListItemText';
-import { useTheme, withStyles } from '@material-ui/core/styles';
 import KeyboardArrowDown from '@material-ui/icons/KeyboardArrowDown';
-import { debounce } from 'throttle-debounce';
-
-import { Token } from '@mithraic-labs/market-meta/dist/types';
-import useAssetList from '../hooks/useAssetList';
+import { useTheme, withStyles } from '@material-ui/core/styles';
+import { PublicKey } from '@solana/web3.js';
 
 const CustomChip = withStyles({
   disabled: {
@@ -21,44 +16,22 @@ const CustomChip = withStyles({
   },
 })(Chip);
 
-const SelectAsset: React.FC<{
-  label?: string;
-  selectedAsset: Token;
-  onSelectAsset?: (asset: Token) => void;
+export const SelectAsset: React.VFC<{
   disabled?: boolean;
-}> = ({
-  label = 'Select Asset',
-  selectedAsset,
-  onSelectAsset,
-  disabled = false,
-}) => {
-  const theme = useTheme();
-  const { supportedAssets, assetListLoading } = useAssetList();
-
+  onChange: (key: PublicKey) => void;
+  label?: string;
+  mints: PublicKey[];
+  value: PublicKey | null;
+}> = ({ disabled = false, label, mints, onChange, value }) => {
+  // const theme = useTheme();
   const [open, setOpen] = useState(false);
-  const [filterInput, setFilterInput] = useState('');
-
-  const filteredAssetList = supportedAssets.filter((item) => {
-    const match = filterInput.toLowerCase();
-    const shouldAppear =
-      (item.tokenName.toLowerCase().match(match) ||
-        item.tokenSymbol.toLowerCase().match(match)) &&
-      !item.tokenSymbol.toLowerCase().match('usdc');
-    return shouldAppear;
-  });
-
-  const handleChangeFilterInput = debounce(200, false, (e) => {
-    setFilterInput(e.target.value);
-  });
-
-  const handleOpen = () => {
-    setFilterInput('');
-    setOpen(true);
-  };
-
-  const chipLabel = assetListLoading
-    ? 'Loading...'
-    : selectedAsset?.tokenSymbol || 'Choose Asset';
+  const [filter, setFilter] = useState('');
+  const onFilterChange: React.ChangeEventHandler<HTMLInputElement> = (e) =>
+    setFilter(e.target.value);
+  console.log('TJ VAL ', value);
+  // TODO this next line is throwing some error about negative
+  const chipLabel = value ? value.toString() : 'Loading...';
+  const handleOpen = () => setOpen(true);
 
   return (
     <>
@@ -79,28 +52,28 @@ const SelectAsset: React.FC<{
               <TextField
                 label="Search"
                 variant="filled"
-                onChange={handleChangeFilterInput}
+                onChange={onFilterChange}
                 style={{
                   width: '100%',
                 }}
               />
             </Box>
             <Box my={3} height="300px" overflow="auto">
-              {filteredAssetList.map((asset) => (
+              {mints.map((mint) => (
                 <ListItem
                   button
                   onClick={() => {
                     setOpen(false);
-                    onSelectAsset(asset);
+                    onChange(mint);
                   }}
-                  key={asset.mintAddress}
+                  key={mint.toString()}
                 >
+                  {/* 
+                  TODO figure out how to get avatar based on mint
                   <ListItemAvatar>
                     <Avatar src={asset.icon} />
-                  </ListItemAvatar>
-                  <ListItemText
-                    primary={`${asset.tokenName} (${asset.tokenSymbol})`}
-                  />
+                  </ListItemAvatar> */}
+                  <ListItemText primary={mint.toString()} />
                 </ListItem>
               ))}
             </Box>
@@ -110,28 +83,26 @@ const SelectAsset: React.FC<{
       <CustomChip
         label={chipLabel}
         clickable={!disabled}
-        color={'primary'}
+        color="primary"
         variant="outlined"
         disabled={disabled}
-        avatar={
-          selectedAsset ? (
-            <Avatar
-              src={selectedAsset.icon}
-              alt={selectedAsset.tokenName}
-              style={{
-                backgroundColor: theme.palette.primary.main,
-              }}
-            >
-              {assetListLoading ? '?' : ''}
-            </Avatar>
-          ) : null
-        }
-        onClick={disabled ? null : handleOpen}
-        onDelete={disabled ? null : handleOpen}
-        deleteIcon={disabled ? null : <KeyboardArrowDown />}
+        // avatar={
+        //   selectedAsset ? (
+        //     <Avatar
+        //       src={selectedAsset.icon}
+        //       alt={selectedAsset.tokenName}
+        //       style={{
+        //         backgroundColor: theme.palette.primary.main,
+        //       }}
+        //     >
+        //       {assetListLoading ? '?' : ''}
+        //     </Avatar>
+        //   ) : null
+        // }
+        onClick={disabled ? undefined : handleOpen}
+        onDelete={disabled ? undefined : handleOpen}
+        deleteIcon={disabled ? undefined : <KeyboardArrowDown />}
       />
     </>
   );
 };
-
-export default SelectAsset;

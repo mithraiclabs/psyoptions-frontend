@@ -350,7 +350,9 @@ const useOptionsMarkets = () => {
     wallet,
     pubKey,
     program,
-    connection
+    connection,
+    sendTransaction,
+    pushErrorNotification
   ]);
 
   const createAccountsAndMint = useCallback(async ({

@@ -248,14 +248,13 @@ const BuySellDialog: React.VFC<{
   const handlePlaceSellOrder = useCallback(async () => {
     if (!serumMarketData || !serumMarketData?.serumMarket || !pubKey || !optionMarket || !orderbook)
       return;
-    const numberOfContracts = orderSize - openPositionSize;
-    const optionTokenKey = getHighestAccount(optionAccounts)?.pubKey;
-    const underlyingAssetSrcKey = getHighestAccount(uAssetAccounts)?.pubKey;
-    const writerTokenDestinationKey = getHighestAccount(writerAccounts)?.pubKey;
-    if (!optionTokenKey)
-      return;
     setPlaceOrderLoading(true);
     try {
+      const numberOfContracts = orderSize - openPositionSize;
+      const optionTokenKey = getHighestAccount(optionAccounts)?.pubKey;
+      const underlyingAssetSrcKey = getHighestAccount(uAssetAccounts)?.pubKey;
+      const writerTokenDestinationKey = getHighestAccount(writerAccounts)?.pubKey;
+      
       await placeSellOrder({
         numberOfContractsToMint: numberOfContracts,
         serumMarket: serumMarketData.serumMarket,

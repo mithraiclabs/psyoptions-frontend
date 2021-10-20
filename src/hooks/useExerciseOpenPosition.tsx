@@ -13,10 +13,13 @@ import useWallet from './useWallet';
 import useNotifications from './useNotifications';
 import useSendTransaction from './useSendTransaction';
 import { OptionMarket } from '../types';
+import { initializeTokenAccountTx, WRAPPED_SOL_ADDRESS } from '../utils/token';
+import { useSolanaMeta } from '../context/SolanaMetaContext';
 import { createAssociatedTokenAccountInstruction } from '../utils/instructions';
 import useOwnedTokenAccounts from './useOwnedTokenAccounts';
 import { useAmericanPsyOptionsProgram } from './useAmericanPsyOptionsProgram';
 import { uiOptionMarketToProtocolOptionMarket } from '../utils/typeConversions';
+import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 
 // TODO add support for wrapped solana as quote asset???
 const useExerciseOpenPosition = (
@@ -29,17 +32,34 @@ const useExerciseOpenPosition = (
   const { subscribeToTokenAccount } = useOwnedTokenAccounts();
   const { pushErrorNotification } = useNotifications();
   const { connection } = useConnection();
-  const { sendTransaction } = useSendTransaction();
+  const { sendSignedTransaction } = useSendTransaction();
   const { wallet, pubKey } = useWallet();
+  const { splTokenAccountRentBalance } = useSolanaMeta();
 
   return useCallback(async (size) => {
     if (!pubKey || !wallet)
       return;
     try {
       const transaction = new Transaction();
-
+      const signers = [];
       let _exerciserUnderlyingAssetKey = exerciserUnderlyingAssetKey;
-      if (!_exerciserUnderlyingAssetKey) {
+      if (market.uAssetMint === WRAPPED_SOL_ADDRESS) {
+        // need to create a sol account
+        const {
+          transaction: initWrappedSolAcctIx,
+          newTokenAccount: wrappedSolAccount,
+        } = await initializeTokenAccountTx({
+          // eslint-disable-line
+          connection,
+          payerKey: pubKey,
+          mintPublicKey: new PublicKey(WRAPPED_SOL_ADDRESS),
+          owner: pubKey,
+          rentBalance: splTokenAccountRentBalance,
+        });
+        transaction.add(initWrappedSolAcctIx);
+        signers.push(wrappedSolAccount);
+        _exerciserUnderlyingAssetKey = wrappedSolAccount.publicKey;
+      } else if (!_exerciserUnderlyingAssetKey) {
         // Create a SPL Token account for this base account if the wallet doesn't have one
         const [createOptAccountTx, newTokenAccountKey] =
           await createAssociatedTokenAccountInstruction({
@@ -87,10 +107,30 @@ const useExerciseOpenPosition = (
 
       transaction.add(exerciseTx);
 
+      if (market.uAssetMint === WRAPPED_SOL_ADDRESS) {
+        transaction.add(
+          Token.createCloseAccountInstruction(
+            TOKEN_PROGRAM_ID,
+            _exerciserUnderlyingAssetKey,
+            pubKey, // Send any remaining SOL to the owner
+            pubKey,
+            [],
+          ),
+        );
+      }
+      transaction.feePayer = pubKey;
+      const { blockhash } = await connection.getRecentBlockhash(); // eslint-disable-line
+      transaction.recentBlockhash = blockhash;
+
+      if (signers.length) {
+        transaction.partialSign(...signers);
+      }
+
+      const signedTx = await wallet.signTransaction(transaction);
+
       // TODO add the Asset Pair to the push note messages
-      await sendTransaction({
-        transaction,
-        wallet,
+      await sendSignedTransaction({
+        signedTransaction: signedTx,
         connection,
         sendingMessage: 'Processing: Exercise Option',
         successMessage: 'Confirmed: Exercise Option',
@@ -105,10 +145,11 @@ const useExerciseOpenPosition = (
     exerciserQuoteAssetKey,
     exerciserUnderlyingAssetKey,
     exerciserContractTokenKey,
+    splTokenAccountRentBalance,
     program,
     wallet,
     pushErrorNotification,
-    sendTransaction,
+    sendSignedTransaction,
     subscribeToTokenAccount,
   ]);
 };

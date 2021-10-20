@@ -3,7 +3,6 @@ import {
   PublicKey,
   Signer,
   Transaction,
-  TransactionInstruction,
 } from '@solana/web3.js';
 import {
   PSY_AMERICAN_PROGRAM_IDS,
@@ -12,7 +11,7 @@ import {
 } from '@mithraic-labs/psy-american';
 import { Market, OrderParams } from '@mithraic-labs/serum/lib/market';
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import { Asset, OptionMarket, TokenAccount } from '../types';
+import { Asset, CreateMissingMintAccountsRes, OptionMarket, TokenAccount } from '../types';
 import { WRAPPED_SOL_ADDRESS } from '../utils/token';
 import useNotifications from './useNotifications';
 import useSendTransaction from './useSendTransaction';
@@ -30,7 +29,7 @@ type PlaceSellOrderArgs = {
   orderArgs: OrderParams<PublicKey>;
   optionMarket: OptionMarket;
   uAsset: Asset;
-  uAssetTokenAccount: TokenAccount;
+  uAssetTokenAccount: TokenAccount | null;
   mintedOptionDestinationKey?: PublicKey;
   writerTokenDestinationKey?: PublicKey;
 };
@@ -59,12 +58,12 @@ const usePlaceSellOrder = (
       mintedOptionDestinationKey,
       writerTokenDestinationKey,
     }: PlaceSellOrderArgs) => {
-      if (!connection) {
+      if (!connection || !program || !wallet || !splTokenAccountRentBalance || !pubKey) {
         return;
       }
       try {
         const mintTX = new Transaction();
-        let mintSigners = [];
+        let mintSigners: Signer[] = [];
         let _uAssetTokenAccount = uAssetTokenAccount;
         let _optionTokenSrcKey = mintedOptionDestinationKey;
         let _writerTokenDestinationKey = writerTokenDestinationKey;
@@ -100,7 +99,7 @@ const usePlaceSellOrder = (
             mintedOptionDestinationKey: _mintedOptionDestinationKey,
             writerTokenDestinationKey: __writerTokenDestinationKey,
             uAssetTokenAccount: __uAssetTokenAccount,
-          } = response;
+          } = response as CreateMissingMintAccountsRes;
           _uAssetTokenAccount = __uAssetTokenAccount;
           subscribeToTokenAccount(__writerTokenDestinationKey);
           subscribeToTokenAccount(_mintedOptionDestinationKey);
@@ -128,15 +127,17 @@ const usePlaceSellOrder = (
           }
         }
 
+        if (!_optionTokenSrcKey) {
+          return;
+        }
+
         /// /////////////////// CREATE SERUM TRANSACTION /////////////////////////
         // Backwards compatability for V1
         let placeOrderTx: Transaction;
         let placeOrderSigners: Signer[] = [];
         let openOrdersAddress: PublicKey;
-        if (
-          PSY_AMERICAN_PROGRAM_IDS[optionsProgramId.toString()] ===
-          ProgramVersions.V1
-        ) {
+        // eslint-disable-next-line
+        if (PSY_AMERICAN_PROGRAM_IDS[optionsProgramId.toString()] === ProgramVersions.V1) {
           ({
             openOrdersAddress,
             transaction: placeOrderTx,
@@ -146,6 +147,9 @@ const usePlaceSellOrder = (
             payer: _optionTokenSrcKey,
           }));
         } else {
+          if (!optionMarket.serumMarketKey) {
+            return;
+          }
           const { openOrdersKey, tx } = await serumInstructions.newOrderInstruction(
             program,
             optionMarket.pubkey,

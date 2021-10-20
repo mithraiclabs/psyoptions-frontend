@@ -18,6 +18,7 @@ import { OptionType } from '../../types';
 import TxButton from '../TxButton';
 import useOptionsMarkets from '../../hooks/useOptionsMarkets';
 import useScreenSize from '../../hooks/useScreenSize';
+import { useSubscribeSerumOrderbook } from '../../hooks/Serum';
 
 const useStyles = makeStyles((theme) => ({
   root: {},
@@ -78,6 +79,7 @@ const UnsettledRow = ({
   const [loading, setLoading] = useState(false);
   const { formFactor } = useScreenSize();
   const isMobile = formFactor === "mobile";
+  useSubscribeSerumOrderbook(serumMarketKey.toString());
 
   const handleSettleFunds = useCallback(async () => {
     setLoading(true);

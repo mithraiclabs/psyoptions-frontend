@@ -3,8 +3,10 @@ import {
   PSY_AMERICAN_PROGRAM_IDS,
   ProgramVersions,
   instructions,
+  feeAmountPerContract,
 } from '@mithraic-labs/psy-american';
 import {
+  Connection,
   PublicKey,
   Signer,
   Transaction,
@@ -24,10 +26,12 @@ import {
   TokenAccount,
 } from '../../types';
 import { truncatePublicKey } from '../format';
-import { WRAPPED_SOL_ADDRESS } from '../token';
+import {
+  initializeTokenAccountTx,
+  WRAPPED_SOL_ADDRESS,
+} from '../token';
 import {
   createAssociatedTokenAccountInstruction,
-  createNewTokenAccount,
 } from './token';
 import { uiOptionMarketToProtocolOptionMarket } from '../typeConversions';
 
@@ -40,20 +44,22 @@ export const createMissingMintAccounts = async ({
   owner,
   market,
   uAsset,
-  uAssetTokenAccount,
-  splTokenAccountRentBalance,
+  uAssetTokenAccount = null,
+  splTokenAccountRentBalance = null,
   mintedOptionDestinationKey,
   writerTokenDestinationKey,
   numberOfContractsToMint = 1,
+  connection,
 }: {
   owner: PublicKey;
   market: OptionMarket;
   uAsset: Asset;
-  uAssetTokenAccount: TokenAccount;
-  splTokenAccountRentBalance: number;
+  uAssetTokenAccount: TokenAccount | null;
+  splTokenAccountRentBalance: number | null;
   mintedOptionDestinationKey?: PublicKey;
   writerTokenDestinationKey?: PublicKey;
   numberOfContractsToMint: number;
+  connection: Connection;
   // TODO create an optional return type
 }): Promise<Result<CreateMissingMintAccountsRes, InstructionErrorResponse>> => {
   const tx = new Transaction();
@@ -77,25 +83,35 @@ export const createMissingMintAccounts = async ({
   const uAssetDecimals = new BigNumber(10).pow(uAsset.decimals);
 
   // Handle Wrapped SOL
-  if (uAsset.mintAddress === WRAPPED_SOL_ADDRESS) {
-    const lamports = market.amountPerContract
-      .times(uAssetDecimals)
-      .times(new BigNumber(numberOfContractsToMint));
-
-    const { transaction, newTokenAccount } = createNewTokenAccount({
-      fromPubkey: owner,
-      owner,
-      mintPublicKey: new PublicKey(WRAPPED_SOL_ADDRESS),
-      splTokenAccountRentBalance,
-      extraLamports: lamports.toNumber(),
-    });
+  if (uAsset.mintAddress === WRAPPED_SOL_ADDRESS && splTokenAccountRentBalance) {
+    const fees = feeAmountPerContract(market.amountPerContractBN);
+    const lamports = market.amountPerContractBN
+      .add(fees)
+      .mul(new BN(numberOfContractsToMint));
+    const { transaction, newTokenAccount } =
+      await initializeTokenAccountTx({
+        connection,
+        payerKey: owner,
+        mintPublicKey: new PublicKey(WRAPPED_SOL_ADDRESS),
+        owner,
+        rentBalance: splTokenAccountRentBalance,
+        extraLamports: lamports.toNumber(),
+      });
     tx.add(transaction);
     signers.push(newTokenAccount);
-
     _uAssetTokenAccount = {
       pubKey: newTokenAccount.publicKey,
       mint: new PublicKey(WRAPPED_SOL_ADDRESS),
       amount: lamports.toNumber(),
+    };
+  }
+
+  if (!_uAssetTokenAccount) {
+    return {
+      error: {
+        severity: NotificationSeverity.WARNING,
+        message: 'Unable to find underlying asset token account.',
+      },
     };
   }
 
@@ -243,12 +259,12 @@ export const createMissingAccountsAndMint = async ({
   owner: PublicKey;
   market: OptionMarket;
   uAsset: Asset;
-  uAssetTokenAccount: TokenAccount;
+  uAssetTokenAccount: TokenAccount | null;
   splTokenAccountRentBalance: number;
   mintedOptionDestinationKey?: PublicKey;
   writerTokenDestinationKey?: PublicKey;
   numberOfContractsToMint: number;
-  program?: Program;
+  program: Program;
 }): Promise<Result<CreateMissingMintAccountsRes, InstructionErrorResponse>> => {
   const transaction = new Transaction();
   let signers: Signer[] = [];
@@ -262,6 +278,7 @@ export const createMissingAccountsAndMint = async ({
     mintedOptionDestinationKey,
     writerTokenDestinationKey,
     numberOfContractsToMint,
+    connection: program.provider.connection,
   });
   if (error || !response) {
     return { error };

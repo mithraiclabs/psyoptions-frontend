@@ -29,7 +29,7 @@ type PlaceSellOrderArgs = {
   orderArgs: OrderParams<PublicKey>;
   optionMarket: OptionMarket;
   uAsset: Asset;
-  uAssetTokenAccount: TokenAccount;
+  uAssetTokenAccount: TokenAccount | null;
   mintedOptionDestinationKey?: PublicKey;
   writerTokenDestinationKey?: PublicKey;
 };

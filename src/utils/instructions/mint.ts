@@ -44,7 +44,7 @@ export const createMissingMintAccounts = async ({
   owner,
   market,
   uAsset,
-  uAssetTokenAccount,
+  uAssetTokenAccount = null,
   splTokenAccountRentBalance = null,
   mintedOptionDestinationKey,
   writerTokenDestinationKey,
@@ -54,7 +54,7 @@ export const createMissingMintAccounts = async ({
   owner: PublicKey;
   market: OptionMarket;
   uAsset: Asset;
-  uAssetTokenAccount: TokenAccount;
+  uAssetTokenAccount: TokenAccount | null;
   splTokenAccountRentBalance: number | null;
   mintedOptionDestinationKey?: PublicKey;
   writerTokenDestinationKey?: PublicKey;
@@ -103,6 +103,15 @@ export const createMissingMintAccounts = async ({
       pubKey: newTokenAccount.publicKey,
       mint: new PublicKey(WRAPPED_SOL_ADDRESS),
       amount: lamports.toNumber(),
+    };
+  }
+
+  if (!_uAssetTokenAccount) {
+    return {
+      error: {
+        severity: NotificationSeverity.WARNING,
+        message: 'Unable to find underlying asset token account.',
+      },
     };
   }
 
@@ -250,7 +259,7 @@ export const createMissingAccountsAndMint = async ({
   owner: PublicKey;
   market: OptionMarket;
   uAsset: Asset;
-  uAssetTokenAccount: TokenAccount;
+  uAssetTokenAccount: TokenAccount | null;
   splTokenAccountRentBalance: number;
   mintedOptionDestinationKey?: PublicKey;
   writerTokenDestinationKey?: PublicKey;

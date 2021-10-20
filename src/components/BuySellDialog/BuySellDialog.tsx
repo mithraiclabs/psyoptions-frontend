@@ -252,7 +252,7 @@ const BuySellDialog: React.VFC<{
     const optionTokenKey = getHighestAccount(optionAccounts)?.pubKey;
     const underlyingAssetSrcKey = getHighestAccount(uAssetAccounts)?.pubKey;
     const writerTokenDestinationKey = getHighestAccount(writerAccounts)?.pubKey;
-    if (!optionTokenKey || !underlyingAssetSrcKey)
+    if (!optionTokenKey)
       return;
     setPlaceOrderLoading(true);
     try {
@@ -291,14 +291,14 @@ const BuySellDialog: React.VFC<{
           decimals: uAssetDecimals,
         },
         optionMarket,
-        uAssetTokenAccount: {
+        uAssetTokenAccount: underlyingAssetSrcKey ? {
           pubKey: underlyingAssetSrcKey,
           amount:
             uAssetAccounts.find((asset) =>
               asset.pubKey.equals(underlyingAssetSrcKey),
             )?.amount || 0,
           mint: new PublicKey(uAssetMint),
-        },
+        } : null,
         mintedOptionDestinationKey: optionTokenKey,
         writerTokenDestinationKey,
       });

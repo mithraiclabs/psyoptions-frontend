@@ -254,7 +254,7 @@ const BuySellDialog: React.VFC<{
       const optionTokenKey = getHighestAccount(optionAccounts)?.pubKey;
       const underlyingAssetSrcKey = getHighestAccount(uAssetAccounts)?.pubKey;
       const writerTokenDestinationKey = getHighestAccount(writerAccounts)?.pubKey;
-      
+
       await placeSellOrder({
         numberOfContractsToMint: numberOfContracts,
         serumMarket: serumMarketData.serumMarket,
@@ -327,17 +327,14 @@ const BuySellDialog: React.VFC<{
     if (!serumMarketData || !serumMarketData?.serumMarket || !pubKey || !optionMarket || !orderbook)
       return;
 
-    const serumQuoteTokenAccounts =
-      // @ts-ignore: serum market._decoded
-      ownedTokenAccounts[serumMarketData.serumMarket._decoded.quoteMint.toString()] || [];
-    const serumQuoteTokenKey = getHighestAccount(serumQuoteTokenAccounts)?.pubKey;
-    const optionTokenKey = getHighestAccount(optionAccounts)?.pubKey;
-
-    if (!serumQuoteTokenKey || !optionTokenKey)
-      return;
     setPlaceOrderLoading(true);
 
     try {
+      const serumQuoteTokenAccounts =
+        // @ts-ignore: serum market._decoded
+        ownedTokenAccounts[serumMarketData.serumMarket._decoded.quoteMint.toString()] || [];
+      const serumQuoteTokenKey = getHighestAccount(serumQuoteTokenAccounts)?.pubKey;
+      const optionTokenKey = getHighestAccount(optionAccounts)?.pubKey;
       await placeBuyOrder({
         optionMarket,
         serumMarket: serumMarketData?.serumMarket,

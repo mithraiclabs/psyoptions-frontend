@@ -32,87 +32,85 @@ const useExerciseOpenPosition = (
   const { sendTransaction } = useSendTransaction();
   const { wallet, pubKey } = useWallet();
 
-  return useCallback(
-    async (size) => {
-      try {
-        const transaction = new Transaction();
+  return useCallback(async (size) => {
+    if (!pubKey || !wallet)
+      return;
+    try {
+      const transaction = new Transaction();
 
-        let _exerciserUnderlyingAssetKey = exerciserUnderlyingAssetKey;
-        if (!_exerciserUnderlyingAssetKey) {
-          // Create a SPL Token account for this base account if the wallet doesn't have one
-          const [createOptAccountTx, newTokenAccountKey] =
-            await createAssociatedTokenAccountInstruction({
-              payer: pubKey,
-              owner: pubKey,
-              mintPublicKey: market.underlyingAssetMintKey,
-            });
-          transaction.add(createOptAccountTx);
-          subscribeToTokenAccount(newTokenAccountKey);
-          _exerciserUnderlyingAssetKey = newTokenAccountKey;
-        }
-
-        let exerciseTx: Transaction;
-        if (
-          PSY_AMERICAN_PROGRAM_IDS[market.psyOptionsProgramId.toString()] ===
-          ProgramVersions.V1
-        ) {
-          ({ transaction: exerciseTx } = await exerciseCoveredCall({
-            connection,
-            payerKey: pubKey,
-            programId: market.psyOptionsProgramId,
-            optionMintKey: market.optionMintKey,
-            optionMarketKey: market.optionMarketKey,
-            exerciserQuoteAssetKey,
-            exerciserUnderlyingAssetKey: _exerciserUnderlyingAssetKey,
-            exerciserQuoteAssetAuthorityKey: pubKey,
-            underlyingAssetPoolKey: market.underlyingAssetPoolKey,
-            quoteAssetPoolKey: market.quoteAssetPoolKey,
-            optionTokenKey: exerciserContractTokenKey,
-            optionTokenAuthorityKey: pubKey,
-            quoteAssetMintKey: market.quoteAssetMintKey,
-            size: new BN(size),
-          }));
-        } else {
-          const ix = await instructions.exerciseOptionsInstruction(
-            program,
-            new BN(size),
-            uiOptionMarketToProtocolOptionMarket(market),
-            exerciserContractTokenKey,
-            _exerciserUnderlyingAssetKey,
-            exerciserQuoteAssetKey,
-          );
-          exerciseTx = new Transaction().add(ix);
-        }
-
-        transaction.add(exerciseTx);
-
-        // TODO add the Asset Pair to the push note messages
-        await sendTransaction({
-          transaction,
-          wallet,
-          connection,
-          sendingMessage: 'Processing: Exercise Option',
-          successMessage: 'Confirmed: Exercise Option',
-        });
-      } catch (err) {
-        pushErrorNotification(err);
+      let _exerciserUnderlyingAssetKey = exerciserUnderlyingAssetKey;
+      if (!_exerciserUnderlyingAssetKey) {
+        // Create a SPL Token account for this base account if the wallet doesn't have one
+        const [createOptAccountTx, newTokenAccountKey] =
+          await createAssociatedTokenAccountInstruction({
+            payer: pubKey,
+            owner: pubKey,
+            mintPublicKey: market.underlyingAssetMintKey,
+          });
+        transaction.add(createOptAccountTx);
+        subscribeToTokenAccount(newTokenAccountKey);
+        _exerciserUnderlyingAssetKey = newTokenAccountKey;
       }
-      return null;
-    },
-    [
-      connection,
-      pubKey,
-      market,
-      exerciserQuoteAssetKey,
-      exerciserUnderlyingAssetKey,
-      exerciserContractTokenKey,
-      program,
-      wallet,
-      pushErrorNotification,
-      sendTransaction,
-      subscribeToTokenAccount,
-    ],
-  );
+
+      let exerciseTx: Transaction;
+      if (
+        PSY_AMERICAN_PROGRAM_IDS[market.psyOptionsProgramId.toString()] ===
+        ProgramVersions.V1
+      ) {
+        ({ transaction: exerciseTx } = await exerciseCoveredCall({
+          connection,
+          payerKey: pubKey,
+          programId: market.psyOptionsProgramId,
+          optionMintKey: market.optionMintKey,
+          optionMarketKey: market.optionMarketKey,
+          exerciserQuoteAssetKey,
+          exerciserUnderlyingAssetKey: _exerciserUnderlyingAssetKey,
+          exerciserQuoteAssetAuthorityKey: pubKey,
+          underlyingAssetPoolKey: market.underlyingAssetPoolKey,
+          quoteAssetPoolKey: market.quoteAssetPoolKey,
+          optionTokenKey: exerciserContractTokenKey,
+          optionTokenAuthorityKey: pubKey,
+          quoteAssetMintKey: market.quoteAssetMintKey,
+          size: new BN(size),
+        }));
+      } else {
+        const ix = await instructions.exerciseOptionsInstruction(
+          program,
+          new BN(size),
+          uiOptionMarketToProtocolOptionMarket(market),
+          exerciserContractTokenKey,
+          _exerciserUnderlyingAssetKey,
+          exerciserQuoteAssetKey,
+        );
+        exerciseTx = new Transaction().add(ix);
+      }
+
+      transaction.add(exerciseTx);
+
+      // TODO add the Asset Pair to the push note messages
+      await sendTransaction({
+        transaction,
+        wallet,
+        connection,
+        sendingMessage: 'Processing: Exercise Option',
+        successMessage: 'Confirmed: Exercise Option',
+      });
+    } catch (err) {
+      pushErrorNotification(err);
+    }
+  }, [
+    connection,
+    pubKey,
+    market,
+    exerciserQuoteAssetKey,
+    exerciserUnderlyingAssetKey,
+    exerciserContractTokenKey,
+    program,
+    wallet,
+    pushErrorNotification,
+    sendTransaction,
+    subscribeToTokenAccount,
+  ]);
 };
 
 export default useExerciseOpenPosition;

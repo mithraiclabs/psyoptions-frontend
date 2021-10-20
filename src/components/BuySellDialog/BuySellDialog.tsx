@@ -279,11 +279,7 @@ const BuySellDialog: React.VFC<{
           // not exist in the supported asset list
           feeDiscountPubkey: serumDiscountFeeKey,
           // serum fee rate. Should use the taker fee even if limit order if it's likely to match an order
-          feeRate:
-            orderType === 'market' ||
-            parsedLimitPrice.isLessThanOrEqualTo(orderbook.bids?.[0]?.price)
-              ? (serumFeeRates?.taker ?? 0) * 2
-              : undefined,
+          feeRate: undefined,
         },
         uAsset: {
           tokenSymbol: uAssetSymbol,
@@ -321,7 +317,6 @@ const BuySellDialog: React.VFC<{
     pubKey,
     parsedLimitPrice,
     serumDiscountFeeKey,
-    serumFeeRates,
     uAssetSymbol,
     uAssetMint,
     uAssetDecimals,

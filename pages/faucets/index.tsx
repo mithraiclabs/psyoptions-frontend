@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import BN from 'bn.js';
 import {
   PublicKey,
@@ -59,35 +59,46 @@ const Faucets: React.VFC = () => {
   const [loadingUSDC, setLoadingUSDC] = useState(false);
   const [loadingSOL, setLoadingSOL] = useState(false);
 
-  const BTC = {
-    ...(assets.find((a) => a.tokenSymbol === 'BTC') || {}),
-    faucetAddress: process.env.NEXT_PUBLIC_DEVNET_FAUCET_BTC,
-  };
-  const PSY = {
-    ...(assets.find((a) => a.tokenSymbol === 'PSY') || {}),
-    faucetAddress: process.env.NEXT_PUBLIC_DEVNET_FAUCET_PSY,
-  };
-  const USDC = {
-    ...(assets.find((a) => a.tokenSymbol === 'USDC') || {}),
-    faucetAddress: process.env.NEXT_PUBLIC_DEVNET_FAUCET_USDC,
-  };
-  const btcAccount = getHighestAccount(accounts[BTC?.mintAddress ?? ''] || []);
-  const psyAccount = getHighestAccount(accounts[PSY?.mintAddress ?? ''] || []);
-  const usdcAccount = getHighestAccount(
-    accounts[USDC?.mintAddress ?? ''] || [],
-  );
+  const BTC = useMemo(() => {
+    return {
+      ...(assets.find((a) => a.tokenSymbol === 'BTC') || {}),
+      faucetAddress: process.env.NEXT_PUBLIC_DEVNET_FAUCET_BTC,
+    }
+  }, [assets]);
+  const PSY = useMemo(() => {
+    return {
+      ...(assets.find((a) => a.tokenSymbol === 'PSY') || {}),
+      faucetAddress: process.env.NEXT_PUBLIC_DEVNET_FAUCET_PSY,
+    }
+  }, [assets]);
+  const USDC = useMemo(() => {
+    return {
+      ...(assets.find((a) => a.tokenSymbol === 'USDC') || {}),
+      faucetAddress: process.env.NEXT_PUBLIC_DEVNET_FAUCET_USDC,
+    }
+  }, [assets]);
 
-  const btcBalance = btcAccount
-    ? btcAccount.amount * 10 ** -(BTC?.decimals ?? 0)
-    : 0;
-  const psyBalance = psyAccount
-    ? psyAccount.amount * 10 ** -(PSY?.decimals ?? 0)
-    : 0;
-  const usdcBalance = usdcAccount
-    ? usdcAccount.amount * 10 ** -(USDC?.decimals ?? 0)
-    : 0;
+  const btcAccount = useMemo(() => {
+    return getHighestAccount(accounts[BTC?.mintAddress ?? ''] || [])
+  }, [accounts, BTC]);
+  const psyAccount = useMemo(() => {
+    return getHighestAccount(accounts[PSY?.mintAddress ?? ''] || [])
+  }, [accounts, PSY]);
+  const usdcAccount = useMemo(() => {
+    return getHighestAccount(accounts[USDC?.mintAddress ?? ''] || [])
+  }, [accounts, USDC]);
 
-  const handleClaimSOL = async () => {
+  const btcBalance = useMemo(() => {
+    return btcAccount ? btcAccount.amount * 10 ** -(BTC?.decimals ?? 0) : 0
+  }, [btcAccount, BTC]);
+  const psyBalance = useMemo(() => {
+    return psyAccount ? psyAccount.amount * 10 ** -(PSY?.decimals ?? 0) : 0
+  }, [psyAccount, PSY]);
+  const usdcBalance = useMemo(() => {
+    return usdcAccount ? usdcAccount.amount * 10 ** -(USDC?.decimals ?? 0) : 0
+  }, [usdcAccount, USDC]);
+
+  const handleClaimSOL = useCallback(async () => {
     if (!endpoint || !pubKey) {
       return;
     }
@@ -96,20 +107,20 @@ const Faucets: React.VFC = () => {
       const conn = new Connection(endpoint.fallbackUrl, {
         commitment: 'confirmed',
       });
-      await conn.requestAirdrop(pubKey, 10 * LAMPORTS_PER_SOL);
+      await conn.requestAirdrop(pubKey, 5 * LAMPORTS_PER_SOL);
     } catch (err) {
       pushErrorNotification(err);
     }
     setLoadingSOL(false);
-  };
+  }, [endpoint, pubKey, pushErrorNotification]);
 
-  const createAccountsAndAirdrop = async (
+  const createAccountsAndAirdrop = useCallback(async (
     asset: any,
     existingAccount: TokenAccount | undefined,
     amount: number,
     message: string,
   ) => {
-    if (!connection) {
+    if (!connection || !pubKey || !wallet) {
       return;
     }
     try {
@@ -153,15 +164,22 @@ const Faucets: React.VFC = () => {
     } catch (err) {
       pushErrorNotification(err);
     }
-  };
+  }, [
+    connection,
+    wallet,
+    pubKey,
+    subscribeToTokenAccount,
+    sendTransaction,
+    pushErrorNotification
+  ]);
 
-  const handleClaimBTC = async () => {
+  const handleClaimBTC = useCallback(async () => {
     setLoadingBTC(true);
     await createAccountsAndAirdrop(BTC, btcAccount, 10, 'Claim 10 BTC');
     setLoadingBTC(false);
-  };
+  }, [createAccountsAndAirdrop, BTC, btcAccount]);
 
-  const handleClaimUSDC = async () => {
+  const handleClaimUSDC = useCallback(async () => {
     setLoadingUSDC(true);
     await createAccountsAndAirdrop(
       USDC,
@@ -170,13 +188,13 @@ const Faucets: React.VFC = () => {
       'Claim 100,000 USDC',
     );
     setLoadingUSDC(false);
-  };
+  }, [createAccountsAndAirdrop, USDC, usdcAccount]);
 
-  const handleClaimPSY = async () => {
+  const handleClaimPSY = useCallback(async () => {
     setLoadingPSY(true);
     await createAccountsAndAirdrop(PSY, psyAccount, 1000, 'Claim 1,000 PSY');
     setLoadingPSY(false);
-  };
+  }, [createAccountsAndAirdrop, PSY, psyAccount]);
 
   return (
     <Page>
@@ -228,7 +246,7 @@ const Faucets: React.VFC = () => {
                     variant="outlined"
                     onClick={handleClaimSOL}
                   >
-                    Claim 10 SOL
+                    Claim 5 SOL
                   </Button>
                 )}
               </Box>

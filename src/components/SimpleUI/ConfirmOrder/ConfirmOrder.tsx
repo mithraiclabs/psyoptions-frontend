@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import * as Sentry from '@sentry/react';
-import { useRouter } from 'next/router';
+import { useHistory } from 'react-router-dom';
 import Box from '@material-ui/core/Box';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import { Button } from '@material-ui/core';
@@ -27,7 +27,7 @@ import {
 import useOptionsMarkets from '../../../hooks/useOptionsMarkets';
 
 const ConfirmOrder = () => {
-  const router = useRouter();
+  const history = useHistory();
   const wallet = useConnectedWallet();
   const { pushErrorNotification } = useNotifications();
   const [cost, setCost] = useState(null as number | null);
@@ -71,7 +71,7 @@ const ConfirmOrder = () => {
       !contractSize ||
       (orderType === 'limit' && !limitPrice)
     ) {
-      router.replace('/simple/choose-asset');
+      history.replace('/simple/choose-asset');
     }
   }, [
     tokenSymbol,
@@ -82,7 +82,7 @@ const ConfirmOrder = () => {
     orderType,
     limitPrice,
     contractSize,
-    router,
+    history,
   ]);
 
   useEffect(() => {

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/router';
+import { useHistory } from 'react-router-dom';
 import Box from '@material-ui/core/Box';
 import useFilteredOptionsChain from '../../../hooks/useFilteredOptionsChain';
 import { useUpdateForm, useFormState } from '../../../context/SimpleUIContext';
@@ -15,7 +15,7 @@ type StrikeButtonData = {
 const ChooseStrike = () => {
   const { tokenSymbol, direction, expirationUnixTimestamp } = useFormState();
   const updateForm = useUpdateForm();
-  const router = useRouter();
+  const history = useHistory();
   const { lowestAskHighestBidPerStrike } = useFilteredOptionsChain(
     direction === 'down' ? 'put' : 'call',
   );
@@ -27,11 +27,11 @@ const ChooseStrike = () => {
   // If previous form state didn't exist, send user back to first page (choose asset)
   useEffect(() => {
     if (!tokenSymbol || !direction || !expirationUnixTimestamp) {
-      router.replace('/simple/choose-asset');
+      history.replace('/simple/choose-asset');
     }
 
     // If previous form state did exist, we need to load the markets on mount
-  }, [tokenSymbol, direction, router, expirationUnixTimestamp]);
+  }, [tokenSymbol, direction, history, expirationUnixTimestamp]);
 
   // #TODO: eventually, when adding contract size input
   // useEffect(() => {
@@ -45,7 +45,7 @@ const ChooseStrike = () => {
 
       // TODO: animated transition between pages instead of a timeout
       setTimeout(() => {
-        router.push('/simple/order-settings');
+        history.push('/simple/order-settings');
       }, 500);
     }
   };

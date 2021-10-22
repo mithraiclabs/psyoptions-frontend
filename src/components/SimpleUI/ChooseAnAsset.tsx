@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useRouter } from 'next/router';
+import { useHistory } from 'react-router-dom';
 import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
 import Avatar from '@material-ui/core/Avatar';
@@ -78,7 +78,7 @@ const ChooseAssetButton = ({
 
 const ChooseAnAsset = () => {
   const updateForm = useUpdateForm();
-  const router = useRouter();
+  const history = useHistory();
   const { supportedAssets, setUAsset } = useAssetList();
   const assetWhitelist = ['SOL', 'BTC', 'ETH'];
   const [selectedTokenSymbol, setSelectedTokenSymbol] = useState('');
@@ -95,7 +95,7 @@ const ChooseAnAsset = () => {
 
       // TODO: animated transition between pages instead of a timeout
       setTimeout(() => {
-        router.push('/simple/up-or-down');
+        history.push('/simple/up-or-down');
       }, 500);
     }
   };

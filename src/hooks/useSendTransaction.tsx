@@ -107,9 +107,9 @@ const useSendTransaction = (): {
       try {
         await awaitTransactionSignatureConfirmation(txid, timeout, connection);
       } catch (err) {
-        if ((err as TransactionError).timeout) {
-          throw new Error('Timed out awaiting confirmation on transaction');
-        }
+        // if ((err as TransactionError).timeout) {
+        //   throw new Error('Timed out awaiting confirmation on transaction');
+        // }
         let simulateResult: SimulatedTransactionResponse | null = null;
         try {
           simulateResult = (

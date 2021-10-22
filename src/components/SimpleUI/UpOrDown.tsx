@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/router';
+import { useHistory } from 'react-router-dom';
 import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
 import ArrowUpward from '@material-ui/icons/ArrowUpward';
@@ -50,15 +50,15 @@ const UpOrDownButton = ({ selected, onClick, direction }) => {
 const UpOrDown = () => {
   const { tokenSymbol } = useFormState();
   const updateForm = useUpdateForm();
-  const router = useRouter();
+  const history = useHistory();
   const [selectedDirection, setSelectedDirection] = useState('');
 
   // If previous form state didn't exist, send user back to first page (choose asset)
   useEffect(() => {
     if (!tokenSymbol) {
-      router.replace('/simple/choose-asset');
+      history.replace('/simple/choose-asset');
     }
-  }, [tokenSymbol, router]);
+  }, [tokenSymbol, history]);
 
   const handleMakeSelection = (direction) => {
     if (!selectedDirection) {
@@ -67,7 +67,7 @@ const UpOrDown = () => {
 
       // TODO: animated transition between pages instead of a timeout
       setTimeout(() => {
-        router.push('/simple/choose-expiration');
+        history.push('/simple/choose-expiration');
       }, 500);
     }
   };

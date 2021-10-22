@@ -36,6 +36,7 @@ const _providers: React.ReactElement[] = [
     app={{
       name: "PsyOptions",
     }}
+    children={<div />}
   />,
   <WalletInfoProvider key="WalletInfoProvider" />,
   <OwnedTokenAccountsProvider key="OwnedTokenAccountsProvider" />,

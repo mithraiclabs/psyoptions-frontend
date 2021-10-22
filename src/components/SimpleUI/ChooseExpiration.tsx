@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/router';
+import { useHistory } from 'react-router-dom';
 import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
 import { useTheme } from '@material-ui/core/styles';
@@ -47,16 +47,16 @@ const ChooseExpiration = () => {
   const { selectedDate, setSelectedDate, dates } = useExpirationDate();
   const { tokenSymbol, direction, contractSize } = useFormState();
   const updateForm = useUpdateForm();
-  const router = useRouter();
+  const history = useHistory();
   const [selectedExpiration, setSelectedExpiration] = useState(0);
   const { buildOptionsChain } = useOptionsChain();
 
   // If previous form state didn't exist, send user back to first page (choose asset)
   useEffect(() => {
     if (!tokenSymbol || !direction) {
-      router.replace('/simple/choose-asset');
+      history.replace('/simple/choose-asset');
     }
-  }, [tokenSymbol, direction, router]);
+  }, [tokenSymbol, direction, history]);
 
   useEffect(() => {
     if (selectedDate) {
@@ -72,7 +72,7 @@ const ChooseExpiration = () => {
 
       // TODO: animated transition between pages instead of a timeout
       setTimeout(() => {
-        router.push('/simple/choose-strike');
+        history.push('/simple/choose-strike');
       }, 500);
     }
   };

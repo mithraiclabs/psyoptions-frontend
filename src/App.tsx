@@ -38,17 +38,6 @@ const AppWithStore: React.FC = ({ children }) => {
 const App = (): JSX.Element | null => {
   const countryCode = useCountry();
 
-  // This is a stupid fix for SSR not loading styles on first render.
-  // We should eventually fix that and remove
-  // const [meh, setMeh] = useState(true);
-  // useEffect(() => {
-  //   setMeh(false);
-  // }, []);
-  // if (meh) {
-  //   return null;
-  // }
-  // end stupid fix
-
   return (
     <StylesProvider injectFirst>
       <ThemeProvider theme={theme}>

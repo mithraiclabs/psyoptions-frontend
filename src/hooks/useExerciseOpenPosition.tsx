@@ -9,7 +9,7 @@ import {
 } from '@mithraic-labs/psy-american';
 
 import useConnection from './useConnection';
-import useWallet from './useWallet';
+import { useConnectedWallet } from "@saberhq/use-solana";
 import useNotifications from './useNotifications';
 import useSendTransaction from './useSendTransaction';
 import { OptionMarket } from '../types';
@@ -33,11 +33,11 @@ const useExerciseOpenPosition = (
   const { pushErrorNotification } = useNotifications();
   const { connection } = useConnection();
   const { sendSignedTransaction } = useSendTransaction();
-  const { wallet, pubKey } = useWallet();
+  const wallet = useConnectedWallet();
   const { splTokenAccountRentBalance } = useSolanaMeta();
 
   return useCallback(async (size) => {
-    if (!pubKey || !wallet)
+    if (!wallet?.publicKey)
       return;
     try {
       const transaction = new Transaction();
@@ -51,9 +51,9 @@ const useExerciseOpenPosition = (
         } = await initializeTokenAccountTx({
           // eslint-disable-line
           connection,
-          payerKey: pubKey,
+          payerKey: wallet.publicKey,
           mintPublicKey: new PublicKey(WRAPPED_SOL_ADDRESS),
-          owner: pubKey,
+          owner: wallet.publicKey,
           rentBalance: splTokenAccountRentBalance,
         });
         transaction.add(initWrappedSolAcctIx);
@@ -63,8 +63,8 @@ const useExerciseOpenPosition = (
         // Create a SPL Token account for this base account if the wallet doesn't have one
         const [createOptAccountTx, newTokenAccountKey] =
           await createAssociatedTokenAccountInstruction({
-            payer: pubKey,
-            owner: pubKey,
+            payer: wallet.publicKey,
+            owner: wallet.publicKey,
             mintPublicKey: market.underlyingAssetMintKey,
           });
         transaction.add(createOptAccountTx);
@@ -79,17 +79,17 @@ const useExerciseOpenPosition = (
       ) {
         ({ transaction: exerciseTx } = await exerciseCoveredCall({
           connection,
-          payerKey: pubKey,
+          payerKey: wallet.publicKey,
           programId: market.psyOptionsProgramId,
           optionMintKey: market.optionMintKey,
           optionMarketKey: market.optionMarketKey,
           exerciserQuoteAssetKey,
           exerciserUnderlyingAssetKey: _exerciserUnderlyingAssetKey,
-          exerciserQuoteAssetAuthorityKey: pubKey,
+          exerciserQuoteAssetAuthorityKey: wallet.publicKey,
           underlyingAssetPoolKey: market.underlyingAssetPoolKey,
           quoteAssetPoolKey: market.quoteAssetPoolKey,
           optionTokenKey: exerciserContractTokenKey,
-          optionTokenAuthorityKey: pubKey,
+          optionTokenAuthorityKey: wallet.publicKey,
           quoteAssetMintKey: market.quoteAssetMintKey,
           size: new BN(size),
         }));
@@ -112,13 +112,13 @@ const useExerciseOpenPosition = (
           Token.createCloseAccountInstruction(
             TOKEN_PROGRAM_ID,
             _exerciserUnderlyingAssetKey,
-            pubKey, // Send any remaining SOL to the owner
-            pubKey,
+            wallet.publicKey, // Send any remaining SOL to the owner
+            wallet.publicKey,
             [],
           ),
         );
       }
-      transaction.feePayer = pubKey;
+      transaction.feePayer = wallet.publicKey;
       const { blockhash } = await connection.getRecentBlockhash(); // eslint-disable-line
       transaction.recentBlockhash = blockhash;
 
@@ -140,7 +140,6 @@ const useExerciseOpenPosition = (
     }
   }, [
     connection,
-    pubKey,
     market,
     exerciserQuoteAssetKey,
     exerciserUnderlyingAssetKey,

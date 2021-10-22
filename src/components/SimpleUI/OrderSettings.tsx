@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/router';
+import { useHistory } from 'react-router-dom';
 import Box from '@material-ui/core/Box';
 import Chip from '@material-ui/core/Chip';
 import Button from '@material-ui/core/Button';
@@ -19,7 +19,7 @@ const OrderSettings = () => {
   const { tokenSymbol, direction, expirationUnixTimestamp, strike } =
     useFormState();
   const updateForm = useUpdateForm();
-  const router = useRouter();
+  const history = useHistory();
   const theme = useTheme();
   const { qAsset } = useAssetList();
   const [limitPrice, setLimitPrice] = useState('0');
@@ -32,9 +32,9 @@ const OrderSettings = () => {
   // If previous form state didn't exist, send user back to first page (choose asset)
   useEffect(() => {
     if (!tokenSymbol || !direction || !expirationUnixTimestamp || !strike) {
-      router.replace('/simple/choose-asset');
+      history.replace('/simple/choose-asset');
     }
-  }, [tokenSymbol, direction, expirationUnixTimestamp, strike, router]);
+  }, [tokenSymbol, direction, expirationUnixTimestamp, strike, history]);
 
   const handleChangeOrderSize = (e) => setOrderSize(e.target.value);
   const handleChangeLimitPrice = (e) => setLimitPrice(e.target.value);
@@ -46,7 +46,7 @@ const OrderSettings = () => {
 
     // TODO: animated transition between pages instead of a timeout
     setTimeout(() => {
-      router.push('/simple/confirm-order');
+      history.push('/simple/confirm-order');
     }, 500);
   };
 

@@ -1,10 +1,8 @@
 import React from 'react';
-import Image from 'next/image';
 import Box from '@material-ui/core/Box';
 import { makeStyles } from '@material-ui/core/styles';
 
 import Page from '../pages/Page';
-import logo from '../../../public/psyoptions-logo-light.png';
 import theme from '../../utils/theme';
 
 const useStyles = makeStyles({
@@ -48,10 +46,10 @@ const ProhibitedJurisdiction: React.VFC = () => {
             alignItems="center"
             justifyContent="center"
           >
-            <Image
+            <img
               width="95px"
               height="95px"
-              src={logo}
+              src="images/psyoptions-logo-light.png"
               alt="PsyOptions Logo"
             />
             <Box px={[1, 1, 3]} fontSize={['48px', '48px', '60px', '72px']}>

@@ -9,7 +9,7 @@ import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 
 import { BN } from '@project-serum/anchor';
 import useNotifications from './useNotifications';
-import useWallet from './useWallet';
+import { useConnectedWallet } from "@saberhq/use-solana";
 import useConnection from './useConnection';
 import useAssetList from './useAssetList';
 import useSendTransaction from './useSendTransaction';
@@ -31,7 +31,7 @@ import { useAmericanPsyOptionsProgram } from './useAmericanPsyOptionsProgram';
 const useOptionsMarkets = () => {
   const program = useAmericanPsyOptionsProgram();
   const { pushErrorNotification, pushNotification } = useNotifications();
-  const { wallet, pubKey } = useWallet();
+  const wallet = useConnectedWallet();
   const { connection, dexProgramId, endpoint } = useConnection();
   const { splTokenAccountRentBalance } = useSolanaMeta();
   const { sendTransaction } = useSendTransaction();
@@ -297,7 +297,7 @@ const useOptionsMarkets = () => {
     existingTransaction: { transaction, signers }, // existing transaction and signers
     numberOfContracts,
   }) => {
-    if (!pubKey || !program || !connection || !wallet) {
+    if (!wallet?.publicKey || !program || !connection) {
       return;
     }
     try {
@@ -306,7 +306,7 @@ const useOptionsMarkets = () => {
       const { transaction: mintTx } = await mintInstructions(
         numberOfContracts,
         marketData,
-        pubKey,
+        wallet.publicKey,
         new PublicKey(marketData.psyOptionsProgramId),
         mintedOptionDestKey,
         writerTokenDestKey,
@@ -321,8 +321,8 @@ const useOptionsMarkets = () => {
           Token.createCloseAccountInstruction(
             TOKEN_PROGRAM_ID,
             underlyingAssetSrcKey,
-            pubKey, // Send any remaining SOL to the owner
-            pubKey,
+            wallet.publicKey, // Send any remaining SOL to the owner
+            wallet.publicKey,
             [],
           ),
         );
@@ -348,7 +348,6 @@ const useOptionsMarkets = () => {
     return {};
   }, [
     wallet,
-    pubKey,
     program,
     connection,
     sendTransaction,
@@ -367,7 +366,7 @@ const useOptionsMarkets = () => {
     mintedWriterTokenDestKey,
     numberOfContracts,
   }) => {
-    if (!pubKey || !connection) {
+    if (!wallet?.publicKey || !connection) {
       return;
     }
 
@@ -384,7 +383,7 @@ const useOptionsMarkets = () => {
     const writerTokenDestAddress = mintedWriterTokenDestKey;
 
     const { response, error } = await createMissingMintAccounts({
-      owner: pubKey,
+      owner: wallet.publicKey,
       market: marketData,
       uAsset,
       uAssetTokenAccount: uAssetAccount,
@@ -416,7 +415,7 @@ const useOptionsMarkets = () => {
     });
   }, [
     marketsByUiKey,
-    pubKey,
+    wallet?.publicKey,
     connection,
     splTokenAccountRentBalance,
     pushNotification,

@@ -3,7 +3,7 @@ import { OpenOrders } from '@mithraic-labs/serum';
 import { useState, useEffect } from 'react';
 import { useAmericanPsyOptionsProgram } from './useAmericanPsyOptionsProgram';
 import useConnection from './useConnection';
-import useWallet from './useWallet';
+import { useConnectedWallet } from "@saberhq/use-solana";
 
 /**
  * Get open orders for a user for option market keys
@@ -18,11 +18,11 @@ export const useOpenOrdersForOptionMarkets = (): {
   const [loadingOpenOrders, setLoadingOpenOrders] = useState(false);
   const program = useAmericanPsyOptionsProgram();
   const { dexProgramId } = useConnection();
-  const { pubKey } = useWallet();
+  const wallet = useConnectedWallet();
 
   useEffect(() => {
     (async () => {
-      if (!program || !dexProgramId || !pubKey) return;
+      if (!program || !dexProgramId || !wallet?.publicKey) return;
       setLoadingOpenOrders(true);
       const optionMarketWithKeys = await getAllOptionAccounts(program);
       const keys = optionMarketWithKeys.map(marketInfo => marketInfo.key);
@@ -38,7 +38,7 @@ export const useOpenOrdersForOptionMarkets = (): {
       // #TODO: remove as any
       setOpenOrders(orders as any);
     })();
-  }, [program, dexProgramId, pubKey]);
+  }, [program, dexProgramId, wallet?.publicKey]);
 
   return { openOrders, loadingOpenOrders };
 };

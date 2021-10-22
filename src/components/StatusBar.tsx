@@ -1,5 +1,4 @@
-import { useRouter } from 'next/router';
-import Image from 'next/image';
+import { useHistory } from 'react-router-dom';
 import React, { useState } from 'react';
 import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
@@ -13,15 +12,14 @@ import WalletStatus from './WalletStatus';
 import NetworkMenu from './NetworkMenu';
 
 import theme from '../utils/theme';
-import logo from '../../public/psyoptions-logo-light.png';
 
 import useConnection from '../hooks/useConnection';
 import { isTrue } from '../utils/general';
 
-const { NEXT_PUBLIC_INITIALIZE_PAGE_ENABLED } = process.env;
+const { REACT_APP_INITIALIZE_PAGE_ENABLED } = process.env;
 
 const NavOptions: React.VFC = () => {
-  const router = useRouter();
+  const history = useHistory();
   const { endpoint } = useConnection();
 
   return (
@@ -30,18 +28,18 @@ const NavOptions: React.VFC = () => {
         <Button
           onClick={(e) => {
             e.preventDefault();
-            router.push('/');
+            history.push('/');
           }}
           style={{ minWidth: 0, padding: 0 }}
         >
-          <Image src={logo} width="32" height="32" alt="PsyOptions Logo" />
+          <img src="images/psyoptions-logo-light.png" width="32" height="32" alt="PsyOptions Logo" />
         </Button>
       </Box>
       <Box mx={2}>
         <Button
           onClick={(e) => {
             e.preventDefault();
-            router.push('/markets');
+            history.push('/markets');
           }}
         >
           Markets
@@ -51,19 +49,19 @@ const NavOptions: React.VFC = () => {
         <Button
           onClick={(e) => {
             e.preventDefault();
-            router.push('/simple/choose-asset');
+            history.push('/simple/choose-asset');
           }}
         >
           Beginner UI
         </Button>
       </Box>
-      {isTrue(NEXT_PUBLIC_INITIALIZE_PAGE_ENABLED ?? false) && (
+      {isTrue(REACT_APP_INITIALIZE_PAGE_ENABLED ?? false) && (
         <>
           <Box mx={2}>
             <Button
               onClick={(e) => {
                 e.preventDefault();
-                router.push('/initialize-market');
+                history.push('/initialize-market');
               }}
             >
               Initialize
@@ -73,7 +71,7 @@ const NavOptions: React.VFC = () => {
             <Button
               onClick={(e) => {
                 e.preventDefault();
-                router.push('/mint');
+                history.push('/mint');
               }}
             >
               Mint
@@ -85,7 +83,7 @@ const NavOptions: React.VFC = () => {
         <Button
           onClick={(e) => {
             e.preventDefault();
-            router.push('/portfolio');
+            history.push('/portfolio');
           }}
         >
           Portfolio
@@ -96,7 +94,7 @@ const NavOptions: React.VFC = () => {
           <Button
             onClick={(e) => {
               e.preventDefault();
-              router.push('/faucets');
+              history.push('/faucets');
             }}
           >
             Faucets

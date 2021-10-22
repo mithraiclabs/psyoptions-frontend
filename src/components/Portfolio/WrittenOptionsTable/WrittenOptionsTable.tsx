@@ -6,20 +6,20 @@ import {
   TableBody,
   Table,
 } from "@material-ui/core";
-import useWallet from '../../../hooks/useWallet';
+import { useConnectedWallet } from "@saberhq/use-solana";
 import useOpenPositions from '../../../hooks/useOpenPositions';
 import { useWrittenOptions } from '../../../hooks/useWrittenOptions';
 import useOptionsMarkets from '../../../hooks/useOptionsMarkets';
 import WrittenOptionRow from './WrittenOptionRow';
 import WrittenOptionsTableHeader from './WrittenOptionsTableHeader';
 import { TCell } from '../../StyledComponents/Table/TableStyles';
-import ConnectButton from '../../ConnectButton';
+import { ConnectWalletButton } from "@gokiprotocol/walletkit";
 
 // TODO handle the case where the writer has multiple underlying asset accounts
 const WrittenOptionsTable: React.VFC<{
   className: string;
 }> = ({ className }) => {
-  const { connected } = useWallet();
+  const wallet = useConnectedWallet();
   const positions = useOpenPositions();
   const writtenOptions = useWrittenOptions();
   const { marketsByUiKey } = useOptionsMarkets();
@@ -43,11 +43,11 @@ const WrittenOptionsTable: React.VFC<{
         <Table stickyHeader aria-label="sticky table">
           <WrittenOptionsTableHeader />
           <TableBody>
-            {!connected ? (
+            {!wallet?.connected ? (
               <TableRow>
                 <TCell align="center" colSpan={10}>
                   <Box p={1}>
-                    <ConnectButton>Connect Wallet</ConnectButton>
+                    <ConnectWalletButton />
                   </Box>
                 </TCell>
               </TableRow>

@@ -4,17 +4,14 @@ Copy `.env-example` and rename it `.env.local`.
 
 OR run `touch .env.local` and add the following lines to it and fill in the blanks:
 
-**Next.js will read from .env.local. Only env variables prepended with `NEXT_PUBLIC_` will be shared in the browser**
-
 Please add environment variables into the CodePipeline Build configuration in order for them to be accessible
-when Next.js builds static pages.
 
 ```
-NEXT_PUBLIC_LOCAL_PROGRAM_ID=R2y9ip6mxmWUj4pt54jP2hz2dgvMozy9VTSwMWE7evs
-NEXT_PUBLIC_DEVNET_PROGRAM_ID=R2y9ip6mxmWUj4pt54jP2hz2dgvMozy9VTSwMWE7evs
-NEXT_PUBLIC_LOCAL_DEX_PROGRAM_ID=9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin
-NEXT_PUBLIC_DEVNET_DEX_PROGRAM_ID=DESVgJVGajEgKGXhb6XmqDHGz3VjdgP7rEVESBgxmroY
-NEXT_PUBLIC_INITIALIZE_PAGE_ENABLED='true'
+REACT_APP_LOCAL_PROGRAM_ID=R2y9ip6mxmWUj4pt54jP2hz2dgvMozy9VTSwMWE7evs
+REACT_APP_DEVNET_PROGRAM_ID=R2y9ip6mxmWUj4pt54jP2hz2dgvMozy9VTSwMWE7evs
+REACT_APP_LOCAL_DEX_PROGRAM_ID=9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin
+REACT_APP_DEVNET_DEX_PROGRAM_ID=DESVgJVGajEgKGXhb6XmqDHGz3VjdgP7rEVESBgxmroY
+REACT_APP_INITIALIZE_PAGE_ENABLED='true'
 
 OPTIONS_REPO=
 FRONTEND_REPO=
@@ -38,7 +35,7 @@ We aim to make development setup as easy as possible. Follow the steps below:
 ### Extracting market meta data
 
 ```console
-./node_modules/ts-node/dist/bin.js scripts/extractMetaDataFromMarkets.ts --rpc-url http://localhost:8899 --psyoption-program-id NEXT_PUBLIC_LOCAL_PROGRAM_ID --dex-program-id NEXT_PUBLIC_LOCAL_DEX_PROGRAM_ID --mint1-address MINT1_ADDRESS --mint2-address MINT2_ADDRESS
+./node_modules/ts-node/dist/bin.js scripts/extractMetaDataFromMarkets.ts --rpc-url http://localhost:8899 --psyoption-program-id LOCAL_PROGRAM_ID --dex-program-id LOCAL_DEX_PROGRAM_ID --mint1-address MINT1_ADDRESS --mint2-address MINT2_ADDRESS
 ```
 
 ### Deploying the app to dev and prod:

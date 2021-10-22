@@ -19,7 +19,7 @@ import {
 } from '../../utils/token';
 import { useAmericanPsyOptionsProgram } from '../useAmericanPsyOptionsProgram';
 import useNotifications from '../useNotifications';
-import useWallet from '../useWallet';
+import { useConnectedWallet } from "@saberhq/use-solana";
 
 export const useMintOptions = (): ((
   option: OptionMarketWithKey,
@@ -28,11 +28,11 @@ export const useMintOptions = (): ((
   const program = useAmericanPsyOptionsProgram();
   const { pushErrorNotification, pushNotification } = useNotifications();
   const { splTokenAccountRentBalance } = useSolanaMeta();
-  const { wallet } = useWallet();
+  const wallet = useConnectedWallet();
 
   return useCallback(
     async (option, size) => {
-      if (!wallet || !program || !splTokenAccountRentBalance) {
+      if (!wallet?.publicKey || !program) {
         return;
       }
       try {

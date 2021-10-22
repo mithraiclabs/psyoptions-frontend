@@ -1,16 +1,16 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import * as Sentry from '@sentry/react';
-import { useRouter } from 'next/router';
+import { useHistory } from 'react-router-dom';
 import Box from '@material-ui/core/Box';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import { Button } from '@material-ui/core';
 import moment from 'moment';
-import ConnectButton from '../../ConnectButton';
+import { ConnectWalletButton } from "@gokiprotocol/walletkit";
 import { useFormState } from '../../../context/SimpleUIContext';
 import { SimpleUIPage } from '../SimpeUIPage';
 import OrderDetails from './OrderDetails';
 import LabelledText from './LabelledText';
-import useWallet from '../../../hooks/useWallet';
+import { useConnectedWallet } from "@saberhq/use-solana";
 import useNotifications from '../../../hooks/useNotifications';
 import usePlaceBuyOrder from '../../../hooks/usePlaceBuyOrder';
 import { getHighestAccount } from '../../../utils/token';
@@ -27,8 +27,8 @@ import {
 import useOptionsMarkets from '../../../hooks/useOptionsMarkets';
 
 const ConfirmOrder = () => {
-  const router = useRouter();
-  const { connected, pubKey } = useWallet();
+  const history = useHistory();
+  const wallet = useConnectedWallet();
   const { pushErrorNotification } = useNotifications();
   const [cost, setCost] = useState(null as number | null);
   const [breakeven, setBreakeven] = useState(null as number | null);
@@ -71,7 +71,7 @@ const ConfirmOrder = () => {
       !contractSize ||
       (orderType === 'limit' && !limitPrice)
     ) {
-      router.replace('/simple/choose-asset');
+      history.replace('/simple/choose-asset');
     }
   }, [
     tokenSymbol,
@@ -82,7 +82,7 @@ const ConfirmOrder = () => {
     orderType,
     limitPrice,
     contractSize,
-    router,
+    history,
   ]);
 
   useEffect(() => {
@@ -124,10 +124,12 @@ const ConfirmOrder = () => {
     orderbook?.asks,
   ]);
 
-  const disabledPlaceOrder = !serumMarket || !pubKey || (orderType === "limit" && !limitPrice)
+  const disabledPlaceOrder = useMemo(() => {
+    return !serumMarket || !wallet?.publicKey || (orderType === "limit" && !limitPrice)
+  }, [serumMarket, wallet?.publicKey, orderType, limitPrice]);
 
   const handlePlaceOrderClicked = useCallback(async () => {
-    if (disabledPlaceOrder) return;
+    if (disabledPlaceOrder || !wallet?.publicKey) return;
 
     setPlaceOrderLoading(true);
     try {
@@ -146,7 +148,7 @@ const ConfirmOrder = () => {
         serumMarket: serumMarket,
         optionDestinationKey: optionTokenKey,
         orderArgs: {
-          owner: pubKey,
+          owner: wallet.publicKey,
           // For Serum, the payer is really the account of the asset being sold
           payer: serumQuoteTokenKey || null,
           side: 'buy',
@@ -184,7 +186,7 @@ const ConfirmOrder = () => {
     optionRowForStrike,
     strike,
     optionMarket,
-    pubKey,
+    wallet?.publicKey,
     orderType,
     limitPrice,
     orderSize,
@@ -236,8 +238,8 @@ const ConfirmOrder = () => {
           display="flex"
           alignItems="center"
         >
-          {!connected ? (
-            <ConnectButton fullWidth>Connect Wallet</ConnectButton>
+          {!wallet?.connected ? (
+            <ConnectWalletButton />
           ) : placeOrderLoading ? (
             <CircularProgress />
           ) : (

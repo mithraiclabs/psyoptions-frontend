@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { useRouter } from 'next/router';
+import { useLocation } from 'react-router-dom';
 import Box from '@material-ui/core/Box';
 import { useTheme } from '@material-ui/core/styles';
 
@@ -18,22 +18,22 @@ const StepBar: React.VFC<{ on: boolean }> = ({ on }) => {
 };
 
 export const StepIndicator: React.FC = () => {
-  const { pathname } = useRouter();
+  const location = useLocation();
 
   let step = 1;
-  if (pathname.match(/^\/simple\/up-or-down/)) {
+  if (location.pathname.match(/^\/simple\/up-or-down/)) {
     step = 2;
   }
-  if (pathname.match(/^\/simple\/choose-expiration/)) {
+  if (location.pathname.match(/^\/simple\/choose-expiration/)) {
     step = 3;
   }
-  if (pathname.match(/^\/simple\/choose-strike/)) {
+  if (location.pathname.match(/^\/simple\/choose-strike/)) {
     step = 4;
   }
-  if (pathname.match(/^\/simple\/order-settings/)) {
+  if (location.pathname.match(/^\/simple\/order-settings/)) {
     step = 5;
   }
-  if (pathname.match(/^\/simple\/confirm-order/)) {
+  if (location.pathname.match(/^\/simple\/confirm-order/)) {
     step = 6;
   }
 

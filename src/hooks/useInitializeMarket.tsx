@@ -8,7 +8,7 @@ import useConnection from './useConnection';
 import useNotifications from './useNotifications';
 import { NotificationSeverity } from '../types';
 import { useAmericanPsyOptionsProgram } from './useAmericanPsyOptionsProgram';
-import WalletAdapter from '../utils/wallet/walletAdapter';
+import { useConnectedWallet } from "@saberhq/use-solana";
 
 type InitMarketParams = {
   amountPerContract: BigNumber;
@@ -42,6 +42,7 @@ export const useInitializeMarket = (): ((
   const program = useAmericanPsyOptionsProgram();
   const { pushNotification, pushErrorNotification } = useNotifications();
   const { endpoint, dexProgramId } = useConnection();
+  const wallet = useConnectedWallet();
 
   return useCallback(
     async ({
@@ -53,7 +54,7 @@ export const useInitializeMarket = (): ((
       uAssetDecimals,
       qAssetDecimals,
     }: InitMarketParams) => {
-      if (!program || !(program.provider.wallet as WalletAdapter).connected) {
+      if (!program || !wallet?.connected) {
         // short circuit when there is no program. This is likely
         // due to there being no wallet connected
         pushErrorNotification('Please connect wallet');
@@ -127,6 +128,7 @@ export const useInitializeMarket = (): ((
     },
     [
       program,
+      wallet?.connected,
       pushErrorNotification,
       endpoint?.programId,
       pushNotification,

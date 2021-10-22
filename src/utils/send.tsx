@@ -8,7 +8,7 @@ import {
   Transaction,
   TransactionSignature,
 } from '@solana/web3.js';
-import Wallet from '@project-serum/sol-wallet-adapter';
+import { ConnectedWallet } from "@saberhq/use-solana";
 import { TimeoutError } from './transactionErrors/TimeoutError';
 
 export async function sleep(ms: number): Promise<void> {
@@ -26,7 +26,7 @@ export async function signTransaction({
   connection,
 }: {
   transaction: Transaction;
-  wallet: Wallet;
+  wallet: ConnectedWallet;
   signers?: Array<Keypair>;
   connection: Connection;
 }): Promise<Transaction> {
@@ -48,7 +48,7 @@ export async function signTransactions({
     transaction: Transaction;
     signers?: Array<Keypair>;
   }[];
-  wallet: Wallet;
+  wallet: ConnectedWallet;
   connection: Connection;
 }): Promise<Transaction[]> {
   const { blockhash } = await connection.getRecentBlockhash('max');

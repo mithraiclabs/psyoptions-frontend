@@ -1,0 +1,6 @@
+{
+  "name": "PsyOptions",
+  "short_name": "PsyOptions",
+  "display": "standalone",
+  "start_url": "./"
+}

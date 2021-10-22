@@ -5,8 +5,8 @@ import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import TableBody from '@material-ui/core/TableBody';
 import TableContainer from '@material-ui/core/TableContainer';
-import useWallet from '../../hooks/useWallet';
-import ConnectButton from '../ConnectButton';
+import { useConnectedWallet } from "@saberhq/use-solana";
+import { ConnectWalletButton } from "@gokiprotocol/walletkit";
 import UnsettledBalancesRow from './UnsettledBalancesRow';
 import { TCell, THeadCell } from '../StyledComponents/Table/TableStyles';
 import { OptionType } from '../../types';
@@ -15,7 +15,7 @@ import useAssetList from '../../hooks/useAssetList';
 import useScreenSize from '../../hooks/useScreenSize';
 
 const UnsettledBalancesTable = () => {
-  const { connected } = useWallet();
+  const wallet = useConnectedWallet();
   const { optionMarketsForOpenOrders } = useSerumOpenOrders();
   const { qAsset } = useAssetList();
   const { formFactor } = useScreenSize();
@@ -54,11 +54,11 @@ const UnsettledBalancesTable = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {!connected ? (
+            {!wallet?.connected ? (
               <TableRow>
                 <TCell align="center" colSpan={10}>
                   <Box p={1}>
-                    <ConnectButton>Connect Wallet</ConnectButton>
+                    <ConnectWalletButton />
                   </Box>
                 </TCell>
               </TableRow>

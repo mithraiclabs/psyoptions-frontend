@@ -1,11 +1,11 @@
-import type WalletAdapter from './walletAdapter';
+import type WalletAdapter from './WalletAdapter';
 
-import getSolletAdapter from './adapters/sollet';
-import getPhantomAdapter from './adapters/phantom';
-import getMathAdapter from './adapters/math';
-import getSolongAdapter from './adapters/solong';
-import getSolflareAdapter from './adapters/solflare';
-import getSolletExtAdaptor from './adapters/solletExtension';
+import getSolletAdapter from './adaptors/sollet';
+import getPhantomAdapter from './adaptors/phantom';
+import getMathAdapter from './adaptors/math';
+import getSolongAdapter from './adaptors/solong';
+import getSolflareAdapter from './adaptors/solflare';
+import getSolletExtAdaptor from './adaptors/solletExtension';
 
 type GetAdapterFunction = () => WalletAdapter | undefined;
 

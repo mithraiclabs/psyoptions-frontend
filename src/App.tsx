@@ -16,6 +16,7 @@ import {
 } from './context/ScreenSizeContext';
 import { Routes } from "./routes";
 import { HashRouter } from "react-router-dom";
+import "./App.less";
 
 const AppWithStore: React.FC = ({ children }) => {
   const { packagedMarkets } = useOptionsMarkets();
@@ -50,9 +51,6 @@ const App = (): JSX.Element | null => {
 
   return (
     <StylesProvider injectFirst>
-      {/* <Head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      </Head> */}
       <ThemeProvider theme={theme}>
         <HashRouter basename={"/"}>
           <Store>

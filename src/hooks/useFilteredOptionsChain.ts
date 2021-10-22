@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { OptionRow, SerumMarketAndProgramId } from '@types';
+import { OptionRow, SerumMarketAndProgramId } from '../types';
 import useSerum from './useSerum';
 import { OrderbookData, useSerumOrderbooks } from '../context/SerumOrderbookContext';
 import useOptionsChain from './useOptionsChain';

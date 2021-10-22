@@ -2,12 +2,12 @@ import React from 'react';
 import Box from '@material-ui/core/Box';
 import Link from '@material-ui/core/Link';
 import KeyboardArrowDown from '@material-ui/icons/KeyboardArrowDown';
-import useWallet from '../../hooks/useWallet';
+import { useConnectedWallet } from "@saberhq/use-solana";
 import { useSerumOpenOrders } from '../../context/SerumOpenOrdersContext';
 import { hasUnsettled } from '../../utils/hasUnsettled';
 
 const MarketsUnsettledBalances: React.FC = () => {
-  const { connected } = useWallet();
+  const wallet = useConnectedWallet();
   const { openOrdersBySerumMarket } = useSerumOpenOrders();
 
   const containsUnsettled = Object.values(openOrdersBySerumMarket)
@@ -16,7 +16,7 @@ const MarketsUnsettledBalances: React.FC = () => {
     })
     .includes(true);
 
-  if (!connected || !containsUnsettled) {
+  if (!wallet?.connected || !containsUnsettled) {
     return null;
   }
 

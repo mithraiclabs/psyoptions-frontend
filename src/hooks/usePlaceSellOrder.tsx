@@ -18,7 +18,7 @@ import useSendTransaction from './useSendTransaction';
 import useOwnedTokenAccounts from './useOwnedTokenAccounts';
 import { useSolanaMeta } from '../context/SolanaMetaContext';
 import useConnection from './useConnection';
-import useWallet from './useWallet';
+import { useConnectedWallet } from "@saberhq/use-solana";
 import { createMissingAccountsAndMint } from '../utils/instructions/index';
 import { useCreateAdHocOpenOrdersSubscription } from './Serum';
 import { useAmericanPsyOptionsProgram } from './useAmericanPsyOptionsProgram';
@@ -39,7 +39,7 @@ const usePlaceSellOrder = (
 ): ((obj: PlaceSellOrderArgs) => Promise<void>) => {
   const program = useAmericanPsyOptionsProgram();
   const { pushErrorNotification } = useNotifications();
-  const { wallet, pubKey } = useWallet();
+  const wallet = useConnectedWallet();
   const { connection } = useConnection();
   const { splTokenAccountRentBalance } = useSolanaMeta();
   const { subscribeToTokenAccount } = useOwnedTokenAccounts();
@@ -58,7 +58,7 @@ const usePlaceSellOrder = (
       mintedOptionDestinationKey,
       writerTokenDestinationKey,
     }: PlaceSellOrderArgs) => {
-      if (!connection || !program || !wallet || !splTokenAccountRentBalance || !pubKey) {
+      if (!connection || !wallet?.publicKey) {
         return;
       }
       try {
@@ -76,8 +76,8 @@ const usePlaceSellOrder = (
           // Mint missing contracs before placing order
           const { error, response } = await createMissingAccountsAndMint({
             optionsProgramId,
-            authorityPubkey: pubKey,
-            owner: pubKey,
+            authorityPubkey: wallet.publicKey,
+            owner: wallet.publicKey,
             market: optionMarket,
             uAsset,
             uAssetTokenAccount: _uAssetTokenAccount,
@@ -119,8 +119,8 @@ const usePlaceSellOrder = (
               Token.createCloseAccountInstruction(
                 TOKEN_PROGRAM_ID,
                 _uAssetTokenAccount.pubKey,
-                pubKey, // Send any remaining SOL to the owner
-                pubKey,
+                wallet.publicKey, // Send any remaining SOL to the owner
+                wallet.publicKey,
                 [],
               ),
             );
@@ -168,14 +168,14 @@ const usePlaceSellOrder = (
         const { blockhash } = await connection.getRecentBlockhash();
         const transactions: Transaction[] = [];
         if (mintTX.instructions.length > 0) {
-          mintTX.feePayer = pubKey;
+          mintTX.feePayer = wallet.publicKey;
           mintTX.recentBlockhash = blockhash;
           if (mintSigners.length) {
             mintTX.partialSign(...mintSigners);
           }
           transactions.push(mintTX);
         }
-        placeOrderTx.feePayer = pubKey;
+        placeOrderTx.feePayer = wallet.publicKey;
         placeOrderTx.recentBlockhash = blockhash;
 
         if (placeOrderSigners.length) {
@@ -217,7 +217,6 @@ const usePlaceSellOrder = (
       connection,
       createAdHocOpenOrdersSub,
       program,
-      pubKey,
       pushErrorNotification,
       sendSignedTransaction,
       splTokenAccountRentBalance,

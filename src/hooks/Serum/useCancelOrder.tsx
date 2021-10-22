@@ -7,7 +7,7 @@ import {
 
 import { PublicKey, Transaction } from '@solana/web3.js';
 import useSerum from '../useSerum';
-import useWallet from '../useWallet';
+import { useConnectedWallet } from "@saberhq/use-solana";
 import useConnection from '../useConnection';
 import { useSettleFunds } from './useSettleFunds';
 import useNotifications from '../useNotifications';
@@ -22,7 +22,7 @@ export const useCancelOrder = (
 ) => {
   const program = useAmericanPsyOptionsProgram();
   const { connection } = useConnection();
-  const { wallet, pubKey } = useWallet();
+  const wallet = useConnectedWallet();
   const { serumMarkets } = useSerum();
   const { serumMarket } = serumMarkets[serumMarketAddress] || {};
   const { makeSettleFundsTx } = useSettleFunds(
@@ -34,10 +34,13 @@ export const useCancelOrder = (
   useSubscribeSerumOrderbook(serumMarket?.address.toString() ?? '');
 
   return useCallback(async (order) => {
-    if (!serumMarket || !optionMarket || !pubKey || !wallet)
+    if (!serumMarket || !optionMarket || !wallet?.publicKey)
       return;
     try {
       const settleTx = await makeSettleFundsTx();
+
+      if (!settleTx)
+        return;
 
       let cancelTx: Transaction;
       if (
@@ -47,7 +50,7 @@ export const useCancelOrder = (
       ) {
         cancelTx = await serumMarket.makeCancelOrderTransaction(
           connection,
-          pubKey,
+          wallet.publicKey,
           order,
         );
       } else {
@@ -63,7 +66,7 @@ export const useCancelOrder = (
       }
       const { blockhash } = await connection.getRecentBlockhash();
       cancelTx.recentBlockhash = blockhash;
-      cancelTx.feePayer = pubKey;
+      cancelTx.feePayer = wallet.publicKey;
       const [signedCancelTx, signedSettleTx] =
         await wallet.signAllTransactions([cancelTx, settleTx]);
 
@@ -86,7 +89,6 @@ export const useCancelOrder = (
   }, [
     connection,
     makeSettleFundsTx,
-    pubKey,
     program,
     optionMarket,
     pushErrorNotification,

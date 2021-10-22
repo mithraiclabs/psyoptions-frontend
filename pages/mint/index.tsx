@@ -12,8 +12,8 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useAmericanPsyOptionsProgram } from '../../src/hooks/useAmericanPsyOptionsProgram';
 import Page from '../../src/components/pages/Page';
 import { PlusMinusIntegerInput } from '../../src/components/PlusMinusIntegerInput';
-import useWallet from '../../src/hooks/useWallet';
-import ConnectButton from '../../src/components/ConnectButton';
+import { useConnectedWallet } from "@saberhq/use-solana";
+import { ConnectWalletButton } from "@gokiprotocol/walletkit";
 import theme from '../../src/utils/theme';
 import { useMintOptions } from '../../src/hooks/PsyOptionsAPI/useMintOptions';
 import { MintInfo } from '../../src/components/Mint/MintInfo';
@@ -26,7 +26,7 @@ import { MintParamInput } from '../../src/components/Mint/MintParamInput';
  */
 const Mint: React.VFC = () => {
   const program = useAmericanPsyOptionsProgram();
-  const { connected } = useWallet();
+  const wallet = useConnectedWallet();
   const mintOptions = useMintOptions();
   const [optionMarketAddress, setOptionMarketAddress] = useState('');
   const [quantity, setQuantity] = useState<number | null>(1);
@@ -129,10 +129,8 @@ const Mint: React.VFC = () => {
                 <Box display="flex" justifyContent="center" p={1}>
                   <CircularProgress />
                 </Box>
-              ) : !connected ? (
-                <ConnectButton fullWidth>
-                  <Box py={1}>Connect Wallet To Mint</Box>
-                </ConnectButton>
+              ) : !wallet?.connected ? (
+                <ConnectWalletButton />
               ) : validInput ? (
                 <Button
                   fullWidth

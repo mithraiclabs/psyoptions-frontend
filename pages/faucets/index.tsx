@@ -13,7 +13,6 @@ import Button from '@material-ui/core/Button';
 import Avatar from '@material-ui/core/Avatar';
 import theme from '../../src/utils/theme';
 import useNotifications from '../../src/hooks/useNotifications';
-import useWallet from '../../src/hooks/useWallet';
 import useConnection from '../../src/hooks/useConnection';
 import useAssetList from '../../src/hooks/useAssetList';
 import useSendTransaction from '../../src/hooks/useSendTransaction';
@@ -21,9 +20,11 @@ import useOwnedTokenAccounts from '../../src/hooks/useOwnedTokenAccounts';
 import { createAssociatedTokenAccountInstruction } from '../../src/utils/instructions';
 import { buildAirdropTokensIx } from '../../src/utils/airdropInstructions';
 import Page from '../../src/components/pages/Page';
-import ConnectButton from '../../src/components/ConnectButton';
 import { TokenAccount } from '../../src/types';
 import { useRouter } from 'next/router';
+import { ConnectWalletButton } from "@gokiprotocol/walletkit";
+import { useConnectedWallet } from "@saberhq/use-solana";
+import useWalletInfo from '../../src/hooks/useWalletInfo';
 
 const darkBorder = `1px solid ${theme.palette.background.main}`;
 
@@ -48,7 +49,8 @@ const Faucets: React.VFC = () => {
     }
   }, [endpoint?.name, router]);
   const { pushErrorNotification } = useNotifications();
-  const { balance: solBalance, connected, wallet, pubKey } = useWallet();
+  const wallet = useConnectedWallet();
+  const { balance: solBalance } = useWalletInfo();
   const { supportedAssets: assets } = useAssetList();
   const { sendTransaction } = useSendTransaction();
   const { ownedTokenAccounts: accounts, subscribeToTokenAccount } =
@@ -99,7 +101,7 @@ const Faucets: React.VFC = () => {
   }, [usdcAccount, USDC]);
 
   const handleClaimSOL = useCallback(async () => {
-    if (!endpoint || !pubKey) {
+    if (!endpoint || !wallet?.publicKey) {
       return;
     }
     setLoadingSOL(true);
@@ -107,12 +109,12 @@ const Faucets: React.VFC = () => {
       const conn = new Connection(endpoint.fallbackUrl, {
         commitment: 'confirmed',
       });
-      await conn.requestAirdrop(pubKey, 5 * LAMPORTS_PER_SOL);
+      await conn.requestAirdrop(wallet.publicKey, 5 * LAMPORTS_PER_SOL);
     } catch (err) {
       pushErrorNotification(err);
     }
     setLoadingSOL(false);
-  }, [endpoint, pubKey, pushErrorNotification]);
+  }, [endpoint, wallet?.publicKey, pushErrorNotification]);
 
   const createAccountsAndAirdrop = useCallback(async (
     asset: any,
@@ -120,7 +122,7 @@ const Faucets: React.VFC = () => {
     amount: number,
     message: string,
   ) => {
-    if (!connection || !pubKey || !wallet) {
+    if (!connection || !wallet?.publicKey) {
       return;
     }
     try {
@@ -131,8 +133,8 @@ const Faucets: React.VFC = () => {
       if (!existingAccount) {
         const [ix, associatedTokenPublicKey] =
           await createAssociatedTokenAccountInstruction({
-            payer: pubKey,
-            owner: pubKey,
+            payer: wallet.publicKey,
+            owner: wallet.publicKey,
             mintPublicKey,
           });
         tx.add(ix);
@@ -167,7 +169,6 @@ const Faucets: React.VFC = () => {
   }, [
     connection,
     wallet,
-    pubKey,
     subscribeToTokenAccount,
     sendTransaction,
     pushErrorNotification
@@ -220,7 +221,7 @@ const Faucets: React.VFC = () => {
             Claim Devnet SPL tokens here. These faucets airdrop Devnet SPLs for
             testing only, they are not real and have no value.
           </Box>
-          {connected ? (
+          {wallet?.connected ? (
             <>
               <Box
                 p={2}
@@ -234,7 +235,7 @@ const Faucets: React.VFC = () => {
                   <Box px={2}>
                     Devnet SOL
                     <br />
-                    Balance: {(solBalance / LAMPORTS_PER_SOL).toFixed(2)}
+                    Balance: {solBalance ? (solBalance / LAMPORTS_PER_SOL).toFixed(2) : 'Loading...'}
                   </Box>
                 </Box>
                 {loadingSOL ? (
@@ -342,7 +343,7 @@ const Faucets: React.VFC = () => {
               justifyContent="center"
               alignItems="center"
             >
-              <ConnectButton>Connect Wallet</ConnectButton>
+              <ConnectWalletButton />
             </Box>
           )}
         </Paper>

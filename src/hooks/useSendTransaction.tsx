@@ -6,7 +6,7 @@ import {
   Transaction,
   TransactionSignature,
 } from '@solana/web3.js';
-import Wallet from '@project-serum/sol-wallet-adapter';
+import { ConnectedWallet } from "@saberhq/use-solana";
 import Link from '@material-ui/core/Link';
 import {
   awaitTransactionSignatureConfirmation,
@@ -49,7 +49,7 @@ const useSendTransaction = (): {
     timeout,
   }: {
     transaction: Transaction;
-    wallet: Wallet;
+    wallet: ConnectedWallet;
     signers?: Keypair[] | undefined;
     connection: Connection;
     sendingMessage?: string | undefined;
@@ -175,7 +175,7 @@ const useSendTransaction = (): {
       timeout = DEFAULT_TIMEOUT,
     }: {
       transaction: Transaction;
-      wallet: Wallet;
+      wallet: ConnectedWallet;
       signers?: Array<Keypair>;
       connection: Connection;
       sendingMessage?: string;

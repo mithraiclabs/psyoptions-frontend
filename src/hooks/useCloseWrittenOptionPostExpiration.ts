@@ -14,7 +14,7 @@ import {
 } from '@mithraic-labs/psy-american';
 
 import useConnection from './useConnection';
-import useWallet from './useWallet';
+import { useConnectedWallet } from "@saberhq/use-solana";
 import useNotifications from './useNotifications';
 import useSendTransaction from './useSendTransaction';
 import { initializeTokenAccountTx, WRAPPED_SOL_ADDRESS } from '../utils/token';
@@ -40,12 +40,12 @@ export const useCloseWrittenOptionPostExpiration = (
   const program = useAmericanPsyOptionsProgram();
   const { connection } = useConnection();
   const { pushErrorNotification } = useNotifications();
-  const { pubKey, wallet } = useWallet();
+  const wallet = useConnectedWallet();
   const { splTokenAccountRentBalance } = useSolanaMeta();
   const { sendSignedTransaction } = useSendTransaction();
 
   return useCallback(async (contractsToClose = 1) => {
-    if (!pubKey || !wallet)
+    if (!wallet?.publicKey)
       return;
     try {
       const transaction = new Transaction();
@@ -59,9 +59,9 @@ export const useCloseWrittenOptionPostExpiration = (
         } = await initializeTokenAccountTx({
           // eslint-disable-line
           connection,
-          payerKey: pubKey,
+          payerKey: wallet.publicKey,
           mintPublicKey: new PublicKey(WRAPPED_SOL_ADDRESS),
-          owner: pubKey,
+          owner: wallet.publicKey,
           rentBalance: splTokenAccountRentBalance,
         });
         transaction.add(initWrappedSolAcctIx);
@@ -86,7 +86,7 @@ export const useCloseWrittenOptionPostExpiration = (
             underlyingAssetPoolKey: market.underlyingAssetPoolKey,
             writerTokenMintKey: market.writerTokenMintKey,
             writerTokenSourceKey,
-            writerTokenSourceAuthorityKey: pubKey,
+            writerTokenSourceAuthorityKey: wallet.publicKey,
           });
       } else {
         closePostExpirationIx = instructions.closePostExpirationInstruction(
@@ -106,13 +106,13 @@ export const useCloseWrittenOptionPostExpiration = (
           Token.createCloseAccountInstruction(
             TOKEN_PROGRAM_ID,
             _underlyingAssetDestKey,
-            pubKey, // Send any remaining SOL to the owner
-            pubKey,
+            wallet.publicKey, // Send any remaining SOL to the owner
+            wallet.publicKey,
             [],
           ),
         );
       }
-      transaction.feePayer = pubKey;
+      transaction.feePayer = wallet.publicKey;
       const { blockhash } = await connection.getRecentBlockhash(); // eslint-disable-line
       transaction.recentBlockhash = blockhash;
 
@@ -136,7 +136,6 @@ export const useCloseWrittenOptionPostExpiration = (
     market,
     program,
     writerTokenSourceKey,
-    pubKey,
     connection,
     wallet,
     pushErrorNotification,

@@ -17,13 +17,13 @@ import moment from 'moment';
 import { MarketExistsDialog } from './MarketExistsDialog';
 import theme from '../../utils/theme';
 import useNotifications from '../../hooks/useNotifications';
-import useWallet from '../../hooks/useWallet';
+import { useConnectedWallet } from "@saberhq/use-solana";
 import { useInitializeMarket } from '../../hooks/useInitializeMarket';
 import useConnection from '../../hooks/useConnection';
 import { useInitializeSerumMarket } from '../../hooks/Serum/useInitializeSerumMarket';
 import { useInitializedMarkets } from '../../context/LocalStorage';
 import { useCheckIfMarketExists } from '../../hooks/PsyOptionsAPI/useCheckIfMarketExists';
-import ConnectButton from '../ConnectButton';
+import { ConnectWalletButton } from "@gokiprotocol/walletkit";
 import { useTokenMintInfo } from '../../hooks/useTokenMintInfo';
 import { SelectAssetOrEnterMint } from '../SelectAssetOrEnterMint';
 import useAssetList from '../../hooks/useAssetList';
@@ -35,7 +35,7 @@ type OptionString = 'calls' | 'puts';
 
 export const InitOptionMarket: React.VFC = () => {
   const { pushNotification } = useNotifications();
-  const { connected } = useWallet();
+  const wallet = useConnectedWallet();
   const initializeMarket = useInitializeMarket();
   const { dexProgramId, endpoint } = useConnection();
   const initializeSerumMarket = useInitializeSerumMarket();
@@ -346,10 +346,8 @@ export const InitOptionMarket: React.VFC = () => {
             </Box>
           ) : assetsSelected && parametersValid ? (
             <>
-              {!connected ? (
-                <ConnectButton fullWidth>
-                  <Box py={1}>Connect Wallet To Initialize</Box>
-                </ConnectButton>
+              {!wallet?.connected ? (
+                <ConnectWalletButton />
               ) : (
                 <Button
                   fullWidth

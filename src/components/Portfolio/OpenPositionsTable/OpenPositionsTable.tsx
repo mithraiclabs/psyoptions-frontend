@@ -6,19 +6,19 @@ import {
   TableBody,
   Table,
 } from "@material-ui/core";
-import useWallet from '../../../hooks/useWallet';
+import { useConnectedWallet } from "@saberhq/use-solana";
 import OpenPositionsTableHeader from './OpenPositionsTableHeader';
 import PositionRow from './PositionRow';
 import { Position } from '../Portfolio';
 import { TCell } from '../../StyledComponents/Table/TableStyles';
-import ConnectButton from '../../ConnectButton';
+import { ConnectWalletButton } from "@gokiprotocol/walletkit";
 
 // TODO handle the case where the writer has multiple underlying asset accounts
 const OpenPositionsTable: React.VFC<{
   positions: Position[];
   className: string;
 }> = ({ className, positions }) => {
-  const { connected } = useWallet();
+  const wallet = useConnectedWallet();
   const [page] = useState(0);
   const [rowsPerPage] = useState(10);
 
@@ -28,11 +28,11 @@ const OpenPositionsTable: React.VFC<{
         <Table stickyHeader aria-label="sticky table">
           <OpenPositionsTableHeader />
           <TableBody>
-            {!connected ? (
+            {!wallet?.connected ? (
               <TableRow>
                 <TCell align="center" colSpan={10}>
                   <Box p={1}>
-                    <ConnectButton>Connect Wallet</ConnectButton>
+                    <ConnectWalletButton />
                   </Box>
                 </TCell>
               </TableRow>

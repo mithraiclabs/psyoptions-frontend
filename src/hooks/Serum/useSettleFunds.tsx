@@ -11,7 +11,7 @@ import useConnection from '../useConnection';
 import useNotifications from '../useNotifications';
 import useOwnedTokenAccounts from '../useOwnedTokenAccounts';
 import useSerum from '../useSerum';
-import useWallet from '../useWallet';
+import { useConnectedWallet } from "@saberhq/use-solana";
 import useSendTransaction from '../useSendTransaction';
 import { useAmericanPsyOptionsProgram } from '../useAmericanPsyOptionsProgram';
 import { OptionMarket } from '../../types';
@@ -25,14 +25,14 @@ export const useSettleFunds = (
   serumMarketAddress: string,
   optionMarket: OptionMarket,
 ): {
-  makeSettleFundsTx: () => Promise<Transaction>;
+  makeSettleFundsTx: () => Promise<Transaction | undefined>;
   settleFunds: () => Promise<void>;
 } => {
   const program = useAmericanPsyOptionsProgram();
   const { pushErrorNotification } = useNotifications();
   const { connection, endpoint } = useConnection();
   const { serumMarkets } = useSerum();
-  const { wallet, pubKey } = useWallet();
+  const wallet = useConnectedWallet();
   const { sendTransaction } = useSendTransaction();
   const { ownedTokenAccounts, subscribeToTokenAccount } =
     useOwnedTokenAccounts();
@@ -48,89 +48,87 @@ export const useSettleFunds = (
   const highestBaseTokenAccount = getHighestAccount(baseTokenAccounts);
   const highestQuoteTokenAccount = getHighestAccount(quoteTokenAccounts);
 
-  const makeSettleFundsTx = useCallback(async (): Promise<
-    Transaction | undefined
-  > => {
-    if (openOrders?.length && serumMarket && optionMarket) {
-      const transaction = new Transaction();
-      let signers = [];
-      let _baseTokenAccountKey = highestBaseTokenAccount?.pubKey;
-      let _quoteTokenAccountKey = highestQuoteTokenAccount?.pubKey;
+  const makeSettleFundsTx = useCallback(async (): Promise<Transaction | undefined> => {
+    if (!openOrders?.length || !serumMarket || !optionMarket || !wallet?.publicKey)
+      return;
+    
+    const transaction = new Transaction();
+    let signers = [];
+    let _baseTokenAccountKey = highestBaseTokenAccount?.pubKey;
+    let _quoteTokenAccountKey = highestQuoteTokenAccount?.pubKey;
 
-      if (!_baseTokenAccountKey) {
-        // Create a SPL Token account for this base account if the wallet doesn't have one
-        const [createOptAccountTx, newTokenAccountKey] =
-          await createAssociatedTokenAccountInstruction({
-            payer: pubKey,
-            owner: pubKey,
-            mintPublicKey: serumMarket?.baseMintAddress,
-          });
+    if (!_baseTokenAccountKey) {
+      // Create a SPL Token account for this base account if the wallet doesn't have one
+      const [createOptAccountTx, newTokenAccountKey] =
+        await createAssociatedTokenAccountInstruction({
+          payer: wallet.publicKey,
+          owner: wallet.publicKey,
+          mintPublicKey: serumMarket?.baseMintAddress,
+        });
 
-        transaction.add(createOptAccountTx);
-        _baseTokenAccountKey = newTokenAccountKey;
-        subscribeToTokenAccount(newTokenAccountKey);
-      }
+      transaction.add(createOptAccountTx);
+      _baseTokenAccountKey = newTokenAccountKey;
+      subscribeToTokenAccount(newTokenAccountKey);
+    }
 
-      if (!_quoteTokenAccountKey) {
-        // Create a SPL Token account for this quote account if the wallet doesn't have one
-        const [createOptAccountTx, newTokenAccountKey] =
-          await createAssociatedTokenAccountInstruction({
-            payer: pubKey,
-            owner: pubKey,
-            mintPublicKey: serumMarket.quoteMintAddress,
-          });
+    if (!_quoteTokenAccountKey) {
+      // Create a SPL Token account for this quote account if the wallet doesn't have one
+      const [createOptAccountTx, newTokenAccountKey] =
+        await createAssociatedTokenAccountInstruction({
+          payer: wallet.publicKey,
+          owner: wallet.publicKey,
+          mintPublicKey: serumMarket.quoteMintAddress,
+        });
 
-        transaction.add(createOptAccountTx);
-        _quoteTokenAccountKey = newTokenAccountKey;
-        subscribeToTokenAccount(newTokenAccountKey);
-      }
+      transaction.add(createOptAccountTx);
+      _quoteTokenAccountKey = newTokenAccountKey;
+      subscribeToTokenAccount(newTokenAccountKey);
+    }
 
-      let settleTx: Transaction;
-      let settleSigners: Signer[] = [];
-      if (
-        PSY_AMERICAN_PROGRAM_IDS[
-          optionMarket.psyOptionsProgramId.toString()
-        ] === ProgramVersions.V1
-      ) {
-        ({ transaction: settleTx, signers: settleSigners } =
-          await serumMarket.makeSettleFundsTransaction(
-            connection,
-            openOrders[0],
-            _baseTokenAccountKey,
-            _quoteTokenAccountKey,
-            await getReferralId(
-              program,
-              endpoint,
-              serumMarket.quoteMintAddress,
-            ),
-          ));
-      } else {
-        const ix = await serumInstructions.settleFundsInstruction(
-          program,
-          optionMarket.pubkey,
-          new PublicKey(optionMarket.serumProgramId),
-          serumMarket.address,
+    let settleTx: Transaction;
+    let settleSigners: Signer[] = [];
+    if (
+      PSY_AMERICAN_PROGRAM_IDS[
+        optionMarket.psyOptionsProgramId.toString()
+      ] === ProgramVersions.V1
+    ) {
+      ({ transaction: settleTx, signers: settleSigners } =
+        await serumMarket.makeSettleFundsTransaction(
+          connection,
+          openOrders[0],
           _baseTokenAccountKey,
           _quoteTokenAccountKey,
-          await getReferralId(program, endpoint, serumMarket.quoteMintAddress),
-          openOrders[0].address,
-          undefined,
-        );
-        settleTx = new Transaction().add(ix);
-      }
-      transaction.add(settleTx);
-      signers = [...signers, ...settleSigners];
-
-      transaction.feePayer = pubKey;
-      const { blockhash } = await connection.getRecentBlockhash();
-      transaction.recentBlockhash = blockhash;
-
-      if (signers.length) {
-        transaction.partialSign(...signers);
-      }
-      return transaction;
+          await getReferralId(
+            program,
+            endpoint,
+            serumMarket.quoteMintAddress,
+          ),
+        ));
+    } else {
+      const ix = await serumInstructions.settleFundsInstruction(
+        program,
+        optionMarket.pubkey,
+        new PublicKey(optionMarket.serumProgramId),
+        serumMarket.address,
+        _baseTokenAccountKey,
+        _quoteTokenAccountKey,
+        await getReferralId(program, endpoint, serumMarket.quoteMintAddress),
+        openOrders[0].address,
+        undefined,
+      );
+      settleTx = new Transaction().add(ix);
     }
-    return undefined;
+    transaction.add(settleTx);
+    signers = [...signers, ...settleSigners];
+
+    transaction.feePayer = wallet.publicKey;
+    const { blockhash } = await connection.getRecentBlockhash();
+    transaction.recentBlockhash = blockhash;
+
+    if (signers.length) {
+      transaction.partialSign(...signers);
+    }
+    return transaction;
   }, [
     endpoint,
     serumMarket,
@@ -140,13 +138,17 @@ export const useSettleFunds = (
     highestQuoteTokenAccount?.pubKey,
     connection,
     optionMarket,
-    pubKey,
+    wallet?.publicKey,
     subscribeToTokenAccount,
   ]);
 
   const settleFunds = useCallback(async () => {
+    if (!wallet)
+      return;
     try {
       const transaction = await makeSettleFundsTx();
+      if (!transaction)
+        return;
       await sendTransaction({
         transaction,
         wallet,

@@ -3,16 +3,17 @@ import Box from '@material-ui/core/Box';
 import Avatar from '@material-ui/core/Avatar';
 import { useTheme } from '@material-ui/core/styles';
 import { LAMPORTS_PER_SOL } from '@solana/web3.js';
-
-import useWallet from '../hooks/useWallet';
+import { useConnectedWallet } from "@saberhq/use-solana";
 import useAssetList from '../hooks/useAssetList';
 import useOwnedTokenAccounts from '../hooks/useOwnedTokenAccounts';
 
 import { WRAPPED_SOL_ADDRESS, getHighestAccount } from '../utils/token';
+import useWalletInfo from '../hooks/useWalletInfo';
 
 const SupportedAssetBalances: React.FC = () => {
   const theme = useTheme();
-  const { balance, connected } = useWallet();
+  const wallet = useConnectedWallet();
+  const { balance } = useWalletInfo();
   const { supportedAssets, assetListLoading } = useAssetList();
   const { ownedTokenAccounts, loadingOwnedTokenAccounts } =
     useOwnedTokenAccounts();
@@ -25,11 +26,12 @@ const SupportedAssetBalances: React.FC = () => {
   });
 
   const balances = supportedAssetAccounts.map(({ asset, accounts }) => {
-    let assetBalance =
-      (getHighestAccount(accounts)?.amount || 0) / 10 ** asset?.decimals;
+    const highestAccount = getHighestAccount(accounts);
+    let assetBalance: number | null = highestAccount ?
+      highestAccount.amount / 10 ** asset?.decimals : null;
     if (asset?.mintAddress === WRAPPED_SOL_ADDRESS) {
       // if asset is wrapped Sol, use balance of wallet account
-      assetBalance = balance / LAMPORTS_PER_SOL;
+      assetBalance = balance ? balance / LAMPORTS_PER_SOL : null;
     }
     return {
       asset,
@@ -37,7 +39,7 @@ const SupportedAssetBalances: React.FC = () => {
     };
   });
 
-  if (!loadingOwnedTokenAccounts && !assetListLoading && connected) {
+  if (!loadingOwnedTokenAccounts && !assetListLoading && wallet?.connected) {
     return (
       <Box
         display="flex"
@@ -75,7 +77,7 @@ const SupportedAssetBalances: React.FC = () => {
                 style={{ width: '24px', height: '24px', marginRight: '8px' }}
                 src={asset?.icon}
               />{' '}
-              {assetBalance.toFixed(2)} {asset?.tokenSymbol}
+              {assetBalance ? assetBalance.toFixed(2) : 'Loading...'} {asset?.tokenSymbol}
             </Box>
           ))}
         </Box>

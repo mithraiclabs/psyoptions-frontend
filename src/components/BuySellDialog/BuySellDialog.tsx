@@ -14,7 +14,7 @@ import type { Moment } from 'moment';
 
 import theme from '../../utils/theme';
 import { WRAPPED_SOL_ADDRESS, getHighestAccount } from '../../utils/token';
-import useWallet from '../../hooks/useWallet';
+import { useConnectedWallet } from "@saberhq/use-solana";
 import useSerum from '../../hooks/useSerum';
 import useOwnedTokenAccounts from '../../hooks/useOwnedTokenAccounts';
 import useNotifications from '../../hooks/useNotifications';
@@ -29,7 +29,7 @@ import { UnsettledFunds } from './UnsettledFunds';
 import BuyButton from './BuyButton';
 import SellButton from './SellButton';
 import { StyledFilledInput } from './styles';
-import ConnectButton from '../ConnectButton';
+import { ConnectWalletButton } from "@gokiprotocol/walletkit";
 
 import DialogFullscreenMobile from '../DialogFullscreenMobile';
 import { calculatePriceWithSlippage } from '../../utils/calculatePriceWithSlippage';
@@ -40,6 +40,7 @@ import {
 import { useInitializeSerumMarket } from '../../hooks/Serum/useInitializeSerumMarket';
 import { PlusMinusIntegerInput } from '../PlusMinusIntegerInput';
 import { TokenAccount } from '../../types';
+import useWalletInfo from '../../hooks/useWalletInfo';
 
 const bgLighterColor = (theme.palette.background as any).lighter;
 
@@ -106,7 +107,8 @@ const BuySellDialog: React.VFC<{
   const [initializingSerum, setInitializingSerum] = useState(false);
   const [placeOrderLoading, setPlaceOrderLoading] = useState(false);
   const { pushErrorNotification } = useNotifications();
-  const { balance, pubKey, connected } = useWallet();
+  const wallet = useConnectedWallet();
+  const { balance } = useWalletInfo();
   const placeSellOrder = usePlaceSellOrder(serumAddress);
   const placeBuyOrder = usePlaceBuyOrder(serumAddress);
   const { serumMarkets, fetchSerumMarket } = useSerum();
@@ -160,7 +162,7 @@ const BuySellDialog: React.VFC<{
     let tempBalance = (getHighestAccount(newUAssetAccounts)?.amount || 0) / 10 ** uAssetDecimals;
     if (uAssetMint === WRAPPED_SOL_ADDRESS) {
       // if asset is wrapped Sol, use balance of wallet account
-      tempBalance = balance / LAMPORTS_PER_SOL;
+      tempBalance = balance ?? 0 / LAMPORTS_PER_SOL;
     }
     setUAssetBalance(tempBalance);
   }, [
@@ -246,7 +248,7 @@ const BuySellDialog: React.VFC<{
   ]);
 
   const handlePlaceSellOrder = useCallback(async () => {
-    if (!serumMarketData || !serumMarketData?.serumMarket || !pubKey || !optionMarket || !orderbook)
+    if (!serumMarketData || !serumMarketData?.serumMarket || !wallet?.publicKey || !optionMarket || !orderbook)
       return;
     setPlaceOrderLoading(true);
     try {
@@ -259,7 +261,7 @@ const BuySellDialog: React.VFC<{
         numberOfContractsToMint: numberOfContracts,
         serumMarket: serumMarketData.serumMarket,
         orderArgs: {
-          owner: pubKey,
+          owner: wallet.publicKey,
           // For Serum, the payer is really the account of the asset being sold
           payer: optionTokenKey,
           side: 'sell',
@@ -313,7 +315,7 @@ const BuySellDialog: React.VFC<{
     writerAccounts,
     placeSellOrder,
     serumMarketData,
-    pubKey,
+    wallet?.publicKey,
     parsedLimitPrice,
     serumDiscountFeeKey,
     uAssetSymbol,
@@ -324,7 +326,7 @@ const BuySellDialog: React.VFC<{
   ]);
 
   const handleBuyOrder = useCallback(async () => {
-    if (!serumMarketData || !serumMarketData?.serumMarket || !pubKey || !optionMarket || !orderbook)
+    if (!serumMarketData || !serumMarketData?.serumMarket || !wallet?.publicKey || !optionMarket || !orderbook)
       return;
 
     setPlaceOrderLoading(true);
@@ -340,7 +342,7 @@ const BuySellDialog: React.VFC<{
         serumMarket: serumMarketData?.serumMarket,
         optionDestinationKey: optionTokenKey,
         orderArgs: {
-          owner: pubKey,
+          owner: wallet.publicKey,
           // For Serum, the payer is really the account of the asset being sold
           payer: serumQuoteTokenKey,
           side: 'buy',
@@ -380,7 +382,7 @@ const BuySellDialog: React.VFC<{
     optionAccounts,
     placeBuyOrder,
     serumMarketData,
-    pubKey,
+    wallet?.publicKey,
     parsedLimitPrice,
     serumDiscountFeeKey,
     serumFeeRates,
@@ -547,8 +549,8 @@ const BuySellDialog: React.VFC<{
                     justifyContent="center"
                     width="100%"
                   >
-                    {!connected ? (
-                      <ConnectButton fullWidth>Connect Wallet</ConnectButton>
+                    {!wallet?.connected ? (
+                      <ConnectWalletButton />
                     ) : placeOrderLoading ? (
                       <CircularProgress />
                     ) : (
@@ -633,12 +635,12 @@ const BuySellDialog: React.VFC<{
                     }
                   />
                 </>
-              ) : !connected ? (
+              ) : !wallet?.connected ? (
                 <>
                   <Box textAlign="center" px={2} pb={2}>
                     Connect to Initialize Serum Market
                   </Box>
-                  <ConnectButton>Connect Wallet</ConnectButton>
+                  <ConnectWalletButton />
                 </>
               ) : (
                 <>

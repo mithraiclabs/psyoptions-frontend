@@ -1,7 +1,7 @@
 import { Provider } from '@project-serum/anchor';
 import { useMemo } from 'react';
 import useConnection from './useConnection';
-import useWallet from './useWallet';
+import { useConnectedWallet } from "@saberhq/use-solana";
 
 /**
  * Get provider based on current RPC connection and wallet.
@@ -10,7 +10,7 @@ import useWallet from './useWallet';
  */
 export const useProvider = (): Provider | null => {
   const { connection } = useConnection();
-  const { wallet } = useWallet();
+  const wallet = useConnectedWallet();
 
   return useMemo(() => {
     if (wallet && connection) {

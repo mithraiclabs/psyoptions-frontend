@@ -4,6 +4,9 @@ import {
   useMediaQuery,
 } from '@material-ui/core';
 import React, { useEffect } from 'react';
+import { HashRouter } from 'react-router-dom';
+
+import ProhibitedJurisdiction from './components/ProhibitedJurisdiction';
 import Store from './context/store';
 import useOptionsMarkets from './hooks/useOptionsMarkets';
 import theme from './utils/theme';
@@ -12,9 +15,11 @@ import {
   MOBILE_DEVICE_MEDIA_QUERY,
   TABLET_DEVICE_MEDIA_QUERY,
 } from './context/ScreenSizeContext';
-import { Routes } from "./routes";
-import { HashRouter } from "react-router-dom";
-import "./App.less";
+import { Routes } from './routes';
+import { RecoilRoot } from 'recoil';
+import { RecoilDevTool } from './recoil';
+import './App.less';
+import { DISALLOWED_COUNTRIES } from './hooks/useCountry';
 
 const AppWithStore: React.FC = ({ children }) => {
   const { packagedMarkets } = useOptionsMarkets();
@@ -34,17 +39,21 @@ const AppWithStore: React.FC = ({ children }) => {
 };
 
 const App = (): JSX.Element | null => {
-
   return (
-    <StylesProvider injectFirst>
-      <ThemeProvider theme={theme}>
-        <HashRouter basename={"/"}>
-          <Store>
-            <AppWithStore><Routes /></AppWithStore>
-          </Store>
-        </HashRouter>
-      </ThemeProvider>
-    </StylesProvider>
+    <RecoilRoot>
+      <RecoilDevTool />
+      <StylesProvider injectFirst>
+        <ThemeProvider theme={theme}>
+          <HashRouter basename={'/'}>
+            <Store>
+              <AppWithStore>
+                <Routes />
+              </AppWithStore>
+            </Store>
+          </HashRouter>
+        </ThemeProvider>
+      </StylesProvider>
+    </RecoilRoot>
   );
 };
 export default App;

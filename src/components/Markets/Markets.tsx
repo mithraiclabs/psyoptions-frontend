@@ -18,7 +18,6 @@ import Balances from './MarketsBalances';
 import MarketsUnsettledBalances from './MarketsUnsettledBalances';
 import { MarketsTableHeader } from './MarketsTableHeader';
 import useAssetList from '../../hooks/useAssetList';
-import useExpirationDate from '../../hooks/useExpirationDate';
 import useOptionsChain from '../../hooks/useOptionsChain';
 import useOptionsMarkets from '../../hooks/useOptionsMarkets';
 import useSerum from '../../hooks/useSerum';
@@ -27,7 +26,6 @@ import Page from '../pages/Page';
 import BuySellDialog from '../BuySellDialog';
 import Select from '../Select';
 import { ContractSizeSelector } from '../ContractSizeSelector';
-import SelectAssetOld from '../SelectAssetOld';
 import theme from '../../utils/theme';
 import Loading from '../Loading';
 import CallPutRow from './CallPutRow';
@@ -40,8 +38,10 @@ import { CallOrPut, SerumMarketAndProgramId } from '../../types';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import {
   expirationUnixTimestamp,
+  quoteMint,
   selectExpirationAsDate,
   selectFutureExpirationsByUnderlyingAndQuote,
+  selectQuoteMintsOfFutureOptions,
   selectUnderlyingMintsOfFutureOptions,
   underlyingMint,
 } from '../../recoil';
@@ -92,14 +92,17 @@ const rowTemplate = {
 
 const Markets: React.VFC = () => {
   const { uAsset, qAsset, assetListLoading } = useAssetList();
-  const { selectedDate: date, setSelectedDate, dates } = useExpirationDate();
   const [contractSize, setContractSize] = useState(0.01);
   const { chains, buildOptionsChain } = useOptionsChain();
   const { getSizes, marketsLoading } = useOptionsMarkets();
   const [_underlyingMint, setUnderlyingMint] = useRecoilState(underlyingMint);
+  const [_quoteMint, setQuoteMint] = useRecoilState(quoteMint);
   const underlyingMints = useRecoilValue(selectUnderlyingMintsOfFutureOptions);
+  const quoteMints = useRecoilValue(selectQuoteMintsOfFutureOptions);
   const expirationDateString = useRecoilValue(selectExpirationAsDate);
-  const [, setExpiration] = useRecoilState(expirationUnixTimestamp);
+  const [_expirationUnixTimestamp, setExpiration] = useRecoilState(
+    expirationUnixTimestamp,
+  );
   const expirations = useRecoilValue(
     selectFutureExpirationsByUnderlyingAndQuote,
   );
@@ -118,6 +121,10 @@ const Markets: React.VFC = () => {
   const [showVolume, setShowVolume] = useState(true);
   const [showOI, setShowOI] = useState(true);
   const [currentColumnsCount, setColumnsCount] = useState(19); // 19 columns
+  const momentDate = useMemo(
+    () => moment(expirationDateString),
+    [expirationDateString],
+  );
 
   useEffect(() => {
     const availableSizes = getSizes({
@@ -199,8 +206,8 @@ const Markets: React.VFC = () => {
   useBatchLoadMints(optionMints);
 
   useEffect(() => {
-    buildOptionsChain(date?.unix() ?? 0, contractSize);
-  }, [buildOptionsChain, contractSize, date]);
+    buildOptionsChain(momentDate?.unix() ?? 0, contractSize);
+  }, [buildOptionsChain, contractSize, momentDate]);
 
   useEffect(() => {
     // Load serum markets when the options chain changes
@@ -242,12 +249,10 @@ const Markets: React.VFC = () => {
   const buySellDialogHeading = callPutData
     ? `${callPutData.uAssetSymbol}-${
         callPutData.qAssetSymbol
-      }${dblsp}|${dblsp}${date?.format(
+      }${dblsp}|${dblsp}${momentDate?.format(
         'D MMM YYYY',
       )}${dblsp}|${dblsp}${callPutData.type.slice(0, 1).toUpperCase()}`
     : '--';
-
-  console.log('TJ expirations ', expirations);
 
   const currentPageStart = page * rowsPerPage + 1;
   const currentPageEnd = Math.min(
@@ -270,7 +275,7 @@ const Markets: React.VFC = () => {
           onClose={() => setBuySellDialogOpen(false)}
           round={round}
           precision={precision}
-          date={date}
+          date={momentDate}
           uAssetDecimals={
             callPutData?.type === 'call' ? uAsset?.decimals : qAsset?.decimals
           }
@@ -310,7 +315,7 @@ const Markets: React.VFC = () => {
                     },
                   }}
                   label="Expiration Date"
-                  value={expirationDateString}
+                  value={_expirationUnixTimestamp}
                   onChange={(e) => setExpiration(e.target.value as BN)}
                   options={expirations.map((e) => {
                     const _date = moment(e.toNumber() * 1000);
@@ -363,7 +368,11 @@ const Markets: React.VFC = () => {
                 </Box>
                 <h3 style={{ margin: 0 }}>/</h3>
                 <Box pl={'4px'}>
-                  <SelectAssetOld disabled selectedAsset={qAsset} />
+                  <SelectAsset
+                    onChange={setQuoteMint}
+                    mints={quoteMints}
+                    value={_quoteMint}
+                  />
                 </Box>
               </Box>
             </Box>
@@ -415,7 +424,7 @@ const Markets: React.VFC = () => {
                         row={row}
                         uAsset={uAsset}
                         qAsset={qAsset}
-                        date={date}
+                        date={momentDate}
                         precision={precision}
                         round={round}
                         onClickBuySellCall={handleBuySellClick}

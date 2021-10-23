@@ -6,8 +6,8 @@ import {
   TableBody,
   Table,
   makeStyles,
-} from "@material-ui/core";
-import { useConnectedWallet } from "@saberhq/use-solana";
+} from '@material-ui/core';
+import { useConnectedWallet } from '@saberhq/use-solana';
 import useOpenPositions from '../../../hooks/useOpenPositions';
 import { useWrittenOptions } from '../../../hooks/useWrittenOptions';
 import useOptionsMarkets from '../../../hooks/useOptionsMarkets';
@@ -19,8 +19,8 @@ import CSS from 'csstype';
 
 const useStyles = makeStyles((theme) => ({
   walletButtonCell: {
-    textAlign: "-webkit-center" as CSS.Property.TextAlign,
-  }
+    textAlign: '-webkit-center' as CSS.Property.TextAlign,
+  },
 }));
 
 // TODO handle the case where the writer has multiple underlying asset accounts
@@ -54,7 +54,11 @@ const WrittenOptionsTable: React.VFC<{
           <TableBody>
             {!wallet?.connected ? (
               <TableRow>
-                <TCell align="center" colSpan={10} className={classes.walletButtonCell}>
+                <TCell
+                  align="center"
+                  colSpan={10}
+                  className={classes.walletButtonCell}
+                >
                   <Box p={1}>
                     <GokiButton />
                   </Box>
@@ -65,7 +69,9 @@ const WrittenOptionsTable: React.VFC<{
                 {writtenOptionKeys.map((marketKey) => {
                   const market = marketsByUiKey[marketKey];
                   const heldContracts = positions[marketKey]
-                    ? positions[marketKey].filter((position) => position.amount > 0)
+                    ? positions[marketKey].filter(
+                        (position) => position.amount > 0,
+                      )
                     : [];
                   return (
                     <WrittenOptionRow

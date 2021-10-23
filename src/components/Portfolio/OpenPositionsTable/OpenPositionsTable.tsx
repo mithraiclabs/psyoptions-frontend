@@ -6,8 +6,8 @@ import {
   TableBody,
   Table,
   makeStyles,
-} from "@material-ui/core";
-import { useConnectedWallet } from "@saberhq/use-solana";
+} from '@material-ui/core';
+import { useConnectedWallet } from '@saberhq/use-solana';
 import OpenPositionsTableHeader from './OpenPositionsTableHeader';
 import PositionRow from './PositionRow';
 import { Position } from '../Portfolio';
@@ -17,8 +17,8 @@ import CSS from 'csstype';
 
 const useStyles = makeStyles((theme) => ({
   walletButtonCell: {
-    textAlign: "-webkit-center" as CSS.Property.TextAlign,
-  }
+    textAlign: '-webkit-center' as CSS.Property.TextAlign,
+  },
 }));
 
 // TODO handle the case where the writer has multiple underlying asset accounts
@@ -39,7 +39,11 @@ const OpenPositionsTable: React.VFC<{
           <TableBody>
             {!wallet?.connected ? (
               <TableRow>
-                <TCell align="center" colSpan={10} className={classes.walletButtonCell}>
+                <TCell
+                  align="center"
+                  colSpan={10}
+                  className={classes.walletButtonCell}
+                >
                   <Box p={1}>
                     <GokiButton />
                   </Box>
@@ -47,14 +51,14 @@ const OpenPositionsTable: React.VFC<{
               </TableRow>
             ) : (
               positions
-              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-              .map((row) => (
-                <PositionRow
-                  key={row.market.optionMintKey.toString()}
-                  row={row}
-                  className={className}
-                />
-              ))
+                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                .map((row) => (
+                  <PositionRow
+                    key={row.market.optionMintKey.toString()}
+                    row={row}
+                    className={className}
+                  />
+                ))
             )}
           </TableBody>
         </Table>

@@ -154,15 +154,22 @@ export const selectUnderlyingAmountPerOptionByExpirationUnderlyingQuote =
     },
   });
 
+/**
+ * Upserts Options into the optionsMap atomFamily. Also initializes
+ * other state based on the results
+ */
 export const useUpsertOptions = () =>
   useRecoilTransaction_UNSTABLE<[ProgramAccount<OptionMarket>[]]>(
-    ({ set }) =>
+    ({ get, set }) =>
       (_optionAccounts) => {
+        console.log('TJ TRANSACTION');
         // loop over fetched options and insert into state in a single recoil transaction
         const optionKeys = _optionAccounts.map((optionAccount) =>
           optionAccount.publicKey.toString(),
         );
         set(optionsIds, optionKeys);
+        const underlyingCountMap: Record<string, number> = {};
+        const quoteCountMap: Record<string, number> = {};
         _optionAccounts.forEach((optionAcount) => {
           const optionPublicKeyStr = optionAcount.publicKey.toString();
           set(
@@ -172,6 +179,45 @@ export const useUpsertOptions = () =>
             (curr) => [...curr, optionPublicKeyStr],
           );
           set(optionsMap(optionPublicKeyStr), optionAcount.account);
+          // count underlying and quote mints to determine most used
+          const optionUnderlyingMintString =
+            optionAcount.account.underlyingAssetMint.toString();
+          const optionQuoteMintString =
+            optionAcount.account.quoteAssetMint.toString();
+          underlyingCountMap[optionUnderlyingMintString] =
+            (underlyingCountMap[optionUnderlyingMintString] ?? 0) + 1;
+          quoteCountMap[optionQuoteMintString] =
+            (quoteCountMap[optionQuoteMintString] ?? 0) + 1;
         });
+
+        const _underlyingMint = get(underlyingMint);
+        const _quoteMint = get(quoteMint);
+        console.log('TJ YOYOY ', _underlyingMint, _quoteMint);
+        if (_underlyingMint.equals(PublicKey.default)) {
+          // only overwrite underlyingMint when it is set to the default PublicKey
+          const mostUsedUnderlying = Object.entries(underlyingCountMap).reduce(
+            (acc, entry) => {
+              if (entry[1] > underlyingCountMap[acc]) {
+                return entry[0];
+              }
+              return acc;
+            },
+            Object.keys(underlyingCountMap)[0],
+          );
+          set(underlyingMint, new PublicKey(mostUsedUnderlying));
+        }
+        if (_quoteMint.equals(PublicKey.default)) {
+          // only overwrite quoteMint when it is set to the default PublicKey
+          const mostUsedQuote = Object.entries(quoteCountMap).reduce(
+            (acc, entry) => {
+              if (entry[1] > quoteCountMap[acc]) {
+                return entry[0];
+              }
+              return acc;
+            },
+            Object.keys(quoteCountMap)[0],
+          );
+          set(quoteMint, new PublicKey(mostUsedQuote));
+        }
       },
   );

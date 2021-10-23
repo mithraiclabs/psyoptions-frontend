@@ -4,6 +4,9 @@ import {
   useMediaQuery,
 } from '@material-ui/core';
 import React, { useEffect } from 'react';
+import { HashRouter } from 'react-router-dom';
+import { RecoilRoot } from 'recoil';
+
 import Store from './context/store';
 import useOptionsMarkets from './hooks/useOptionsMarkets';
 import theme from './utils/theme';
@@ -12,9 +15,8 @@ import {
   MOBILE_DEVICE_MEDIA_QUERY,
   TABLET_DEVICE_MEDIA_QUERY,
 } from './context/ScreenSizeContext';
-import { Routes } from "./routes";
-import { HashRouter } from "react-router-dom";
-import { RecoilRoot } from 'recoil';
+import { Routes } from './routes';
+import { RecoilDevTool } from './recoil';
 import './App.less';
 
 const AppWithStore: React.FC = ({ children }) => {
@@ -35,15 +37,15 @@ const AppWithStore: React.FC = ({ children }) => {
 };
 
 const App = (): JSX.Element | null => {
-
   return (
     <RecoilRoot>
+      <RecoilDevTool />
       <StylesProvider injectFirst>
         <ThemeProvider theme={theme}>
           <HashRouter basename={'/'}>
             <Store>
               <AppWithStore>
-                  <Routes />
+                <Routes />
               </AppWithStore>
             </Store>
           </HashRouter>

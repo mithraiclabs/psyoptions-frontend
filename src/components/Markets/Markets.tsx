@@ -99,7 +99,7 @@ const Markets: React.VFC = () => {
   const [_underlyingMint, setUnderlyingMint] = useRecoilState(underlyingMint);
   const underlyingMints = useRecoilValue(selectUnderlyingMintsOfFutureOptions);
   const expirationDateString = useRecoilValue(selectExpirationAsDate);
-  const [expiration, setExpiration] = useRecoilState(expirationUnixTimestamp);
+  const [, setExpiration] = useRecoilState(expirationUnixTimestamp);
   const expirations = useRecoilValue(
     selectFutureExpirationsByUnderlyingAndQuote,
   );
@@ -247,6 +247,8 @@ const Markets: React.VFC = () => {
       )}${dblsp}|${dblsp}${callPutData.type.slice(0, 1).toUpperCase()}`
     : '--';
 
+  console.log('TJ expirations ', expirations);
+
   const currentPageStart = page * rowsPerPage + 1;
   const currentPageEnd = Math.min(
     rowsPerPage * (page + 1),
@@ -308,7 +310,7 @@ const Markets: React.VFC = () => {
                     },
                   }}
                   label="Expiration Date"
-                  value={expiration.toString()}
+                  value={expirationDateString}
                   onChange={(e) => setExpiration(e.target.value as BN)}
                   options={expirations.map((e) => {
                     const _date = moment(e.toNumber() * 1000);

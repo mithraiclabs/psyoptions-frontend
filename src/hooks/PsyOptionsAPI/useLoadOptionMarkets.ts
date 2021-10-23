@@ -13,9 +13,11 @@ export const useLoadOptionMarkets = (): void => {
 
   useEffect(() => {
     (async () => {
+      console.log('TJ program ', program);
       const options = (await program?.account.optionMarket.all()) as
         | ProgramAccount<OptionMarket>[]
         | null;
+      console.log('TJ options ', options);
       if (options) {
         // update the option state
         upsertOptions(options);

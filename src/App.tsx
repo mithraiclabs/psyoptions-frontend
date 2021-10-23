@@ -17,6 +17,7 @@ import {
 } from './context/ScreenSizeContext';
 import { Routes } from './routes';
 import { RecoilDevTool } from './recoil';
+import { useLoadOptionMarkets } from './hooks/PsyOptionsAPI/useLoadOptionMarkets';
 import './App.less';
 
 const AppWithStore: React.FC = ({ children }) => {
@@ -24,6 +25,8 @@ const AppWithStore: React.FC = ({ children }) => {
   const { updateFormFactor } = useScreenSize();
   const mobileDevice = !useMediaQuery(MOBILE_DEVICE_MEDIA_QUERY);
   const tabletDevice = !useMediaQuery(TABLET_DEVICE_MEDIA_QUERY);
+
+  useLoadOptionMarkets();
 
   useEffect(() => {
     updateFormFactor(mobileDevice, tabletDevice);

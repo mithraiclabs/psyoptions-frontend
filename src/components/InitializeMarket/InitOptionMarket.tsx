@@ -23,7 +23,7 @@ import useConnection from '../../hooks/useConnection';
 import { useInitializeSerumMarket } from '../../hooks/Serum/useInitializeSerumMarket';
 import { useInitializedMarkets } from '../../context/LocalStorage';
 import { useCheckIfMarketExists } from '../../hooks/PsyOptionsAPI/useCheckIfMarketExists';
-import { ConnectWalletButton } from "@gokiprotocol/walletkit";
+import GokiButton from '../GokiButton';
 import { useTokenMintInfo } from '../../hooks/useTokenMintInfo';
 import { SelectAssetOrEnterMint } from '../SelectAssetOrEnterMint';
 import useAssetList from '../../hooks/useAssetList';
@@ -347,7 +347,7 @@ export const InitOptionMarket: React.VFC = () => {
           ) : assetsSelected && parametersValid ? (
             <>
               {!wallet?.connected ? (
-                <ConnectWalletButton />
+                <GokiButton />
               ) : (
                 <Button
                   fullWidth

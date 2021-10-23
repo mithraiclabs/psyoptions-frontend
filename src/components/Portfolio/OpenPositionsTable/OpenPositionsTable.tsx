@@ -11,7 +11,7 @@ import OpenPositionsTableHeader from './OpenPositionsTableHeader';
 import PositionRow from './PositionRow';
 import { Position } from '../Portfolio';
 import { TCell } from '../../StyledComponents/Table/TableStyles';
-import { ConnectWalletButton } from "@gokiprotocol/walletkit";
+import GokiButton from '../../GokiButton';
 
 // TODO handle the case where the writer has multiple underlying asset accounts
 const OpenPositionsTable: React.VFC<{
@@ -32,7 +32,7 @@ const OpenPositionsTable: React.VFC<{
               <TableRow>
                 <TCell align="center" colSpan={10}>
                   <Box p={1}>
-                    <ConnectWalletButton />
+                    <GokiButton />
                   </Box>
                 </TCell>
               </TableRow>

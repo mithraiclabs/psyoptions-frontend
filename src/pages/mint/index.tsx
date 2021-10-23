@@ -13,7 +13,7 @@ import { useAmericanPsyOptionsProgram } from '../../hooks/useAmericanPsyOptionsP
 import Page from '../../components/pages/Page';
 import { PlusMinusIntegerInput } from '../../components/PlusMinusIntegerInput';
 import { useConnectedWallet } from "@saberhq/use-solana";
-import { ConnectWalletButton } from "@gokiprotocol/walletkit";
+import GokiButton from '../../components/GokiButton';
 import theme from '../../utils/theme';
 import { useMintOptions } from '../../hooks/PsyOptionsAPI/useMintOptions';
 import { MintInfo } from '../../components/Mint/MintInfo';
@@ -130,7 +130,7 @@ const Mint: React.VFC = () => {
                   <CircularProgress />
                 </Box>
               ) : !wallet?.connected ? (
-                <ConnectWalletButton />
+                <GokiButton />
               ) : validInput ? (
                 <Button
                   fullWidth

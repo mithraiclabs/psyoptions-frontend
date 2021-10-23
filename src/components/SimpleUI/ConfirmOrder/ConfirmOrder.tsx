@@ -5,7 +5,7 @@ import Box from '@material-ui/core/Box';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import { Button } from '@material-ui/core';
 import moment from 'moment';
-import { ConnectWalletButton } from "@gokiprotocol/walletkit";
+import GokiButton from '../../GokiButton';
 import { useFormState } from '../../../context/SimpleUIContext';
 import { SimpleUIPage } from '../SimpeUIPage';
 import OrderDetails from './OrderDetails';
@@ -239,7 +239,7 @@ const ConfirmOrder = () => {
           alignItems="center"
         >
           {!wallet?.connected ? (
-            <ConnectWalletButton />
+            <GokiButton />
           ) : placeOrderLoading ? (
             <CircularProgress />
           ) : (

@@ -13,7 +13,7 @@ import useOptionsMarkets from '../../../hooks/useOptionsMarkets';
 import WrittenOptionRow from './WrittenOptionRow';
 import WrittenOptionsTableHeader from './WrittenOptionsTableHeader';
 import { TCell } from '../../StyledComponents/Table/TableStyles';
-import { ConnectWalletButton } from "@gokiprotocol/walletkit";
+import GokiButton from '../../GokiButton';
 
 // TODO handle the case where the writer has multiple underlying asset accounts
 const WrittenOptionsTable: React.VFC<{
@@ -47,7 +47,7 @@ const WrittenOptionsTable: React.VFC<{
               <TableRow>
                 <TCell align="center" colSpan={10}>
                   <Box p={1}>
-                    <ConnectWalletButton />
+                    <GokiButton />
                   </Box>
                 </TCell>
               </TableRow>

@@ -32,7 +32,7 @@ const useSerum = (): SerumHook => {
   const { pushNotification } = useNotifications();
   const { connection, dexProgramId } = useConnection();
   const { serumMarkets, setSerumMarkets } = useContext(SerumContext);
-  const [_, setOrderbooks] = useSerumOrderbooks();
+  const [, setOrderbooks] = useSerumOrderbooks();
 
   const fetchMultipleSerumMarkets = useCallback(
     async (serumMarketKeys: SerumMarketAndProgramId[]) => {

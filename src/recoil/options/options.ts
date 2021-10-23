@@ -42,6 +42,14 @@ export const expirationUnixTimestamp = atom<BN>({
   default: defaultExpiration,
 });
 
+/**
+ * aka contract size
+ */
+export const underlyingAmountPerContract = atom<BN>({
+  key: 'underlyingAmountPerContract',
+  default: new BN(0.01),
+});
+
 export const selectExpirationAsDate = selector({
   key: 'selectExpirationAsDate',
   get: ({ get }) => {

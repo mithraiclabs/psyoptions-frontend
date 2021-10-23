@@ -42,28 +42,16 @@ import {
   selectExpirationAsDate,
   selectFutureExpirationsByUnderlyingAndQuote,
   selectQuoteMintsOfFutureOptions,
+  selectUnderlyingAmountPerOptionByExpirationUnderlyingQuote,
   selectUnderlyingMintsOfFutureOptions,
+  underlyingAmountPerContract,
   underlyingMint,
 } from '../../recoil';
 import { SelectAsset } from '../SelectAsset';
 import { BN } from '@project-serum/anchor';
+import { useTokenMintInfo } from '../../hooks/useTokenMintInfo';
 
 const dblsp = `${'\u00A0'}${'\u00A0'}`;
-
-const defaultSizeOptions = [
-  {
-    value: 1,
-    text: '1',
-  },
-  {
-    value: 0.1,
-    text: '0.1',
-  },
-  {
-    value: 0.01,
-    text: '0.01',
-  },
-];
 
 const rowTemplate = {
   call: {
@@ -92,9 +80,8 @@ const rowTemplate = {
 
 const Markets: React.VFC = () => {
   const { uAsset, qAsset, assetListLoading } = useAssetList();
-  const [contractSize, setContractSize] = useState(0.01);
   const { chains, buildOptionsChain } = useOptionsChain();
-  const { getSizes, marketsLoading } = useOptionsMarkets();
+  const { marketsLoading } = useOptionsMarkets();
   const [_underlyingMint, setUnderlyingMint] = useRecoilState(underlyingMint);
   const [_quoteMint, setQuoteMint] = useRecoilState(quoteMint);
   const underlyingMints = useRecoilValue(selectUnderlyingMintsOfFutureOptions);
@@ -106,13 +93,18 @@ const Markets: React.VFC = () => {
   const expirations = useRecoilValue(
     selectFutureExpirationsByUnderlyingAndQuote,
   );
+  const [contractSize, setContractSize] = useRecoilState(
+    underlyingAmountPerContract,
+  );
+  const contractSizes = useRecoilValue(
+    selectUnderlyingAmountPerOptionByExpirationUnderlyingQuote,
+  );
   const { serumMarkets, fetchMultipleSerumMarkets } = useSerum();
   const [round, setRound] = useState(true);
   const [buySellDialogOpen, setBuySellDialogOpen] = useState(false);
   const [callPutData, setCallPutData] = useState({ type: 'call' } as CallOrPut);
   const [page, setPage] = useState(0);
   const [initialMarkPrice, setInitialMarkPrice] = useState<number | null>(null);
-  const [sizeOptions, setSizeOptions] = useState(defaultSizeOptions);
   const [limitPrice, setLimitPrice] = useState('0');
   const rowsPerPage = 7;
   const [showIV, setShowIV] = useState(true);
@@ -125,27 +117,7 @@ const Markets: React.VFC = () => {
     () => moment(expirationDateString),
     [expirationDateString],
   );
-
-  useEffect(() => {
-    const availableSizes = getSizes({
-      uAssetSymbol: uAsset?.tokenSymbol,
-      qAssetSymbol: qAsset?.tokenSymbol,
-    });
-    setSizeOptions(
-      availableSizes.map((s) => ({ text: s.toString(), value: parseFloat(s) })),
-    );
-  }, [getSizes, uAsset?.tokenSymbol, qAsset?.tokenSymbol]);
-
-  // Unfortunately we need to set contract size in a useEffect because uAsset is asynchronously loaded
-  useEffect(() => {
-    if (sizeOptions.find((s) => s.value === uAsset?.defaultContractSize)) {
-      setContractSize(uAsset?.defaultContractSize ?? 1);
-    } else {
-      if (sizeOptions[0]) {
-        setContractSize(sizeOptions[0].value);
-      }
-    }
-  }, [uAsset?.defaultContractSize, sizeOptions]);
+  const underlyingMintInfo = useTokenMintInfo(_underlyingMint);
 
   const markPrice = useSerumPriceByAssets(
     uAsset?.mintAddress ?? null,
@@ -206,7 +178,7 @@ const Markets: React.VFC = () => {
   useBatchLoadMints(optionMints);
 
   useEffect(() => {
-    buildOptionsChain(momentDate?.unix() ?? 0, contractSize);
+    buildOptionsChain(momentDate?.unix() ?? 0, contractSize.toNumber());
   }, [buildOptionsChain, contractSize, momentDate]);
 
   useEffect(() => {
@@ -240,11 +212,6 @@ const Markets: React.VFC = () => {
     setCallPutData(callOrPut);
     setBuySellDialogOpen(true);
   }, []);
-
-  const updateContractSize = useCallback(
-    (e) => setContractSize(e.target.value),
-    [],
-  );
 
   const buySellDialogHeading = callPutData
     ? `${callPutData.uAssetSymbol}-${
@@ -333,9 +300,10 @@ const Markets: React.VFC = () => {
                 width={['100%', '100%', '200px']}
               >
                 <ContractSizeSelector
-                  onChange={updateContractSize}
+                  decimals={underlyingMintInfo?.decimals ?? 0}
+                  onChange={setContractSize}
                   value={contractSize}
-                  options={sizeOptions}
+                  options={contractSizes}
                 />
               </Box>
               <Box px={[0, 0, 2]} py={[2, 2, 0]}>
@@ -436,7 +404,7 @@ const Markets: React.VFC = () => {
                         showVolume={showVolume}
                         showLastPrice={showLastPrice}
                         showOI={showOI}
-                        contractSize={contractSize}
+                        contractSize={contractSize.toNumber()}
                       />
                     );
                   })}

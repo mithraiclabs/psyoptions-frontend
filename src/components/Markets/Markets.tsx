@@ -308,7 +308,7 @@ const Markets: React.VFC = () => {
                     },
                   }}
                   label="Expiration Date"
-                  value={expiration}
+                  value={expiration.toString()}
                   onChange={(e) => setExpiration(e.target.value as BN)}
                   options={expirations.map((e) => {
                     const _date = moment(e.toNumber() * 1000);

@@ -4,6 +4,8 @@ import {
   useMediaQuery,
 } from '@material-ui/core';
 import React, { useEffect } from 'react';
+import { HashRouter } from 'react-router-dom';
+
 import ProhibitedJurisdiction from './components/ProhibitedJurisdiction';
 import Store from './context/store';
 import { DISALLOWED_COUNTRIES, useCountry } from './hooks/useCountry';
@@ -14,9 +16,10 @@ import {
   MOBILE_DEVICE_MEDIA_QUERY,
   TABLET_DEVICE_MEDIA_QUERY,
 } from './context/ScreenSizeContext';
-import { Routes } from "./routes";
-import { HashRouter } from "react-router-dom";
-import "./App.less";
+import { Routes } from './routes';
+import { RecoilRoot } from 'recoil';
+import { RecoilDevTool } from './recoil';
+import './App.less';
 
 const AppWithStore: React.FC = ({ children }) => {
   const { packagedMarkets } = useOptionsMarkets();
@@ -39,15 +42,24 @@ const App = (): JSX.Element | null => {
   const countryCode = useCountry();
 
   return (
-    <StylesProvider injectFirst>
-      <ThemeProvider theme={theme}>
-        <HashRouter basename={"/"}>
-          <Store>
-            <AppWithStore>{DISALLOWED_COUNTRIES.includes(countryCode ?? '') ? <ProhibitedJurisdiction /> : <Routes />}</AppWithStore>
-          </Store>
-        </HashRouter>
-      </ThemeProvider>
-    </StylesProvider>
+    <RecoilRoot>
+      <RecoilDevTool />
+      <StylesProvider injectFirst>
+        <ThemeProvider theme={theme}>
+          <HashRouter basename={'/'}>
+            <Store>
+              <AppWithStore>
+                {DISALLOWED_COUNTRIES.includes(countryCode ?? '') ? (
+                  <ProhibitedJurisdiction />
+                ) : (
+                  <Routes />
+                )}
+              </AppWithStore>
+            </Store>
+          </HashRouter>
+        </ThemeProvider>
+      </StylesProvider>
+    </RecoilRoot>
   );
 };
 export default App;

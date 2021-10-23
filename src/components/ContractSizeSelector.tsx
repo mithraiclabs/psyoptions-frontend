@@ -24,7 +24,7 @@ export const ContractSizeSelector: React.VFC<{
   );
   const _onChange = useCallback(
     (e) => {
-      onChange(e.value);
+      onChange(e.target.value);
     },
     [onChange],
   );

@@ -178,7 +178,7 @@ const Markets: React.VFC = () => {
   useBatchLoadMints(optionMints);
 
   useEffect(() => {
-    buildOptionsChain(momentDate?.unix() ?? 0, contractSize.toNumber());
+    buildOptionsChain(momentDate?.unix() ?? 0, contractSize?.toNumber());
   }, [buildOptionsChain, contractSize, momentDate]);
 
   useEffect(() => {
@@ -404,7 +404,7 @@ const Markets: React.VFC = () => {
                         showVolume={showVolume}
                         showLastPrice={showLastPrice}
                         showOI={showOI}
-                        contractSize={contractSize.toNumber()}
+                        contractSize={contractSize?.toNumber()}
                       />
                     );
                   })}

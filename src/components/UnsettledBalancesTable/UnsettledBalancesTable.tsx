@@ -6,7 +6,7 @@ import TableRow from '@material-ui/core/TableRow';
 import TableBody from '@material-ui/core/TableBody';
 import TableContainer from '@material-ui/core/TableContainer';
 import { useConnectedWallet } from "@saberhq/use-solana";
-import { ConnectWalletButton } from "@gokiprotocol/walletkit";
+import GokiButton from '../GokiButton';
 import UnsettledBalancesRow from './UnsettledBalancesRow';
 import { TCell, THeadCell } from '../StyledComponents/Table/TableStyles';
 import { OptionType } from '../../types';
@@ -21,7 +21,7 @@ const UnsettledBalancesTable = () => {
   const { formFactor } = useScreenSize();
 
   return (
-    <Box>
+    <Box style={{ zIndex: 1 }}>
       <TableContainer>
         <Table stickyHeader aria-label="sticky table">
           <TableHead>
@@ -58,7 +58,7 @@ const UnsettledBalancesTable = () => {
               <TableRow>
                 <TCell align="center" colSpan={10}>
                   <Box p={1}>
-                    <ConnectWalletButton />
+                    <GokiButton />
                   </Box>
                 </TCell>
               </TableRow>

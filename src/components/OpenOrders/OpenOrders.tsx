@@ -9,7 +9,7 @@ import { useConnectedWallet } from "@saberhq/use-solana";
 import {
   useSerumOpenOrders,
 } from '../../context/SerumOpenOrdersContext';
-import { ConnectWalletButton } from "@gokiprotocol/walletkit";
+import GokiButton from '../GokiButton';
 import OpenOrdersRow from './OpenOrdersRow';
 import { TCell, THeadCell } from '../StyledComponents/Table/TableStyles';
 import { OptionType } from '../../types';
@@ -22,7 +22,7 @@ const OpenOrders = () => {
   const { formFactor } = useScreenSize();
 
   return (
-    <Box>
+    <Box style={{ zIndex: 1 }}>
       <TableContainer>
         <Table stickyHeader aria-label="sticky table">
           <TableHead>
@@ -60,7 +60,7 @@ const OpenOrders = () => {
               <TableRow>
                 <TCell align="center" colSpan={10}>
                   <Box p={1}>
-                    <ConnectWalletButton />
+                    <GokiButton />
                   </Box>
                 </TCell>
               </TableRow>

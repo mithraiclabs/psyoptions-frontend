@@ -29,7 +29,7 @@ import { UnsettledFunds } from './UnsettledFunds';
 import BuyButton from './BuyButton';
 import SellButton from './SellButton';
 import { StyledFilledInput } from './styles';
-import { ConnectWalletButton } from "@gokiprotocol/walletkit";
+import GokiButton from '../GokiButton';
 
 import DialogFullscreenMobile from '../DialogFullscreenMobile';
 import { calculatePriceWithSlippage } from '../../utils/calculatePriceWithSlippage';
@@ -550,7 +550,7 @@ const BuySellDialog: React.VFC<{
                     width="100%"
                   >
                     {!wallet?.connected ? (
-                      <ConnectWalletButton />
+                      <GokiButton />
                     ) : placeOrderLoading ? (
                       <CircularProgress />
                     ) : (
@@ -640,7 +640,7 @@ const BuySellDialog: React.VFC<{
                   <Box textAlign="center" px={2} pb={2}>
                     Connect to Initialize Serum Market
                   </Box>
-                  <ConnectWalletButton />
+                  <GokiButton />
                 </>
               ) : (
                 <>

@@ -22,7 +22,7 @@ import { buildAirdropTokensIx } from '../../utils/airdropInstructions';
 import Page from '../../components/pages/Page';
 import { TokenAccount } from '../../types';
 import { useHistory } from 'react-router-dom';
-import { ConnectWalletButton } from "@gokiprotocol/walletkit";
+import GokiButton from '../../components/GokiButton';
 import { useConnectedWallet } from "@saberhq/use-solana";
 import useWalletInfo from '../../hooks/useWalletInfo';
 
@@ -343,7 +343,7 @@ const Faucets: React.VFC = () => {
               justifyContent="center"
               alignItems="center"
             >
-              <ConnectWalletButton />
+              <GokiButton />
             </Box>
           )}
         </Paper>

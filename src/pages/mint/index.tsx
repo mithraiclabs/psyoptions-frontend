@@ -124,7 +124,7 @@ const Mint: React.VFC = () => {
             <Box m={2}>
               <MintInfo option={option} size={quantity} />
             </Box>
-            <Box mt={3} mx={2}>
+            <Box mt={3} mx={2} zIndex={1} alignSelf="center">
               {loading ? (
                 <Box display="flex" justifyContent="center" p={1}>
                   <CircularProgress />

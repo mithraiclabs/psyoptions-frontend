@@ -21,7 +21,7 @@ const UnsettledBalancesTable = () => {
   const { formFactor } = useScreenSize();
 
   return (
-    <Box>
+    <Box style={{ zIndex: 1 }}>
       <TableContainer>
         <Table stickyHeader aria-label="sticky table">
           <TableHead>

@@ -38,7 +38,7 @@ const WrittenOptionsTable: React.VFC<{
   );
 
   return (
-    <Box>
+    <Box style={{ zIndex: 1 }}>
       <TableContainer>
         <Table stickyHeader aria-label="sticky table">
           <WrittenOptionsTableHeader />

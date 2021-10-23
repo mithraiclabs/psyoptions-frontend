@@ -23,7 +23,7 @@ const OpenPositionsTable: React.VFC<{
   const [rowsPerPage] = useState(10);
 
   return (
-    <Box>
+    <Box style={{ zIndex: 1 }}>
       <TableContainer>
         <Table stickyHeader aria-label="sticky table">
           <OpenPositionsTableHeader />

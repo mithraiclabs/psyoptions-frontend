@@ -6,6 +6,7 @@ import { OptionsChainContext } from '../context/OptionsChainContext';
 import useAssetList from './useAssetList';
 import useNotifications from './useNotifications';
 import { ChainRow, OptionMarket, OptionRow } from '../types';
+import { useNormalizedContractSize } from './useNormalizedContractSize';
 
 const callOrPutTemplate = {
   key: '',
@@ -17,10 +18,13 @@ const callOrPutTemplate = {
   size: '',
   initialized: false,
 };
+
+// TODO automatically build chain from the recoil state
 const useOptionsChain = () => {
   const { pushNotification } = useNotifications();
   const { marketsByUiKey, marketsLoading } = useOptionsMarkets();
   const { uAsset, qAsset } = useAssetList();
+  const contractSize = useNormalizedContractSize();
   const { chains, setChains } = useContext(OptionsChainContext);
 
   /**
@@ -30,7 +34,7 @@ const useOptionsChain = () => {
    * @param {number} dateTimestamp - Expiration as unix timestamp in seconds
    */
   const buildOptionsChain = useCallback(
-    (dateTimestamp: number, contractSize?: number) => {
+    (dateTimestamp: number) => {
       try {
         if (marketsLoading) return;
 
@@ -143,10 +147,11 @@ const useOptionsChain = () => {
       }
     },
     [
-      marketsByUiKey,
+      contractSize,
       marketsLoading,
       uAsset?.tokenSymbol,
       qAsset?.tokenSymbol,
+      marketsByUiKey,
       setChains,
       pushNotification,
     ],

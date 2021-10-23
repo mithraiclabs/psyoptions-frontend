@@ -12,6 +12,7 @@ export const RecoilDevTool: React.VFC = () => {
 
   return (
     <DockMonitor
+      defaultIsVisible={false}
       toggleVisibilityKey="ctrl-h"
       changePositionKey="ctrl-q"
       changeMonitorKey="ctrl-m"

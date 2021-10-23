@@ -82,7 +82,7 @@ export function getSolanaDerivationPath(
     offset = derivationPath.writeUInt32BE(harden(account), offset);
     if (length === 4) {
       // @FIXME: https://github.com/project-serum/spl-token-wallet/issues/59
-      offset = derivationPath.writeUInt32BE(harden(change), offset);
+      derivationPath.writeUInt32BE(harden(change), offset);
     }
   }
 

@@ -11,6 +11,8 @@ import {
 } from 'recoil';
 import { getOptionsByMarketsPageParamsKey } from './utils';
 
+const defaultExpiration = new BN(0);
+
 /**
  * Store each option by PublicKey string.
  */
@@ -25,21 +27,19 @@ export const optionsIds = atom<string[]>({
   default: [],
 });
 
-// TODO default based on future options
-export const underlyingMint = atom<PublicKey>({
+export const underlyingMint = atom<PublicKey | null>({
   key: 'underlyingMint',
-  default: PublicKey.default,
+  default: null,
 });
 
-// TODO default to USDC
-export const quoteMint = atom<PublicKey>({
+export const quoteMint = atom<PublicKey | null>({
   key: 'quoteMint',
-  default: PublicKey.default,
+  default: null,
 });
 
 export const expirationUnixTimestamp = atom<BN>({
   key: 'expirationUnixTimestamp',
-  default: new BN(0),
+  default: defaultExpiration,
 });
 
 export const selectExpirationAsDate = selector({
@@ -162,7 +162,6 @@ export const useUpsertOptions = () =>
   useRecoilTransaction_UNSTABLE<[ProgramAccount<OptionMarket>[]]>(
     ({ get, set }) =>
       (_optionAccounts) => {
-        console.log('TJ TRANSACTION');
         // loop over fetched options and insert into state in a single recoil transaction
         const optionKeys = _optionAccounts.map((optionAccount) =>
           optionAccount.publicKey.toString(),
@@ -190,10 +189,9 @@ export const useUpsertOptions = () =>
             (quoteCountMap[optionQuoteMintString] ?? 0) + 1;
         });
 
-        const _underlyingMint = get(underlyingMint);
-        const _quoteMint = get(quoteMint);
-        console.log('TJ YOYOY ', _underlyingMint, _quoteMint);
-        if (_underlyingMint.equals(PublicKey.default)) {
+        let _underlyingMint = get(underlyingMint);
+        let _quoteMint = get(quoteMint);
+        if (!_underlyingMint || _underlyingMint.equals(PublicKey.default)) {
           // only overwrite underlyingMint when it is set to the default PublicKey
           const mostUsedUnderlying = Object.entries(underlyingCountMap).reduce(
             (acc, entry) => {
@@ -204,9 +202,10 @@ export const useUpsertOptions = () =>
             },
             Object.keys(underlyingCountMap)[0],
           );
-          set(underlyingMint, new PublicKey(mostUsedUnderlying));
+          _underlyingMint = new PublicKey(mostUsedUnderlying);
+          set(underlyingMint, _underlyingMint);
         }
-        if (_quoteMint.equals(PublicKey.default)) {
+        if (!_quoteMint || _quoteMint.equals(PublicKey.default)) {
           // only overwrite quoteMint when it is set to the default PublicKey
           const mostUsedQuote = Object.entries(quoteCountMap).reduce(
             (acc, entry) => {
@@ -217,7 +216,9 @@ export const useUpsertOptions = () =>
             },
             Object.keys(quoteCountMap)[0],
           );
-          set(quoteMint, new PublicKey(mostUsedQuote));
+          _quoteMint = new PublicKey(mostUsedQuote);
+          set(quoteMint, _quoteMint);
         }
+        // TODO find expiration based on the underlying and quote
       },
   );

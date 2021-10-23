@@ -28,7 +28,6 @@ export const SelectAsset: React.VFC<{
   const [filter, setFilter] = useState('');
   const onFilterChange: React.ChangeEventHandler<HTMLInputElement> = (e) =>
     setFilter(e.target.value);
-  console.log('TJ VAL ', value);
   // TODO this next line is throwing some error about negative
   const chipLabel = value ? value.toString() : 'Loading...';
   const handleOpen = () => setOpen(true);

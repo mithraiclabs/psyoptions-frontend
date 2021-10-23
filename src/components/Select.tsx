@@ -14,7 +14,7 @@ type Option = {
 const Sel: React.FC<{
   disabled?: boolean;
   label: string;
-  value: string | number;
+  value: BN | string | number;
   onChange: (
     event: ChangeEvent<{ name?: string; value: Option['value'] }>,
   ) => void;
@@ -32,7 +32,7 @@ const Sel: React.FC<{
       >
         {options
           ? options.map((option) => (
-              <MenuItem key={option.text} value={option.value}>
+              <MenuItem key={option.text} value={option.value as any}>
                 <NoSsr>{option.text}</NoSsr>
               </MenuItem>
             ))

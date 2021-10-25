@@ -17,6 +17,7 @@ import { SerumOrderbooksProvider } from './SerumOrderbookContext';
 import { SPLTokenMintsProvider } from './SPLTokenMintsContext';
 import { SerumOpenOrdersProvider } from './SerumOpenOrdersContext';
 import { ExpirationDateProvider } from './ExpirationDateContext';
+import { GraphQLProvider } from './GraphQLProvider';
 import { SimpleUIFormProvider } from './SimpleUIContext';
 import { ScreenSizeProvider } from './ScreenSizeContext';
 
@@ -24,6 +25,7 @@ const _providers: React.ReactElement[] = [
   // eslint-disable-next-line react/no-children-prop
   <ThemeProvider key="ThemeProvider" theme={theme} children={<div />} />,
   <ConnectionProvider key="ConnectionProvider" />,
+  <GraphQLProvider key="GraphQLProvider" />,
   <NotificationsProvider key="NotificationsProvider" />,
   <SolanaMetaProvider key="SolanaMetaProvider" />,
   <AssetListProvider key="AssetListProvider" />,

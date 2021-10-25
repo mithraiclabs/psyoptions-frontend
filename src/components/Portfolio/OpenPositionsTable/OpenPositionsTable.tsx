@@ -5,6 +5,7 @@ import {
   TableRow,
   TableBody,
   Table,
+  makeStyles,
 } from "@material-ui/core";
 import { useConnectedWallet } from "@saberhq/use-solana";
 import OpenPositionsTableHeader from './OpenPositionsTableHeader';
@@ -12,12 +13,20 @@ import PositionRow from './PositionRow';
 import { Position } from '../Portfolio';
 import { TCell } from '../../StyledComponents/Table/TableStyles';
 import GokiButton from '../../GokiButton';
+import CSS from 'csstype';
+
+const useStyles = makeStyles((theme) => ({
+  walletButtonCell: {
+    textAlign: "-webkit-center" as CSS.Property.TextAlign,
+  }
+}));
 
 // TODO handle the case where the writer has multiple underlying asset accounts
 const OpenPositionsTable: React.VFC<{
   positions: Position[];
   className: string;
 }> = ({ className, positions }) => {
+  const classes = useStyles();
   const wallet = useConnectedWallet();
   const [page] = useState(0);
   const [rowsPerPage] = useState(10);
@@ -30,7 +39,7 @@ const OpenPositionsTable: React.VFC<{
           <TableBody>
             {!wallet?.connected ? (
               <TableRow>
-                <TCell align="center" colSpan={10}>
+                <TCell align="center" colSpan={10} className={classes.walletButtonCell}>
                   <Box p={1}>
                     <GokiButton />
                   </Box>

@@ -1,35 +1,50 @@
 import React from 'react';
-import Box from '@material-ui/core/Box';
-import Table from '@material-ui/core/Table';
-import TableHead from '@material-ui/core/TableHead';
-import TableRow from '@material-ui/core/TableRow';
-import TableBody from '@material-ui/core/TableBody';
-import TableContainer from '@material-ui/core/TableContainer';
+import {
+  Box,
+  Table,
+  TableHead,
+  TableRow,
+  TableBody,
+  TableContainer,
+  makeStyles,
+} from '@material-ui/core';
 import { useConnectedWallet } from "@saberhq/use-solana";
 import {
   useSerumOpenOrders,
 } from '../../context/SerumOpenOrdersContext';
-import { ConnectWalletButton } from "@gokiprotocol/walletkit";
+import GokiButton from '../GokiButton';
 import OpenOrdersRow from './OpenOrdersRow';
 import { TCell, THeadCell } from '../StyledComponents/Table/TableStyles';
 import { OptionType } from '../../types';
 import useScreenSize from '../../hooks/useScreenSize';
+import CSS from 'csstype';
+
+const useStyles = makeStyles((theme) => ({
+  headCell: {
+    borderTop: 'none',
+    padding: '16px 20px',
+  },
+  walletButtonCell: {
+    textAlign: "-webkit-center" as CSS.Property.TextAlign,
+  }
+}));
 
 // Render all open orders for all optionMarkets specified in props
 const OpenOrders = () => {
+  const classes = useStyles();
   const wallet = useConnectedWallet();
   const { optionMarketsForOpenOrders } = useSerumOpenOrders();
   const { formFactor } = useScreenSize();
 
   return (
-    <Box>
+    <Box style={{ zIndex: 1 }}>
       <TableContainer>
         <Table stickyHeader aria-label="sticky table">
           <TableHead>
             <TableRow>
               <THeadCell
                 colSpan={10}
-                style={{ borderTop: 'none', padding: '16px 20px' }}
+                className={classes.headCell}
               >
                 <h3 style={{ margin: 0 }}>Open Orders</h3>
               </THeadCell>
@@ -58,9 +73,9 @@ const OpenOrders = () => {
           <TableBody>
             {!wallet?.connected ? (
               <TableRow>
-                <TCell align="center" colSpan={10}>
+                <TCell align="center" colSpan={10} className={classes.walletButtonCell}>
                   <Box p={1}>
-                    <ConnectWalletButton />
+                    <GokiButton />
                   </Box>
                 </TCell>
               </TableRow>

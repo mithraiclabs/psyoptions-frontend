@@ -4,7 +4,7 @@ import {
   Box,
   Button
 } from '@material-ui/core';
-import { ConnectWalletButton } from "@gokiprotocol/walletkit";
+import GokiButton from './GokiButton';
 import { useConnectedWallet, useSolana } from "@saberhq/use-solana";
 import theme from '../utils/theme';
 
@@ -25,7 +25,7 @@ const WalletStatus: React.FC = () => {
         />
       </Box>
       {`Disconnect ${pubKeyB58}...`}
-    </Button> : <ConnectWalletButton />
+    </Button> : <GokiButton />
   );
 };
 

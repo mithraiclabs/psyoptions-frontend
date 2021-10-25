@@ -13,7 +13,7 @@ import { useAmericanPsyOptionsProgram } from '../../hooks/useAmericanPsyOptionsP
 import Page from '../../components/pages/Page';
 import { PlusMinusIntegerInput } from '../../components/PlusMinusIntegerInput';
 import { useConnectedWallet } from "@saberhq/use-solana";
-import { ConnectWalletButton } from "@gokiprotocol/walletkit";
+import GokiButton from '../../components/GokiButton';
 import theme from '../../utils/theme';
 import { useMintOptions } from '../../hooks/PsyOptionsAPI/useMintOptions';
 import { MintInfo } from '../../components/Mint/MintInfo';
@@ -124,13 +124,13 @@ const Mint: React.VFC = () => {
             <Box m={2}>
               <MintInfo option={option} size={quantity} />
             </Box>
-            <Box mt={3} mx={2}>
+            <Box mt={3} mx={2} zIndex={1} alignSelf="center">
               {loading ? (
                 <Box display="flex" justifyContent="center" p={1}>
                   <CircularProgress />
                 </Box>
               ) : !wallet?.connected ? (
-                <ConnectWalletButton />
+                <GokiButton />
               ) : validInput ? (
                 <Button
                   fullWidth

@@ -153,11 +153,12 @@ export const useMintOptions = (): ((
           );
           transaction.add(closeWSolIx);
         }
+
+        transaction.feePayer = wallet.publicKey;
+        const { blockhash } = await program.provider.connection.getRecentBlockhash();
+        transaction.recentBlockhash = blockhash;
+
         if (signers.length) {
-          transaction.feePayer = wallet.publicKey;
-          transaction.recentBlockhash = (
-            await program.provider.connection.getRecentBlockhash('max')
-          ).blockhash;
           transaction.partialSign(...signers);
         }
         await wallet.signTransaction(transaction);
@@ -165,6 +166,7 @@ export const useMintOptions = (): ((
         await program.provider.connection.sendRawTransaction(
           transaction.serialize(),
         );
+        console.log('tx here:', transaction)
 
         pushNotification({
           severity: NotificationSeverity.SUCCESS,

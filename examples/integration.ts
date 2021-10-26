@@ -2,7 +2,9 @@ import {
   instructions,
   OptionMarket,
   OptionMarketWithKey,
+  OrderParamsWithFeeRate,
   PsyAmericanIdl,
+  serumInstructions,
 } from '@mithraic-labs/psy-american';
 import { MarketMeta } from '@mithraic-labs/market-meta';
 import { BN, Program, Provider } from '@project-serum/anchor';
@@ -26,6 +28,7 @@ import {
 } from '@solana/web3.js';
 import * as fs from 'fs';
 import * as os from 'os';
+import { Market } from '@project-serum/serum';
 
 function readKeypair() {
   return JSON.parse(
@@ -239,5 +242,67 @@ const createWSolAccountInstruction = (
   /**
    * Now that we have some wSOL OptionTokens, lets read the order book
    */
-  // const market = Market.load()
+  // Load the Serum market for the example option market
+  const market = await Market.load(
+    connection,
+    new PublicKey(EXAMPLE_WSOL_CALL_OPTION.serumMarketAddress),
+    {},
+    new PublicKey(EXAMPLE_WSOL_CALL_OPTION.serumProgramId),
+  );
+
+  // Fetch orderbooks
+  const bids = await market.loadBids(connection);
+  const asks = await market.loadAsks(connection);
+
+  // L2 orderbook data
+  for (const [price, size] of bids.getL2(20)) {
+    console.log(price, size);
+  }
+
+  // L3 orderbook data
+  for (const order of asks) {
+    console.log(
+      order.openOrdersAddress.toBase58(),
+      order.orderId.toString('hex'),
+      order.price,
+      order.size,
+      order.side,
+    );
+  }
+
+  /**
+   * Now lets place an order!
+   *
+   * NOTE: This process can be made more efficient if you derive the
+   * OpenOrders address outside of this instruction and ensure it is
+   * initialized. If you take a look at [this code block](https://github.com/mithraiclabs/psyoptions-ts/blob/master/packages/psy-american/src/serumInstructions/newOrder.ts#L46-L73)
+   * you will notice multiple async functions that could be avoid
+   * with each order if OpenOrders information is hoisted out and
+   * passed in with the Order.
+   */
+  const serumProgramId = new PublicKey(EXAMPLE_WSOL_CALL_OPTION.serumProgramId);
+  const order: OrderParamsWithFeeRate<PublicKey> = {
+    owner: wallet.publicKey,
+    payer: wallet.publicKey,
+    side: 'sell',
+    price: 50,
+    size: 3,
+    orderType: 'limit',
+    clientId: new BN(1),
+    selfTradeBehavior: 'decrementTake',
+    programId: serumProgramId,
+  };
+  const { openOrdersKey, tx: newOrderTx } =
+    await serumInstructions.newOrderInstruction(
+      program,
+      new PublicKey(EXAMPLE_WSOL_CALL_OPTION.optionMarketAddress),
+      serumProgramId,
+      new PublicKey(EXAMPLE_WSOL_CALL_OPTION.serumMarketAddress),
+      order,
+    );
+  await sendAndConfirmRawTransaction(connection, newOrderTx.serialize(), {
+    skipPreflight: false,
+    preflightCommitment: 'recent',
+    commitment: 'max',
+  });
 })();

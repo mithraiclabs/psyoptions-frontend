@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState } from 'react';
 
-import type { Orderbook } from '@mithraic-labs/serum';
+import type { Orderbook } from '@project-serum/serum';
 
 export type Order = {
   price: number;

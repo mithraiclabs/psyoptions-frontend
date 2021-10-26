@@ -7,12 +7,12 @@ import {
   Signer,
 } from '@solana/web3.js';
 
-import { DexInstructions, Market } from '@mithraic-labs/serum';
+import { DexInstructions, Market } from '@project-serum/serum';
 import BN from 'bn.js';
 import { MintLayout, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { Buffer } from 'buffer';
 
-import { MarketOptions, Orderbook } from '@mithraic-labs/serum/lib/market';
+import { MarketOptions, Orderbook } from '@project-serum/serum/lib/market';
 import * as Sentry from '@sentry/react';
 
 import type { SerumMarketAndProgramId } from '../types';

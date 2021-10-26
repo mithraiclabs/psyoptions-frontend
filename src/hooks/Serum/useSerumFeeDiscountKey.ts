@@ -1,4 +1,4 @@
-import { getFeeRates, getFeeTier } from '@mithraic-labs/serum';
+import { getFeeRates, getFeeTier } from '@project-serum/serum';
 import { PublicKey } from '@solana/web3.js';
 import { useMemo } from 'react';
 import { getHighestAccount } from '../../utils/token';

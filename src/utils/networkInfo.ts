@@ -1,6 +1,6 @@
 import { clusterApiUrl, PublicKey } from '@solana/web3.js';
 import { TOKENS } from '@project-serum/tokens';
-import { MARKETS } from '@mithraic-labs/serum';
+import { MARKETS } from '@project-serum/serum';
 /* eslint-disable */
 import { MarketMeta } from '@mithraic-labs/market-meta';
 import { ClusterName } from '../types';
@@ -102,9 +102,7 @@ const getDexProgramKeyByNetwork = (name: ClusterName) => {
       return new PublicKey(process.env.REACT_APP_DEVNET_DEX_PROGRAM_ID ?? '');
     case 'Testnet':
       // NOTE THIS WILL NOT WORK BECUASE THERE IS NO SERUM DEX DEPLOYED TO TESTNET
-      return new PublicKey(
-        process.env.REACT_APP_TESTNET_DEX_PROGRAM_ID ?? '',
-      );
+      return new PublicKey(process.env.REACT_APP_TESTNET_DEX_PROGRAM_ID ?? '');
     case 'localhost':
       // TODO fix this when we can work through the issues with Serum locally
       // NOTE THIS WILL NOT WORK LOCALLY (fix the commented out section)

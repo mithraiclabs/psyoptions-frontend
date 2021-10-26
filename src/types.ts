@@ -1,4 +1,4 @@
-import { Market } from '@mithraic-labs/serum';
+import { Market } from '@project-serum/serum';
 import { BN } from '@project-serum/anchor';
 import { PublicKey, Signer, Transaction } from '@solana/web3.js';
 import BigNumber from 'bignumber.js';

@@ -1,4 +1,4 @@
-import { OpenOrders } from '@mithraic-labs/serum';
+import { OpenOrders } from '@project-serum/serum';
 import { PublicKey } from '@solana/web3.js';
 import { useCallback, useEffect, useRef } from 'react';
 import { useSerumOpenOrders } from '../../context/SerumOpenOrdersContext';
@@ -40,10 +40,10 @@ export const useCreateAdHocOpenOrdersSubscription = (
             prevOpenOrder.address.equals(publicKey),
           );
           // immutably replace the OpenOrders instance with the matching address
-          orders.splice(index < 0 ? 0 : index, index < 0 ? 0 : 1, _openOrder)
+          orders.splice(index < 0 ? 0 : index, index < 0 ? 0 : 1, _openOrder);
           return {
             ...prevSerumOpenOrders,
-            [key]: orders
+            [key]: orders,
           };
         });
       });

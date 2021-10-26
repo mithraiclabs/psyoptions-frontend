@@ -1,24 +1,25 @@
 import { useCallback } from 'react';
-import {
-  PublicKey,
-  Signer,
-  Transaction,
-} from '@solana/web3.js';
+import { PublicKey, Signer, Transaction } from '@solana/web3.js';
 import {
   PSY_AMERICAN_PROGRAM_IDS,
   ProgramVersions,
   serumInstructions,
 } from '@mithraic-labs/psy-american';
-import { Market, OrderParams } from '@mithraic-labs/serum/lib/market';
+import { Market, OrderParams } from '@project-serum/serum/lib/market';
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import { Asset, CreateMissingMintAccountsRes, OptionMarket, TokenAccount } from '../types';
+import {
+  Asset,
+  CreateMissingMintAccountsRes,
+  OptionMarket,
+  TokenAccount,
+} from '../types';
 import { WRAPPED_SOL_ADDRESS } from '../utils/token';
 import useNotifications from './useNotifications';
 import useSendTransaction from './useSendTransaction';
 import useOwnedTokenAccounts from './useOwnedTokenAccounts';
 import { useSolanaMeta } from '../context/SolanaMetaContext';
 import useConnection from './useConnection';
-import { useConnectedWallet } from "@saberhq/use-solana";
+import { useConnectedWallet } from '@saberhq/use-solana';
 import { createMissingAccountsAndMint } from '../utils/instructions/index';
 import { useCreateAdHocOpenOrdersSubscription } from './Serum';
 import { useAmericanPsyOptionsProgram } from './useAmericanPsyOptionsProgram';
@@ -137,7 +138,10 @@ const usePlaceSellOrder = (
         let placeOrderSigners: Signer[] = [];
         let openOrdersAddress: PublicKey;
         // eslint-disable-next-line
-        if (PSY_AMERICAN_PROGRAM_IDS[optionsProgramId.toString()] === ProgramVersions.V1) {
+        if (
+          PSY_AMERICAN_PROGRAM_IDS[optionsProgramId.toString()] ===
+          ProgramVersions.V1
+        ) {
           ({
             openOrdersAddress,
             transaction: placeOrderTx,
@@ -150,13 +154,14 @@ const usePlaceSellOrder = (
           if (!optionMarket.serumMarketKey) {
             return;
           }
-          const { openOrdersKey, tx } = await serumInstructions.newOrderInstruction(
-            program,
-            optionMarket.pubkey,
-            new PublicKey(optionMarket.serumProgramId),
-            optionMarket.serumMarketKey,
-            { ...orderArgs, payer: _optionTokenSrcKey },
-          );
+          const { openOrdersKey, tx } =
+            await serumInstructions.newOrderInstruction(
+              program,
+              optionMarket.pubkey,
+              new PublicKey(optionMarket.serumProgramId),
+              optionMarket.serumMarketKey,
+              { ...orderArgs, payer: _optionTokenSrcKey },
+            );
           placeOrderTx = new Transaction().add(tx);
           openOrdersAddress = openOrdersKey;
         }

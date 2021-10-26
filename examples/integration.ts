@@ -235,4 +235,9 @@ const createWSolAccountInstruction = (
     preflightCommitment: 'recent',
     commitment: 'max',
   });
+
+  /**
+   * Now that we have some wSOL OptionTokens, lets read the order book
+   */
+  // const market = Market.load()
 })();

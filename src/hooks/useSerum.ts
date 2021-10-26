@@ -1,7 +1,7 @@
 import { useContext, useCallback } from 'react';
 import { PublicKey } from '@solana/web3.js';
 
-import { Market } from '@mithraic-labs/serum';
+import { Market } from '@project-serum/serum';
 import { SerumContext, SerumContextType } from '../context/SerumContext';
 import {
   batchSerumMarkets,

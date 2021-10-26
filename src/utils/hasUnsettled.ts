@@ -1,4 +1,4 @@
-import { OpenOrders } from '@mithraic-labs/serum';
+import { OpenOrders } from '@project-serum/serum';
 import BN from 'bn.js';
 
 const BN_ZERO = new BN(0);

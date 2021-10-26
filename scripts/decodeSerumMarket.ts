@@ -1,5 +1,5 @@
 import { Connection, PublicKey } from '@solana/web3.js';
-import { Market as SerumMarket } from '@mithraic-labs/serum';
+import { Market as SerumMarket } from '@project-serum/serum';
 import * as yargs from 'yargs';
 
 yargs

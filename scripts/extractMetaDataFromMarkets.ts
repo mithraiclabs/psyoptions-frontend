@@ -1,6 +1,6 @@
 import { Connection, PublicKey } from '@solana/web3.js';
 import { Market } from '@mithraic-labs/psyoptions';
-import { Market as SerumMarket } from '@mithraic-labs/serum';
+import { Market as SerumMarket } from '@project-serum/serum';
 import * as yargs from 'yargs';
 const fs = require('fs');
 

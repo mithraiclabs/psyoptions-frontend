@@ -59,9 +59,6 @@ const activeDevnetMarkets = MarketMeta.devnet.optionMarkets.filter(
   (marketMeta) => marketMeta.expiration * 1000 > new Date().getTime(),
 );
 
-// TODO: Provide gist for minting an option
-// TODO: Provide example for posting an order to the permissioned markets
-
 /**
  * WSol call option
  */

@@ -22,6 +22,7 @@ import {
   Signer,
   SystemProgram,
   Transaction,
+  LAMPORTS_PER_SOL,
 } from '@solana/web3.js';
 import * as fs from 'fs';
 import * as os from 'os';
@@ -38,8 +39,6 @@ function readKeypair() {
 const PSY_PROGRAM_ID = new PublicKey(
   'R2y9ip6mxmWUj4pt54jP2hz2dgvMozy9VTSwMWE7evs',
 );
-const SOL_DECIMALS = 9;
-const LAMPORTS_MULTIPLIER = 10 ** SOL_DECIMALS;
 const WRAPPED_SOL_MINT = new PublicKey(
   'So11111111111111111111111111111111111111112',
 );
@@ -149,7 +148,7 @@ const createWSolAccountInstruction = (
   // the amount of Solana we want in the account PLUS the rent exemption amount.
   const [createWSolAccountTx, wSolKeypair] = createWSolAccountInstruction(
     provider,
-    splTokenRentBalance + 5 * LAMPORTS_MULTIPLIER,
+    splTokenRentBalance + 5 * LAMPORTS_PER_SOL,
   );
   mintTransaction.add(createWSolAccountTx);
   signers.push(wSolKeypair);

@@ -28,7 +28,8 @@ import {
 } from '@solana/web3.js';
 import * as fs from 'fs';
 import * as os from 'os';
-import { Market } from '@project-serum/serum';
+import { Market, OpenOrders } from '@project-serum/serum';
+import { Order } from '@project-serum/serum/lib/market';
 
 function readKeypair() {
   return JSON.parse(
@@ -77,11 +78,17 @@ const EXAMPLE_WSOL_CALL_OPTION = {
   serumProgramId: 'DESVgJVGajEgKGXhb6XmqDHGz3VjdgP7rEVESBgxmroY',
   psyOptionsProgramId: 'R2y9ip6mxmWUj4pt54jP2hz2dgvMozy9VTSwMWE7evs',
 };
+const optionPublicKey = new PublicKey(
+  EXAMPLE_WSOL_CALL_OPTION.optionMarketAddress,
+);
 const optionTokenMint = new PublicKey(
   EXAMPLE_WSOL_CALL_OPTION.optionContractMintAddress,
 );
 const writerTokenMint = new PublicKey(
   EXAMPLE_WSOL_CALL_OPTION.optionWriterTokenMintAddress,
+);
+const serumMarketKey = new PublicKey(
+  EXAMPLE_WSOL_CALL_OPTION.serumMarketAddress,
 );
 
 const WrappedSolToken = new Token(
@@ -273,7 +280,7 @@ const createWSolAccountInstruction = (
    * NOTE: This process can be made more efficient if you derive the
    * OpenOrders address outside of this instruction and ensure it is
    * initialized. If you take a look at [this code block](https://github.com/mithraiclabs/psyoptions-ts/blob/master/packages/psy-american/src/serumInstructions/newOrder.ts#L46-L73)
-   * you will notice multiple async functions that could be avoid
+   * you will notice multiple async functions that could be avoided
    * with each order if OpenOrders information is hoisted out and
    * passed in with the Order.
    */
@@ -292,12 +299,39 @@ const createWSolAccountInstruction = (
   const { openOrdersKey, tx: newOrderTx } =
     await serumInstructions.newOrderInstruction(
       program,
-      new PublicKey(EXAMPLE_WSOL_CALL_OPTION.optionMarketAddress),
+      optionPublicKey,
       serumProgramId,
-      new PublicKey(EXAMPLE_WSOL_CALL_OPTION.serumMarketAddress),
+      serumMarketKey,
       order,
     );
   await sendAndConfirmRawTransaction(connection, newOrderTx.serialize(), {
+    skipPreflight: false,
+    preflightCommitment: 'recent',
+    commitment: 'max',
+  });
+
+  /**
+   * We no longer like that order, lets cancel it.
+   */
+  // load the open orders for our OpenOrders account
+  const openOrders = await OpenOrders.load(
+    connection,
+    openOrdersKey,
+    serumProgramId,
+  );
+  // for simplicity we'll just use the clientId
+  const firstClientId = openOrders.clientIds[0];
+  const cancelOrderTx = new Transaction().add(
+    await serumInstructions.cancelOrderByClientId(
+      program,
+      optionPublicKey,
+      serumProgramId,
+      serumMarketKey,
+      { clientId: firstClientId, openOrdersAddress: openOrdersKey } as Order,
+    ),
+  );
+
+  await sendAndConfirmRawTransaction(connection, cancelOrderTx.serialize(), {
     skipPreflight: false,
     preflightCommitment: 'recent',
     commitment: 'max',

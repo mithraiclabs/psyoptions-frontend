@@ -243,7 +243,7 @@ const Markets: React.VFC = () => {
   return (
     <MarketDataProvider chain={chains}>
       <Page>
-        <BuySellDialog
+        {date && <BuySellDialog
           {...callPutData}
           markPrice={markPrice}
           heading={buySellDialogHeading}
@@ -261,7 +261,7 @@ const Markets: React.VFC = () => {
           setLimitPrice={setLimitPrice}
           limitPrice={limitPrice}
           serumAddress={callPutData.serumMarketKey?.toString() ?? ''}
-        />
+        />}
         <Box
           display="flex"
           justifyContent="center"
@@ -368,7 +368,7 @@ const Markets: React.VFC = () => {
                   setColumnsCount={setColumnsCount}
                 />
                 <TableBody>
-                  {rows.map((row) => {
+                  {date && rows.map((row) => {
                     return fullPageLoading ? (
                       <tr key={`${row.key}`}>
                         <TCellLoading

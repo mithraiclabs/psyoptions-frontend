@@ -1,3 +1,4 @@
+import { Token } from '@mithraic-labs/market-meta/dist/types';
 import { Market } from '@mithraic-labs/serum';
 import { BN } from '@project-serum/anchor';
 import { PublicKey, Signer, Transaction } from '@solana/web3.js';
@@ -140,4 +141,9 @@ export type LocalSerumMarket = {
 export type SerumMarketAndProgramId = {
   serumMarketKey: PublicKey;
   serumProgramId: string;
+};
+
+export type Balance = {
+  asset: Token;
+  assetBalance: number;
 };

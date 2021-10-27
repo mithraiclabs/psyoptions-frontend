@@ -14,18 +14,18 @@ const Balances: React.FC = () => {
   const { uAsset, qAsset, assetListLoading } = useAssetList();
   const { ownedTokenAccounts, loadingOwnedTokenAccounts } =
     useOwnedTokenAccounts();
-  const [qAssetBalance, setQAssetBalance] = useState(null as number | null);
-  const [uAssetBalance, setUAssetBalance] = useState(null as number | null);
+  const [qAssetBalance, setQAssetBalance] = useState(0);
+  const [uAssetBalance, setUAssetBalance] = useState(0);
 
   useEffect(() => {
     const uAssetAccounts = ownedTokenAccounts[uAsset?.mintAddress ?? ''] || [];
     const qAssetAccounts = ownedTokenAccounts[qAsset?.mintAddress ?? ''] || [];
     const qAssetHighestAccount = getHighestAccount(qAssetAccounts);
-    const newQAssetBalance = qAssetHighestAccount ? qAssetHighestAccount.amount / 10 ** (qAsset?.decimals ?? 0) : null;
+    const newQAssetBalance = qAssetHighestAccount ? qAssetHighestAccount.amount / 10 ** (qAsset?.decimals ?? 0) : 0;
     setQAssetBalance(newQAssetBalance);
 
     const uAssetHighestAccount = getHighestAccount(uAssetAccounts);
-    let newUAssetBalance = uAssetHighestAccount ? uAssetHighestAccount.amount / 10 ** (uAsset?.decimals ?? 0) : null;
+    let newUAssetBalance = uAssetHighestAccount ? uAssetHighestAccount.amount / 10 ** (uAsset?.decimals ?? 0) : 0;
     if (uAsset?.mintAddress === WRAPPED_SOL_ADDRESS) {
       // if asset is wrapped Sol, use balance of wallet account
       newUAssetBalance = balance ? (balance / LAMPORTS_PER_SOL) : null;
@@ -50,14 +50,14 @@ const Balances: React.FC = () => {
               style={{ width: '20px', height: '20px', marginRight: '6px' }}
               src={uAsset?.icon}
             />{' '}
-            {uAssetBalance ? uAssetBalance.toFixed(2) : 'Loading...'} {uAsset?.tokenSymbol}
+            {uAssetBalance.toFixed(2)} {uAsset?.tokenSymbol}
           </Box>
           <Box display="flex" flexDirection={'row'} alignItems="center" mx={1}>
             <Avatar
               style={{ width: '20px', height: '20px', marginRight: '6px' }}
               src={qAsset?.icon}
             />{' '}
-            {qAssetBalance ? qAssetBalance.toFixed(2) : 'Loading...'} {qAsset?.tokenSymbol}
+            {qAssetBalance.toFixed(2)} {qAsset?.tokenSymbol}
           </Box>
         </Box>
       </Box>

@@ -90,10 +90,17 @@ const writerTokenMint = new PublicKey(
 const serumMarketKey = new PublicKey(
   EXAMPLE_WSOL_CALL_OPTION.serumMarketAddress,
 );
+const quoteAssetMint = new PublicKey(EXAMPLE_WSOL_CALL_OPTION.quoteAssetMint);
 
 const WrappedSolToken = new Token(
   connection,
   WRAPPED_SOL_MINT,
+  TOKEN_PROGRAM_ID,
+  wallet.payer,
+);
+const QuoteAssetToken = new Token(
+  connection,
+  quoteAssetMint,
   TOKEN_PROGRAM_ID,
   wallet.payer,
 );
@@ -332,6 +339,54 @@ const createWSolAccountInstruction = (
   );
 
   await sendAndConfirmRawTransaction(connection, cancelOrderTx.serialize(), {
+    skipPreflight: false,
+    preflightCommitment: 'recent',
+    commitment: 'max',
+  });
+
+  /**
+   * Exercise 1 option!!
+   */
+  const exerciseTx = new Transaction();
+  const exerciseSigners: Signer[] = [];
+  // For the purpose of this example, We'll assume that this associated
+  // token account has enough funds to exercise.
+  const quoteAssetSource = await Token.getAssociatedTokenAddress(
+    ASSOCIATED_TOKEN_PROGRAM_ID,
+    TOKEN_PROGRAM_ID,
+    quoteAssetMint,
+    wallet.publicKey,
+  );
+  // renaming for the context of this instruction as this is our Option token address
+  // that we will be exercising from.
+  const optionTokenSource = optionTokenDest;
+
+  // Since we're exercising a Wrapped Solana option, we must create a Wrapped
+  // Sol account for the duration of this transaction. However, as we're receiving
+  // Wrapped Sol for exercising the WSol call, we don't need to prefund it with
+  // extra lamports.
+  const [createExerciseWSolAccountTx, wSolExerciseKeypair] =
+    createWSolAccountInstruction(
+      provider,
+      splTokenRentBalance + 5 * LAMPORTS_PER_SOL,
+    );
+  exerciseTx.add(createExerciseWSolAccountTx);
+  exerciseSigners.push(wSolExerciseKeypair);
+
+  // Create the instruction to exercise
+  const exerciseIx = await instructions.exerciseOptionsInstruction(
+    program,
+    new BN(1),
+    optionWithKey,
+    optionTokenSource,
+    wSolExerciseKeypair.publicKey,
+    quoteAssetSource,
+  );
+  exerciseTx.add(exerciseIx);
+
+  // Sign and send transaction to exercise
+  await exerciseTx.partialSign(...exerciseSigners, wallet.payer);
+  await sendAndConfirmRawTransaction(connection, exerciseTx.serialize(), {
     skipPreflight: false,
     preflightCommitment: 'recent',
     commitment: 'max',

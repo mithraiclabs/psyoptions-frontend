@@ -23,23 +23,23 @@ const ExpirationDateProvider: React.FC = ({ children }) => {
   const { uAsset, qAsset, assetListLoading } = useAssetList();
   const { marketsByUiKey } = useOptionsMarkets();
   const [dates, setDates] = useState<Moment[]>([]);
-
   const [_selectedDatesByAsset, _setSelectedDatesByAsset] =
     useLocalStorageState<Record<string, string>>('selectedDates', {});
-  const setSelectedDate = useCallback(
-    (date: Moment) => {
-      if (uAsset?.tokenSymbol) {
-        _setSelectedDatesByAsset((prevValue) => ({
-          ...prevValue,
-          [uAsset.tokenSymbol]: date.toISOString(),
-        }));
-      }
-    },
-    [_setSelectedDatesByAsset, uAsset?.tokenSymbol],
-  );
+  const [parsedDate, setParsedDate] = useState<Moment | null>(null);
 
-  const _selectedDate = _selectedDatesByAsset[uAsset?.tokenSymbol ?? ''];
-  const parsedDate = moment.utc(_selectedDate);
+  const setSelectedDate = useCallback((date: Moment) => {
+    if (uAsset?.tokenSymbol) {
+      _setSelectedDatesByAsset((prevValue) => ({
+        ...prevValue,
+        [uAsset.tokenSymbol]: date.toISOString(),
+      }));
+
+      setParsedDate(date);
+    }
+  }, [
+    _setSelectedDatesByAsset,
+    uAsset?.tokenSymbol
+  ]);
 
   useEffect(() => {
     if (!assetListLoading && uAsset?.mintAddress && qAsset?.mintAddress) {
@@ -66,29 +66,24 @@ const ExpirationDateProvider: React.FC = ({ children }) => {
         });
 
       setDates(newDates);
-    }
-  }, [assetListLoading, marketsByUiKey, uAsset?.mintAddress, qAsset?.mintAddress]);
-
-  useEffect(() => {
-    // Set default date or load user's stored date for current asset
-    if (
-      uAsset?.tokenSymbol &&
-      dates.length > 0 &&
-      (parsedDate.isBefore(moment.utc()) ||
-        !dates.some((d) => d.toISOString() === _selectedDate))
-    ) {
-      _setSelectedDatesByAsset((prevValue) => ({
-        ...prevValue,
-        [uAsset.tokenSymbol]: dates[0].toISOString(),
-      }));
+      if (!parsedDate && newDates.length) {
+        // Set default date or load user's stored date for current asset
+        const _selectedDate = _selectedDatesByAsset[uAsset?.tokenSymbol ?? ''];
+        if (_selectedDate && newDates.some((d) => d.toISOString() === _selectedDate)) {
+          setParsedDate(moment.utc(_selectedDate));
+        } else {
+          setParsedDate(newDates[0]);
+        }
+      }
     }
   }, [
-    dates,
-    parsedDate,
-    _selectedDate,
-    _setSelectedDatesByAsset,
+    assetListLoading,
+    marketsByUiKey,
+    uAsset?.mintAddress,
     uAsset?.tokenSymbol,
-  ]);
+    qAsset?.mintAddress,
+    _selectedDatesByAsset,
+    parsedDate]);
 
   return (
     <ExpirationDateContext.Provider

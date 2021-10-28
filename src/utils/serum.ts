@@ -5,6 +5,7 @@ import {
   SystemProgram,
   Connection,
   Signer,
+  AccountInfo,
 } from '@solana/web3.js';
 
 import { DexInstructions, Market } from '@mithraic-labs/serum';
@@ -17,6 +18,7 @@ import * as Sentry from '@sentry/react';
 
 import type { SerumMarketAndProgramId } from '../types';
 import { Order } from '../context/SerumOrderbookContext';
+import { chunkArray } from './general';
 
 export const getKeyForMarket = (market: Market): string =>
   market.address.toString();
@@ -71,7 +73,12 @@ export const batchSerumMarkets = async (
       const { addresses } = serumPrograms[key];
       const programId = new PublicKey(key);
       // Load all of the MarketState data
-      const marketInfos = await connection.getMultipleAccountsInfo(addresses);
+      const groupOfAddresses: PublicKey[][] = chunkArray(addresses, 100);
+      const getMultipleAccountsForAddresses: Promise<AccountInfo<Buffer>[]>[] = groupOfAddresses.map(addresses => {
+        return connection.getMultipleAccountsInfo(addresses);
+      });
+      const addressesAccounts = await Promise.all(getMultipleAccountsForAddresses);
+      const marketInfos: AccountInfo<Buffer>[] = addressesAccounts.flat();
       if (!marketInfos || !marketInfos.length) {
         throw new Error('Markets not found');
       }
@@ -80,19 +87,36 @@ export const batchSerumMarkets = async (
         Market.getLayout(programId).decode(accountInfo?.data),
       );
 
-      // Load all of the SPL Token Mint data and orderbook data for the markets
       const mintKeys: PublicKey[] = [];
       const orderbookKeys: PublicKey[] = [];
-      decoded.forEach((d) => {
-        mintKeys.push(d.baseMint);
-        mintKeys.push(d.quoteMint);
-        orderbookKeys.push(d.bids);
-        orderbookKeys.push(d.asks);
-      });
-      const [mintInfos, orderBookInfos] = await Promise.all([
-        connection.getMultipleAccountsInfo(mintKeys),
-        connection.getMultipleAccountsInfo(orderbookKeys),
-      ]);
+      let mintInfos: AccountInfo<Buffer>[];
+      let orderBookInfos: AccountInfo<Buffer>[];
+
+      try {
+        // Load all of the SPL Token Mint data and orderbook data for the markets
+        decoded.forEach((d) => {
+          mintKeys.push(d.baseMint);
+          mintKeys.push(d.quoteMint);
+          orderbookKeys.push(d.bids);
+          orderbookKeys.push(d.asks);
+        });
+        const groupOfMintKeys: PublicKey[][] = chunkArray(mintKeys, 100);
+        const getMultipleAccountsForMintKeys: Promise<AccountInfo<Buffer>[]>[] = groupOfMintKeys.map(mintKeys => {
+          return connection.getMultipleAccountsInfo(mintKeys);
+        });
+        const mintKeysAccounts = await Promise.all(getMultipleAccountsForMintKeys);
+        mintInfos = mintKeysAccounts.flat();
+
+        const groupOfOrderbookKeys: PublicKey[][] = chunkArray(orderbookKeys, 100);
+        const getMultipleAccountsForOrderbookKeys: Promise<AccountInfo<Buffer>[]>[] = groupOfOrderbookKeys.map(orderbookKeys => {
+          return connection.getMultipleAccountsInfo(orderbookKeys);
+        });
+        const orderbookKeysAccounts = await Promise.all(getMultipleAccountsForOrderbookKeys);
+        orderBookInfos = orderbookKeysAccounts.flat();
+      } catch (err) {
+        throw new Error('Could not load all of the SPL Token Mint & Orderbook data');
+      }
+
       const mints = mintInfos?.map((mintInfo) =>
         MintLayout.decode(mintInfo?.data),
       );

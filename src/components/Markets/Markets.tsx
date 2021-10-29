@@ -178,7 +178,7 @@ const Markets: React.VFC = () => {
   useBatchLoadMints(optionMints);
 
   useEffect(() => {
-    buildOptionsChain(momentDate?.unix() ?? 0, contractSize?.toNumber());
+    buildOptionsChain(momentDate?.unix() ?? 0);
   }, [buildOptionsChain, contractSize, momentDate]);
 
   useEffect(() => {
@@ -234,25 +234,27 @@ const Markets: React.VFC = () => {
   return (
     <MarketDataProvider chain={chains}>
       <Page>
-        {date && <BuySellDialog
-          {...callPutData}
-          markPrice={markPrice}
-          heading={buySellDialogHeading}
-          open={buySellDialogOpen}
-          onClose={() => setBuySellDialogOpen(false)}
-          round={round}
-          precision={precision}
-          date={momentDate}
-          uAssetDecimals={
-            callPutData?.type === 'call' ? uAsset?.decimals : qAsset?.decimals
-          }
-          qAssetDecimals={
-            callPutData?.type === 'call' ? qAsset?.decimals : uAsset?.decimals
-          }
-          setLimitPrice={setLimitPrice}
-          limitPrice={limitPrice}
-          serumAddress={callPutData.serumMarketKey?.toString() ?? ''}
-        />}
+        {momentDate && (
+          <BuySellDialog
+            {...callPutData}
+            markPrice={markPrice}
+            heading={buySellDialogHeading}
+            open={buySellDialogOpen}
+            onClose={() => setBuySellDialogOpen(false)}
+            round={round}
+            precision={precision}
+            date={momentDate}
+            uAssetDecimals={
+              callPutData?.type === 'call' ? uAsset?.decimals : qAsset?.decimals
+            }
+            qAssetDecimals={
+              callPutData?.type === 'call' ? qAsset?.decimals : uAsset?.decimals
+            }
+            setLimitPrice={setLimitPrice}
+            limitPrice={limitPrice}
+            serumAddress={callPutData.serumMarketKey?.toString() ?? ''}
+          />
+        )}
         <Box
           display="flex"
           justifyContent="center"
@@ -365,49 +367,50 @@ const Markets: React.VFC = () => {
                   setColumnsCount={setColumnsCount}
                 />
                 <TableBody>
-                  {date && rows.map((row) => {
-                    return fullPageLoading ? (
-                      <tr key={`${row.key}`}>
-                        <TCellLoading
-                          colSpan={9}
-                          style={{
-                            backgroundColor: theme.palette.background.medium,
-                          }}
-                        >
-                          <Loading />
-                        </TCellLoading>
-                        <TCellStrike />
-                        <TCellLoading
-                          colSpan={9}
-                          style={{
-                            backgroundColor: theme.palette.background.medium,
-                          }}
-                        >
-                          <Loading />
-                        </TCellLoading>
-                      </tr>
-                    ) : (
-                      <CallPutRow
-                        key={`${row.key}`}
-                        row={row}
-                        uAsset={uAsset}
-                        qAsset={qAsset}
-                        date={momentDate}
-                        precision={precision}
-                        round={round}
-                        onClickBuySellCall={handleBuySellClick}
-                        onClickBuySellPut={handleBuySellClick}
-                        markPrice={markPrice}
-                        setLimitPrice={setLimitPrice}
-                        showIV={showIV}
-                        showPriceChange={showPriceChange}
-                        showVolume={showVolume}
-                        showLastPrice={showLastPrice}
-                        showOI={showOI}
-                        contractSize={contractSize?.toNumber()}
-                      />
-                    );
-                  })}
+                  {momentDate &&
+                    rows.map((row) => {
+                      return fullPageLoading ? (
+                        <tr key={`${row.key}`}>
+                          <TCellLoading
+                            colSpan={9}
+                            style={{
+                              backgroundColor: theme.palette.background.medium,
+                            }}
+                          >
+                            <Loading />
+                          </TCellLoading>
+                          <TCellStrike />
+                          <TCellLoading
+                            colSpan={9}
+                            style={{
+                              backgroundColor: theme.palette.background.medium,
+                            }}
+                          >
+                            <Loading />
+                          </TCellLoading>
+                        </tr>
+                      ) : (
+                        <CallPutRow
+                          key={`${row.key}`}
+                          row={row}
+                          uAsset={uAsset}
+                          qAsset={qAsset}
+                          date={momentDate}
+                          precision={precision}
+                          round={round}
+                          onClickBuySellCall={handleBuySellClick}
+                          onClickBuySellPut={handleBuySellClick}
+                          markPrice={markPrice}
+                          setLimitPrice={setLimitPrice}
+                          showIV={showIV}
+                          showPriceChange={showPriceChange}
+                          showVolume={showVolume}
+                          showLastPrice={showLastPrice}
+                          showOI={showOI}
+                          contractSize={contractSize?.toNumber()}
+                        />
+                      );
+                    })}
                   <TableRow>
                     <THeadCell
                       colSpan={currentColumnsCount}

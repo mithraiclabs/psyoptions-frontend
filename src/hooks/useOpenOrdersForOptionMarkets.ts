@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAmericanPsyOptionsProgram } from './useAmericanPsyOptionsProgram';
 import useConnection from './useConnection';
 import { useConnectedWallet } from "@saberhq/use-solana";
+import * as Sentry from '@sentry/react';
 
 /**
  * Get open orders for a user for option market keys
@@ -24,19 +25,25 @@ export const useOpenOrdersForOptionMarkets = (): {
     (async () => {
       if (!program || !dexProgramId || !wallet?.publicKey) return;
       setLoadingOpenOrders(true);
-      const optionMarketWithKeys = await getAllOptionAccounts(program);
-      const keys = optionMarketWithKeys.map(marketInfo => marketInfo.key);
 
-      const orders = await serumUtils.findOpenOrdersForOptionMarkets(
-        program,
-        dexProgramId,
-        keys,
-      );
-
-      setLoadingOpenOrders(false);
-      
-      // #TODO: remove as any
-      setOpenOrders(orders as any);
+      try {
+        const optionMarketWithKeys = await getAllOptionAccounts(program);
+        const keys = optionMarketWithKeys.map(marketInfo => marketInfo.key);
+  
+        const orders = await serumUtils.findOpenOrdersForOptionMarkets(
+          program,
+          dexProgramId,
+          keys,
+        );
+        
+        // #TODO: remove as any
+        setOpenOrders(orders as any);
+      } catch (err) {
+        console.error(err);
+        Sentry.captureException(err);
+      } finally {
+        setLoadingOpenOrders(false);
+      }
     })();
   }, [program, dexProgramId, wallet?.publicKey]);
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import Dialog from '@material-ui/core/Dialog';
 import Chip from '@material-ui/core/Chip';
 import Box from '@material-ui/core/Box';
@@ -8,6 +8,9 @@ import ListItemText from '@material-ui/core/ListItemText';
 import KeyboardArrowDown from '@material-ui/icons/KeyboardArrowDown';
 import { useTheme, withStyles } from '@material-ui/core/styles';
 import { PublicKey } from '@solana/web3.js';
+import { useNetworkTokens, useTokenByMint } from '../hooks/useNetworkTokens';
+import ListItemAvatar from '@material-ui/core/ListItemAvatar';
+import Avatar from '@material-ui/core/Avatar';
 
 const CustomChip = withStyles({
   disabled: {
@@ -23,13 +26,26 @@ export const SelectAsset: React.VFC<{
   mints: PublicKey[];
   value: PublicKey | null;
 }> = ({ disabled = false, label, mints, onChange, value }) => {
-  // const theme = useTheme();
+  const theme = useTheme();
+  const tokens = useNetworkTokens();
+  const asset = useTokenByMint(value ?? '');
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState('');
+  const filteredMints = useMemo(() => {
+    const lowerFilter = filter.toLowerCase();
+    return mints.filter((mint) => {
+      const token = tokens[mint.toString()];
+
+      return !!token?.symbol.toLowerCase().match(lowerFilter);
+    });
+  }, [filter, mints, tokens]);
   const onFilterChange: React.ChangeEventHandler<HTMLInputElement> = (e) =>
     setFilter(e.target.value);
-  // TODO this next line is throwing some error about negative
-  const chipLabel = value ? value.toString() : 'Loading...';
+  const chipLabel = asset
+    ? asset.symbol
+    : value
+    ? value.toString()
+    : 'Loading...';
   const handleOpen = () => setOpen(true);
 
   return (
@@ -58,23 +74,27 @@ export const SelectAsset: React.VFC<{
               />
             </Box>
             <Box my={3} height="300px" overflow="auto">
-              {mints.map((mint) => (
-                <ListItem
-                  button
-                  onClick={() => {
-                    setOpen(false);
-                    onChange(mint);
-                  }}
-                  key={mint.toString()}
-                >
-                  {/* 
-                  TODO figure out how to get avatar based on mint
-                  <ListItemAvatar>
-                    <Avatar src={asset.icon} />
-                  </ListItemAvatar> */}
-                  <ListItemText primary={mint.toString()} />
-                </ListItem>
-              ))}
+              {filteredMints.map((mint) => {
+                // TODO refactor this to it's own component
+                const token = tokens[mint.toString()];
+                return (
+                  <ListItem
+                    button
+                    onClick={() => {
+                      setOpen(false);
+                      onChange(mint);
+                    }}
+                    key={mint.toString()}
+                  >
+                    {token && (
+                      <ListItemAvatar>
+                        <Avatar src={token.logoURI} />
+                      </ListItemAvatar>
+                    )}
+                    <ListItemText primary={token?.symbol ?? mint.toString()} />
+                  </ListItem>
+                );
+              })}
             </Box>
           </Box>
         </Box>
@@ -85,19 +105,17 @@ export const SelectAsset: React.VFC<{
         color="primary"
         variant="outlined"
         disabled={disabled}
-        // avatar={
-        //   selectedAsset ? (
-        //     <Avatar
-        //       src={selectedAsset.icon}
-        //       alt={selectedAsset.tokenName}
-        //       style={{
-        //         backgroundColor: theme.palette.primary.main,
-        //       }}
-        //     >
-        //       {assetListLoading ? '?' : ''}
-        //     </Avatar>
-        //   ) : null
-        // }
+        avatar={
+          asset ? (
+            <Avatar
+              src={asset.logoURI}
+              alt={asset.name}
+              style={{
+                backgroundColor: theme.palette.primary.main,
+              }}
+            />
+          ) : undefined
+        }
         onClick={disabled ? undefined : handleOpen}
         onDelete={disabled ? undefined : handleOpen}
         deleteIcon={disabled ? undefined : <KeyboardArrowDown />}

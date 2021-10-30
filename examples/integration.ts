@@ -20,7 +20,6 @@ import {
   Connection,
   Keypair,
   PublicKey,
-  sendAndConfirmRawTransaction,
   Signer,
   SystemProgram,
   Transaction,
@@ -243,12 +242,8 @@ const createWSolAccountInstruction = (
   mintTransaction.add(closeWSolIx);
 
   // Sign and send transaction
+  await program.provider.send(mintTransaction, signers);
   await mintTransaction.partialSign(...signers, wallet.payer);
-  await sendAndConfirmRawTransaction(connection, mintTransaction.serialize(), {
-    skipPreflight: false,
-    preflightCommitment: 'recent',
-    commitment: 'max',
-  });
 
   /**
    * Now that we have some wSOL OptionTokens, lets read the order book
@@ -311,11 +306,7 @@ const createWSolAccountInstruction = (
       serumMarketKey,
       order,
     );
-  await sendAndConfirmRawTransaction(connection, newOrderTx.serialize(), {
-    skipPreflight: false,
-    preflightCommitment: 'recent',
-    commitment: 'max',
-  });
+  await program.provider.send(newOrderTx);
 
   /**
    * We no longer like that order, lets cancel it.
@@ -337,12 +328,7 @@ const createWSolAccountInstruction = (
       { clientId: firstClientId, openOrdersAddress: openOrdersKey } as Order,
     ),
   );
-
-  await sendAndConfirmRawTransaction(connection, cancelOrderTx.serialize(), {
-    skipPreflight: false,
-    preflightCommitment: 'recent',
-    commitment: 'max',
-  });
+  await program.provider.send(cancelOrderTx);
 
   /**
    * Exercise 1 option!!
@@ -386,9 +372,5 @@ const createWSolAccountInstruction = (
 
   // Sign and send transaction to exercise
   await exerciseTx.partialSign(...exerciseSigners, wallet.payer);
-  await sendAndConfirmRawTransaction(connection, exerciseTx.serialize(), {
-    skipPreflight: false,
-    preflightCommitment: 'recent',
-    commitment: 'max',
-  });
+  await program.provider.send(exerciseTx, exerciseSigners);
 })();

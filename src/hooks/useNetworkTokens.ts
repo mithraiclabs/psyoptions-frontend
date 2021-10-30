@@ -8,7 +8,7 @@ export const useNetworkTokens = (): ClusterEnv => {
   const { endpoint } = useConnection();
 
   return useMemo(() => {
-    switch (endpoint.name) {
+    switch (endpoint?.name ?? '') {
       case ClusterName.mainnet:
         return Tokens.mainnet;
       case ClusterName.devnet:
@@ -16,7 +16,7 @@ export const useNetworkTokens = (): ClusterEnv => {
       default:
         return {};
     }
-  }, [endpoint.name]);
+  }, [endpoint?.name]);
 };
 
 export const useTokenByMint = (mint: PublicKey | string): Token | undefined => {

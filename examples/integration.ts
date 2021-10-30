@@ -243,7 +243,6 @@ const createWSolAccountInstruction = (
 
   // Sign and send transaction
   await program.provider.send(mintTransaction, signers);
-  await mintTransaction.partialSign(...signers, wallet.payer);
 
   /**
    * Now that we have some wSOL OptionTokens, lets read the order book
@@ -371,6 +370,5 @@ const createWSolAccountInstruction = (
   exerciseTx.add(exerciseIx);
 
   // Sign and send transaction to exercise
-  await exerciseTx.partialSign(...exerciseSigners, wallet.payer);
   await program.provider.send(exerciseTx, exerciseSigners);
 })();

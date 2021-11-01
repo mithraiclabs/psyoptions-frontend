@@ -288,7 +288,7 @@ const createWSolAccountInstruction = (
   const serumProgramId = new PublicKey(EXAMPLE_WSOL_CALL_OPTION.serumProgramId);
   const order: OrderParamsWithFeeRate<PublicKey> = {
     owner: wallet.publicKey,
-    payer: wallet.publicKey,
+    payer: optionTokenDest,
     side: 'sell',
     price: 50,
     size: 3,

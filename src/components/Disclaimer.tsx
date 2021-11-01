@@ -2,11 +2,10 @@ import React from 'react';
 import Dialog from '@material-ui/core/Dialog';
 import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
-import useLocalStorageState from 'use-local-storage-state';
+import { useDisclaimerState } from './GokiButton';
 
 const Disclaimer = () => {
-  const [hasAcceptedDisclaimer, setHasAcceptedDisclaimer] =
-    useLocalStorageState('hasAcceptedDisclaimer', false);
+  const [hasAcceptedDisclaimer, setHasAcceptedDisclaimer] = useDisclaimerState();
 
   const dismissDisclaimer = () => {
     setHasAcceptedDisclaimer(true);

@@ -4,9 +4,7 @@ import {
   useMediaQuery,
 } from '@material-ui/core';
 import React, { useEffect } from 'react';
-import ProhibitedJurisdiction from './components/ProhibitedJurisdiction';
 import Store from './context/store';
-import { DISALLOWED_COUNTRIES, useCountry } from './hooks/useCountry';
 import useOptionsMarkets from './hooks/useOptionsMarkets';
 import theme from './utils/theme';
 import useScreenSize from './hooks/useScreenSize';
@@ -36,14 +34,13 @@ const AppWithStore: React.FC = ({ children }) => {
 };
 
 const App = (): JSX.Element | null => {
-  const countryCode = useCountry();
 
   return (
     <StylesProvider injectFirst>
       <ThemeProvider theme={theme}>
         <HashRouter basename={"/"}>
           <Store>
-            <AppWithStore>{DISALLOWED_COUNTRIES.includes(countryCode ?? '') ? <ProhibitedJurisdiction /> : <Routes />}</AppWithStore>
+            <AppWithStore><Routes /></AppWithStore>
           </Store>
         </HashRouter>
       </ThemeProvider>

@@ -3,7 +3,6 @@ import Box from '@material-ui/core/Box';
 import StatusBar from '../StatusBar';
 import Notifications from '../Notifications';
 import Footer from '../Footer';
-import Disclaimer from '../Disclaimer';
 
 // Default page template
 const Page: React.FC<{
@@ -38,7 +37,6 @@ const Page: React.FC<{
       >
         <Box minHeight="100%">{children}</Box>
       </Box>
-      <Disclaimer />
       <Footer />
     </Box>
   </>

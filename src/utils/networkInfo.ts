@@ -27,9 +27,9 @@ export type Network = {
 const networks: Network[] = [
   {
     name: ClusterName.mainnet,
-    url: 'https://lokidfxnwlabdq.main.genesysgo.net:8899',
+    url: 'https://psyoptions.genesysgo.net:8899',
     fallbackUrl: clusterApiUrl('mainnet-beta'),
-    wsEndpoint: 'wss://lokidfxnWLaBDQ.main.genesysgo.net:8900',
+    wsEndpoint: 'wss://psyoptions.genesysgo.net:8900',
     programId: process.env.REACT_APP_MAINNET_PROGRAM_ID,
     serumReferrerIds: {
       EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v: new PublicKey(

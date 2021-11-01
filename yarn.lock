@@ -2247,10 +2247,10 @@
     prop-types "^15.7.2"
     react-is "^16.8.0 || ^17.0.0"
 
-"@mithraic-labs/market-meta@^0.0.21":
-  version "0.0.21"
-  resolved "https://registry.yarnpkg.com/@mithraic-labs/market-meta/-/market-meta-0.0.21.tgz#d023c6717e3e5893c815832e1e129607d9de0757"
-  integrity sha512-nq0O3/ff1mdBnW5P8HZVSIm1mnLTsIeO7U0Qx6KNBQCfjPARm+pcFeokTOl7UjVWCg5/wLbciivSR9pJU2FzRQ==
+"@mithraic-labs/market-meta@^0.0.22":
+  version "0.0.22"
+  resolved "https://registry.yarnpkg.com/@mithraic-labs/market-meta/-/market-meta-0.0.22.tgz#ac81637c7cd517f98e5a941de3cfd6f1dc9ce2d4"
+  integrity sha512-3MO+5kmmAB63CO0fS+RXitX/JYStlPqU7ljb33fZslYcaZlm3OK5VIKB8N3qM/d/lZveA2m7PozpW6WFk83s9Q==
 
 "@mithraic-labs/psy-american@^0.0.11":
   version "0.0.11"

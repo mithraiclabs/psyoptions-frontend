@@ -8,6 +8,8 @@ const Disclaimer = () => {
   const [hasAcceptedDisclaimer, setHasAcceptedDisclaimer] = useDisclaimerState();
 
   const dismissDisclaimer = () => {
+    let element: HTMLElement = document.querySelector('#temp-solution-2m00n') as HTMLElement;
+    element.click();
     setHasAcceptedDisclaimer(true);
   };
 

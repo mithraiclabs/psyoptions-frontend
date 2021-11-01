@@ -48,9 +48,9 @@ const GokiButton: React.VFC = () => {
         (hasAcceptedDisclaimer)
           ? <ConnectWalletButton className={styles.gokiButton} />
           : <div className={styles.disclaimerButtonContainer}>
-              <ConnectWalletButton />
-              <div className={styles.disclaimerButton} onClick={handleGeoCheck}>
-              </div>
+              {/* Workarounds re Goki callbacks (coming soon?) */}
+              <ConnectWalletButton id='temp-solution-2m00n' />
+              <div className={styles.disclaimerButton} onClick={handleGeoCheck}></div>
             </div>
       }
       {

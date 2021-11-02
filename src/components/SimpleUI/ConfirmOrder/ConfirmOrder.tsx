@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import * as Sentry from '@sentry/react';
-import { useHistory } from 'react-router-dom';
+import { DISALLOWED_COUNTRIES, useCountry } from '../../../hooks/useCountry';
+import { useHistory, Link } from 'react-router-dom';
 import Box from '@material-ui/core/Box';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import { Button } from '@material-ui/core';
@@ -27,11 +28,17 @@ import {
 import useOptionsMarkets from '../../../hooks/useOptionsMarkets';
 
 const ConfirmOrder = () => {
+  const countryCode = useCountry();
+  const [isProhibited, setIsProhibited] = useState(true);
   const history = useHistory();
   const wallet = useConnectedWallet();
   const { pushErrorNotification } = useNotifications();
   const [cost, setCost] = useState(null as number | null);
   const [breakeven, setBreakeven] = useState(null as number | null);
+  const [
+    disabledButtonMessage
+    // , setDisabledButtonMessage
+  ] = useState(isProhibited ? 'Prohibited Jurisdiction' : 'Loading Market Info...');
   const {
     tokenSymbol,
     direction,
@@ -124,8 +131,16 @@ const ConfirmOrder = () => {
     orderbook?.asks,
   ]);
 
+  useEffect(() => {
+    setIsProhibited(DISALLOWED_COUNTRIES.includes(countryCode ?? ''))
+  }, [countryCode]);
+
   const disabledPlaceOrder = useMemo(() => {
-    return !serumMarket || !wallet?.publicKey || (orderType === "limit" && !limitPrice)
+    return isProhibited
+           || !serumMarket
+           || !wallet?.publicKey
+           || (orderType === "limit" && !limitPrice);
+
   }, [serumMarket, wallet?.publicKey, orderType, limitPrice]);
 
   const handlePlaceOrderClicked = useCallback(async () => {
@@ -243,15 +258,28 @@ const ConfirmOrder = () => {
           ) : placeOrderLoading ? (
             <CircularProgress />
           ) : (
-            <Button
-              color="primary"
-              onClick={handlePlaceOrderClicked}
-              variant="outlined"
-              style={{ width: '100%' }}
-              disabled={disabledPlaceOrder}
-            >
-              {disabledPlaceOrder ?  'Loading Market Info...' : 'Place Order'}
-            </Button>
+            <>
+              <Button
+                color="primary"
+                onClick={handlePlaceOrderClicked}
+                variant="outlined"
+                style={{ width: '100%' }}
+                disabled={isProhibited || disabledPlaceOrder}
+              >
+                {disabledPlaceOrder ?  disabledButtonMessage : 'Place Order'}
+              </Button>
+              {
+                (isProhibited) ? (
+                  <div style={{marginTop: '15px'}}>
+                    <span>⚠️</span>
+                    <span style={{color: 'white', marginRight: '10px', marginLeft: '15px'}}>
+                      It appears you're located in a prohibited jurisdiction.
+                    </span>
+                    <Link to='/prohibited-jurisdiction'>Click here for more information</Link>
+                  </div>
+                ) : null
+              }
+            </>
           )}
         </Box>
       </Box>

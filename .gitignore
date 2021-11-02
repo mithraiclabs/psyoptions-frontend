@@ -8,3 +8,5 @@ serum/dex
 logs/
 tmp/
 .next/
+.ignore*
+.secret*

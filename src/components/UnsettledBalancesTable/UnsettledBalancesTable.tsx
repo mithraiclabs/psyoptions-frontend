@@ -82,13 +82,14 @@ const UnsettledBalancesTable = () => {
                 (optionMarket.serumMarketKey && qAsset) ?
                 <UnsettledBalancesRow
                   expiration={optionMarket.expiration}
-                  contractSize={optionMarket.size}
+                  contractSize={optionMarket.qAssetSymbol === "USDC" ? optionMarket.size : optionMarket.quoteAmountPerContract.toString()}
                   // #TODO: change later, should have option type here
                   type={optionMarket.qAssetSymbol === "USDC" ? OptionType.CALL : OptionType.PUT}
                   qAssetSymbol={optionMarket.qAssetSymbol}
                   uAssetSymbol={optionMarket.uAssetSymbol}
                   serumMarketKey={optionMarket.serumMarketKey}
-                  strikePrice={optionMarket.strikePrice ?? ''}
+                  strikePrice={optionMarket.qAssetSymbol === "USDC" ? optionMarket.strike.toString() :
+                    optionMarket.amountPerContract.dividedBy(optionMarket.quoteAmountPerContract).toString()}
                   qAssetDecimals={qAsset.decimals}
                   key={`${optionMarket.serumMarketKey.toString()}-unsettled`}
                 /> : null

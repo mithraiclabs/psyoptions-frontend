@@ -32,12 +32,19 @@ const GokiButton: React.VFC = () => {
   const countryCode = useCountry();
   const [isProhibited, setIsProhibited] = useState(false);
 
-  // const [hasAcceptedDisclaimer, setHasAcceptedDisclaimer] = useDisclaimerState();
+  const [
+    hasAcceptedDisclaimer
+    // , setHasAcceptedDisclaimer
+  ] = useDisclaimerState();
   const [showDisclaimer, setDisclaimerVisible] = useState(false);
 
   const handleGeoCheck = () => {
     if (DISALLOWED_COUNTRIES.includes(countryCode ?? '')) {
       return setIsProhibited(true);
+    }
+    if (hasAcceptedDisclaimer) {
+      let element: HTMLElement = document.querySelector('#temp-solution-2m00n') as HTMLElement;
+      return element.click();
     }
     setDisclaimerVisible(true);
   };

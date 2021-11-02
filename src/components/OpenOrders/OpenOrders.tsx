@@ -84,13 +84,14 @@ const OpenOrders = () => {
                 optionMarket.serumMarketKey ?
                 <OpenOrdersRow
                   expiration={optionMarket.expiration}
-                  contractSize={optionMarket.size}
+                  contractSize={optionMarket.qAssetSymbol === "USDC" ? optionMarket.size : optionMarket.quoteAmountPerContract.toString()}
                   // #TODO: change later, should have option type here
                   type={optionMarket.qAssetSymbol === "USDC" ? OptionType.CALL : OptionType.PUT}
                   qAssetSymbol={optionMarket.qAssetSymbol}
                   uAssetSymbol={optionMarket.uAssetSymbol}
                   serumMarketKey={optionMarket.serumMarketKey}
-                  strikePrice={optionMarket.strike.toString()}
+                  strikePrice={optionMarket.qAssetSymbol === "USDC" ? optionMarket.strike.toString() :
+                    optionMarket.amountPerContract.dividedBy(optionMarket.quoteAmountPerContract).toString()}
                   key={optionMarket.serumMarketKey?.toString()}
                 /> : null
               ))

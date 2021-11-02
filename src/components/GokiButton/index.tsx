@@ -32,7 +32,7 @@ const GokiButton: React.VFC = () => {
   const countryCode = useCountry();
   const [isProhibited, setIsProhibited] = useState(false);
 
-  const [hasAcceptedDisclaimer] = useDisclaimerState();
+  // const [hasAcceptedDisclaimer, setHasAcceptedDisclaimer] = useDisclaimerState();
   const [showDisclaimer, setDisclaimerVisible] = useState(false);
 
   const handleGeoCheck = () => {
@@ -44,15 +44,11 @@ const GokiButton: React.VFC = () => {
 
   return (
     <>
-      {
-        (hasAcceptedDisclaimer)
-          ? <ConnectWalletButton className={styles.gokiButton} />
-          : <div className={styles.disclaimerButtonContainer}>
-              {/* Workarounds re Goki callbacks (coming soon?) */}
-              <ConnectWalletButton id='temp-solution-2m00n' />
-              <div className={styles.disclaimerButton} onClick={handleGeoCheck}></div>
-            </div>
-      }
+      <div className={styles.disclaimerButtonContainer}>
+        {/* Workarounds re Goki callbacks (coming soon?) */}
+        <ConnectWalletButton id='temp-solution-2m00n' />
+        <div className={styles.disclaimerButton} onClick={handleGeoCheck}></div>
+      </div>
       {
         (showDisclaimer) ? <Disclaimer /> : null
       }

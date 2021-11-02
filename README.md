@@ -1,6 +1,10 @@
-## Configuring the app for local development:
+## Run the App locally
 
-Copy `.env-example` and rename it `.env.local`.
+1. Clone the repo
+
+`git@github.com:mithraiclabs/psyoptions-frontend.git`
+
+2. Copy `.env-example` and rename it `.env.local`.
 
 OR run `touch .env.local` and add the following lines to it and fill in the blanks:
 
@@ -20,7 +24,17 @@ KEY_FILE=
 WALLET_ADDRESS=
 ```
 
-## Development
+3. Install dependencies
+
+`yarn`
+
+4. Run the app!
+
+`yarn start`
+
+## Protocol Development
+
+> Note this is presently unsupported. Fixes coming soon
 
 We aim to make development setup as easy as possible. Follow the steps below:
 

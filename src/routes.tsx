@@ -12,10 +12,10 @@ import SimpleUIChooseExpiration from "./pages/simple/choose-expiration";
 import SimpleUIChooseStrike from "./pages/simple/choose-strike";
 import SimpleUIOrderSettings from "./pages/simple/order-settings";
 import SimpleUIConfirmOrder from "./pages/simple/confirm-order";
+import ProhibitedJurisdiction from "./pages/prohibited-jurisdiction";
 import Mints from "./pages/mint";
 
 export function Routes() {
-
   return (
     <Switch>
       <Route exact path="/" children={<Landing />} />
@@ -30,12 +30,13 @@ export function Routes() {
       <Route exact path="/simple/choose-strike" children={<SimpleUIChooseStrike />} />
       <Route exact path="/simple/order-settings" children={<SimpleUIOrderSettings />} />
       <Route exact path="/simple/confirm-order" children={<SimpleUIConfirmOrder />} />
+      <Route exact path="/prohibited-jurisdiction" children={<ProhibitedJurisdiction />} />
       <Route exact path="/not-found" children={<Custom404 />} />
       <Route exact path="*"><Redirect
         to={{
           pathname: "/not-found"
         }}
       /></Route>
-  </Switch>
+    </Switch>
   );
 }

@@ -62,10 +62,10 @@ const ProhibitedJurisdiction: React.VFC = () => {
             mt={4}
           >
             <h1 style={{ textAlign: 'center', margin: '5px 0' }}>
-              Access Denied
+              Prohibited Jurisdiction 😭
             </h1>
             <h6>
-              This website is not available to residents of Belarus, the Central
+              Due to regulations, this website is not available to residents of Belarus, the Central
               African Republic, the Democratic Republic of Congo, the Democratic
               People&lsquo;s Republic of Korea, the Crimea region of Ukraine,
               Cuba, Iran, Libya, Somalia, Sudan, South Sudan, Syria, Thailand,

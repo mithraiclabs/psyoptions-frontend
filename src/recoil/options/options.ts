@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
-import { OptionMarket } from '@mithraic-labs/psy-american';
+import { OptionMarket, OptionMarketWithKey } from '@mithraic-labs/psy-american';
 import { BN, ProgramAccount } from '@project-serum/anchor';
 import { PublicKey } from '@solana/web3.js';
 import _uniqby from 'lodash.uniqby';
@@ -16,7 +16,7 @@ const defaultExpiration = new BN(0);
 /**
  * Store each option by PublicKey string.
  */
-export const optionsMap = atomFamily<OptionMarket | null, string>({
+export const optionsMap = atomFamily<OptionMarketWithKey | null, string>({
   key: 'optionsMap',
   default: null,
 });
@@ -121,7 +121,9 @@ export const selectFutureExpirationsByUnderlyingAndQuote = selector({
       if (
         option &&
         option.expirationUnixTimestamp.toNumber() > nowInSeconds &&
+        _underlyingMint &&
         option.underlyingAssetMint.equals(_underlyingMint) &&
+        _quoteMint &&
         option.quoteAssetMint.equals(_quoteMint)
       ) {
         acc.push(option.expirationUnixTimestamp);
@@ -150,7 +152,9 @@ export const selectUnderlyingAmountPerOptionByExpirationUnderlyingQuote =
         if (
           option &&
           option.expirationUnixTimestamp.eq(_expirationUnixTimestamp) &&
+          _underlyingMint &&
           option.underlyingAssetMint.equals(_underlyingMint) &&
+          _quoteMint &&
           option.quoteAssetMint.equals(_quoteMint)
         ) {
           acc.push(option.underlyingAmountPerContract);
@@ -161,6 +165,35 @@ export const selectUnderlyingAmountPerOptionByExpirationUnderlyingQuote =
       return _uniqby(expirations, (exp) => exp.toNumber());
     },
   });
+
+export const selectOptionsByMarketsPageParams = selector({
+  key: 'selectOptionsByMarketsPageParams',
+  get: ({ get }) => {
+    const _underlyingMint = get(underlyingMint);
+    const _quoteMint = get(quoteMint);
+    const _expiration = get(expirationUnixTimestamp);
+    const _underlyingAmountPerContract = get(underlyingAmountPerContract);
+
+    const _optionsIds = get(optionsIds);
+    const options = _optionsIds
+      .map((publicKeyStr) => get(optionsMap(publicKeyStr)))
+      .filter((option) => {
+        return (
+          option &&
+          option.expirationUnixTimestamp.eq(_expiration) &&
+          _underlyingMint &&
+          _quoteMint &&
+          // must check for all permutations to get Calls and Puts
+          (option.underlyingAssetMint.equals(_underlyingMint) ||
+            option.underlyingAssetMint.equals(_quoteMint)) &&
+          (option.quoteAssetMint.equals(_quoteMint) ||
+            option.quoteAssetMint.equals(_underlyingMint)) &&
+          option.underlyingAmountPerContract.eq(_underlyingAmountPerContract)
+        );
+      });
+    return options as OptionMarketWithKey[];
+  },
+});
 
 /**
  * Upserts Options into the optionsMap atomFamily. Also initializes
@@ -185,7 +218,10 @@ export const useUpsertOptions = () =>
             ),
             (curr) => [...curr, optionPublicKeyStr],
           );
-          set(optionsMap(optionPublicKeyStr), optionAcount.account);
+          set(optionsMap(optionPublicKeyStr), {
+            ...optionAcount.account,
+            key: optionAcount.publicKey,
+          });
           // count underlying and quote mints to determine most used
           const optionUnderlyingMintString =
             optionAcount.account.underlyingAssetMint.toString();

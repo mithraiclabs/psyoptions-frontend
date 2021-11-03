@@ -235,7 +235,7 @@ const ConfirmOrder = () => {
           </Box>
           <Box paddingBottom={1}>
             <LabelledText
-              title={cost ? `$${cost.toString()}` : '-'}
+              title={orderType === 'market' ? 'Market Price' : cost ? `$${cost.toString()}` :  '-'}
               subtitle="Cost"
             />
           </Box>

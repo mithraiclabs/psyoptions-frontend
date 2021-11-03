@@ -394,19 +394,19 @@ const BuySellDialog: React.VFC<{
   const serumMarketQuoteAssetBalance = type === 'put' ? uAssetBalance : qAssetBalance;
   const breakeven: number | null = orderType === 'market' ?
     calculateBreakevenForMarketOrder(
-      strike.toNumber(),
+      strike?.toNumber(),
       type === 'call'
-        ? amountPerContract.toNumber()
-        : quoteAmountPerContract.toNumber(),
+        ? amountPerContract?.toNumber()
+        : quoteAmountPerContract?.toNumber(),
       orderSize,
       orderbook?.asks ?? [],
       type === 'put',
     ) : calculateBreakevenForLimitOrder(
-      strike.toNumber(),
+      strike?.toNumber(),
       type === 'call'
-        ? amountPerContract.toNumber()
-        : quoteAmountPerContract.toNumber(),
-      parsedLimitPrice.toNumber(),
+        ? amountPerContract?.toNumber()
+        : quoteAmountPerContract?.toNumber(),
+      parsedLimitPrice?.toNumber(),
       type === 'put',
     );
 

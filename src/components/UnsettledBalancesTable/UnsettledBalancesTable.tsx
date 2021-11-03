@@ -45,7 +45,7 @@ const UnsettledBalancesTable = () => {
                 colSpan={9}
                 className={classes.headCell}
               >
-                <h3 style={{ margin: 0 }}>Unsettled Balances</h3>
+                <h3 style={{ margin: 0 }}>Unsettled Funds</h3>
               </THeadCell>
             </TableRow>
             <TableRow>

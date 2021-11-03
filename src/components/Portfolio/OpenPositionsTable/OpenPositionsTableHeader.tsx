@@ -16,7 +16,7 @@ const OpenPositionsTableHeader: React.VFC = () => {
           colSpan={10}
           style={{ borderTop: 'none', padding: '16px 20px' }}
         >
-          <h3 style={{ margin: 0 }}>Open Positions</h3>
+          <h3 style={{ margin: 0 }}>Bought Options</h3>
         </THeadCell>
       </TableRow>
       <TableRow>

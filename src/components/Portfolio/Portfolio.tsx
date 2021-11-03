@@ -137,13 +137,10 @@ const Portfolio: React.VFC = () => {
             >
               <Box display="flex" flexDirection="row" alignItems="center"
                 style={{ minHeight: "66px" }}>
-                {isDesktop && <BarChartIcon />}
+                {isDesktop && <AttachMoney fontSize="small" />}
                 <Box className={isMobile ? classes.mobileTab : classes.desktopTab} textAlign="left">
                   <Box className={isMobile ? classes.mobileTabHeader : classes.desktopTabHeader}>
-                    Open Positions
-                  </Box>
-                  <Box fontSize={isMobile ? '10px' : '13px'}>
-                    {positionRows.length} open
+                    Unsettled Funds
                   </Box>
                 </Box>
               </Box>
@@ -185,21 +182,20 @@ const Portfolio: React.VFC = () => {
             >
               <Box display="flex" flexDirection="row" alignItems="center"
                 style={{ minHeight: "66px" }}>
-                {isDesktop && <AttachMoney fontSize="small" />}
+                {isDesktop && <BarChartIcon />}
                 <Box className={isMobile ? classes.mobileTab : classes.desktopTab} textAlign="left">
                   <Box className={isMobile ? classes.mobileTabHeader : classes.desktopTabHeader}>
-                    Unsettled Funds
+                    Bought Options
+                  </Box>
+                  <Box fontSize={isMobile ? '10px' : '13px'}>
+                    {positionRows.length} open
                   </Box>
                 </Box>
               </Box>
             </TabCustom>
           </Box>
           {selectedTab === 0 && (
-            <OpenPositionsTable
-              positions={positionRows}
-              className={clsx(classes.desktopColumns,
-                !isDesktop && classes.mobileColumns)}
-            />
+            <UnsettledBalancesTable />
           )}
           {selectedTab === 1 && (
             <WrittenOptionsTable
@@ -211,7 +207,11 @@ const Portfolio: React.VFC = () => {
             <OpenOrders />
           )}
           {selectedTab === 3 && (
-            <UnsettledBalancesTable />
+            <OpenPositionsTable
+              positions={positionRows}
+              className={clsx(classes.desktopColumns,
+                !isDesktop && classes.mobileColumns)}
+            />
           )}
         </Box>
       </Page>

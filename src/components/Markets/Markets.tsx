@@ -50,6 +50,7 @@ import {
 import { SelectAsset } from '../SelectAsset';
 import { BN } from '@project-serum/anchor';
 import { useTokenMintInfo } from '../../hooks/useTokenMintInfo';
+import { useOptionsChainFromMarketsState } from '../../hooks/useOptionChainsFromMarketsState';
 
 const dblsp = `${'\u00A0'}${'\u00A0'}`;
 
@@ -78,9 +79,11 @@ const rowTemplate = {
   },
 };
 
+// TODO move Serum market storage to Recoil
 const Markets: React.VFC = () => {
   const { uAsset, qAsset, assetListLoading } = useAssetList();
-  const { chains, buildOptionsChain } = useOptionsChain();
+  const { chains: _chains, buildOptionsChain } = useOptionsChain();
+  const chains = useOptionsChainFromMarketsState();
   const { marketsLoading } = useOptionsMarkets();
   const [_underlyingMint, setUnderlyingMint] = useRecoilState(underlyingMint);
   const [_quoteMint, setQuoteMint] = useRecoilState(quoteMint);

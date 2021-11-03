@@ -151,23 +151,6 @@ const Portfolio: React.VFC = () => {
             >
               <Box display="flex" flexDirection="row" alignItems="center"
                 style={{ minHeight: "66px" }}>
-                {isDesktop && <CreateIcon fontSize="small" />}
-                <Box className={isMobile ? classes.mobileTab : classes.desktopTab} textAlign="left">
-                  <Box className={isMobile ? classes.mobileTabHeader : classes.desktopTabHeader}>
-                    Written Options
-                  </Box>
-                  <Box fontSize={isMobile ? '10px' : '13px'}>
-                    {writtenOptionKeys.length} written
-                  </Box>
-                </Box>
-              </Box>
-            </TabCustom>
-            <TabCustom
-              selected={selectedTab === 2}
-              onClick={() => setSelectedTab(2)}
-            >
-              <Box display="flex" flexDirection="row" alignItems="center"
-                style={{ minHeight: "66px" }}>
                 {isDesktop && <ShoppingCart fontSize="small" />}
                 <Box className={isMobile ? classes.mobileTab : classes.desktopTab} textAlign="left">
                   <Box className={isMobile ? classes.mobileTabHeader : classes.desktopTabHeader}>
@@ -177,8 +160,8 @@ const Portfolio: React.VFC = () => {
               </Box>
             </TabCustom>
             <TabCustom
-              selected={selectedTab === 3}
-              onClick={() => setSelectedTab(3)}
+              selected={selectedTab === 2}
+              onClick={() => setSelectedTab(2)}
             >
               <Box display="flex" flexDirection="row" alignItems="center"
                 style={{ minHeight: "66px" }}>
@@ -193,22 +176,39 @@ const Portfolio: React.VFC = () => {
                 </Box>
               </Box>
             </TabCustom>
+            <TabCustom
+              selected={selectedTab === 3}
+              onClick={() => setSelectedTab(3)}
+            >
+              <Box display="flex" flexDirection="row" alignItems="center"
+                style={{ minHeight: "66px" }}>
+                {isDesktop && <CreateIcon fontSize="small" />}
+                <Box className={isMobile ? classes.mobileTab : classes.desktopTab} textAlign="left">
+                  <Box className={isMobile ? classes.mobileTabHeader : classes.desktopTabHeader}>
+                    Written Options
+                  </Box>
+                  <Box fontSize={isMobile ? '10px' : '13px'}>
+                    {writtenOptionKeys.length} written
+                  </Box>
+                </Box>
+              </Box>
+            </TabCustom>
           </Box>
           {selectedTab === 0 && (
             <UnsettledBalancesTable />
           )}
           {selectedTab === 1 && (
-            <WrittenOptionsTable
+            <OpenOrders />
+          )}
+          {selectedTab === 2 && (
+            <OpenPositionsTable
+              positions={positionRows}
               className={clsx(classes.desktopColumns,
                 !isDesktop && classes.mobileColumns)}
             />
           )}
-          {selectedTab === 2 && (
-            <OpenOrders />
-          )}
           {selectedTab === 3 && (
-            <OpenPositionsTable
-              positions={positionRows}
+            <WrittenOptionsTable
               className={clsx(classes.desktopColumns,
                 !isDesktop && classes.mobileColumns)}
             />

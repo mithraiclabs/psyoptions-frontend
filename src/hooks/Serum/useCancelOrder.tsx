@@ -7,13 +7,14 @@ import {
 
 import { PublicKey, Transaction } from '@solana/web3.js';
 import useSerum from '../useSerum';
-import useWallet from '../useWallet';
+import { useConnectedWallet } from "@saberhq/use-solana";
 import useConnection from '../useConnection';
 import { useSettleFunds } from './useSettleFunds';
 import useNotifications from '../useNotifications';
 import useSendTransaction from '../useSendTransaction';
 import { OptionMarket } from '../../types';
 import { useAmericanPsyOptionsProgram } from '../useAmericanPsyOptionsProgram';
+import { useSubscribeSerumOrderbook } from '../../hooks/Serum';
 
 export const useCancelOrder = (
   serumMarketAddress: string,
@@ -21,7 +22,7 @@ export const useCancelOrder = (
 ) => {
   const program = useAmericanPsyOptionsProgram();
   const { connection } = useConnection();
-  const { wallet, pubKey } = useWallet();
+  const wallet = useConnectedWallet();
   const { serumMarkets } = useSerum();
   const { serumMarket } = serumMarkets[serumMarketAddress] || {};
   const { makeSettleFundsTx } = useSettleFunds(
@@ -30,69 +31,70 @@ export const useCancelOrder = (
   );
   const { pushErrorNotification } = useNotifications();
   const { sendSignedTransaction } = useSendTransaction();
+  useSubscribeSerumOrderbook(serumMarket?.address.toString() ?? '');
 
-  return useCallback(
-    async (order) => {
-      if (serumMarket && optionMarket) {
-        try {
-          const settleTx = await makeSettleFundsTx();
+  return useCallback(async (order) => {
+    if (!serumMarket || !optionMarket || !wallet?.publicKey)
+      return;
+    try {
+      const settleTx = await makeSettleFundsTx();
 
-          let cancelTx: Transaction;
-          if (
-            PSY_AMERICAN_PROGRAM_IDS[
-              optionMarket.psyOptionsProgramId.toString()
-            ] === ProgramVersions.V1
-          ) {
-            cancelTx = await serumMarket.makeCancelOrderTransaction(
-              connection,
-              pubKey,
-              order,
-            );
-          } else {
-            const ix = await serumInstructions.cancelOrderInstructionV2(
-              program,
-              optionMarket.pubkey,
-              new PublicKey(optionMarket.serumProgramId),
-              serumMarket.address,
-              order,
-              undefined,
-            );
-            cancelTx = new Transaction().add(ix);
-          }
-          const { blockhash } = await connection.getRecentBlockhash();
-          cancelTx.recentBlockhash = blockhash;
-          cancelTx.feePayer = pubKey;
-          const [signedCancelTx, signedSettleTx] =
-            await wallet.signAllTransactions([cancelTx, settleTx]);
+      if (!settleTx)
+        return;
 
-          await sendSignedTransaction({
-            signedTransaction: signedCancelTx,
-            connection,
-            sendingMessage: 'Processing: Cancel Order',
-            successMessage: 'Confirmed: Cancel Order',
-          });
-
-          await sendSignedTransaction({
-            signedTransaction: signedSettleTx,
-            connection,
-            sendingMessage: 'Processing: Settle Funds',
-            successMessage: 'Confirmed: Settle Funds',
-          });
-        } catch (err) {
-          pushErrorNotification(err);
-        }
+      let cancelTx: Transaction;
+      if (
+        PSY_AMERICAN_PROGRAM_IDS[
+          optionMarket.psyOptionsProgramId.toString()
+        ] === ProgramVersions.V1
+      ) {
+        cancelTx = await serumMarket.makeCancelOrderTransaction(
+          connection,
+          wallet.publicKey,
+          order,
+        );
+      } else {
+        const ix = await serumInstructions.cancelOrderInstructionV2(
+          program,
+          optionMarket.pubkey,
+          new PublicKey(optionMarket.serumProgramId),
+          serumMarket.address,
+          order,
+          undefined,
+        );
+        cancelTx = new Transaction().add(ix);
       }
-    },
-    [
-      connection,
-      makeSettleFundsTx,
-      pubKey,
-      program,
-      optionMarket,
-      pushErrorNotification,
-      sendSignedTransaction,
-      serumMarket,
-      wallet,
-    ],
+      const { blockhash } = await connection.getRecentBlockhash();
+      cancelTx.recentBlockhash = blockhash;
+      cancelTx.feePayer = wallet.publicKey;
+      const [signedCancelTx, signedSettleTx] =
+        await wallet.signAllTransactions([cancelTx, settleTx]);
+
+      await sendSignedTransaction({
+        signedTransaction: signedCancelTx,
+        connection,
+        sendingMessage: 'Processing: Cancel Order',
+        successMessage: 'Confirmed: Cancel Order',
+      });
+
+      await sendSignedTransaction({
+        signedTransaction: signedSettleTx,
+        connection,
+        sendingMessage: 'Processing: Settle Funds',
+        successMessage: 'Confirmed: Settle Funds',
+      });
+    } catch (err) {
+      pushErrorNotification(err);
+    }
+  }, [
+    connection,
+    makeSettleFundsTx,
+    program,
+    optionMarket,
+    pushErrorNotification,
+    sendSignedTransaction,
+    serumMarket,
+    wallet,
+  ],
   );
 };

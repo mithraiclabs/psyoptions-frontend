@@ -1,6 +1,15 @@
 version: 0.2
 
 env:
+  variables:
+    REACT_APP_INITIALIZE_PAGE_ENABLED: $REACT_APP_INITIALIZE_PAGE_ENABLED
+    REACT_APP_DEVNET_PROGRAM_ID: $REACT_APP_DEVNET_PROGRAM_ID
+    REACT_APP_MAINNET_PROGRAM_ID: $REACT_APP_MAINNET_PROGRAM_ID
+    REACT_APP_DEVNET_DEX_PROGRAM_ID: $REACT_APP_DEVNET_DEX_PROGRAM_ID
+    REACT_APP_MAINNET_DEX_PROGRAM_ID: $REACT_APP_MAINNET_DEX_PROGRAM_ID
+    REACT_APP_DEVNET_FAUCET_USDC: $REACT_APP_DEVNET_FAUCET_USDC
+    REACT_APP_DEVNET_FAUCET_BTC: $REACT_APP_DEVNET_FAUCET_BTC
+    REACT_APP_DEVNET_FAUCET_PSY: $REACT_APP_DEVNET_FAUCET_PSY
   secrets-manager:
     SENTRY_AUTH_TOKEN: '${SecretsArn}:SENTRY_AUTH_TOKEN'
 
@@ -11,6 +20,9 @@ phases:
       - timeout 15 sh -c "until docker info; do echo .; sleep 1; done"
   pre_build:
     commands:
+      - printenv > .env
+      - echo "REACT_APP_DEVNET_PROGRAM_ID is $REACT_APP_DEVNET_PROGRAM_ID"
+      - echo "REACT_APP_MAINNET_PROGRAM_ID is $REACT_APP_MAINNET_PROGRAM_ID"
       - echo Logging in to Amazon ECR...
       - aws --version
       - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_REPOSITORY_URI

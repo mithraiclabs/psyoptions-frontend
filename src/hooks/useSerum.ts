@@ -2,7 +2,7 @@ import { useContext, useCallback } from 'react';
 import { PublicKey } from '@solana/web3.js';
 
 import { Market } from '@mithraic-labs/serum';
-import { SerumContext } from '../context/SerumContext';
+import { SerumContext, SerumContextType } from '../context/SerumContext';
 import {
   batchSerumMarkets,
   findMarketByAssets,
@@ -16,14 +16,29 @@ import {
 } from '../context/SerumOrderbookContext';
 import { LocalSerumMarket, SerumMarketAndProgramId } from '../types';
 
-const useSerum = () => {
+interface SerumHook extends SerumContextType {
+  fetchMultipleSerumMarkets: (
+    serumMarketKeys: SerumMarketAndProgramId[],
+  ) => Promise<void>;
+  fetchSerumMarket: (
+    serumMarketKey: PublicKey | undefined,
+    baseMintKey: PublicKey,
+    quoteMintKey: PublicKey,
+    serumProgramKey?: PublicKey | undefined,
+  ) => Promise<LocalSerumMarket | undefined>;
+}
+
+const useSerum = (): SerumHook => {
   const { pushNotification } = useNotifications();
   const { connection, dexProgramId } = useConnection();
   const { serumMarkets, setSerumMarkets } = useContext(SerumContext);
-  const [_, setOrderbooks] = useSerumOrderbooks();
+  const [, setOrderbooks] = useSerumOrderbooks();
 
   const fetchMultipleSerumMarkets = useCallback(
     async (serumMarketKeys: SerumMarketAndProgramId[]) => {
+      if (!connection) {
+        return;
+      }
       try {
         // set that the serum markets are loading
         const loading: Record<string, LocalSerumMarket> = {};
@@ -37,7 +52,7 @@ const useSerum = () => {
           serumMarketKeys,
           {},
         );
-        const newMarkets = {};
+        const newMarkets: Record<string, LocalSerumMarket> = {};
         const newOrderbooks: SerumOrderbooks = {};
         serumMarketsInfo.forEach(
           ({ market, orderbookData, serumProgramId }) => {
@@ -75,12 +90,16 @@ const useSerum = () => {
       serumProgramKey?: PublicKey,
     ) => {
       // Set individual loading states for each market
+      const programKey = serumProgramKey || dexProgramId;
+      if (!serumMarketKey || !connection || !programKey) {
+        return;
+      }
       setSerumMarkets((markets) => ({
         ...markets,
         [serumMarketKey.toString()]: { loading: true },
       }));
 
-      let serumMarket: Market;
+      let serumMarket: Market | null = null;
       let error;
       try {
         if (serumMarketKey) {
@@ -88,34 +107,36 @@ const useSerum = () => {
             connection,
             serumMarketKey,
             {},
-            serumProgramKey || dexProgramId,
+            programKey,
           );
         } else {
           serumMarket = await findMarketByAssets(
             connection,
             baseMintKey,
             quoteMintKey,
-            serumProgramKey || dexProgramId,
+            programKey,
           );
         }
       } catch (err) {
         console.error(err);
-        error = err.message;
+        error = (err as Error).message;
         pushNotification({
           severity: 'error',
           message: `${err}`,
         });
       }
 
-      const newMarket = {
+      const newMarket: LocalSerumMarket = {
         loading: false,
         error,
-        serumMarket,
+        serumMarket: serumMarket ?? undefined,
       };
 
-      setSerumMarkets((markets) => {
-        return { ...markets, [serumMarket.address.toString()]: newMarket };
-      });
+      setSerumMarkets((markets) =>
+        serumMarket
+          ? { ...markets, [serumMarket.address.toString()]: newMarket }
+          : markets,
+      );
 
       return newMarket;
     },

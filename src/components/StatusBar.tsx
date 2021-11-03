@@ -1,7 +1,6 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
+import { useHistory } from 'react-router-dom';
 import React, { useState } from 'react';
 import Box from '@material-ui/core/Box';
-import { useHistory } from 'react-router-dom';
 import Button from '@material-ui/core/Button';
 import Hidden from '@material-ui/core/Hidden';
 import IconButton from '@material-ui/core/IconButton';
@@ -13,15 +12,13 @@ import WalletStatus from './WalletStatus';
 import NetworkMenu from './NetworkMenu';
 
 import theme from '../utils/theme';
-// @ts-ignore: asset import
-import logo from '../../assets/psyoptions-logo-light.png';
 
 import useConnection from '../hooks/useConnection';
 import { isTrue } from '../utils/general';
 
-const { INITIALIZE_PAGE_ENABLED } = process.env;
+const { REACT_APP_INITIALIZE_PAGE_ENABLED } = process.env;
 
-const NavOptions = React.memo(() => {
+const NavOptions: React.VFC = () => {
   const history = useHistory();
   const { endpoint } = useConnection();
 
@@ -29,21 +26,17 @@ const NavOptions = React.memo(() => {
     <>
       <Box mx={2}>
         <Button
-          href="/"
           onClick={(e) => {
             e.preventDefault();
             history.push('/');
           }}
           style={{ minWidth: 0, padding: 0 }}
         >
-          <Box p={[1, 1, '2px']}>
-            <img src={logo} width="32px" height="32px" alt="PsyOptions Logo" />
-          </Box>
+          <img src="images/psyoptions-logo-light.png" width="32" height="32" alt="PsyOptions Logo" />
         </Button>
       </Box>
       <Box mx={2}>
         <Button
-          href="/markets"
           onClick={(e) => {
             e.preventDefault();
             history.push('/markets');
@@ -52,22 +45,42 @@ const NavOptions = React.memo(() => {
           Markets
         </Button>
       </Box>
-      {isTrue(INITIALIZE_PAGE_ENABLED) && (
-        <Box mx={2}>
-          <Button
-            href="/initialize-market"
-            onClick={(e) => {
-              e.preventDefault();
-              history.push('/initialize-market');
-            }}
-          >
-            Initialize
-          </Button>
-        </Box>
+      <Box mx={2}>
+        <Button
+          onClick={(e) => {
+            e.preventDefault();
+            history.push('/simple/choose-asset');
+          }}
+        >
+          Beginner UI
+        </Button>
+      </Box>
+      {isTrue(REACT_APP_INITIALIZE_PAGE_ENABLED ?? false) && (
+        <>
+          <Box mx={2}>
+            <Button
+              onClick={(e) => {
+                e.preventDefault();
+                history.push('/initialize-market');
+              }}
+            >
+              Initialize
+            </Button>
+          </Box>
+          <Box mx={2}>
+            <Button
+              onClick={(e) => {
+                e.preventDefault();
+                history.push('/mint');
+              }}
+            >
+              Mint
+            </Button>
+          </Box>
+        </>
       )}
       <Box mx={2}>
         <Button
-          href="/portfolio"
           onClick={(e) => {
             e.preventDefault();
             history.push('/portfolio');
@@ -79,7 +92,6 @@ const NavOptions = React.memo(() => {
       {endpoint?.name === 'Devnet' && (
         <Box mx={2}>
           <Button
-            href="/faucets"
             onClick={(e) => {
               e.preventDefault();
               history.push('/faucets');
@@ -102,9 +114,11 @@ const NavOptions = React.memo(() => {
       </Box>
     </>
   );
-});
+};
 
-const StatusBar = React.memo(() => {
+const StatusBar: React.VFC<{ transparent?: boolean }> = ({
+  transparent = false,
+}) => {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   return (
@@ -128,7 +142,9 @@ const StatusBar = React.memo(() => {
         justifyContent="space-between"
         flexDirection="row"
         style={{
-          background: theme.gradients?.secondaryPrimary,
+          background: transparent
+            ? 'transparent'
+            : theme.gradients?.secondaryPrimary,
         }}
       >
         <Box display="flex">
@@ -147,7 +163,7 @@ const StatusBar = React.memo(() => {
             </IconButton>
           </Hidden>
         </Box>
-        <Box display="flex">
+        <Box display="flex" style={{ alignItems: "center" }}>
           <WalletStatus />
           <NoSsr>
             <NetworkMenu />
@@ -156,6 +172,6 @@ const StatusBar = React.memo(() => {
       </Box>
     </>
   );
-});
+};
 
 export default StatusBar;

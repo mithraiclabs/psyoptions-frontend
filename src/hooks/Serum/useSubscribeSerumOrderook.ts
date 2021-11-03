@@ -21,55 +21,45 @@ export const useSubscribeSerumOrderbook = (
   const serumMarket = serumMarkets[serumMarketAddress]?.serumMarket;
 
   useEffect(() => {
-    let asksSubscription;
-    let bidsSubscription;
     if (serumMarket) {
       // subscribe to bid/ask on chain updates
-      bidsSubscription = connection.onAccountChange(
-        serumMarket.bidsAddress,
-        (bidsAccount) => {
-          const book = Orderbook.decode(serumMarket, bidsAccount.data);
-          const _bids = book
-            .getL2(DEFAULT_DEPTH)
-            .map(([price, size]) => ({ price, size }));
-          setOrderbooks((prevOrderbooks) => ({
-            ...prevOrderbooks,
-            [serumMarketAddress]: {
-              askOrderbook: prevOrderbooks[serumMarketAddress]?.askOrderbook,
-              bidOrderbook: book,
-              asks: prevOrderbooks[serumMarketAddress]?.asks ?? [],
-              bids: _bids,
-            },
-          }));
-        },
-      );
-      asksSubscription = connection.onAccountChange(
-        serumMarket.asksAddress,
-        (asksAccount) => {
-          const book = Orderbook.decode(serumMarket, asksAccount.data);
-          const _asks = book
-            .getL2(DEFAULT_DEPTH)
-            .map(([price, size]) => ({ price, size }));
-          setOrderbooks((prevOrderbooks) => ({
-            ...prevOrderbooks,
-            [serumMarketAddress]: {
-              askOrderbook: book,
-              bidOrderbook: prevOrderbooks[serumMarketAddress]?.bidOrderbook,
-              asks: _asks,
-              bids: prevOrderbooks[serumMarketAddress]?.bids ?? [],
-            },
-          }));
-        },
-      );
+      connection.onAccountChange(serumMarket.bidsAddress, (bidsAccount) => {
+        const book = Orderbook.decode(serumMarket, bidsAccount.data);
+        const _bids = book
+          .getL2(DEFAULT_DEPTH)
+          .map(([price, size]) => ({ price, size }));
+        setOrderbooks((prevOrderbooks) => ({
+          ...prevOrderbooks,
+          [serumMarketAddress]: {
+            askOrderbook: prevOrderbooks[serumMarketAddress]?.askOrderbook,
+            bidOrderbook: book,
+            asks: prevOrderbooks[serumMarketAddress]?.asks ?? [],
+            bids: _bids,
+          },
+        }));
+      });
+      connection.onAccountChange(serumMarket.asksAddress, (asksAccount) => {
+        const book = Orderbook.decode(serumMarket, asksAccount.data);
+        const _asks = book
+          .getL2(DEFAULT_DEPTH)
+          .map(([price, size]) => ({ price, size }));
+        setOrderbooks((prevOrderbooks) => ({
+          ...prevOrderbooks,
+          [serumMarketAddress]: {
+            askOrderbook: book,
+            bidOrderbook: prevOrderbooks[serumMarketAddress]?.bidOrderbook,
+            asks: _asks,
+            bids: prevOrderbooks[serumMarketAddress]?.bids ?? [],
+          },
+        }));
+      });
     }
 
-    return () => {
-      if (asksSubscription) {
-        connection.removeAccountChangeListener(asksSubscription);
-      }
-      if (bidsSubscription) {
-        connection.removeAccountChangeListener(bidsSubscription);
-      }
-    };
+    /**
+     * #TODO: Find best way to remove subscriptions here.
+     *  The problem with removing the subs with a return statement here
+     *  is then when user changes option expiration, they get removed,
+     *  but we still need them!
+     */
   }, [connection, serumMarketAddress, serumMarket, setOrderbooks]);
 };

@@ -8,7 +8,7 @@ import React, {
 import { AccountLayout, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { PublicKey } from '@solana/web3.js';
 import useConnection from '../hooks/useConnection';
-import useWallet from '../hooks/useWallet';
+import { useConnectedWallet } from "@saberhq/use-solana";
 import { TokenAccount } from '../types';
 import useNotifications from '../hooks/useNotifications';
 
@@ -49,7 +49,7 @@ const convertAccountInfoToLocalStruct = (
 export const OwnedTokenAccountsProvider: React.FC = ({ children }) => {
   const { connection } = useConnection();
   const { pushNotification } = useNotifications();
-  const { connected, pubKey } = useWallet();
+  const wallet = useConnectedWallet();
   const [loadingOwnedTokenAccounts, setLoading] = useState(false);
   const [ownedTokenAccounts, setOwnedTokenAccounts] = useState<
     Record<string, TokenAccount[]>
@@ -117,7 +117,7 @@ export const OwnedTokenAccountsProvider: React.FC = ({ children }) => {
 
   useEffect(() => {
     // Fetch and subscribe to Token Account updates on mount
-    if (!connected || !pubKey) {
+    if (!wallet?.connected || !wallet?.publicKey) {
       // short circuit when there is no wallet connected
       return;
     }
@@ -126,13 +126,13 @@ export const OwnedTokenAccountsProvider: React.FC = ({ children }) => {
       setLoading(true);
       try {
         const resp = await connection.getTokenAccountsByOwner(
-          pubKey,
+          wallet.publicKey,
           {
             programId: TOKEN_PROGRAM_ID,
           },
           connection.commitment,
         );
-        const _ownedTokenAccounts = {};
+        const _ownedTokenAccounts = {} as Record<string, TokenAccount[]>;
         if (resp?.value) {
           resp.value.forEach(({ account, pubkey }) => {
             const accountInfo = AccountLayout.decode(account.data);
@@ -164,9 +164,9 @@ export const OwnedTokenAccountsProvider: React.FC = ({ children }) => {
       }
     })();
   }, [
-    connected,
+    wallet?.connected,
     connection,
-    pubKey,
+    wallet?.publicKey,
     pushNotification,
     refreshCount,
     subscribeToTokenAccount,

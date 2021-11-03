@@ -3,7 +3,6 @@ import {
   PublicKey,
   Signer,
   Transaction,
-  TransactionInstruction,
 } from '@solana/web3.js';
 import {
   PSY_AMERICAN_PROGRAM_IDS,
@@ -12,14 +11,14 @@ import {
 } from '@mithraic-labs/psy-american';
 import { Market, OrderParams } from '@mithraic-labs/serum/lib/market';
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import { Asset, OptionMarket, TokenAccount } from '../types';
+import { Asset, CreateMissingMintAccountsRes, OptionMarket, TokenAccount } from '../types';
 import { WRAPPED_SOL_ADDRESS } from '../utils/token';
 import useNotifications from './useNotifications';
 import useSendTransaction from './useSendTransaction';
 import useOwnedTokenAccounts from './useOwnedTokenAccounts';
 import { useSolanaMeta } from '../context/SolanaMetaContext';
 import useConnection from './useConnection';
-import useWallet from './useWallet';
+import { useConnectedWallet } from "@saberhq/use-solana";
 import { createMissingAccountsAndMint } from '../utils/instructions/index';
 import { useCreateAdHocOpenOrdersSubscription } from './Serum';
 import { useAmericanPsyOptionsProgram } from './useAmericanPsyOptionsProgram';
@@ -30,7 +29,7 @@ type PlaceSellOrderArgs = {
   orderArgs: OrderParams<PublicKey>;
   optionMarket: OptionMarket;
   uAsset: Asset;
-  uAssetTokenAccount: TokenAccount;
+  uAssetTokenAccount: TokenAccount | null;
   mintedOptionDestinationKey?: PublicKey;
   writerTokenDestinationKey?: PublicKey;
 };
@@ -40,7 +39,7 @@ const usePlaceSellOrder = (
 ): ((obj: PlaceSellOrderArgs) => Promise<void>) => {
   const program = useAmericanPsyOptionsProgram();
   const { pushErrorNotification } = useNotifications();
-  const { wallet, pubKey } = useWallet();
+  const wallet = useConnectedWallet();
   const { connection } = useConnection();
   const { splTokenAccountRentBalance } = useSolanaMeta();
   const { subscribeToTokenAccount } = useOwnedTokenAccounts();
@@ -59,9 +58,12 @@ const usePlaceSellOrder = (
       mintedOptionDestinationKey,
       writerTokenDestinationKey,
     }: PlaceSellOrderArgs) => {
+      if (!connection || !wallet?.publicKey) {
+        return;
+      }
       try {
         const mintTX = new Transaction();
-        let mintSigners = [];
+        let mintSigners: Signer[] = [];
         let _uAssetTokenAccount = uAssetTokenAccount;
         let _optionTokenSrcKey = mintedOptionDestinationKey;
         let _writerTokenDestinationKey = writerTokenDestinationKey;
@@ -74,8 +76,8 @@ const usePlaceSellOrder = (
           // Mint missing contracs before placing order
           const { error, response } = await createMissingAccountsAndMint({
             optionsProgramId,
-            authorityPubkey: pubKey,
-            owner: pubKey,
+            authorityPubkey: wallet.publicKey,
+            owner: wallet.publicKey,
             market: optionMarket,
             uAsset,
             uAssetTokenAccount: _uAssetTokenAccount,
@@ -97,7 +99,7 @@ const usePlaceSellOrder = (
             mintedOptionDestinationKey: _mintedOptionDestinationKey,
             writerTokenDestinationKey: __writerTokenDestinationKey,
             uAssetTokenAccount: __uAssetTokenAccount,
-          } = response;
+          } = response as CreateMissingMintAccountsRes;
           _uAssetTokenAccount = __uAssetTokenAccount;
           subscribeToTokenAccount(__writerTokenDestinationKey);
           subscribeToTokenAccount(_mintedOptionDestinationKey);
@@ -117,23 +119,25 @@ const usePlaceSellOrder = (
               Token.createCloseAccountInstruction(
                 TOKEN_PROGRAM_ID,
                 _uAssetTokenAccount.pubKey,
-                pubKey, // Send any remaining SOL to the owner
-                pubKey,
+                wallet.publicKey, // Send any remaining SOL to the owner
+                wallet.publicKey,
                 [],
               ),
             );
           }
         }
 
+        if (!_optionTokenSrcKey) {
+          return;
+        }
+
         /// /////////////////// CREATE SERUM TRANSACTION /////////////////////////
         // Backwards compatability for V1
         let placeOrderTx: Transaction;
         let placeOrderSigners: Signer[] = [];
-        if (
-          PSY_AMERICAN_PROGRAM_IDS[optionsProgramId.toString()] ===
-          ProgramVersions.V1
-        ) {
-          let openOrdersAddress: PublicKey;
+        let openOrdersAddress: PublicKey;
+        // eslint-disable-next-line
+        if (PSY_AMERICAN_PROGRAM_IDS[optionsProgramId.toString()] === ProgramVersions.V1) {
           ({
             openOrdersAddress,
             transaction: placeOrderTx,
@@ -142,32 +146,36 @@ const usePlaceSellOrder = (
             ...orderArgs,
             payer: _optionTokenSrcKey,
           }));
-
-          if (openOrdersAddress) {
-            createAdHocOpenOrdersSub(openOrdersAddress);
-          }
         } else {
-          const ix = await serumInstructions.newOrderInstruction(
+          if (!optionMarket.serumMarketKey) {
+            return;
+          }
+          const { openOrdersKey, tx } = await serumInstructions.newOrderInstruction(
             program,
             optionMarket.pubkey,
             new PublicKey(optionMarket.serumProgramId),
             optionMarket.serumMarketKey,
             { ...orderArgs, payer: _optionTokenSrcKey },
           );
-          placeOrderTx = new Transaction().add(ix);
+          placeOrderTx = new Transaction().add(tx);
+          openOrdersAddress = openOrdersKey;
+        }
+
+        if (openOrdersAddress) {
+          createAdHocOpenOrdersSub(openOrdersAddress);
         }
 
         const { blockhash } = await connection.getRecentBlockhash();
         const transactions: Transaction[] = [];
         if (mintTX.instructions.length > 0) {
-          mintTX.feePayer = pubKey;
+          mintTX.feePayer = wallet.publicKey;
           mintTX.recentBlockhash = blockhash;
           if (mintSigners.length) {
             mintTX.partialSign(...mintSigners);
           }
           transactions.push(mintTX);
         }
-        placeOrderTx.feePayer = pubKey;
+        placeOrderTx.feePayer = wallet.publicKey;
         placeOrderTx.recentBlockhash = blockhash;
 
         if (placeOrderSigners.length) {
@@ -209,7 +217,6 @@ const usePlaceSellOrder = (
       connection,
       createAdHocOpenOrdersSub,
       program,
-      pubKey,
       pushErrorNotification,
       sendSignedTransaction,
       splTokenAccountRentBalance,

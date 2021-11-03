@@ -14,7 +14,7 @@ import {
 } from '@mithraic-labs/psy-american';
 
 import useConnection from './useConnection';
-import useWallet from './useWallet';
+import { useConnectedWallet } from "@saberhq/use-solana";
 import useNotifications from './useNotifications';
 import useSendTransaction from './useSendTransaction';
 import { initializeTokenAccountTx, WRAPPED_SOL_ADDRESS } from '../utils/token';
@@ -40,105 +40,106 @@ export const useCloseWrittenOptionPostExpiration = (
   const program = useAmericanPsyOptionsProgram();
   const { connection } = useConnection();
   const { pushErrorNotification } = useNotifications();
-  const { pubKey, wallet } = useWallet();
+  const wallet = useConnectedWallet();
   const { splTokenAccountRentBalance } = useSolanaMeta();
   const { sendSignedTransaction } = useSendTransaction();
 
-  return useCallback(
-    async (contractsToClose = 1) => {
-      try {
-        const transaction = new Transaction();
-        const signers = [];
-        let _underlyingAssetDestKey = underlyingAssetDestKey;
-        if (market.uAssetMint === WRAPPED_SOL_ADDRESS) {
-          // need to create a sol account
-          const {
-            transaction: initWrappedSolAcctIx,
-            newTokenAccount: wrappedSolAccount,
-          } = await initializeTokenAccountTx({
-            // eslint-disable-line
-            connection,
-            payerKey: pubKey,
-            mintPublicKey: new PublicKey(WRAPPED_SOL_ADDRESS),
-            owner: pubKey,
-            rentBalance: splTokenAccountRentBalance,
-          });
-          transaction.add(initWrappedSolAcctIx);
-          signers.push(wrappedSolAccount);
-          _underlyingAssetDestKey = wrappedSolAccount.publicKey;
-        }
-
-        let closePostExpirationIx: TransactionInstruction;
-        if (
-          PSY_AMERICAN_PROGRAM_IDS[market.psyOptionsProgramId.toString()] ===
-          ProgramVersions.V1
-        ) {
-          closePostExpirationIx =
-            await closePostExpirationCoveredCallInstruction({
-              programId: new PublicKey(market.psyOptionsProgramId),
-              optionMarketKey: market.optionMarketKey,
-              size: new BN(contractsToClose),
-              underlyingAssetDestKey: _underlyingAssetDestKey,
-              underlyingAssetPoolKey: market.underlyingAssetPoolKey,
-              writerTokenMintKey: market.writerTokenMintKey,
-              writerTokenSourceKey,
-              writerTokenSourceAuthorityKey: pubKey,
-            });
-        } else {
-          closePostExpirationIx = instructions.closePostExpirationInstruction(
-            program,
-            new BN(contractsToClose),
-            uiOptionMarketToProtocolOptionMarket(market),
-            writerTokenSourceKey,
-            _underlyingAssetDestKey,
-          );
-        }
-
-        transaction.add(closePostExpirationIx);
-
-        // Close out the wrapped SOL account so it feels native
-        if (market.uAssetMint === WRAPPED_SOL_ADDRESS) {
-          transaction.add(
-            Token.createCloseAccountInstruction(
-              TOKEN_PROGRAM_ID,
-              _underlyingAssetDestKey,
-              pubKey, // Send any remaining SOL to the owner
-              pubKey,
-              [],
-            ),
-          );
-        }
-        transaction.feePayer = pubKey;
-        const { blockhash } = await connection.getRecentBlockhash(); // eslint-disable-line
-        transaction.recentBlockhash = blockhash;
-
-        if (signers.length) {
-          transaction.partialSign(...signers);
-        }
-
-        const signedTx = await wallet.signTransaction(transaction);
-
-        await sendSignedTransaction({
-          signedTransaction: signedTx,
+  return useCallback(async (contractsToClose = 1) => {
+    if (!wallet?.publicKey)
+      return;
+    try {
+      const transaction = new Transaction();
+      const signers = [];
+      let _underlyingAssetDestKey = underlyingAssetDestKey;
+      if (market.uAssetMint === WRAPPED_SOL_ADDRESS) {
+        // need to create a sol account
+        const {
+          transaction: initWrappedSolAcctIx,
+          newTokenAccount: wrappedSolAccount,
+        } = await initializeTokenAccountTx({
+          // eslint-disable-line
           connection,
-          sendingMessage: 'Sending Transaction: Close Option',
-          successMessage: 'Transaction Confirmed: Close Option',
+          payerKey: wallet.publicKey,
+          mintPublicKey: new PublicKey(WRAPPED_SOL_ADDRESS),
+          owner: wallet.publicKey,
+          rentBalance: splTokenAccountRentBalance,
         });
-      } catch (err) {
-        pushErrorNotification(err);
+        transaction.add(initWrappedSolAcctIx);
+        signers.push(wrappedSolAccount);
+        _underlyingAssetDestKey = wrappedSolAccount.publicKey;
       }
-    },
-    [
-      underlyingAssetDestKey,
-      market,
-      program,
-      writerTokenSourceKey,
-      pubKey,
-      connection,
-      wallet,
-      pushErrorNotification,
-      sendSignedTransaction,
-      splTokenAccountRentBalance,
-    ],
-  );
+
+      if (!_underlyingAssetDestKey)
+        return;
+
+      let closePostExpirationIx: TransactionInstruction;
+      if (
+        PSY_AMERICAN_PROGRAM_IDS[market.psyOptionsProgramId.toString()] ===
+        ProgramVersions.V1
+      ) {
+        closePostExpirationIx =
+          await closePostExpirationCoveredCallInstruction({
+            programId: new PublicKey(market.psyOptionsProgramId),
+            optionMarketKey: market.optionMarketKey,
+            size: new BN(contractsToClose),
+            underlyingAssetDestKey: _underlyingAssetDestKey,
+            underlyingAssetPoolKey: market.underlyingAssetPoolKey,
+            writerTokenMintKey: market.writerTokenMintKey,
+            writerTokenSourceKey,
+            writerTokenSourceAuthorityKey: wallet.publicKey,
+          });
+      } else {
+        closePostExpirationIx = instructions.closePostExpirationInstruction(
+          program,
+          new BN(contractsToClose),
+          uiOptionMarketToProtocolOptionMarket(market),
+          writerTokenSourceKey,
+          _underlyingAssetDestKey,
+        );
+      }
+
+      transaction.add(closePostExpirationIx);
+
+      // Close out the wrapped SOL account so it feels native
+      if (market.uAssetMint === WRAPPED_SOL_ADDRESS) {
+        transaction.add(
+          Token.createCloseAccountInstruction(
+            TOKEN_PROGRAM_ID,
+            _underlyingAssetDestKey,
+            wallet.publicKey, // Send any remaining SOL to the owner
+            wallet.publicKey,
+            [],
+          ),
+        );
+      }
+      transaction.feePayer = wallet.publicKey;
+      const { blockhash } = await connection.getRecentBlockhash(); // eslint-disable-line
+      transaction.recentBlockhash = blockhash;
+
+      if (signers.length) {
+        transaction.partialSign(...signers);
+      }
+
+      const signedTx = await wallet.signTransaction(transaction);
+
+      await sendSignedTransaction({
+        signedTransaction: signedTx,
+        connection,
+        sendingMessage: 'Sending Transaction: Close Option',
+        successMessage: 'Transaction Confirmed: Close Option',
+      });
+    } catch (err) {
+      pushErrorNotification(err);
+    }
+  }, [
+    underlyingAssetDestKey,
+    market,
+    program,
+    writerTokenSourceKey,
+    connection,
+    wallet,
+    pushErrorNotification,
+    sendSignedTransaction,
+    splTokenAccountRentBalance,
+  ]);
 };

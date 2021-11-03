@@ -1,16 +1,17 @@
 ## Configuring the app for local development:
 
-Copy `.env-example` and rename it `.env`.
+Copy `.env-example` and rename it `.env.local`.
 
-OR run `touch .env` and add the following lines to it and fill in the blanks:
+OR run `touch .env.local` and add the following lines to it and fill in the blanks:
+
+Please add environment variables into the CodePipeline Build configuration in order for them to be accessible
 
 ```
-LOCAL_PROGRAM_ID=R2y9ip6mxmWUj4pt54jP2hz2dgvMozy9VTSwMWE7evs
-DEVNET_PROGRAM_ID=R2y9ip6mxmWUj4pt54jP2hz2dgvMozy9VTSwMWE7evs
-LOCAL_DEX_PROGRAM_ID=9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin
-DEVNET_DEX_PROGRAM_ID=DESVgJVGajEgKGXhb6XmqDHGz3VjdgP7rEVESBgxmroY
-APP_ENABLED=true
-INITIALIZE_PAGE_ENABLED='true'
+REACT_APP_LOCAL_PROGRAM_ID=R2y9ip6mxmWUj4pt54jP2hz2dgvMozy9VTSwMWE7evs
+REACT_APP_DEVNET_PROGRAM_ID=R2y9ip6mxmWUj4pt54jP2hz2dgvMozy9VTSwMWE7evs
+REACT_APP_LOCAL_DEX_PROGRAM_ID=9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin
+REACT_APP_DEVNET_DEX_PROGRAM_ID=DESVgJVGajEgKGXhb6XmqDHGz3VjdgP7rEVESBgxmroY
+REACT_APP_INITIALIZE_PAGE_ENABLED='true'
 
 OPTIONS_REPO=
 FRONTEND_REPO=
@@ -28,7 +29,7 @@ We aim to make development setup as easy as possible. Follow the steps below:
      Psy American and Serum DEX deployed to the right addresses at genesis) airdrop SOL to
      your wallet, create and airdrop SPL tokens to your wallet, deploy PsyOptions,
      deploy Serum, and create an example PsyOptions market with a Serum market attached.
-2. In a separate temrinal `yarn start`
+2. In a separate temrinal `yarn dev`
    - This will run the local UI server
 
 ### Extracting market meta data

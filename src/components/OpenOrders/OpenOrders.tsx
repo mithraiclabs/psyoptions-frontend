@@ -1,146 +1,99 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { PublicKey } from '@solana/web3.js';
-import Box from '@material-ui/core/Box';
-import Table from '@material-ui/core/Table';
-import TableHead from '@material-ui/core/TableHead';
-import TableRow from '@material-ui/core/TableRow';
-import TableBody from '@material-ui/core/TableBody';
-import TableContainer from '@material-ui/core/TableContainer';
-import { OpenOrders as SerumOpenOrdersClass } from '@mithraic-labs/serum';
-
-import useSerum from '../../hooks/useSerum';
-import useWallet from '../../hooks/useWallet';
-import useConnection from '../../hooks/useConnection';
+import React from 'react';
 import {
-  SerumOpenOrders,
+  Box,
+  Table,
+  TableHead,
+  TableRow,
+  TableBody,
+  TableContainer,
+  makeStyles,
+} from '@material-ui/core';
+import { useConnectedWallet } from "@saberhq/use-solana";
+import {
   useSerumOpenOrders,
 } from '../../context/SerumOpenOrdersContext';
-import { hasUnsettled } from '../../utils/hasUnsettled';
+import GokiButton from '../GokiButton';
+import OpenOrdersRow from './OpenOrdersRow';
+import { TCell, THeadCell } from '../StyledComponents/Table/TableStyles';
+import { OptionType } from '../../types';
+import useScreenSize from '../../hooks/useScreenSize';
+import CSS from 'csstype';
 
-import ConnectButton from '../ConnectButton';
-import OpenOrdersForMarket from './OpenOrdersForMarket';
-import { TCell, THeadCell } from './OpenOrderStyles';
-import { CallOrPut } from '../../types';
-import Loading from '../Loading';
+const useStyles = makeStyles((theme) => ({
+  headCell: {
+    borderTop: 'none',
+    padding: '16px 20px',
+  },
+  walletButtonCell: {
+    textAlign: "-webkit-center" as CSS.Property.TextAlign,
+  }
+}));
 
 // Render all open orders for all optionMarkets specified in props
-const OpenOrders: React.FC<{
-  optionMarkets: CallOrPut[];
-}> = ({ optionMarkets }) => {
-  const { connection } = useConnection();
-  const { wallet, pubKey, connected } = useWallet();
-  const { serumMarkets } = useSerum();
-  const [, setOpenOrders] = useSerumOpenOrders();
-  const [loading, setLoading] = useState(false);
-
-  /**
-   * Load open orders for each serum market
-   */
-  useEffect(() => {
-    if (connection && serumMarkets && pubKey) {
-      const serumProgramIds = Array.from(
-        new Set(
-          Object.values(serumMarkets)
-            .filter((market) => market.serumProgramId)
-            .map((market) => market.serumProgramId),
-        ),
-      );
-
-      (async () => {
-        setLoading(true);
-        const newOpenOrders: SerumOpenOrders = {};
-        await Promise.all(
-          serumProgramIds.map(async (programId) => {
-            const openOrdersRes = await SerumOpenOrdersClass.findForOwner(
-              connection,
-              pubKey,
-              new PublicKey(programId),
-            );
-            Object.keys(serumMarkets)
-              .filter((key) => serumMarkets[key].serumProgramId === programId)
-              .forEach((serumMarketAddress) => {
-                const orders = openOrdersRes.filter(
-                  (openOrder) =>
-                    openOrder.market.toString() === serumMarketAddress,
-                );
-                const containsUnsettled = hasUnsettled(orders);
-                newOpenOrders[serumMarketAddress] = {
-                  loading: false,
-                  error: null,
-                  orders,
-                  hasUnsettled: containsUnsettled,
-                };
-              });
-          }),
-        );
-        setOpenOrders((prevOpenOrders) => ({
-          ...prevOpenOrders,
-          ...newOpenOrders,
-        }));
-        setLoading(false);
-      })();
-    }
-  }, [connection, serumMarkets, wallet, pubKey, setOpenOrders]);
-
-  const optionMarketsArray = useMemo(
-    () =>
-      optionMarkets
-        .map((optionMarket) => {
-          if (optionMarket?.serumMarketKey) {
-            return optionMarket;
-          }
-          return undefined;
-        })
-        .filter((item) => !!item),
-    [optionMarkets],
-  );
+const OpenOrders = () => {
+  const classes = useStyles();
+  const wallet = useConnectedWallet();
+  const { optionMarketsForOpenOrders } = useSerumOpenOrders();
+  const { formFactor } = useScreenSize();
 
   return (
-    <Box mt={'20px'}>
+    <Box style={{ zIndex: 1 }}>
       <TableContainer>
         <Table stickyHeader aria-label="sticky table">
           <TableHead>
             <TableRow>
               <THeadCell
                 colSpan={10}
-                style={{ borderTop: 'none', padding: '16px 20px' }}
+                className={classes.headCell}
               >
                 <h3 style={{ margin: 0 }}>Open Orders</h3>
               </THeadCell>
             </TableRow>
             <TableRow>
-              <THeadCell>Side</THeadCell>
-              <THeadCell>Option Type</THeadCell>
-              <THeadCell>Asset Pair</THeadCell>
-              <THeadCell>Expiration</THeadCell>
-              <THeadCell>Strike Price</THeadCell>
-              <THeadCell>Contract Size</THeadCell>
-              <THeadCell>Order Size</THeadCell>
-              <THeadCell>Limit Price</THeadCell>
-              {/* <THeadCell>Filled</THeadCell> */}
-              <THeadCell align="right">Action</THeadCell>
+              { formFactor === 'desktop' ?
+              <>
+                <THeadCell>Side</THeadCell>
+                <THeadCell>Option Type</THeadCell>
+                <THeadCell>Asset Pair</THeadCell>
+                <THeadCell>Expiration</THeadCell>
+                <THeadCell>Strike Price</THeadCell>
+                <THeadCell>Contract Size</THeadCell>
+                <THeadCell>Order Size</THeadCell>
+                <THeadCell>Limit Price</THeadCell>
+                <THeadCell align="right">Action</THeadCell>
+              </> : 
+              <>
+                <THeadCell>Asset</THeadCell>
+                <THeadCell>Expiration</THeadCell>
+                <THeadCell>Limit Price</THeadCell>
+                <THeadCell align="right">Action</THeadCell>
+              </>}
             </TableRow>
           </TableHead>
           <TableBody>
-            {!connected ? (
+            {!wallet?.connected ? (
               <TableRow>
-                <TCell align="center" colSpan={10}>
+                <TCell align="center" colSpan={10} className={classes.walletButtonCell}>
                   <Box p={1}>
-                    <ConnectButton>Connect Wallet</ConnectButton>
+                    <GokiButton />
                   </Box>
                 </TCell>
               </TableRow>
-            ) : loading ? (
-              <TCell colSpan={9}>
-                <Loading />
-              </TCell>
             ) : (
-              optionMarketsArray.map((optionMarket) => (
-                <OpenOrdersForMarket
-                  {...optionMarket}
-                  optionMarketUiKey={optionMarket.key}
-                  key={optionMarket.serumMarketKey.toString()}
-                />
+              optionMarketsForOpenOrders.map((optionMarket) => (
+                optionMarket.serumMarketKey ?
+                <OpenOrdersRow
+                  expiration={optionMarket.expiration}
+                  contractSize={optionMarket.qAssetSymbol === "USDC" ? optionMarket.size : optionMarket.quoteAmountPerContract.toString()}
+                  // #TODO: change later, should have option type here
+                  type={optionMarket.qAssetSymbol === "USDC" ? OptionType.CALL : OptionType.PUT}
+                  qAssetSymbol={optionMarket.qAssetSymbol}
+                  uAssetSymbol={optionMarket.uAssetSymbol}
+                  serumMarketKey={optionMarket.serumMarketKey}
+                  strikePrice={optionMarket.qAssetSymbol === "USDC" ? optionMarket.strike.toString() :
+                    optionMarket.amountPerContract.dividedBy(optionMarket.quoteAmountPerContract).toString()}
+                  key={optionMarket.serumMarketKey?.toString()}
+                /> : null
               ))
             )}
           </TableBody>

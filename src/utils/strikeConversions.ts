@@ -1,5 +1,5 @@
 import BigNumber from 'bignumber.js';
-import { Asset } from 'src/types';
+import { Asset } from '../types';
 
 /**
  * Given a readable strikePrice and the underlyingAmountPerContract in the U64 (BigNumber)

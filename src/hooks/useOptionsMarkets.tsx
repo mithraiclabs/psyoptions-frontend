@@ -9,7 +9,7 @@ import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 
 import { BN } from '@project-serum/anchor';
 import useNotifications from './useNotifications';
-import useWallet from './useWallet';
+import { useConnectedWallet } from "@saberhq/use-solana";
 import useConnection from './useConnection';
 import useAssetList from './useAssetList';
 import useSendTransaction from './useSendTransaction';
@@ -23,7 +23,7 @@ import {
   mintInstructions,
 } from '../utils/instructions/index';
 
-import { ClusterName, OptionMarket } from '../types';
+import { ClusterName, CreateMissingMintAccountsRes, OptionMarket } from '../types';
 import { getSupportedMarketsByNetwork } from '../utils/networkInfo';
 import { findMarketByAssets } from '../utils/serum';
 import { useAmericanPsyOptionsProgram } from './useAmericanPsyOptionsProgram';
@@ -31,13 +31,18 @@ import { useAmericanPsyOptionsProgram } from './useAmericanPsyOptionsProgram';
 const useOptionsMarkets = () => {
   const program = useAmericanPsyOptionsProgram();
   const { pushErrorNotification, pushNotification } = useNotifications();
-  const { wallet, pubKey } = useWallet();
+  const wallet = useConnectedWallet();
   const { connection, dexProgramId, endpoint } = useConnection();
   const { splTokenAccountRentBalance } = useSolanaMeta();
   const { sendTransaction } = useSendTransaction();
-  const { markets, setMarkets, marketsLoading, setMarketsLoading } = useContext(
-    OptionsMarketsContext,
-  );
+  const {
+    marketsByUiKey,
+    setMarkets,
+    marketsLoading,
+    setMarketsLoading,
+    marketsBySerumKey,
+    setMarketsBySerumKey,
+  } = useContext(OptionsMarketsContext);
   const { supportedAssets } = useAssetList();
 
   /**
@@ -46,9 +51,8 @@ const useOptionsMarkets = () => {
    */
   const fetchMarketData = useCallback(async () => {
     try {
-      if (marketsLoading) return;
+      if (marketsLoading || !endpoint || !endpoint.programId || !program || !dexProgramId) return;
       if (!(connection instanceof Connection)) return;
-      if (!endpoint.programId) return;
       if (!supportedAssets || supportedAssets.length === 0) return;
 
       setMarketsLoading(true);
@@ -56,7 +60,8 @@ const useOptionsMarkets = () => {
       const res = await getAllOptionAccounts(program);
 
       // Transform the market data to our expectations
-      const newMarkets = {};
+      const newMarketsByUiKey = {} as Record<string, OptionMarket>;
+      const newMarketsBySerumKey = {} as Record<string, OptionMarket>;
       await Promise.all(
         res.map(async (optionMarket: AmericanOptionData) => {
           const uAssetMint = optionMarket.underlyingAssetMint;
@@ -130,7 +135,7 @@ const useOptionsMarkets = () => {
             quoteAssetPoolKey: quoteAssetPool,
             quoteAssetMintKey: quoteAssetMint,
             serumMarketKey: serumMarket.address,
-            psyOptionsProgramId: endpoint.programId,
+            psyOptionsProgramId: endpoint.programId!,
             serumProgramId: dexProgramId.toString(),
           };
 
@@ -140,29 +145,35 @@ const useOptionsMarkets = () => {
             10,
           )}/${quoteAmountPerContract.toString(10)}`;
 
-          newMarkets[key] = newMarket;
+          newMarketsByUiKey[key] = newMarket;
+          newMarketsBySerumKey[serumMarket.address.toString()] = newMarket;
         }),
       );
 
       // Not sure if we should replace the existing markets or merge them
-      setMarkets(newMarkets);
+      setMarkets(newMarketsByUiKey);
+      setMarketsBySerumKey(newMarketsBySerumKey);
       setMarketsLoading(false);
       return;
     } catch (err) {
       console.error(err);
       setMarketsLoading(false);
     }
-  }, [connection, supportedAssets, endpoint, program]); // eslint-disable-line
+  }, [connection, supportedAssets, endpoint, program, dexProgramId]); // eslint-disable-line
 
   const packagedMarkets = useCallback(async () => {
+    if (!endpoint) return;
     if (endpoint.name === ClusterName.localhost) {
       return fetchMarketData();
     }
     try {
       setMarketsLoading(true);
       const supportedMarkets = getSupportedMarketsByNetwork(endpoint.name);
+
       // Transform the market data to our expectations
-      const newMarkets = {};
+      const newMarketsByUiKey = {} as Record<string, OptionMarket>;
+      const newMarketsBySerumKey = {} as Record<string, OptionMarket>;
+
       supportedMarkets.forEach((market) => {
         const uAsset = supportedAssets.filter(
           (asset) => asset.mintAddress === market.underlyingAssetMint,
@@ -224,12 +235,14 @@ const useOptionsMarkets = () => {
           10,
         )}/${quoteAmountPerContract.toString(10)}`;
 
-        newMarkets[key] = newMarket;
+        newMarketsByUiKey[key] = newMarket;
+        newMarketsBySerumKey[market.serumMarketAddress] = newMarket;
       });
       // Not sure if we should replace the existing markets or merge them
-      setMarkets(newMarkets);
+      setMarkets(newMarketsByUiKey);
+      setMarketsBySerumKey(newMarketsBySerumKey);
       setMarketsLoading(false);
-      return newMarkets;
+      return newMarketsByUiKey;
     } catch (err) {
       console.error(err);
       setMarketsLoading(false);
@@ -241,42 +254,42 @@ const useOptionsMarkets = () => {
     ({ uAssetSymbol, qAssetSymbol }) => {
       const keyPart = `-${uAssetSymbol}-${qAssetSymbol}-`;
 
-      const sizes = Object.keys(markets)
+      const sizes = Object.keys(marketsByUiKey)
         .filter((key) => key.match(keyPart))
-        .map((key) => markets[key].size);
+        .map((key) => marketsByUiKey[key].size);
 
       return [...new Set(sizes)];
     },
-    [markets],
+    [marketsByUiKey],
   );
 
   const getSizesWithDate = useCallback(
     ({ uAssetSymbol, qAssetSymbol, date }) => {
       const keyPart = `${date}-${uAssetSymbol}-${qAssetSymbol}-`;
 
-      const sizes = Object.keys(markets)
+      const sizes = Object.keys(marketsByUiKey)
         .filter((key) => key.match(keyPart))
-        .map((key) => markets[key].size);
+        .map((key) => marketsByUiKey[key].size);
 
       return [...new Set(sizes)];
     },
-    [markets],
+    [marketsByUiKey],
   );
 
-  const getStrikePrices = ({ uAssetSymbol, qAssetSymbol, date, size }) => {
+  const getStrikePrices = useCallback(({ uAssetSymbol, qAssetSymbol, date, size }) => {
     const keyPart = `${date}-${uAssetSymbol}-${qAssetSymbol}-${size}-`;
-    return Object.keys(markets)
+    return Object.keys(marketsByUiKey)
       .filter((key) => key.match(keyPart))
-      .map((key) => markets[key].strikePrice);
-  };
+      .map((key) => marketsByUiKey[key].strikePrice);
+  }, [marketsByUiKey]);
 
-  const getDates = () => {
-    const dates = Object.values(markets).map((m: OptionMarket) => m.expiration);
+  const getDates = useCallback(() => {
+    const dates = Object.values(marketsByUiKey).map((m: OptionMarket) => m.expiration);
     const deduped = [...new Set(dates)];
     return deduped;
-  };
+  }, [marketsByUiKey]);
 
-  const mint = async ({
+  const mint = useCallback(async ({
     marketData,
     mintedOptionDestKey, // address in user's wallet to send minted Option Token to
     underlyingAssetSrcKey, // account in user's wallet to post uAsset collateral from
@@ -284,13 +297,16 @@ const useOptionsMarkets = () => {
     existingTransaction: { transaction, signers }, // existing transaction and signers
     numberOfContracts,
   }) => {
+    if (!wallet?.publicKey || !program || !connection) {
+      return;
+    }
     try {
       const tx = transaction;
 
       const { transaction: mintTx } = await mintInstructions(
         numberOfContracts,
         marketData,
-        pubKey,
+        wallet.publicKey,
         new PublicKey(marketData.psyOptionsProgramId),
         mintedOptionDestKey,
         writerTokenDestKey,
@@ -305,8 +321,8 @@ const useOptionsMarkets = () => {
           Token.createCloseAccountInstruction(
             TOKEN_PROGRAM_ID,
             underlyingAssetSrcKey,
-            pubKey, // Send any remaining SOL to the owner
-            pubKey,
+            wallet.publicKey, // Send any remaining SOL to the owner
+            wallet.publicKey,
             [],
           ),
         );
@@ -330,9 +346,15 @@ const useOptionsMarkets = () => {
       pushErrorNotification(err);
     }
     return {};
-  };
+  }, [
+    wallet,
+    program,
+    connection,
+    sendTransaction,
+    pushErrorNotification
+  ]);
 
-  const createAccountsAndMint = async ({
+  const createAccountsAndMint = useCallback(async ({
     date,
     uAsset,
     qAsset,
@@ -344,11 +366,15 @@ const useOptionsMarkets = () => {
     mintedWriterTokenDestKey,
     numberOfContracts,
   }) => {
+    if (!wallet?.publicKey || !connection) {
+      return;
+    }
+
     const uAssetSymbol = uAsset.tokenSymbol;
     const qAssetSymbol = qAsset.tokenSymbol;
 
     const marketData =
-      markets[`${date}-${uAssetSymbol}-${qAssetSymbol}-${size}-${price}`];
+      marketsByUiKey[`${date}-${uAssetSymbol}-${qAssetSymbol}-${size}-${price}`];
 
     // Fallback to first oowned minted option account
     const mintedOptionDestAddress =
@@ -357,14 +383,15 @@ const useOptionsMarkets = () => {
     const writerTokenDestAddress = mintedWriterTokenDestKey;
 
     const { response, error } = await createMissingMintAccounts({
-      owner: pubKey,
+      owner: wallet.publicKey,
       market: marketData,
       uAsset,
       uAssetTokenAccount: uAssetAccount,
-      splTokenAccountRentBalance,
+      splTokenAccountRentBalance: splTokenAccountRentBalance ?? null,
       mintedOptionDestinationKey: mintedOptionDestAddress,
       writerTokenDestinationKey: writerTokenDestAddress,
       numberOfContractsToMint: numberOfContracts,
+      connection
     });
     if (error) {
       pushNotification(error);
@@ -376,7 +403,7 @@ const useOptionsMarkets = () => {
       mintedOptionDestinationKey,
       writerTokenDestinationKey,
       uAssetTokenAccount,
-    } = response;
+    } = response as CreateMissingMintAccountsRes;
 
     return mint({
       marketData,
@@ -386,12 +413,21 @@ const useOptionsMarkets = () => {
       existingTransaction: { transaction, signers },
       numberOfContracts,
     });
-  };
+  }, [
+    marketsByUiKey,
+    wallet?.publicKey,
+    connection,
+    splTokenAccountRentBalance,
+    pushNotification,
+    mint
+  ]);
 
   return {
-    markets,
+    marketsByUiKey,
     marketsLoading,
     setMarkets,
+    marketsBySerumKey,
+    setMarketsBySerumKey,
     setMarketsLoading,
     getStrikePrices,
     getSizes,

@@ -6,7 +6,7 @@ import {
   Transaction,
   TransactionSignature,
 } from '@solana/web3.js';
-import Wallet from '@project-serum/sol-wallet-adapter';
+import { ConnectedWallet } from "@saberhq/use-solana";
 import Link from '@material-ui/core/Link';
 import {
   awaitTransactionSignatureConfirmation,
@@ -25,7 +25,38 @@ const DEFAULT_TIMEOUT = 30000;
 /**
  * Send transactions and use push notifications for info, confirmation, and errors
  */
-const useSendTransaction = () => {
+const useSendTransaction = (): {
+  sendSignedTransaction: ({
+    signedTransaction,
+    connection,
+    sendingMessage,
+    successMessage,
+    timeout,
+  }: {
+    signedTransaction: Transaction;
+    connection: Connection;
+    sendingMessage?: string | undefined;
+    successMessage?: string | undefined;
+    timeout?: number | undefined;
+  }) => Promise<string>;
+  sendTransaction: ({
+    transaction,
+    wallet,
+    signers,
+    connection,
+    sendingMessage,
+    successMessage,
+    timeout,
+  }: {
+    transaction: Transaction;
+    wallet: ConnectedWallet;
+    signers?: Keypair[] | undefined;
+    connection: Connection;
+    sendingMessage?: string | undefined;
+    successMessage?: string | undefined;
+    timeout?: number | undefined;
+  }) => Promise<string>;
+} => {
   const { pushNotification } = useNotifications();
   const sendSignedTransaction = useCallback(
     async ({
@@ -76,9 +107,9 @@ const useSendTransaction = () => {
       try {
         await awaitTransactionSignatureConfirmation(txid, timeout, connection);
       } catch (err) {
-        if (err.timeout) {
-          throw new Error('Timed out awaiting confirmation on transaction');
-        }
+        // if ((err as TransactionError).timeout) {
+        //   throw new Error('Timed out awaiting confirmation on transaction');
+        // }
         let simulateResult: SimulatedTransactionResponse | null = null;
         try {
           simulateResult = (
@@ -144,7 +175,7 @@ const useSendTransaction = () => {
       timeout = DEFAULT_TIMEOUT,
     }: {
       transaction: Transaction;
-      wallet: Wallet;
+      wallet: ConnectedWallet;
       signers?: Array<Keypair>;
       connection: Connection;
       sendingMessage?: string;

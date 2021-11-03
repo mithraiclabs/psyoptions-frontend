@@ -1,91 +1,98 @@
 import React from 'react';
-import Box from '@material-ui/core/Box';
-import Table from '@material-ui/core/Table';
-import TableHead from '@material-ui/core/TableHead';
-import TableRow from '@material-ui/core/TableRow';
-import TableBody from '@material-ui/core/TableBody';
-import TableContainer from '@material-ui/core/TableContainer';
-
-import useWallet from '../../hooks/useWallet';
-import { useSerumOpenOrders } from '../../context/SerumOpenOrdersContext';
-
-import ConnectButton from '../ConnectButton';
+import {
+  Box,
+  Table,
+  TableHead,
+  TableRow,
+  TableBody,
+  TableContainer,
+  makeStyles,
+} from '@material-ui/core';
+import { useConnectedWallet } from "@saberhq/use-solana";
+import GokiButton from '../GokiButton';
 import UnsettledBalancesRow from './UnsettledBalancesRow';
-import { TCell, THeadCell } from './UnsettledBalancesStyles';
-import { CallOrPut } from '../../types';
+import { TCell, THeadCell } from '../StyledComponents/Table/TableStyles';
+import { OptionType } from '../../types';
+import { useSerumOpenOrders } from '../../context/SerumOpenOrdersContext';
+import useAssetList from '../../hooks/useAssetList';
+import useScreenSize from '../../hooks/useScreenSize';
+import CSS from 'csstype';
 
-const UnsettledBalancesTable: React.FC<{
-  optionMarkets: CallOrPut[];
-  uAssetDecimals: number;
-  qAssetDecimals: number;
-}> = ({ optionMarkets, uAssetDecimals, qAssetDecimals }) => {
-  const { connected } = useWallet();
-  const [serumOpenOrders] = useSerumOpenOrders();
-
-  const hasUnsettled = Object.values(serumOpenOrders)
-    .map((serumMarketAddress) => {
-      return !!serumMarketAddress?.hasUnsettled;
-    })
-    .includes(true);
-
-  // Don't show if not connected or has no unsettled
-  if (!connected || !hasUnsettled) {
-    return null;
+const useStyles = makeStyles((theme) => ({
+  headCell: {
+    borderTop: 'none',
+    padding: '16px 20px',
+  },
+  walletButtonCell: {
+    textAlign: "-webkit-center" as CSS.Property.TextAlign,
   }
+}));
 
-  // filters out non-initialized serum markets
-  const existingMarketsArray = optionMarkets
-    .map((optionMarket) => {
-      if (optionMarket?.serumMarketKey) {
-        return optionMarket;
-      }
-      return undefined;
-    })
-    .filter((item) => !!item);
+const UnsettledBalancesTable = () => {
+  const classes = useStyles();
+  const wallet = useConnectedWallet();
+  const { optionMarketsForOpenOrders } = useSerumOpenOrders();
+  const { qAsset } = useAssetList();
+  const { formFactor } = useScreenSize();
 
   return (
-    <Box mt={'20px'}>
+    <Box style={{ zIndex: 1 }}>
       <TableContainer>
         <Table stickyHeader aria-label="sticky table">
           <TableHead>
             <TableRow>
               <THeadCell
                 colSpan={9}
-                style={{ borderTop: 'none', padding: '16px 20px' }}
+                className={classes.headCell}
               >
                 <h3 style={{ margin: 0 }}>Unsettled Balances</h3>
               </THeadCell>
             </TableRow>
             <TableRow>
-              <THeadCell>Option Type</THeadCell>
-              <THeadCell>Asset Pair</THeadCell>
-              <THeadCell>Expiration</THeadCell>
-              <THeadCell>Strike Price</THeadCell>
-              <THeadCell>Contract Size</THeadCell>
-              <THeadCell>Options</THeadCell>
-              <THeadCell>Assets</THeadCell>
-              {/* <THeadCell>Filled</THeadCell> */}
-              <THeadCell align="right">Action</THeadCell>
+              { formFactor === 'desktop' ?
+              <>
+                <THeadCell>Option Type</THeadCell>
+                <THeadCell>Asset Pair</THeadCell>
+                <THeadCell>Expiration</THeadCell>
+                <THeadCell>Strike Price</THeadCell>
+                <THeadCell>Contract Size</THeadCell>
+                <THeadCell>Options</THeadCell>
+                <THeadCell>Assets</THeadCell>
+                <THeadCell align="right">Action</THeadCell>
+              </> :
+              <>
+                <THeadCell>Asset</THeadCell>
+                <THeadCell>Expiration</THeadCell>
+                <THeadCell>Funds</THeadCell>
+                <THeadCell align="right">Action</THeadCell>
+              </>}
             </TableRow>
           </TableHead>
           <TableBody>
-            {!connected ? (
+            {!wallet?.connected ? (
               <TableRow>
-                <TCell align="center" colSpan={10}>
+                <TCell align="center" colSpan={10} className={classes.walletButtonCell}>
                   <Box p={1}>
-                    <ConnectButton>Connect Wallet</ConnectButton>
+                    <GokiButton />
                   </Box>
                 </TCell>
               </TableRow>
             ) : (
-              existingMarketsArray.map((optionMarket) => (
+              optionMarketsForOpenOrders.map((optionMarket) => (
+                (optionMarket.serumMarketKey && qAsset) ?
                 <UnsettledBalancesRow
-                  {...optionMarket}
-                  uAssetDecimals={uAssetDecimals}
-                  qAssetDecimals={qAssetDecimals}
-                  optionMarketUiKey={optionMarket.key}
+                  expiration={optionMarket.expiration}
+                  contractSize={optionMarket.qAssetSymbol === "USDC" ? optionMarket.size : optionMarket.quoteAmountPerContract.toString()}
+                  // #TODO: change later, should have option type here
+                  type={optionMarket.qAssetSymbol === "USDC" ? OptionType.CALL : OptionType.PUT}
+                  qAssetSymbol={optionMarket.qAssetSymbol}
+                  uAssetSymbol={optionMarket.uAssetSymbol}
+                  serumMarketKey={optionMarket.serumMarketKey}
+                  strikePrice={optionMarket.qAssetSymbol === "USDC" ? optionMarket.strike.toString() :
+                    optionMarket.amountPerContract.dividedBy(optionMarket.quoteAmountPerContract).toString()}
+                  qAssetDecimals={qAsset.decimals}
                   key={`${optionMarket.serumMarketKey.toString()}-unsettled`}
-                />
+                /> : null
               ))
             )}
           </TableBody>

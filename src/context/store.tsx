@@ -3,7 +3,8 @@ import { ThemeProvider } from '@material-ui/core/styles';
 
 import { ConnectionProvider } from './ConnectionContext';
 import { OwnedTokenAccountsProvider } from './OwnedTokenAccounts';
-import { WalletProvider } from './WalletContext';
+import { WalletInfoProvider } from './WalletInfoContext';
+import { WalletKitProvider } from "@gokiprotocol/walletkit";
 import { NotificationsProvider } from './NotificationsContext';
 import { OptionsMarketsProvider } from './OptionsMarketsContext';
 import { SerumProvider } from './SerumContext';
@@ -17,30 +18,46 @@ import { SPLTokenMintsProvider } from './SPLTokenMintsContext';
 import { SerumOpenOrdersProvider } from './SerumOpenOrdersContext';
 import { ExpirationDateProvider } from './ExpirationDateContext';
 import { GraphQLProvider } from './GraphQLProvider';
+import { SimpleUIFormProvider } from './SimpleUIContext';
+import { ScreenSizeProvider } from './ScreenSizeContext';
 
-const _providers = [
+const _providers: React.ReactElement[] = [
   // eslint-disable-next-line react/no-children-prop
-  <ThemeProvider theme={theme} children={<div />} />,
-  <ConnectionProvider />,
-  <GraphQLProvider />,
-  <NotificationsProvider />,
-  <SolanaMetaProvider />,
-  <AssetListProvider />,
-  <WalletProvider />,
-  <OwnedTokenAccountsProvider />,
-  <OptionsMarketsProvider />,
-  <SPLTokenMintsProvider />,
-  <OptionsChainProvider />,
-  <SerumProvider />,
-  <SerumOrderbooksProvider />,
-  <SerumOpenOrdersProvider />,
-  <PasswordProvider />,
-  <ExpirationDateProvider />,
+  <ThemeProvider key="ThemeProvider" theme={theme} children={<div />} />,
+  <ConnectionProvider key="ConnectionProvider" />,
+  <GraphQLProvider key="GraphQLProvider" />,
+  <NotificationsProvider key="NotificationsProvider" />,
+  <SolanaMetaProvider key="SolanaMetaProvider" />,
+  <AssetListProvider key="AssetListProvider" />,
+  // eslint-disable-next-line react/no-children-prop
+  <WalletKitProvider
+    key="WalletKitProvider"
+    defaultNetwork="mainnet-beta"
+    app={{
+      name: "PsyOptions",
+    }}
+    children={<div />}
+  />,
+  <WalletInfoProvider key="WalletInfoProvider" />,
+  <OwnedTokenAccountsProvider key="OwnedTokenAccountsProvider" />,
+  <OptionsMarketsProvider key="OptionsMarketsProvider" />,
+  <SPLTokenMintsProvider key="SPLTokenMintsProvider" />,
+  <OptionsChainProvider key="OptionsChainProvider" />,
+  <SerumProvider key="SerumProvider" />,
+  <SerumOrderbooksProvider key="SerumOrderbooksProvider" />,
+  <SerumOpenOrdersProvider key="SerumOpenOrdersProvider" />,
+  <PasswordProvider key="PasswordProvider" />,
+  <ExpirationDateProvider key="ExpirationDateProvider" />,
+  <ScreenSizeProvider key="ScreenSizeProvider" />,
+  <SimpleUIFormProvider key="SimpleUIFormProvider" />,
 ];
 
 // flatten context providers for simpler app component tree
 
-const ProviderComposer = ({ providers, children }) =>
+const ProviderComposer: React.FC<{
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  providers: any[];
+}> = ({ providers, children }) =>
   providers.reduceRight(
     (kids, parent) => cloneElement(parent, { children: kids }),
     children,

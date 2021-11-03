@@ -1,50 +1,61 @@
-import { MarketMeta } from '@mithraic-labs/market-meta';
 import type { Moment } from 'moment';
 import moment from 'moment';
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useCallback, useEffect, useState } from 'react';
 import useLocalStorageState from 'use-local-storage-state';
 import useOptionsMarkets from '../hooks/useOptionsMarkets';
 import useAssetList from '../hooks/useAssetList';
-import useConnection from '../hooks/useConnection';
 
 type DateContextValue = {
+  setDates: React.Dispatch<React.SetStateAction<Moment[]>>;
   selectedDate: Moment | undefined;
   dates: Moment[];
   setSelectedDate: (date: Moment) => void;
 };
 
 const ExpirationDateContext = createContext<DateContextValue>({
+  setDates: () => {},
   selectedDate: undefined,
   dates: [],
   setSelectedDate: () => {},
 });
 
 const ExpirationDateProvider: React.FC = ({ children }) => {
-  const { endpoint } = useConnection();
   const { uAsset, qAsset, assetListLoading } = useAssetList();
-  const { markets } = useOptionsMarkets();
-  const [dates, setDates] = useState([]);
+  const { marketsByUiKey } = useOptionsMarkets();
+  const [dates, setDates] = useState<Moment[]>([]);
   const [_selectedDatesByAsset, _setSelectedDatesByAsset] =
-    useLocalStorageState('selectedDates', {});
+    useLocalStorageState<Record<string, string>>('selectedDates', {});
+  const [parsedDate, setParsedDate] = useState<Moment | null>(null);
 
-  const _selectedDate = _selectedDatesByAsset[uAsset?.tokenSymbol];
-  const parsedDate = moment.utc(_selectedDate);
+  const setSelectedDate = useCallback((date: Moment) => {
+    if (uAsset?.tokenSymbol) {
+      _setSelectedDatesByAsset((prevValue) => ({
+        ...prevValue,
+        [uAsset.tokenSymbol]: date.toISOString(),
+      }));
+
+      setParsedDate(date);
+    }
+  }, [
+    _setSelectedDatesByAsset,
+    uAsset?.tokenSymbol
+  ]);
 
   useEffect(() => {
     if (!assetListLoading && uAsset?.mintAddress && qAsset?.mintAddress) {
-      const expirationsForAssetPair = [
-        ...new Set(
-          Object.keys(markets)
+      const expirationsForAssetPair = Array.from(
+        new Set(
+          Object.keys(marketsByUiKey)
             .filter(
               (marketKey) =>
-                markets[marketKey].underlyingAssetMintKey.toString() ===
-                  uAsset?.mintAddress &&
-                markets[marketKey].quoteAssetMintKey.toString() ===
-                  qAsset?.mintAddress,
+                marketsByUiKey[marketKey].underlyingAssetMintKey.toString() ===
+                uAsset?.mintAddress &&
+                marketsByUiKey[marketKey].quoteAssetMintKey.toString() ===
+                qAsset?.mintAddress,
             )
-            .map((marketKey) => markets[marketKey].expiration),
+            .map((marketKey) => marketsByUiKey[marketKey].expiration),
         ),
-      ] as number[];
+      );
 
       const newDates = expirationsForAssetPair
         .sort((a, b) => a - b)
@@ -55,43 +66,34 @@ const ExpirationDateProvider: React.FC = ({ children }) => {
         });
 
       setDates(newDates);
-    }
-  }, [assetListLoading, markets, uAsset?.mintAddress, qAsset?.mintAddress]);
-
-  useEffect(() => {
-    // Set default date or load user's stored date for current asset
-    if (
-      dates.length > 0 &&
-      (parsedDate.isBefore(moment.utc()) ||
-        !dates.some((d) => d.toISOString() === _selectedDate))
-    ) {
-      _setSelectedDatesByAsset((prevValue) => ({
-        ...prevValue,
-        [uAsset?.tokenSymbol]: dates[0].toISOString(),
-      }));
+      if (!parsedDate && newDates.length) {
+        // Set default date or load user's stored date for current asset
+        const _selectedDate = _selectedDatesByAsset[uAsset?.tokenSymbol ?? ''];
+        if (_selectedDate && newDates.some((d) => d.toISOString() === _selectedDate)) {
+          setParsedDate(moment.utc(_selectedDate));
+        } else {
+          setParsedDate(newDates[0]);
+        }
+      }
     }
   }, [
-    dates,
-    parsedDate,
-    _selectedDate,
-    _setSelectedDatesByAsset,
+    assetListLoading,
+    marketsByUiKey,
+    uAsset?.mintAddress,
     uAsset?.tokenSymbol,
-  ]);
-
-  const value = {
-    setDates,
-    dates,
-    selectedDate: parsedDate,
-    setSelectedDate: (date: Moment) => {
-      _setSelectedDatesByAsset((prevValue) => ({
-        ...prevValue,
-        [uAsset?.tokenSymbol]: date.toISOString(),
-      }));
-    },
-  };
+    qAsset?.mintAddress,
+    _selectedDatesByAsset,
+    parsedDate]);
 
   return (
-    <ExpirationDateContext.Provider value={value}>
+    <ExpirationDateContext.Provider
+      value={{
+        setDates,
+        dates,
+        selectedDate: parsedDate,
+        setSelectedDate,
+      }}
+    >
       {children}
     </ExpirationDateContext.Provider>
   );

@@ -1,4 +1,4 @@
-import { useCallback, useContext } from 'react';
+import { useCallback } from 'react';
 import { PublicKey } from '@solana/web3.js';
 import BigNumber from 'bignumber.js';
 import { instructions } from '@mithraic-labs/psy-american';
@@ -6,50 +6,62 @@ import * as anchor from '@project-serum/anchor';
 import { BN } from '@project-serum/anchor';
 import useConnection from './useConnection';
 import useNotifications from './useNotifications';
-import { OptionsMarketsContext } from '../context/OptionsMarketsContext';
-import { NotificationSeverity, OptionMarket } from '../types';
+import { NotificationSeverity } from '../types';
 import { useAmericanPsyOptionsProgram } from './useAmericanPsyOptionsProgram';
-import WalletAdapter from '../utils/wallet/walletAdapter';
+import { useConnectedWallet } from "@saberhq/use-solana";
 
 type InitMarketParams = {
   amountPerContract: BigNumber;
   quoteAmountPerContract: BigNumber;
-  uAssetSymbol: string;
-  qAssetSymbol: string;
-  uAssetMint: string;
-  qAssetMint: string;
+  uAssetMint: PublicKey;
+  qAssetMint: PublicKey;
   expiration: number;
   uAssetDecimals: number;
   qAssetDecimals: number;
 };
+
+type MarketInitRet = {
+  amountPerContract: BigNumber;
+  amountPerContractBN: BN;
+  quoteAmountPerContract: BigNumber;
+  quoteAmountPerContractBN: BN;
+  expiration: number;
+  optionMarketKey: PublicKey;
+  optionMintKey: PublicKey;
+  writerTokenMintKey: PublicKey;
+  underlyingAssetPoolKey: PublicKey;
+  underlyingAssetMintKey: PublicKey;
+  quoteAssetPoolKey: PublicKey;
+  quoteAssetMintKey: PublicKey;
+  psyOptionsProgramId: string;
+  serumProgramId?: string;
+};
 export const useInitializeMarket = (): ((
   obj: InitMarketParams,
-) => Promise<OptionMarket | null>) => {
+) => Promise<MarketInitRet | null>) => {
   const program = useAmericanPsyOptionsProgram();
   const { pushNotification, pushErrorNotification } = useNotifications();
   const { endpoint, dexProgramId } = useConnection();
-  const { setMarkets } = useContext(OptionsMarketsContext);
+  const wallet = useConnectedWallet();
 
   return useCallback(
     async ({
       amountPerContract,
       quoteAmountPerContract,
-      uAssetSymbol,
-      qAssetSymbol,
       uAssetMint,
       qAssetMint,
       expiration,
       uAssetDecimals,
       qAssetDecimals,
     }: InitMarketParams) => {
-      if (!program || !(program.provider.wallet as WalletAdapter).connected) {
+      if (!program || !wallet?.connected) {
         // short circuit when there is no program. This is likely
         // due to there being no wallet connected
         pushErrorNotification('Please connect wallet');
         return null;
       }
       try {
-        const programId = new PublicKey(endpoint.programId);
+        const programId = new PublicKey(endpoint?.programId ?? '');
         const quoteMintKey = new PublicKey(qAssetMint);
         const underlyingMintKey = new PublicKey(uAssetMint);
         // Create and send transaction for creating/initializing accounts needed
@@ -85,22 +97,11 @@ export const useInitializeMarket = (): ((
           underlyingMint: underlyingMintKey,
         });
 
-        const strike = quoteAmountPerContract.div(amountPerContract);
-
-        const marketData: OptionMarket = {
-          key: `${expiration}-${uAssetSymbol}-${qAssetSymbol}-${amountPerContract.toString()}-${amountPerContract.toString()}/${quoteAmountPerContract.toString()}`,
-          pubkey: optionMarketKey,
+        const marketData: MarketInitRet = {
           amountPerContract,
           amountPerContractBN,
           quoteAmountPerContract,
           quoteAmountPerContractBN,
-          size: `${amountPerContract.toNumber()}`,
-          strike,
-          strikePrice: strike.toString(),
-          uAssetSymbol,
-          qAssetSymbol,
-          uAssetMint,
-          qAssetMint,
           expiration,
           optionMarketKey,
           optionMintKey,
@@ -110,10 +111,8 @@ export const useInitializeMarket = (): ((
           quoteAssetPoolKey,
           quoteAssetMintKey: quoteMintKey,
           psyOptionsProgramId: programId.toString(),
-          serumProgramId: dexProgramId.toString(),
+          serumProgramId: dexProgramId?.toString(),
         };
-
-        setMarkets((markets) => ({ ...markets, [marketData.key]: marketData }));
 
         pushNotification({
           severity: NotificationSeverity.SUCCESS,
@@ -129,11 +128,11 @@ export const useInitializeMarket = (): ((
     },
     [
       program,
+      wallet?.connected,
       pushErrorNotification,
-      endpoint.programId,
+      endpoint?.programId,
       pushNotification,
       dexProgramId,
-      setMarkets,
     ],
   );
 };

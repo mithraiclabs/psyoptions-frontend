@@ -6,6 +6,7 @@ import {
   PublicKey,
 } from '@solana/web3.js';
 import { AccountLayout, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { TokenAccount } from '../types';
 
 export const WRAPPED_SOL_ADDRESS =
   'So11111111111111111111111111111111111111112';
@@ -57,8 +58,10 @@ export async function initializeTokenAccountTx({
   return { transaction, newTokenAccount: newAccount };
 }
 
-export const getHighestAccount = (accounts) => {
-  if (accounts.length === 0) return {};
+export const getHighestAccount = (
+  accounts: TokenAccount[],
+): TokenAccount | null => {
+  if (accounts.length === 0) return null;
   if (accounts.length === 1) return accounts[0];
   return accounts.sort((a, b) => b.amount - a.amount)[0];
 };

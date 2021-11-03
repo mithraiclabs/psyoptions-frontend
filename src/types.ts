@@ -1,8 +1,8 @@
+import { Token } from '@mithraic-labs/market-meta/dist/types';
 import { Market } from '@mithraic-labs/serum';
 import { BN } from '@project-serum/anchor';
-import { Account, PublicKey, Transaction } from '@solana/web3.js';
+import { PublicKey, Signer, Transaction } from '@solana/web3.js';
 import BigNumber from 'bignumber.js';
-import { SerumMarket } from './utils/serum';
 
 export enum ClusterName {
   devnet = 'Devnet',
@@ -86,11 +86,6 @@ export type CallOrPut = OptionRow & {
   strike: BigNumber;
 };
 
-export type UnsettledRow = CallOrPut & {
-  uAssetDecimals: number;
-  qAssetDecimals: number;
-};
-
 export type OptionMarketMeta = {
   expiration: number;
   optionMarketAddress: string;
@@ -125,10 +120,10 @@ export type Result<T, E> = {
 };
 export type InstructionResponse = {
   transaction: Transaction;
-  signers: Account[];
+  signers: Signer[];
 };
 export interface CreateNewTokenAccountResponse extends InstructionResponse {
-  newTokenAccount: Account;
+  newTokenAccount: Signer;
 }
 export interface CreateMissingMintAccountsRes extends InstructionResponse {
   mintedOptionDestinationKey: PublicKey;
@@ -146,4 +141,9 @@ export type LocalSerumMarket = {
 export type SerumMarketAndProgramId = {
   serumMarketKey: PublicKey;
   serumProgramId: string;
+};
+
+export type Balance = {
+  asset: Token;
+  assetBalance: number;
 };

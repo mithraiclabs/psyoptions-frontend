@@ -40,11 +40,15 @@ dotenv.config();
   const provider = anchor.Provider.local();
   const connection = provider.connection;
 
-  const dexProgramId = new PublicKey(process.env.LOCAL_DEX_PROGRAM_ID);
+  const dexProgramId = new PublicKey(
+    process.env.REACT_APP_LOCAL_DEX_PROGRAM_ID,
+  );
 
   const idlPath = `${process.env.OPTIONS_REPO}/target/idl/psy_american.json`;
   const psyAmericanIdl = JSON.parse(fs.readFileSync(idlPath, 'utf-8'));
-  const programId = new anchor.web3.PublicKey(process.env.LOCAL_PROGRAM_ID);
+  const programId = new anchor.web3.PublicKey(
+    process.env.REACT_APP_LOCAL_PROGRAM_ID,
+  );
 
   const program = new anchor.Program(psyAmericanIdl, programId, provider);
   // create markets for the end of the current month,

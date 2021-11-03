@@ -139,12 +139,20 @@ const ConfirmOrder = () => {
     return isProhibited
            || !serumMarket
            || !wallet?.publicKey
-           || (orderType === "limit" && !limitPrice);
+           || (orderType === "limit" && !limitPrice)
+           || !orderbook?.asks?.length;
 
-  }, [serumMarket, wallet?.publicKey, orderType, limitPrice]);
+  }, [
+    isProhibited,
+    serumMarket,
+    wallet?.publicKey,
+    orderType,
+    limitPrice,
+    orderbook?.asks
+  ]);
 
   const handlePlaceOrderClicked = useCallback(async () => {
-    if (disabledPlaceOrder || !wallet?.publicKey) return;
+    if (disabledPlaceOrder) return;
 
     setPlaceOrderLoading(true);
     try {
@@ -189,6 +197,8 @@ const ConfirmOrder = () => {
         },
       });
       setPlaceOrderLoading(false);
+      history.push('/portfolio');
+      history.go(0);
     } catch (err) {
       setPlaceOrderLoading(false);
       Sentry.captureException(err);
@@ -210,6 +220,7 @@ const ConfirmOrder = () => {
     serumFeeRates,
     placeBuyOrder,
     pushErrorNotification,
+    history,
   ]);
 
   return (
@@ -264,9 +275,9 @@ const ConfirmOrder = () => {
                 onClick={handlePlaceOrderClicked}
                 variant="outlined"
                 style={{ width: '100%' }}
-                disabled={isProhibited || disabledPlaceOrder}
+                disabled={disabledPlaceOrder}
               >
-                {disabledPlaceOrder ?  disabledButtonMessage : 'Place Order'}
+                {disabledPlaceOrder ?  ((!orderbook?.asks?.length) ? 'No Offers' : disabledButtonMessage) : 'Place Order'}
               </Button>
               {
                 (isProhibited) ? (

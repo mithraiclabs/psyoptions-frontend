@@ -68,10 +68,10 @@ export const optionsByMarketsPageParams = atomFamily<string[], string>({
 });
 
 /**
- * Selects the underlying mints for options that have not yet expired
+ * Selects the mints for options that have not yet expired
  */
-export const selectUnderlyingMintsOfFutureOptions = selector({
-  key: 'selectUnderlyingMints',
+export const selectMintsOfFutureOptions = selector({
+  key: 'selectMintsOfFutureOptions',
   get: ({ get }) => {
     const nowInSeconds = Date.now() / 1000;
     const _optionsIds = get(optionsIds);
@@ -79,24 +79,6 @@ export const selectUnderlyingMintsOfFutureOptions = selector({
       const option = get(optionsMap(publicKeyStr));
       if (option && option.expirationUnixTimestamp.toNumber() > nowInSeconds) {
         acc.push(option.underlyingAssetMint);
-      }
-      return acc;
-    }, [] as PublicKey[]);
-    return _uniqby(mints, (mint) => mint.toString());
-  },
-});
-
-/**
- * Selects the quote mints for options that have not yet expired
- */
-export const selectQuoteMintsOfFutureOptions = selector({
-  key: 'selectQuoteMintsOfFutureOptions',
-  get: ({ get }) => {
-    const nowInSeconds = Date.now() / 1000;
-    const _optionsIds = get(optionsIds);
-    const mints = _optionsIds.reduce((acc, publicKeyStr) => {
-      const option = get(optionsMap(publicKeyStr));
-      if (option && option.expirationUnixTimestamp.toNumber() > nowInSeconds) {
         acc.push(option.quoteAssetMint);
       }
       return acc;
@@ -122,9 +104,12 @@ export const selectFutureExpirationsByUnderlyingAndQuote = selector({
         option &&
         option.expirationUnixTimestamp.toNumber() > nowInSeconds &&
         _underlyingMint &&
-        option.underlyingAssetMint.equals(_underlyingMint) &&
         _quoteMint &&
-        option.quoteAssetMint.equals(_quoteMint)
+        // must check for all permutations to get Calls and Puts
+        (option.underlyingAssetMint.equals(_underlyingMint) ||
+          option.underlyingAssetMint.equals(_quoteMint)) &&
+        (option.quoteAssetMint.equals(_quoteMint) ||
+          option.quoteAssetMint.equals(_underlyingMint))
       ) {
         acc.push(option.expirationUnixTimestamp);
       }
@@ -153,9 +138,12 @@ export const selectUnderlyingAmountPerOptionByExpirationUnderlyingQuote =
           option &&
           option.expirationUnixTimestamp.eq(_expirationUnixTimestamp) &&
           _underlyingMint &&
-          option.underlyingAssetMint.equals(_underlyingMint) &&
           _quoteMint &&
-          option.quoteAssetMint.equals(_quoteMint)
+          // must check for all permutations to get Calls and Puts
+          (option.underlyingAssetMint.equals(_underlyingMint) ||
+            option.underlyingAssetMint.equals(_quoteMint)) &&
+          (option.quoteAssetMint.equals(_quoteMint) ||
+            option.quoteAssetMint.equals(_underlyingMint))
         ) {
           acc.push(option.underlyingAmountPerContract);
         }

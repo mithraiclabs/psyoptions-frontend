@@ -58,6 +58,7 @@ const UnsettledRow = ({
   expiration,
   uAssetSymbol,
   qAssetSymbol,
+  assetPair,
   strikePrice,
   contractSize,
   unsettledFunds,
@@ -69,6 +70,7 @@ const UnsettledRow = ({
   expiration: number;
   uAssetSymbol: string;
   qAssetSymbol: string;
+  assetPair: string;
   strikePrice: string;
   contractSize: string;
   unsettledFunds: any;
@@ -104,7 +106,7 @@ const UnsettledRow = ({
       {formFactor === 'desktop' ?
       <>
         <TCell>{type}</TCell>
-        <TCell>{`${qAssetSymbol}/${uAssetSymbol}`}</TCell>
+        <TCell>{assetPair}</TCell>
         <TCell>
           {`${moment.utc(expiration * 1000).format('LL')} 23:59:59 UTC`}
         </TCell>
@@ -129,7 +131,7 @@ const UnsettledRow = ({
           formFactor === "mobile" && classes.mobileFont)}>
           <Box pl={isMobile ? 1 : 2} className={classes.column}>
             <Box className={classes.uppercase}>{type}</Box>
-            <Box>{`${qAssetSymbol}/${uAssetSymbol}`}</Box>
+            <Box>{assetPair}</Box>
           </Box>
           <Box pl={isMobile ? 1 : 2} className={classes.column}>
             <Box>{`Strike: ${strikePrice}`}</Box>
@@ -208,6 +210,7 @@ const UnsettledBalancesRow: React.FC<{
       expiration={expiration}
       uAssetSymbol={uAssetSymbol}
       qAssetSymbol={qAssetSymbol}
+      assetPair={type === 'put' ? `${qAssetSymbol}/${uAssetSymbol}` : `${uAssetSymbol}/${qAssetSymbol}`}
       strikePrice={strikePrice}
       contractSize={contractSize}
       unsettledFunds={unsettledFunds}

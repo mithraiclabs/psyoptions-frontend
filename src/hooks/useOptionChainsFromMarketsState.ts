@@ -1,5 +1,5 @@
 import { BigNumber } from 'bignumber.js';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useRecoilValue } from 'recoil';
 import {
   quoteMint,
@@ -56,10 +56,12 @@ export const useOptionsChainFromMarketsState = (): ChainRow[] => {
           option.underlyingAmountPerContract,
         );
       }
-      const key = `${option.expirationUnixTimestamp}-${normalizedUnderlyingAmount}-${normalizedQuoteAmount}`;
+      const key = `${option.expirationUnixTimestamp}-${
+        normalizedUnderlyingAmount * normalizedQuoteAmount
+      }`;
 
-      const strike = new BigNumber(normalizedQuoteAmount.toString()).div(
-        new BigNumber(normalizedUnderlyingAmount.toString()),
+      const strike = new BigNumber(
+        normalizedUnderlyingAmount * normalizedQuoteAmount,
       );
 
       const callOrPutRow = {

@@ -9,7 +9,6 @@ import {
   selector,
   useRecoilTransaction_UNSTABLE,
 } from 'recoil';
-import { getOptionsByMarketsPageParamsKey } from './utils';
 
 const defaultExpiration = new BN(0);
 
@@ -57,14 +56,6 @@ export const selectExpirationAsDate = selector({
     const date = new Date(expiration.toNumber() * 1000);
     return date.toISOString();
   },
-});
-
-/**
- * Should store a list of option keys by the non fungible params used on the Markets page.
- */
-export const optionsByMarketsPageParams = atomFamily<string[], string>({
-  key: 'optionsByMarketsPageParams',
-  default: [],
 });
 
 /**
@@ -172,11 +163,14 @@ export const selectOptionsByMarketsPageParams = selector({
           _underlyingMint &&
           _quoteMint &&
           // must check for all permutations to get Calls and Puts
+          (option.underlyingAmountPerContract.eq(
+            _underlyingAmountPerContract,
+          ) ||
+            option.quoteAmountPerContract.eq(_underlyingAmountPerContract)) &&
           (option.underlyingAssetMint.equals(_underlyingMint) ||
             option.underlyingAssetMint.equals(_quoteMint)) &&
           (option.quoteAssetMint.equals(_quoteMint) ||
-            option.quoteAssetMint.equals(_underlyingMint)) &&
-          option.underlyingAmountPerContract.eq(_underlyingAmountPerContract)
+            option.quoteAssetMint.equals(_underlyingMint))
         );
       });
     return options as OptionMarketWithKey[];
@@ -200,12 +194,6 @@ export const useUpsertOptions = () =>
         const quoteCountMap: Record<string, number> = {};
         _optionAccounts.forEach((optionAcount) => {
           const optionPublicKeyStr = optionAcount.publicKey.toString();
-          set(
-            optionsByMarketsPageParams(
-              getOptionsByMarketsPageParamsKey(optionAcount.account),
-            ),
-            (curr) => [...curr, optionPublicKeyStr],
-          );
           set(optionsMap(optionPublicKeyStr), {
             ...optionAcount.account,
             key: optionAcount.publicKey,

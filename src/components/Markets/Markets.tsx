@@ -373,8 +373,6 @@ const Markets: React.VFC = () => {
                         <CallPutRow
                           key={`${row.key}`}
                           row={row}
-                          uAsset={uAsset}
-                          qAsset={qAsset}
                           date={momentDate}
                           precision={precision}
                           round={round}

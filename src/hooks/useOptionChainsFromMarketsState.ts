@@ -66,7 +66,6 @@ export const useOptionsChainFromMarketsState = (): ChainRow[] => {
         ...option,
         type: isCall ? OptionType.CALL : OptionType.PUT,
         strike,
-        key: option.optionMint.toString(),
         change: '', // TODO
         volume: '', // TODO
         openInterest: '', // TODO

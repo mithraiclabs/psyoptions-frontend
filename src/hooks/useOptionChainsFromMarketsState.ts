@@ -7,6 +7,8 @@ import {
   underlyingMint,
 } from '../recoil';
 import { CallOrPut, OptionType } from '../types';
+import { useLoadOptionsMintInfo } from './PsyOptionsAPI/useLoadOptionsMintInfo';
+import { useLoadSerumDataByMarketAddresses } from './Serum/useLoadSerumDataByMarketKeys';
 import { useDeriveMultipleSerumMarketAddresses } from './useDeriveMultipleSerumMarketAddresses';
 import { useNormalizeAmountOfMint } from './useNormalizeAmountOfMint';
 
@@ -27,6 +29,8 @@ export const useOptionsChainFromMarketsState = (): ChainRow[] => {
   const _quoteMint = useRecoilValue(quoteMint);
   const normalizeUnderlyingAmount = useNormalizeAmountOfMint(_underlyingMint);
   const normalizeQuoteAmount = useNormalizeAmountOfMint(_quoteMint);
+  useLoadOptionsMintInfo(options);
+  useLoadSerumDataByMarketAddresses(serumAddresses);
 
   return useMemo(() => {
     if (!_underlyingMint) {
@@ -63,8 +67,6 @@ export const useOptionsChainFromMarketsState = (): ChainRow[] => {
         type: isCall ? OptionType.CALL : OptionType.PUT,
         strike,
         key: option.optionMint.toString(),
-        ask: '', // TODO
-        bid: '', // TODO
         change: '', // TODO
         volume: '', // TODO
         openInterest: '', // TODO

@@ -61,7 +61,6 @@ export type OptionMarket = {
 
 export type ChainRow = {
   strike: BigNumber;
-  size: string;
   key: string;
   call: OptionRow;
   put: OptionRow;
@@ -70,8 +69,6 @@ export type ChainRow = {
 export type OptionRow = OptionMarket & {
   emptyRow?: boolean;
   key: string;
-  ask: string;
-  bid: string;
   change: string;
   volume: string;
   openInterest: string;

@@ -11,14 +11,12 @@ import {
 } from '@material-ui/core';
 import ChevronLeft from '@material-ui/icons/ChevronLeft';
 import ChevronRight from '@material-ui/icons/ChevronRight';
-import { PublicKey } from '@solana/web3.js';
 import moment from 'moment';
 import { TCellLoading, THeadCell, TCellStrike, PageButton } from './styles';
 import Balances from './MarketsBalances';
 import MarketsUnsettledBalances from './MarketsUnsettledBalances';
 import { MarketsTableHeader } from './MarketsTableHeader';
 import useAssetList from '../../hooks/useAssetList';
-import useOptionsChain from '../../hooks/useOptionsChain';
 import useOptionsMarkets from '../../hooks/useOptionsMarkets';
 import useSerum from '../../hooks/useSerum';
 import { MarketDataProvider } from '../../context/MarketDataContext';
@@ -33,7 +31,6 @@ import OpenOrders from '../OpenOrders';
 import UnsettledBalancesTable from '../UnsettledBalancesTable';
 import { calculateStrikePrecision } from '../../utils/getStrikePrices';
 import { useSerumPriceByAssets } from '../../hooks/Serum/useSerumPriceByAssets';
-import { useBatchLoadMints } from '../../hooks/SPLToken';
 import { CallOrPut, SerumMarketAndProgramId } from '../../types';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import {
@@ -57,8 +54,6 @@ const dblsp = `${'\u00A0'}${'\u00A0'}`;
 const rowTemplate = {
   call: {
     key: '',
-    bid: '',
-    ask: '',
     change: '',
     volume: '',
     openInterest: '',
@@ -68,8 +63,6 @@ const rowTemplate = {
   },
   put: {
     key: '',
-    bid: '',
-    ask: '',
     change: '',
     volume: '',
     openInterest: '',
@@ -82,7 +75,6 @@ const rowTemplate = {
 // TODO move Serum market storage to Recoil
 const Markets: React.VFC = () => {
   const { uAsset, qAsset, assetListLoading } = useAssetList();
-  const { chains: _chains, buildOptionsChain } = useOptionsChain();
   const chains = useOptionsChainFromMarketsState();
   const { marketsLoading } = useOptionsMarkets();
   const [_underlyingMint, setUnderlyingMint] = useRecoilState(underlyingMint);
@@ -165,25 +157,6 @@ const Markets: React.VFC = () => {
     [rowsToDisplay],
   );
 
-  // batch request the option mint information for each row
-  const optionMints = useMemo(() => {
-    const tmp: PublicKey[] = [];
-    rows.forEach((row) => {
-      if (row?.call?.optionMintKey) {
-        tmp.push(row?.call?.optionMintKey);
-      }
-      if (row?.put?.optionMintKey) {
-        tmp.push(row?.put?.optionMintKey);
-      }
-    });
-    return tmp;
-  }, [rows]);
-  useBatchLoadMints(optionMints);
-
-  useEffect(() => {
-    buildOptionsChain(momentDate?.unix() ?? 0);
-  }, [buildOptionsChain, contractSize, momentDate]);
-
   useEffect(() => {
     // Load serum markets when the options chain changes
     // Only if they don't already exist for the matching call/put
@@ -248,10 +221,14 @@ const Markets: React.VFC = () => {
             precision={precision}
             date={momentDate}
             uAssetDecimals={
-              callPutData?.type === 'call' ? uAsset?.decimals : qAsset?.decimals
+              (callPutData?.type === 'call'
+                ? uAsset?.decimals
+                : qAsset?.decimals) ?? 0
             }
             qAssetDecimals={
-              callPutData?.type === 'call' ? qAsset?.decimals : uAsset?.decimals
+              (callPutData?.type === 'call'
+                ? qAsset?.decimals
+                : uAsset?.decimals) ?? 0
             }
             setLimitPrice={setLimitPrice}
             limitPrice={limitPrice}

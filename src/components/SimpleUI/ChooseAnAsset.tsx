@@ -93,9 +93,11 @@ const ChooseAnAsset = () => {
       updateForm('tokenSymbol', asset.tokenSymbol);
       setUAsset(asset);
 
-      // #TODO: add contract size input to Simple UI, but for now, when choosing ETH, set contractSize to 0.1
+      // #TODO: add contract size input to Simple UI, so can remove this
       if (asset.tokenSymbol.toLowerCase() === 'eth') {
         updateForm('contractSize', 0.1);
+      } else if (asset.tokenSymbol.toLowerCase() === 'sol') {
+        updateForm('contractSize', 1);
       }
 
       // TODO: animated transition between pages instead of a timeout

@@ -62,7 +62,7 @@ const OrderRow: React.VFC<{
   type: OptionType;
   expiration: number;
   uAssetSymbol: string;
-  qAssetSymbol: string;
+  assetPair: string;
   strikePrice: string;
   contractSize: string;
   handleCancelOrder: (order: any) => Promise<void>;
@@ -71,7 +71,7 @@ const OrderRow: React.VFC<{
   type,
   expiration,
   uAssetSymbol,
-  qAssetSymbol,
+  assetPair,
   strikePrice,
   contractSize,
   handleCancelOrder,
@@ -98,7 +98,7 @@ const OrderRow: React.VFC<{
           {order?.side}
         </TCell>
         <TCell>{type}</TCell>
-        <TCell>{`${qAssetSymbol}/${uAssetSymbol}`}</TCell>
+        <TCell>{assetPair}</TCell>
         <TCell>
           {`${moment.utc(expiration * 1000).format('LL')} 23:59:59 UTC`}
         </TCell>
@@ -135,7 +135,7 @@ const OrderRow: React.VFC<{
             >
                 {`${order?.side} ${type}`}
             </Box>
-            <Box>{`${qAssetSymbol}/${uAssetSymbol}`}</Box>
+            <Box>{assetPair}</Box>
           </Box>
           <Box pl={formFactor === "mobile" ? 1 : 2} className={classes.column}>
             <Box>{`Strike: ${strikePrice}`}</Box>
@@ -267,7 +267,7 @@ const OpenOrdersRow: React.VFC<{
               type={type}
               expiration={expiration}
               uAssetSymbol={uAssetSymbol}
-              qAssetSymbol={qAssetSymbol}
+              assetPair={type === 'put' ? `${qAssetSymbol}/${uAssetSymbol}` : `${uAssetSymbol}/${qAssetSymbol}`}
               strikePrice={strikePrice}
               contractSize={contractSize}
               handleCancelOrder={handleCancelOrder}

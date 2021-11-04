@@ -392,6 +392,23 @@ const BuySellDialog: React.VFC<{
 
   const serumMarketQuoteAssetSymbol = type === 'put' ? uAssetSymbol : qAssetSymbol;
   const serumMarketQuoteAssetBalance = type === 'put' ? uAssetBalance : qAssetBalance;
+  const breakeven: number | null = orderType === 'market' ?
+    calculateBreakevenForMarketOrder(
+      strike?.toNumber(),
+      type === 'call'
+        ? amountPerContract?.toNumber()
+        : quoteAmountPerContract?.toNumber(),
+      orderSize,
+      orderbook?.asks ?? [],
+      type === 'put',
+    ) : calculateBreakevenForLimitOrder(
+      strike?.toNumber(),
+      type === 'call'
+        ? amountPerContract?.toNumber()
+        : quoteAmountPerContract?.toNumber(),
+      parsedLimitPrice?.toNumber(),
+      type === 'put',
+    );
 
   return (
     <DialogFullscreenMobile open={open} onClose={onClose} maxWidth={'lg'}>
@@ -596,27 +613,8 @@ const BuySellDialog: React.VFC<{
                         }`}
                   </Box>
                   <Box alignSelf="flex-start" pt={1} pb={2}>
-                    Breakeven:{' $'}
-                    {orderSize
-                      ? orderType === 'market'
-                        ? calculateBreakevenForMarketOrder(
-                            strike.toNumber(),
-                            type === 'call'
-                              ? amountPerContract.toNumber()
-                              : quoteAmountPerContract.toNumber(),
-                            orderSize,
-                            orderbook?.asks ?? [],
-                            type === 'put',
-                          )
-                        : calculateBreakevenForLimitOrder(
-                            strike.toNumber(),
-                            type === 'call'
-                              ? amountPerContract.toNumber()
-                              : quoteAmountPerContract.toNumber(),
-                            parsedLimitPrice.toNumber(),
-                            type === 'put',
-                          )
-                      : '-'}
+                    Breakeven:
+                    {orderSize && breakeven && !isNaN(breakeven) ? ` $${breakeven}` : ' -'}
                   </Box>
                   <Box
                     py={2}

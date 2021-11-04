@@ -137,10 +137,38 @@ const Portfolio: React.VFC = () => {
             >
               <Box display="flex" flexDirection="row" alignItems="center"
                 style={{ minHeight: "66px" }}>
+                {isDesktop && <AttachMoney fontSize="small" />}
+                <Box className={isMobile ? classes.mobileTab : classes.desktopTab} textAlign="left">
+                  <Box className={isMobile ? classes.mobileTabHeader : classes.desktopTabHeader}>
+                    Unsettled Funds
+                  </Box>
+                </Box>
+              </Box>
+            </TabCustom>
+            <TabCustom
+              selected={selectedTab === 1}
+              onClick={() => setSelectedTab(1)}
+            >
+              <Box display="flex" flexDirection="row" alignItems="center"
+                style={{ minHeight: "66px" }}>
+                {isDesktop && <ShoppingCart fontSize="small" />}
+                <Box className={isMobile ? classes.mobileTab : classes.desktopTab} textAlign="left">
+                  <Box className={isMobile ? classes.mobileTabHeader : classes.desktopTabHeader}>
+                    Open Orders
+                  </Box>
+                </Box>
+              </Box>
+            </TabCustom>
+            <TabCustom
+              selected={selectedTab === 2}
+              onClick={() => setSelectedTab(2)}
+            >
+              <Box display="flex" flexDirection="row" alignItems="center"
+                style={{ minHeight: "66px" }}>
                 {isDesktop && <BarChartIcon />}
                 <Box className={isMobile ? classes.mobileTab : classes.desktopTab} textAlign="left">
                   <Box className={isMobile ? classes.mobileTabHeader : classes.desktopTabHeader}>
-                    Open Positions
+                    Bought Options
                   </Box>
                   <Box fontSize={isMobile ? '10px' : '13px'}>
                     {positionRows.length} open
@@ -149,8 +177,8 @@ const Portfolio: React.VFC = () => {
               </Box>
             </TabCustom>
             <TabCustom
-              selected={selectedTab === 1}
-              onClick={() => setSelectedTab(1)}
+              selected={selectedTab === 3}
+              onClick={() => setSelectedTab(3)}
             >
               <Box display="flex" flexDirection="row" alignItems="center"
                 style={{ minHeight: "66px" }}>
@@ -165,53 +193,25 @@ const Portfolio: React.VFC = () => {
                 </Box>
               </Box>
             </TabCustom>
-            <TabCustom
-              selected={selectedTab === 2}
-              onClick={() => setSelectedTab(2)}
-            >
-              <Box display="flex" flexDirection="row" alignItems="center"
-                style={{ minHeight: "66px" }}>
-                {isDesktop && <ShoppingCart fontSize="small" />}
-                <Box className={isMobile ? classes.mobileTab : classes.desktopTab} textAlign="left">
-                  <Box className={isMobile ? classes.mobileTabHeader : classes.desktopTabHeader}>
-                    Open Orders
-                  </Box>
-                </Box>
-              </Box>
-            </TabCustom>
-            <TabCustom
-              selected={selectedTab === 3}
-              onClick={() => setSelectedTab(3)}
-            >
-              <Box display="flex" flexDirection="row" alignItems="center"
-                style={{ minHeight: "66px" }}>
-                {isDesktop && <AttachMoney fontSize="small" />}
-                <Box className={isMobile ? classes.mobileTab : classes.desktopTab} textAlign="left">
-                  <Box className={isMobile ? classes.mobileTabHeader : classes.desktopTabHeader}>
-                    Unsettled Funds
-                  </Box>
-                </Box>
-              </Box>
-            </TabCustom>
           </Box>
           {selectedTab === 0 && (
+            <UnsettledBalancesTable />
+          )}
+          {selectedTab === 1 && (
+            <OpenOrders />
+          )}
+          {selectedTab === 2 && (
             <OpenPositionsTable
               positions={positionRows}
               className={clsx(classes.desktopColumns,
                 !isDesktop && classes.mobileColumns)}
             />
           )}
-          {selectedTab === 1 && (
+          {selectedTab === 3 && (
             <WrittenOptionsTable
               className={clsx(classes.desktopColumns,
                 !isDesktop && classes.mobileColumns)}
             />
-          )}
-          {selectedTab === 2 && (
-            <OpenOrders />
-          )}
-          {selectedTab === 3 && (
-            <UnsettledBalancesTable />
           )}
         </Box>
       </Page>

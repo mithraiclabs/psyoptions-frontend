@@ -28,7 +28,7 @@ const MarketsUnsettledBalances: React.FC = () => {
       fontSize={'14px'}
       px={[1, 1, 0]}
     >
-      <Box px={[1, 1, 0]}>Unsettled Balances:</Box>
+      <Box px={[1, 1, 0]}>Unsettled Funds:</Box>
       <Box display="flex" px={[1, 1, 0]} pt={[0, 0, 1]}>
         <Box display="flex" flexDirection={'row'} alignItems="center" mr={1}>
           <span>You have&nbsp;</span>

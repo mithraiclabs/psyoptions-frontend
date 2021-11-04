@@ -1,9 +1,12 @@
-import React from 'react';
-import Box from '@material-ui/core/Box';
-import TableHead from '@material-ui/core/TableHead';
-import TableRow from '@material-ui/core/TableRow';
+import React, { useState } from 'react';
+import {
+  Box,
+  IconButton,
+  TableHead,
+  TableRow
+} from '@material-ui/core';
 import { ColumnDisplaySelector } from './ColumnDisplaySelector';
-
+import InfoOutlined from '@material-ui/icons/InfoOutlined';
 import { THeadCell, TCellStrike, StyledTooltip } from './styles';
 
 export const MarketsTableHeader: React.FC<{
@@ -37,6 +40,8 @@ export const MarketsTableHeader: React.FC<{
   currentColumnsCount,
   setColumnsCount,
 }) => {
+  const [showCallsTooltip, setShowCallsTooltip] = useState(false);
+  const [showPutsTooltip, setShowPutsTooltip] = useState(false);
   const colWidth = (1 / currentColumnsCount) * 100;
 
   return (
@@ -44,10 +49,15 @@ export const MarketsTableHeader: React.FC<{
       <TableRow>
         <THeadCell
           colSpan={Math.floor(currentColumnsCount / 2)}
-          style={{ borderTop: 'none', padding: '16px 20px' }}
+          style={{ borderTop: 'none', padding: '8px 20px' }}
         >
-          <h3 style={{ margin: 0 }}>
+          <Box display="flex" flexDirection="row" alignItems="center">
+            <h3 style={{ margin: "0 5px 0 0" }}>{uAssetSymbol} Calls</h3>
             <StyledTooltip
+              disableTouchListener
+              open={showCallsTooltip}
+              onOpen={() => setShowCallsTooltip(true)}
+              onClose={() => setShowCallsTooltip(false)}
               title={
                 <Box px={1}>
                   <Box py={1}>
@@ -68,9 +78,11 @@ export const MarketsTableHeader: React.FC<{
                 </Box>
               }
             >
-              <Box display="inline">{uAssetSymbol} Calls</Box>
+              <IconButton color="inherit" onClick={() => setShowCallsTooltip(!showCallsTooltip)}>
+                <InfoOutlined />
+              </IconButton>
             </StyledTooltip>
-          </h3>
+          </Box>
         </THeadCell>
         <TCellStrike colSpan={1} align="center">
           <ColumnDisplaySelector
@@ -90,10 +102,15 @@ export const MarketsTableHeader: React.FC<{
         </TCellStrike>
         <THeadCell
           colSpan={Math.floor(currentColumnsCount / 2)}
-          style={{ borderTop: 'none', padding: '16px 20px' }}
+          style={{ borderTop: 'none', padding: '8px 20px' }}
         >
-          <h3 style={{ margin: 0 }}>
+          <Box display="flex" flexDirection="row" alignItems="center">
+            <h3 style={{ margin: "0 5px 0 0" }}>{uAssetSymbol} Puts</h3>
             <StyledTooltip
+              disableTouchListener
+              open={showPutsTooltip}
+              onOpen={() => setShowPutsTooltip(true)}
+              onClose={() => setShowPutsTooltip(false)}
               title={
                 <Box px={1}>
                   <Box py={1}>
@@ -114,9 +131,11 @@ export const MarketsTableHeader: React.FC<{
                 </Box>
               }
             >
-              <Box display="inline">{uAssetSymbol} Puts</Box>
+              <IconButton color="inherit" onClick={() => setShowPutsTooltip(!showPutsTooltip)}>
+                <InfoOutlined />
+              </IconButton>
             </StyledTooltip>
-          </h3>
+          </Box>
         </THeadCell>
       </TableRow>
       <TableRow>

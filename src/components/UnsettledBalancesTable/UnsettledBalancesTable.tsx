@@ -24,7 +24,7 @@ import CSS from 'csstype';
 const useStyles = makeStyles((theme) => ({
   headCell: {
     borderTop: 'none',
-    padding: '16px 20px',
+    padding: '8px 20px',
   },
   walletButtonCell: {
     textAlign: "-webkit-center" as CSS.Property.TextAlign,

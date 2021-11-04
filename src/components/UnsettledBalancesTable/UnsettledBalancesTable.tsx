@@ -52,6 +52,7 @@ const UnsettledBalancesTable = () => {
                 <Box display="flex" flexDirection="row" alignItems="center">
                   <h3 style={{ margin: "0 5px 0 0" }}>Unsettled Funds</h3>
                   <StyledTooltip
+                    disableTouchListener
                     open={showTooltip}
                     onOpen={() => setShowTooltip(true)}
                     onClose={() => setShowTooltip(false)}

@@ -38,9 +38,8 @@ import {
   quoteMint,
   selectExpirationAsDate,
   selectFutureExpirationsByUnderlyingAndQuote,
-  selectQuoteMintsOfFutureOptions,
+  selectMintsOfFutureOptions,
   selectUnderlyingAmountPerOptionByExpirationUnderlyingQuote,
-  selectUnderlyingMintsOfFutureOptions,
   underlyingAmountPerContract,
   underlyingMint,
 } from '../../recoil';
@@ -79,8 +78,7 @@ const Markets: React.VFC = () => {
   const { marketsLoading } = useOptionsMarkets();
   const [_underlyingMint, setUnderlyingMint] = useRecoilState(underlyingMint);
   const [_quoteMint, setQuoteMint] = useRecoilState(quoteMint);
-  const underlyingMints = useRecoilValue(selectUnderlyingMintsOfFutureOptions);
-  const quoteMints = useRecoilValue(selectQuoteMintsOfFutureOptions);
+  const mints = useRecoilValue(selectMintsOfFutureOptions);
   const expirationDateString = useRecoilValue(selectExpirationAsDate);
   const [_expirationUnixTimestamp, setExpiration] = useRecoilState(
     expirationUnixTimestamp,
@@ -311,7 +309,7 @@ const Markets: React.VFC = () => {
                   <Box>
                     <SelectAsset
                       onChange={setUnderlyingMint}
-                      mints={underlyingMints}
+                      mints={mints}
                       value={_underlyingMint}
                     />
                   </Box>
@@ -320,7 +318,7 @@ const Markets: React.VFC = () => {
                 <Box pl={'4px'}>
                   <SelectAsset
                     onChange={setQuoteMint}
-                    mints={quoteMints}
+                    mints={mints}
                     value={_quoteMint}
                   />
                 </Box>

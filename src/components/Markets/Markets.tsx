@@ -487,11 +487,11 @@ const Markets: React.VFC = () => {
                 </TableBody>
               </Table>
             </TableContainer>
-            <Box mt={'20px'}>
-              <OpenOrders />
-            </Box>
             <Box id="unsettled-balances-table" mt={'20px'}>
               <UnsettledBalancesTable />
+            </Box>
+            <Box mt={'20px'}>
+              <OpenOrders />
             </Box>
           </Box>
         </Box>

@@ -1,10 +1,11 @@
 import React, { cloneElement } from 'react';
 import { ThemeProvider } from '@material-ui/core/styles';
 
+import { GraphQLProvider } from './GraphQLProvider';
 import { ConnectionProvider } from './ConnectionContext';
 import { OwnedTokenAccountsProvider } from './OwnedTokenAccounts';
 import { WalletInfoProvider } from './WalletInfoContext';
-import { WalletKitProvider } from "@gokiprotocol/walletkit";
+import { WalletKitProvider } from '@gokiprotocol/walletkit';
 import { NotificationsProvider } from './NotificationsContext';
 import { OptionsMarketsProvider } from './OptionsMarketsContext';
 import { SerumProvider } from './SerumContext';
@@ -24,6 +25,7 @@ const _providers: React.ReactElement[] = [
   // eslint-disable-next-line react/no-children-prop
   <ThemeProvider key="ThemeProvider" theme={theme} children={<div />} />,
   <ConnectionProvider key="ConnectionProvider" />,
+  <GraphQLProvider key="GraphQLProvider" />,
   <NotificationsProvider key="NotificationsProvider" />,
   <SolanaMetaProvider key="SolanaMetaProvider" />,
   <AssetListProvider key="AssetListProvider" />,
@@ -32,7 +34,7 @@ const _providers: React.ReactElement[] = [
     key="WalletKitProvider"
     defaultNetwork="mainnet-beta"
     app={{
-      name: "PsyOptions",
+      name: 'PsyOptions',
     }}
     children={<div />}
   />,

@@ -107,7 +107,9 @@ export const selectFutureExpirationsByUnderlyingAndQuote = selector({
       return acc;
     }, [] as BN[]);
 
-    return _uniqby(expirations, (exp) => exp.toNumber());
+    return _uniqby(expirations, (exp) => exp.toNumber()).sort((a, b) =>
+      a.sub(b).toNumber(),
+    );
   },
 });
 

@@ -1,5 +1,5 @@
 import { BigNumber } from 'bignumber.js';
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useRecoilValue } from 'recoil';
 import {
   quoteMint,
@@ -10,7 +10,7 @@ import { CallOrPut, OptionType } from '../types';
 import { useLoadOptionsMintInfo } from './PsyOptionsAPI/useLoadOptionsMintInfo';
 import { useLoadSerumDataByMarketAddresses } from './Serum/useLoadSerumDataByMarketKeys';
 import { useDeriveMultipleSerumMarketAddresses } from './useDeriveMultipleSerumMarketAddresses';
-import { useNormalizeAmountOfMint } from './useNormalizeAmountOfMint';
+import { useNormalizeAmountOfMintBN } from './useNormalizeAmountOfMintBN';
 
 type ChainRow = {
   key: string;
@@ -27,8 +27,9 @@ export const useOptionsChainFromMarketsState = (): ChainRow[] => {
   const serumAddresses = useDeriveMultipleSerumMarketAddresses(options);
   const _underlyingMint = useRecoilValue(underlyingMint);
   const _quoteMint = useRecoilValue(quoteMint);
-  const normalizeUnderlyingAmount = useNormalizeAmountOfMint(_underlyingMint);
-  const normalizeQuoteAmount = useNormalizeAmountOfMint(_quoteMint);
+  const normalizeUnderlyingAmountBN =
+    useNormalizeAmountOfMintBN(_underlyingMint);
+  const normalizeQuoteAmountBN = useNormalizeAmountOfMintBN(_quoteMint);
   useLoadOptionsMintInfo(options);
   useLoadSerumDataByMarketAddresses(serumAddresses);
 
@@ -40,29 +41,27 @@ export const useOptionsChainFromMarketsState = (): ChainRow[] => {
       const isCall = option.underlyingAssetMint.equals(_underlyingMint);
       // let normalizedUnderlying = option.underlyingAssetMint;
       // let normalizedQuote = option.quoteAssetMint;
-      let normalizedUnderlyingAmount = normalizeUnderlyingAmount(
+      let normalizedUnderlyingAmount = normalizeUnderlyingAmountBN(
         option.underlyingAmountPerContract,
       );
-      let normalizedQuoteAmount = normalizeQuoteAmount(
+      let normalizedQuoteAmount = normalizeQuoteAmountBN(
         option.quoteAmountPerContract,
       );
       if (!isCall) {
         // normalizedUnderlying = option.quoteAssetMint;
         // normalizedQuote = option.underlyingAssetMint;
-        normalizedUnderlyingAmount = normalizeQuoteAmount(
+        normalizedUnderlyingAmount = normalizeQuoteAmountBN(
           option.quoteAmountPerContract,
         );
-        normalizedQuoteAmount = normalizeUnderlyingAmount(
+        normalizedQuoteAmount = normalizeUnderlyingAmountBN(
           option.underlyingAmountPerContract,
         );
       }
-      const key = `${option.expirationUnixTimestamp}-${
-        normalizedUnderlyingAmount * normalizedQuoteAmount
-      }`;
 
-      const strike = new BigNumber(
-        normalizedUnderlyingAmount * normalizedQuoteAmount,
+      const strike = normalizedUnderlyingAmount.multipliedBy(
+        normalizedQuoteAmount,
       );
+      const key = `${option.expirationUnixTimestamp}-${strike.toNumber()}`;
 
       const callOrPutRow = {
         ...option,
@@ -90,8 +89,8 @@ export const useOptionsChainFromMarketsState = (): ChainRow[] => {
     );
   }, [
     _underlyingMint,
-    normalizeQuoteAmount,
-    normalizeUnderlyingAmount,
+    normalizeQuoteAmountBN,
+    normalizeUnderlyingAmountBN,
     options,
     serumAddresses,
   ]);

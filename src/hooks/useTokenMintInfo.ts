@@ -42,6 +42,7 @@ export const useTokenMintInfo = (
     }
     (async () => {
       try {
+        // TODO cache in Recoil
         const _mintInfo = await token.getMintInfo();
         setMintInfo(_mintInfo);
       } catch (err) {

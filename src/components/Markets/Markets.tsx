@@ -48,8 +48,6 @@ import { BN } from '@project-serum/anchor';
 import { useTokenMintInfo } from '../../hooks/useTokenMintInfo';
 import { useOptionsChainFromMarketsState } from '../../hooks/useOptionChainsFromMarketsState';
 
-const dblsp = `${'\u00A0'}${'\u00A0'}`;
-
 const rowTemplate = {
   call: {
     key: '',
@@ -187,14 +185,6 @@ const Markets: React.VFC = () => {
     setBuySellDialogOpen(true);
   }, []);
 
-  const buySellDialogHeading = callPutData
-    ? `${callPutData.uAssetSymbol}-${
-        callPutData.qAssetSymbol
-      }${dblsp}|${dblsp}${momentDate?.format(
-        'D MMM YYYY',
-      )}${dblsp}|${dblsp}${callPutData.type.slice(0, 1).toUpperCase()}`
-    : '--';
-
   const currentPageStart = page * rowsPerPage + 1;
   const currentPageEnd = Math.min(
     rowsPerPage * (page + 1),
@@ -211,8 +201,8 @@ const Markets: React.VFC = () => {
         {momentDate && (
           <BuySellDialog
             {...callPutData}
+            optionKey={callPutData.key}
             markPrice={markPrice}
-            heading={buySellDialogHeading}
             open={buySellDialogOpen}
             onClose={() => setBuySellDialogOpen(false)}
             round={round}

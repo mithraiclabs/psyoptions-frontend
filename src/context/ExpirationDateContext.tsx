@@ -27,19 +27,19 @@ const ExpirationDateProvider: React.FC = ({ children }) => {
     useLocalStorageState<Record<string, string>>('selectedDates', {});
   const [parsedDate, setParsedDate] = useState<Moment | null>(null);
 
-  const setSelectedDate = useCallback((date: Moment) => {
-    if (uAsset?.tokenSymbol) {
-      _setSelectedDatesByAsset((prevValue) => ({
-        ...prevValue,
-        [uAsset.tokenSymbol]: date.toISOString(),
-      }));
+  const setSelectedDate = useCallback(
+    (date: Moment) => {
+      if (uAsset?.tokenSymbol) {
+        _setSelectedDatesByAsset((prevValue) => ({
+          ...prevValue,
+          [uAsset.tokenSymbol]: date.toISOString(),
+        }));
 
-      setParsedDate(date);
-    }
-  }, [
-    _setSelectedDatesByAsset,
-    uAsset?.tokenSymbol
-  ]);
+        setParsedDate(date);
+      }
+    },
+    [_setSelectedDatesByAsset, uAsset?.tokenSymbol],
+  );
 
   useEffect(() => {
     if (!assetListLoading && uAsset?.mintAddress && qAsset?.mintAddress) {
@@ -48,10 +48,16 @@ const ExpirationDateProvider: React.FC = ({ children }) => {
           Object.keys(marketsByUiKey)
             .filter(
               (marketKey) =>
-                marketsByUiKey[marketKey].underlyingAssetMintKey.toString() ===
-                uAsset?.mintAddress &&
-                marketsByUiKey[marketKey].quoteAssetMintKey.toString() ===
-                qAsset?.mintAddress,
+                (marketsByUiKey[marketKey].underlyingAssetMintKey.toString() ===
+                  uAsset?.mintAddress ||
+                  marketsByUiKey[
+                    marketKey
+                  ].underlyingAssetMintKey.toString() ===
+                    qAsset?.mintAddress) &&
+                (marketsByUiKey[marketKey].quoteAssetMintKey.toString() ===
+                  qAsset?.mintAddress ||
+                  marketsByUiKey[marketKey].quoteAssetMintKey.toString() ===
+                    uAsset?.mintAddress),
             )
             .map((marketKey) => marketsByUiKey[marketKey].expiration),
         ),
@@ -69,7 +75,10 @@ const ExpirationDateProvider: React.FC = ({ children }) => {
       if (!parsedDate && newDates.length) {
         // Set default date or load user's stored date for current asset
         const _selectedDate = _selectedDatesByAsset[uAsset?.tokenSymbol ?? ''];
-        if (_selectedDate && newDates.some((d) => d.toISOString() === _selectedDate)) {
+        if (
+          _selectedDate &&
+          newDates.some((d) => d.toISOString() === _selectedDate)
+        ) {
           setParsedDate(moment.utc(_selectedDate));
         } else {
           setParsedDate(newDates[0]);
@@ -83,7 +92,8 @@ const ExpirationDateProvider: React.FC = ({ children }) => {
     uAsset?.tokenSymbol,
     qAsset?.mintAddress,
     _selectedDatesByAsset,
-    parsedDate]);
+    parsedDate,
+  ]);
 
   return (
     <ExpirationDateContext.Provider

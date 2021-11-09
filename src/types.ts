@@ -68,7 +68,7 @@ export type ChainRow = {
 
 export type OptionRow = OptionMarket & {
   emptyRow?: boolean;
-  key: string;
+  key: PublicKey;
   change: string;
   volume: string;
   openInterest: string;

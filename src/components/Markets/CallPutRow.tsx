@@ -16,7 +16,7 @@ import { useSubscribeSPLTokenMint } from '../../hooks/SPLToken';
 import { useSerumOrderbooks } from '../../context/SerumOrderbookContext';
 import { TCell, TCellLoading, TCellStrike, TRow } from './styles';
 import { useMarketData } from '../../context/MarketDataContext';
-import { Asset, CallOrPut, OptionType } from '../../types';
+import { CallOrPut, OptionType } from '../../types';
 import { useSPLTokenMints } from '../../context/SPLTokenMintsContext';
 import { optionsMap } from '../../recoil';
 import { useRecoilValue } from 'recoil';

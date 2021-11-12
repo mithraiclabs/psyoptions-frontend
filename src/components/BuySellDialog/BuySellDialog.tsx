@@ -43,6 +43,7 @@ import { optionsMap, quoteMint, underlyingMint } from '../../recoil';
 import { useTokenByMint } from '../../hooks/useNetworkTokens';
 import { useTokenMintInfo } from '../../hooks/useTokenMintInfo';
 import moment from 'moment';
+import { useNormalizeAmountOfMintBN } from '../../hooks/useNormalizeAmountOfMintBN';
 
 const bgLighterColor = (theme.palette.background as any).lighter;
 
@@ -124,6 +125,9 @@ const BuySellDialog: React.VFC<{
     underlyingMintInfo?.decimals || underlyingAsset?.decimals || 0;
   const isCall =
     _underlyingMint && option?.underlyingAssetMint.equals(_underlyingMint);
+  const normalizeOptionUnderlyingSize = useNormalizeAmountOfMintBN(
+    option?.underlyingAssetMint ?? null,
+  );
 
   const serumMarketData = useMemo(() => {
     return serumMarkets[serumAddress];
@@ -239,17 +243,19 @@ const BuySellDialog: React.VFC<{
           mintAddress: underlyingAsset?.address ?? '',
           decimals: underlyingMintDecimals,
         },
-        // TODO fix what breaks here
-        optionMarket: option,
+        option,
+        optionUnderlyingSize: normalizeOptionUnderlyingSize(
+          option.underlyingAmountPerContract,
+        ),
         uAssetTokenAccount: underlyingAssetSrcKey
-          ? {
+          ? ({
               pubKey: underlyingAssetSrcKey,
               amount:
                 uAssetAccounts.find((asset) =>
                   asset.pubKey.equals(underlyingAssetSrcKey),
                 )?.amount || 0,
               mint: _underlyingMint,
-            }
+            } as TokenAccount)
           : null,
         mintedOptionDestinationKey: optionTokenKey,
         writerTokenDestinationKey,
@@ -277,6 +283,7 @@ const BuySellDialog: React.VFC<{
     underlyingAsset?.symbol,
     underlyingAsset?.address,
     underlyingMintDecimals,
+    normalizeOptionUnderlyingSize,
     _underlyingMint,
     pushErrorNotification,
   ]);
@@ -305,7 +312,7 @@ const BuySellDialog: React.VFC<{
       const optionTokenKey = getHighestAccount(optionAccounts)?.pubKey;
 
       await placeBuyOrder({
-        optionMarket: option,
+        option,
         serumMarket: serumMarketData?.serumMarket,
         optionDestinationKey: optionTokenKey,
         orderArgs: {

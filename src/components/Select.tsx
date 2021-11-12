@@ -21,6 +21,7 @@ const Sel: React.FC<{
   options: Option[];
   formControlOptions?: FormControlProps;
 }> = ({ disabled, label, value, onChange, options, formControlOptions }) => {
+  console.log('YOYOY ', label, value?.toString());
   return (
     <FormControl disabled={disabled} {...formControlOptions}>
       <InputLabel id={`${label}-label`}>{label}</InputLabel>

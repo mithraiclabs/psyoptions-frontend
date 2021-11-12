@@ -6,11 +6,11 @@ export const isTrue = (val: string | boolean) => val === true || val === 'true';
  * @param myArray {Array} Array to split
  * @param chunkSize {Integer} Size of every group
  */
-export const chunkArray = (myArray, chunkSize) => {
+export const chunkArray = <T>(myArray: T[], chunkSize: number) => {
   var index = 0;
   var arrayLength = myArray.length;
-  var tempArray = [];
-  
+  var tempArray: T[][] = [];
+
   for (index = 0; index < arrayLength; index += chunkSize) {
     const myChunk = myArray.slice(index, index + chunkSize);
     tempArray.push(myChunk);

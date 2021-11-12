@@ -21,15 +21,16 @@ export const useBatchLoadMints = (mints: PublicKey[]) => {
     (async () => {
       try {
         const groupOfMints: PublicKey[][] = chunkArray(mints, 100);
-        const getMultipleAccountsInfoPromises: Promise<AccountInfo<Buffer>[]>[] = groupOfMints.map(mints => {
+        const getMultipleAccountsInfoPromises: Promise<
+          (AccountInfo<Buffer> | null)[]
+        >[] = groupOfMints.map((mints) => {
           return connection.getMultipleAccountsInfo(mints);
         });
         const results = await Promise.all(getMultipleAccountsInfoPromises);
-        const infos: AccountInfo<Buffer>[] = results.flat();
+        const infos: (AccountInfo<Buffer> | null)[] = results.flat();
         const mintInfos: Record<string, MintInfo> = {};
         infos.forEach((info, index) => {
-          if (!info)
-            return;
+          if (!info) return;
           const mintInfo = MintLayout.decode(info.data);
           if (mintInfo.mintAuthorityOption === 0) {
             mintInfo.mintAuthority = null;

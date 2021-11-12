@@ -1,18 +1,15 @@
 import { useCallback } from 'react';
 import { PublicKey, Signer, Transaction } from '@solana/web3.js';
 import {
+  serumUtils,
   PSY_AMERICAN_PROGRAM_IDS,
   ProgramVersions,
   serumInstructions,
+  OptionMarketWithKey,
 } from '@mithraic-labs/psy-american';
 import { Market, OrderParams } from '@mithraic-labs/serum/lib/market';
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import {
-  Asset,
-  CreateMissingMintAccountsRes,
-  OptionMarket,
-  TokenAccount,
-} from '../types';
+import { Asset, CreateMissingMintAccountsRes, TokenAccount } from '../types';
 import { WRAPPED_SOL_ADDRESS } from '../utils/token';
 import useNotifications from './useNotifications';
 import useSendTransaction from './useSendTransaction';
@@ -23,12 +20,14 @@ import { useConnectedWallet } from '@saberhq/use-solana';
 import { createMissingAccountsAndMint } from '../utils/instructions/index';
 import { useCreateAdHocOpenOrdersSubscription } from './Serum';
 import { useAmericanPsyOptionsProgram } from './useAmericanPsyOptionsProgram';
+import BigNumber from 'bignumber.js';
 
 type PlaceSellOrderArgs = {
   numberOfContractsToMint: number;
   serumMarket: Market;
   orderArgs: OrderParams<PublicKey> & { payer: PublicKey | undefined };
-  optionMarket: OptionMarket;
+  option: OptionMarketWithKey;
+  optionUnderlyingSize: BigNumber;
   uAsset: Asset;
   uAssetTokenAccount: TokenAccount | null;
   mintedOptionDestinationKey?: PublicKey;
@@ -41,7 +40,7 @@ const usePlaceSellOrder = (
   const program = useAmericanPsyOptionsProgram();
   const { pushErrorNotification } = useNotifications();
   const wallet = useConnectedWallet();
-  const { connection } = useConnection();
+  const { connection, dexProgramId } = useConnection();
   const { splTokenAccountRentBalance } = useSolanaMeta();
   const { subscribeToTokenAccount } = useOwnedTokenAccounts();
   const { sendSignedTransaction } = useSendTransaction();
@@ -53,13 +52,20 @@ const usePlaceSellOrder = (
       numberOfContractsToMint,
       serumMarket,
       orderArgs,
-      optionMarket,
+      option,
+      optionUnderlyingSize,
       uAsset,
       uAssetTokenAccount,
       mintedOptionDestinationKey,
       writerTokenDestinationKey,
     }: PlaceSellOrderArgs) => {
-      if (!connection || !wallet?.publicKey || !program) {
+      if (
+        !connection ||
+        !wallet?.publicKey ||
+        !program ||
+        !dexProgramId ||
+        !splTokenAccountRentBalance
+      ) {
         return;
       }
       try {
@@ -68,18 +74,16 @@ const usePlaceSellOrder = (
         let _uAssetTokenAccount = uAssetTokenAccount;
         let _optionTokenSrcKey = mintedOptionDestinationKey;
         let _writerTokenDestinationKey = writerTokenDestinationKey;
-        const optionsProgramId = new PublicKey(
-          optionMarket.psyOptionsProgramId,
-        );
 
         // Mint and place order
         if (numberOfContractsToMint > 0) {
           // Mint missing contracs before placing order
           const { error, response } = await createMissingAccountsAndMint({
-            optionsProgramId,
+            optionsProgramId: program.programId,
             authorityPubkey: wallet.publicKey,
             owner: wallet.publicKey,
-            market: optionMarket,
+            option,
+            optionUnderlyingSize,
             uAsset,
             uAssetTokenAccount: _uAssetTokenAccount,
             splTokenAccountRentBalance,
@@ -115,7 +119,7 @@ const usePlaceSellOrder = (
           _writerTokenDestinationKey = __writerTokenDestinationKey;
 
           // Close out the wrapped SOL account so it feels native
-          if (optionMarket.uAssetMint === WRAPPED_SOL_ADDRESS) {
+          if (option.underlyingAssetMint.toString() === WRAPPED_SOL_ADDRESS) {
             mintTX.add(
               Token.createCloseAccountInstruction(
                 TOKEN_PROGRAM_ID,
@@ -139,7 +143,7 @@ const usePlaceSellOrder = (
         let openOrdersAddress: PublicKey;
         // eslint-disable-next-line
         if (
-          PSY_AMERICAN_PROGRAM_IDS[optionsProgramId.toString()] ===
+          PSY_AMERICAN_PROGRAM_IDS[program.programId.toString()] ===
           ProgramVersions.V1
         ) {
           ({
@@ -151,15 +155,16 @@ const usePlaceSellOrder = (
             payer: _optionTokenSrcKey,
           }));
         } else {
-          if (!optionMarket.serumMarketKey) {
-            return;
-          }
+          const [serumMarketKey] = await serumUtils.deriveSerumMarketAddress(
+            program,
+            option.key,
+          );
           const { openOrdersKey, tx } =
             await serumInstructions.newOrderInstruction(
               program,
-              optionMarket.pubkey,
-              new PublicKey(optionMarket.serumProgramId),
-              optionMarket.serumMarketKey,
+              option.key,
+              dexProgramId,
+              serumMarketKey,
               { ...orderArgs, payer: _optionTokenSrcKey },
             );
           placeOrderTx = new Transaction().add(tx);
@@ -215,12 +220,14 @@ const usePlaceSellOrder = (
           }`,
         });
       } catch (err) {
+        console.error('TJ ', err);
         pushErrorNotification(err);
       }
     },
     [
       connection,
       createAdHocOpenOrdersSub,
+      dexProgramId,
       program,
       pushErrorNotification,
       sendSignedTransaction,

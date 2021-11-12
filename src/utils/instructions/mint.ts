@@ -4,8 +4,10 @@ import {
   ProgramVersions,
   instructions,
   feeAmountPerContract,
+  OptionMarketWithKey,
 } from '@mithraic-labs/psy-american';
 import {
+  Account,
   Connection,
   PublicKey,
   Signer,
@@ -13,7 +15,7 @@ import {
   TransactionInstruction,
 } from '@solana/web3.js';
 import BigNumber from 'bignumber.js';
-import { BN } from 'bn.js';
+import BN from 'bn.js';
 import { Program } from '@project-serum/anchor';
 import {
   Asset,
@@ -21,19 +23,12 @@ import {
   InstructionErrorResponse,
   InstructionResponse,
   NotificationSeverity,
-  OptionMarket,
   Result,
   TokenAccount,
 } from '../../types';
 import { truncatePublicKey } from '../format';
-import {
-  initializeTokenAccountTx,
-  WRAPPED_SOL_ADDRESS,
-} from '../token';
-import {
-  createAssociatedTokenAccountInstruction,
-} from './token';
-import { uiOptionMarketToProtocolOptionMarket } from '../typeConversions';
+import { initializeTokenAccountTx, WRAPPED_SOL_ADDRESS } from '../token';
+import { createAssociatedTokenAccountInstruction } from './token';
 
 /**
  * Check that all the necessary accounts exist. If they're not provided then
@@ -41,18 +36,20 @@ import { uiOptionMarketToProtocolOptionMarket } from '../typeConversions';
  *
  */
 export const createMissingMintAccounts = async ({
+  connection,
+  option,
+  optionUnderlyingSize,
   owner,
-  market,
   uAsset,
   uAssetTokenAccount = null,
   splTokenAccountRentBalance = null,
   mintedOptionDestinationKey,
   writerTokenDestinationKey,
   numberOfContractsToMint = 1,
-  connection,
 }: {
+  option: OptionMarketWithKey;
+  optionUnderlyingSize: BigNumber;
   owner: PublicKey;
-  market: OptionMarket;
   uAsset: Asset;
   uAssetTokenAccount: TokenAccount | null;
   splTokenAccountRentBalance: number | null;
@@ -63,7 +60,7 @@ export const createMissingMintAccounts = async ({
   // TODO create an optional return type
 }): Promise<Result<CreateMissingMintAccountsRes, InstructionErrorResponse>> => {
   const tx = new Transaction();
-  const signers = [];
+  const signers: Account[] = [];
   const uAssetSymbol = uAsset.tokenSymbol;
   let _uAssetTokenAccount = uAssetTokenAccount;
   let _mintedOptionDestinationKey = mintedOptionDestinationKey;
@@ -83,20 +80,22 @@ export const createMissingMintAccounts = async ({
   const uAssetDecimals = new BigNumber(10).pow(uAsset.decimals);
 
   // Handle Wrapped SOL
-  if (uAsset.mintAddress === WRAPPED_SOL_ADDRESS && splTokenAccountRentBalance) {
-    const fees = feeAmountPerContract(market.amountPerContractBN);
-    const lamports = market.amountPerContractBN
+  if (
+    uAsset.mintAddress === WRAPPED_SOL_ADDRESS &&
+    splTokenAccountRentBalance
+  ) {
+    const fees = feeAmountPerContract(option.underlyingAmountPerContract);
+    const lamports = option.underlyingAmountPerContract
       .add(fees)
       .mul(new BN(numberOfContractsToMint));
-    const { transaction, newTokenAccount } =
-      await initializeTokenAccountTx({
-        connection,
-        payerKey: owner,
-        mintPublicKey: new PublicKey(WRAPPED_SOL_ADDRESS),
-        owner,
-        rentBalance: splTokenAccountRentBalance,
-        extraLamports: lamports.toNumber(),
-      });
+    const { transaction, newTokenAccount } = await initializeTokenAccountTx({
+      connection,
+      payerKey: owner,
+      mintPublicKey: new PublicKey(WRAPPED_SOL_ADDRESS),
+      owner,
+      rentBalance: splTokenAccountRentBalance,
+      extraLamports: lamports.toNumber(),
+    });
     tx.add(transaction);
     signers.push(newTokenAccount);
     _uAssetTokenAccount = {
@@ -115,9 +114,7 @@ export const createMissingMintAccounts = async ({
     };
   }
 
-  // TODO use amount per contract as validation so we can leave most everything as a BigNumber.
-  //  This will be easier to comprehend as it most similarly mirrors chain state.
-  const requiredUnderlyingAmount = new BigNumber(market.size).times(
+  const requiredUnderlyingAmount = optionUnderlyingSize.times(
     new BigNumber(numberOfContractsToMint),
   );
   if (
@@ -145,7 +142,7 @@ export const createMissingMintAccounts = async ({
       await createAssociatedTokenAccountInstruction({
         payer: owner,
         owner,
-        mintPublicKey: market.optionMintKey,
+        mintPublicKey: option.optionMint,
       });
 
     tx.add(instruction);
@@ -158,7 +155,7 @@ export const createMissingMintAccounts = async ({
       await createAssociatedTokenAccountInstruction({
         payer: owner,
         owner,
-        mintPublicKey: market.writerTokenMintKey,
+        mintPublicKey: option.writerTokenMint,
       });
     tx.add(instruction);
     _writerTokenDestinationKey = newTokenAccountKey;
@@ -190,7 +187,7 @@ export const createMissingMintAccounts = async ({
  */
 export const mintInstructions = async (
   numberOfContractsToMint: number,
-  market: OptionMarket,
+  option: OptionMarketWithKey,
   authorityPubkey: PublicKey,
   programId: PublicKey,
   mintedOptionDestKey: PublicKey,
@@ -210,14 +207,14 @@ export const mintInstructions = async (
     mintInstruction = await mintCoveredCallInstruction({
       authorityPubkey,
       programId,
-      optionMarketKey: market.optionMarketKey,
-      optionMintKey: market.optionMintKey,
+      optionMarketKey: option.key,
+      optionMintKey: option.optionMint,
       mintedOptionDestKey,
       writerTokenDestKey,
-      writerTokenMintKey: market.writerTokenMintKey,
-      underlyingAssetPoolKey: market.underlyingAssetPoolKey,
+      writerTokenMintKey: option.writerTokenMint,
+      underlyingAssetPoolKey: option.underlyingAssetPool,
       underlyingAssetSrcKey,
-      underlyingMintKey: market.underlyingAssetMintKey,
+      underlyingMintKey: option.underlyingAssetMint,
       fundingAccountKey: authorityPubkey,
       size: new BN(numberOfContractsToMint),
     });
@@ -228,7 +225,7 @@ export const mintInstructions = async (
       writerTokenDestKey,
       underlyingAssetSrcKey,
       new BN(numberOfContractsToMint),
-      uiOptionMarketToProtocolOptionMarket(market),
+      option,
     ));
   }
   if (mintInstruction) {
@@ -244,8 +241,9 @@ export const mintInstructions = async (
 export const createMissingAccountsAndMint = async ({
   optionsProgramId,
   authorityPubkey,
+  option,
+  optionUnderlyingSize,
   owner,
-  market,
   uAsset,
   uAssetTokenAccount,
   splTokenAccountRentBalance,
@@ -256,8 +254,9 @@ export const createMissingAccountsAndMint = async ({
 }: {
   optionsProgramId: PublicKey;
   authorityPubkey: PublicKey;
+  option: OptionMarketWithKey;
+  optionUnderlyingSize: BigNumber;
   owner: PublicKey;
-  market: OptionMarket;
   uAsset: Asset;
   uAssetTokenAccount: TokenAccount | null;
   splTokenAccountRentBalance: number;
@@ -270,14 +269,15 @@ export const createMissingAccountsAndMint = async ({
   let signers: Signer[] = [];
 
   const { response, error } = await createMissingMintAccounts({
+    option,
     owner,
-    market,
     uAsset,
     uAssetTokenAccount,
     splTokenAccountRentBalance,
     mintedOptionDestinationKey,
     writerTokenDestinationKey,
     numberOfContractsToMint,
+    optionUnderlyingSize,
     connection: program.provider.connection,
   });
   if (error || !response) {
@@ -296,7 +296,7 @@ export const createMissingAccountsAndMint = async ({
 
   const { transaction: mintTx } = await mintInstructions(
     numberOfContractsToMint,
-    market,
+    option,
     authorityPubkey,
     optionsProgramId,
     _mintedOptionDestinationKey,

@@ -5,7 +5,7 @@ import useOptionsMarkets from './useOptionsMarkets';
 import { OptionsChainContext } from '../context/OptionsChainContext';
 import useAssetList from './useAssetList';
 import useNotifications from './useNotifications';
-import { ChainRow, OptionMarket, OptionRow } from '../types';
+import { ChainRow, OptionMarket } from '../types';
 import { useNormalizedContractSize } from './useNormalizedContractSize';
 
 const callOrPutTemplate = {
@@ -19,7 +19,9 @@ const callOrPutTemplate = {
   initialized: false,
 };
 
-// TODO automatically build chain from the recoil state
+/**
+ * @deprecated
+ */
 const useOptionsChain = () => {
   const { pushNotification } = useNotifications();
   const { marketsByUiKey, marketsLoading } = useOptionsMarkets();
@@ -121,14 +123,14 @@ const useOptionsChain = () => {
                       ...call,
                       initialized: true,
                     }
-                  : (callOrPutTemplate as OptionRow),
+                  : callOrPutTemplate,
                 put: put
                   ? {
                       ...callOrPutTemplate,
                       ...put,
                       initialized: true,
                     }
-                  : (callOrPutTemplate as OptionRow),
+                  : callOrPutTemplate,
                 key: `${callKeyPart}-${size}-${strike}`,
               };
 

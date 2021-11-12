@@ -4,11 +4,12 @@ import {
   Connection,
   Keypair,
   RpcResponseAndContext,
+  Signer,
   SimulatedTransactionResponse,
   Transaction,
   TransactionSignature,
 } from '@solana/web3.js';
-import { ConnectedWallet } from "@saberhq/use-solana";
+import { ConnectedWallet } from '@saberhq/use-solana';
 import { TimeoutError } from './transactionErrors/TimeoutError';
 
 export async function sleep(ms: number): Promise<void> {
@@ -27,7 +28,7 @@ export async function signTransaction({
 }: {
   transaction: Transaction;
   wallet: ConnectedWallet;
-  signers?: Array<Keypair>;
+  signers?: Keypair[] | Signer[];
   connection: Connection;
 }): Promise<Transaction> {
   const tx = transaction;

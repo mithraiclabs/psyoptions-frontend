@@ -2,11 +2,12 @@ import React, { useCallback } from 'react';
 import {
   Connection,
   Keypair,
+  Signer,
   SimulatedTransactionResponse,
   Transaction,
   TransactionSignature,
 } from '@solana/web3.js';
-import { ConnectedWallet } from "@saberhq/use-solana";
+import { ConnectedWallet } from '@saberhq/use-solana';
 import Link from '@material-ui/core/Link';
 import {
   awaitTransactionSignatureConfirmation,
@@ -50,7 +51,7 @@ const useSendTransaction = (): {
   }: {
     transaction: Transaction;
     wallet: ConnectedWallet;
-    signers?: Keypair[] | undefined;
+    signers?: Keypair[] | Signer[] | undefined;
     connection: Connection;
     sendingMessage?: string | undefined;
     successMessage?: string | undefined;
@@ -176,7 +177,7 @@ const useSendTransaction = (): {
     }: {
       transaction: Transaction;
       wallet: ConnectedWallet;
-      signers?: Array<Keypair>;
+      signers?: Keypair[] | Signer[];
       connection: Connection;
       sendingMessage?: string;
       successMessage?: string;

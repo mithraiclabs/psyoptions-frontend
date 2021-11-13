@@ -96,14 +96,13 @@ export const getReferralId = async (
 const getDexProgramKeyByNetwork = (name: ClusterName) => {
   switch (name) {
     case 'Mainnet':
+      // TODO Don't rely on the markets for this
       return MARKETS.find(({ deprecated }) => !deprecated)?.programId;
     case 'Devnet':
       return new PublicKey(process.env.REACT_APP_DEVNET_DEX_PROGRAM_ID ?? '');
     case 'Testnet':
       // NOTE THIS WILL NOT WORK BECUASE THERE IS NO SERUM DEX DEPLOYED TO TESTNET
-      return new PublicKey(
-        process.env.REACT_APP_TESTNET_DEX_PROGRAM_ID ?? '',
-      );
+      return new PublicKey(process.env.REACT_APP_TESTNET_DEX_PROGRAM_ID ?? '');
     case 'localhost':
       // TODO fix this when we can work through the issues with Serum locally
       // NOTE THIS WILL NOT WORK LOCALLY (fix the commented out section)

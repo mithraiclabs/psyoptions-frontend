@@ -6,40 +6,35 @@ import {
   Network,
   networks,
 } from '../utils/networkInfo';
-import {
-  useRecoilState
-} from 'recoil';
-import {
-  DISALLOWED_COUNTRIES,
-  useCountry
-} from '../hooks/useCountry';
+import { useRecoilState } from 'recoil';
+import { DISALLOWED_COUNTRIES, useCountry } from '../hooks/useCountry';
 import { ClusterName } from '../types';
-import {
-  atom
-} from 'recoil';
+import { atom } from 'recoil';
 
-const DEFAULT_NETWORK = networks.find(
-  (network) => network.programId !== undefined
-);
+// Default to first network that has a defined program id
+const DEFAULT_NETWORK =
+  networks.find((network) => network.programId !== undefined) || networks[1];
 
 export const activeNetwork = atom({
   key: 'activeNetwork',
-  default: DEFAULT_NETWORK
+  default: DEFAULT_NETWORK,
 });
 
 export type ConnectionContextType = {
   networks: Network[];
   connection: Connection;
   setConnection: React.Dispatch<React.SetStateAction<Connection>>;
-  endpoint?: Network;
-  setEndpoint?: React.Dispatch<React.SetStateAction<Network>>;
+  endpoint: Network;
+  setEndpoint: React.Dispatch<React.SetStateAction<Network>>;
   dexProgramId?: PublicKey;
   graphQLUrl?: string;
 };
 
 const ConnectionContext = createContext<ConnectionContextType>({
   connection: new Connection(clusterApiUrl('devnet')),
+  endpoint: networks[1], // devnet
   setConnection: () => {},
+  setEndpoint: () => {},
   networks,
 });
 
@@ -49,16 +44,15 @@ const ConnectionProvider: React.FC = ({ children }) => {
   const [endpoint, setEndpoint] = useRecoilState(activeNetwork);
   setTimeout(() => {
     setEndpoint(
-      (isDisallowed) ? networks.find(
-        (network) => network.name === ClusterName.devnet
-      ) : networks.find(
-        (network) => network.programId !== undefined
-      )
+      (isDisallowed
+        ? networks.find((network) => network.name === ClusterName.devnet)
+        : networks.find((network) => network.programId !== undefined)) ||
+        networks[1],
     );
   }, 0);
 
   const [connection, setConnection] = useState(
-    new Connection(endpoint?.url, {
+    new Connection(endpoint.url, {
       commitment: 'confirmed',
       wsEndpoint: endpoint?.wsEndpoint,
     }),

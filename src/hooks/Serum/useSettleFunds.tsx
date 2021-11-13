@@ -11,7 +11,7 @@ import useConnection from '../useConnection';
 import useNotifications from '../useNotifications';
 import useOwnedTokenAccounts from '../useOwnedTokenAccounts';
 import useSerum from '../useSerum';
-import { useConnectedWallet } from "@saberhq/use-solana";
+import { useConnectedWallet } from '@saberhq/use-solana';
 import useSendTransaction from '../useSendTransaction';
 import { useAmericanPsyOptionsProgram } from '../useAmericanPsyOptionsProgram';
 import { OptionMarket } from '../../types';
@@ -43,17 +43,25 @@ export const useSettleFunds = (
     serumMarket?.baseMintAddress && serumMarket.baseMintAddress.toString();
   const quoteMintAddress =
     serumMarket?.quoteMintAddress && serumMarket.quoteMintAddress.toString();
-  const baseTokenAccounts = ownedTokenAccounts[baseMintAddress] ?? [];
-  const quoteTokenAccounts = ownedTokenAccounts[quoteMintAddress] ?? [];
+  const baseTokenAccounts = ownedTokenAccounts[baseMintAddress ?? ''] ?? [];
+  const quoteTokenAccounts = ownedTokenAccounts[quoteMintAddress ?? ''] ?? [];
   const highestBaseTokenAccount = getHighestAccount(baseTokenAccounts);
   const highestQuoteTokenAccount = getHighestAccount(quoteTokenAccounts);
 
-  const makeSettleFundsTx = useCallback(async (): Promise<Transaction | undefined> => {
-    if (!openOrders?.length || !serumMarket || !optionMarket || !wallet?.publicKey)
+  const makeSettleFundsTx = useCallback(async (): Promise<
+    Transaction | undefined
+  > => {
+    if (
+      !openOrders?.length ||
+      !serumMarket ||
+      !optionMarket ||
+      !wallet?.publicKey ||
+      !program
+    )
       return;
-    
+
     const transaction = new Transaction();
-    let signers = [];
+    let signers: Signer[] = [];
     let _baseTokenAccountKey = highestBaseTokenAccount?.pubKey;
     let _quoteTokenAccountKey = highestQuoteTokenAccount?.pubKey;
 
@@ -88,9 +96,8 @@ export const useSettleFunds = (
     let settleTx: Transaction;
     let settleSigners: Signer[] = [];
     if (
-      PSY_AMERICAN_PROGRAM_IDS[
-        optionMarket.psyOptionsProgramId.toString()
-      ] === ProgramVersions.V1
+      PSY_AMERICAN_PROGRAM_IDS[optionMarket.psyOptionsProgramId.toString()] ===
+      ProgramVersions.V1
     ) {
       ({ transaction: settleTx, signers: settleSigners } =
         await serumMarket.makeSettleFundsTransaction(
@@ -98,11 +105,7 @@ export const useSettleFunds = (
           openOrders[0],
           _baseTokenAccountKey,
           _quoteTokenAccountKey,
-          await getReferralId(
-            program,
-            endpoint,
-            serumMarket.quoteMintAddress,
-          ),
+          await getReferralId(program, endpoint, serumMarket.quoteMintAddress),
         ));
     } else {
       const ix = await serumInstructions.settleFundsInstruction(
@@ -143,12 +146,10 @@ export const useSettleFunds = (
   ]);
 
   const settleFunds = useCallback(async () => {
-    if (!wallet)
-      return;
+    if (!wallet) return;
     try {
       const transaction = await makeSettleFundsTx();
-      if (!transaction)
-        return;
+      if (!transaction) return;
       await sendTransaction({
         transaction,
         wallet,

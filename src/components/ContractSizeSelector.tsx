@@ -9,7 +9,7 @@ import { useRecoilState, useRecoilValue } from 'recoil';
 import { useTokenMintInfo } from '../hooks/useTokenMintInfo';
 import {
   selectUnderlyingAmountPerOptionByExpirationUnderlyingQuote,
-  underlyingAmountPerContractBN,
+  underlyingAmountPerContract,
   underlyingMint,
 } from '../recoil';
 
@@ -18,7 +18,7 @@ import {
  */
 export const ContractSizeSelector: React.VFC = () => {
   const [contractSize, setContractSize] = useRecoilState(
-    underlyingAmountPerContractBN,
+    underlyingAmountPerContract,
   );
   const contractSizes = useRecoilValue(
     selectUnderlyingAmountPerOptionByExpirationUnderlyingQuote,

@@ -36,7 +36,7 @@ import {
   quoteMint,
   selectExpirationAsDate,
   selectMintsOfFutureOptions,
-  underlyingAmountPerContractBN,
+  underlyingAmountPerContract,
   underlyingMint,
 } from '../../recoil';
 import { SelectAsset } from '../SelectAsset';
@@ -65,7 +65,7 @@ const rowTemplate = {
 };
 
 // TODO move Serum market storage to Recoil
-const Markets: React.VFC = (props) => {
+const Markets: React.VFC = () => {
   const { uAsset, qAsset, assetListLoading } = useAssetList();
   const chains = useOptionsChainFromMarketsState();
   const { marketsLoading } = useOptionsMarkets();
@@ -73,7 +73,7 @@ const Markets: React.VFC = (props) => {
   const [_quoteMint, setQuoteMint] = useRecoilState(quoteMint);
   const mints = useRecoilValue(selectMintsOfFutureOptions);
   const expirationDateString = useRecoilValue(selectExpirationAsDate);
-  const contractSize = useRecoilValue(underlyingAmountPerContractBN);
+  const contractSize = useRecoilValue(underlyingAmountPerContract);
   const { serumMarkets, fetchMultipleSerumMarkets } = useSerum();
   const [round, setRound] = useState(true);
   const [buySellDialogOpen, setBuySellDialogOpen] = useState(false);

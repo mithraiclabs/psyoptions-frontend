@@ -44,6 +44,7 @@ import { useTokenByMint } from '../../hooks/useNetworkTokens';
 import { useTokenMintInfo } from '../../hooks/useTokenMintInfo';
 import moment from 'moment';
 import { useNormalizeAmountOfMintBN } from '../../hooks/useNormalizeAmountOfMintBN';
+import { useNormalizedContractSize } from '../../hooks/useNormalizedContractSize';
 
 const bgLighterColor = (theme.palette.background as any).lighter;
 
@@ -124,6 +125,7 @@ const BuySellDialog: React.VFC<{
   const normalizeOptionUnderlyingSize = useNormalizeAmountOfMintBN(
     option?.underlyingAssetMint ?? null,
   );
+  const sizeOfContract = useNormalizedContractSize();
 
   const serumMarketData = useMemo(() => {
     return serumMarkets[serumAddress];
@@ -593,20 +595,16 @@ const BuySellDialog: React.VFC<{
                       ? orderType === 'market'
                         ? calculateBreakevenForMarketOrder(
                             strike.toNumber(),
-                            type === 'call'
-                              ? amountPerContract.toNumber()
-                              : quoteAmountPerContract.toNumber(),
+                            sizeOfContract,
                             orderSize,
                             orderbook?.asks ?? [],
                             !isCall,
                           )
                         : calculateBreakevenForLimitOrder(
                             strike.toNumber(),
-                            isCall
-                              ? amountPerContract.toNumber()
-                              : quoteAmountPerContract.toNumber(),
+                            sizeOfContract,
                             parsedLimitPrice.toNumber(),
-                            type === 'put',
+                            !isCall,
                           )
                       : '-'}
                   </Box>
@@ -616,7 +614,7 @@ const BuySellDialog: React.VFC<{
                     fontSize={'14px'}
                   >
                     {`This is a ${
-                      type === 'call' ? 'covered call' : 'secured put'
+                      isCall ? 'covered call' : 'secured put'
                     }. Mint/Sell will lock the required collateral (${collateralRequired} ${
                       underlyingAsset?.symbol
                     }) until the contract expires or is exercised.`}

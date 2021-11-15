@@ -39,8 +39,6 @@ export const useOptionsChainFromMarketsState = (): ChainRow[] => {
     }
     const chainObject = options.reduce((acc, option, index) => {
       const isCall = option.underlyingAssetMint.equals(_underlyingMint);
-      // let normalizedUnderlying = option.underlyingAssetMint;
-      // let normalizedQuote = option.quoteAssetMint;
       let normalizedUnderlyingAmount = normalizeUnderlyingAmountBN(
         option.underlyingAmountPerContract,
       );
@@ -48,8 +46,6 @@ export const useOptionsChainFromMarketsState = (): ChainRow[] => {
         option.quoteAmountPerContract,
       );
       if (!isCall) {
-        // normalizedUnderlying = option.quoteAssetMint;
-        // normalizedQuote = option.underlyingAssetMint;
         normalizedUnderlyingAmount = normalizeQuoteAmountBN(
           option.quoteAmountPerContract,
         );
@@ -67,9 +63,6 @@ export const useOptionsChainFromMarketsState = (): ChainRow[] => {
         ...option,
         type: isCall ? OptionType.CALL : OptionType.PUT,
         strike,
-        change: '', // TODO
-        volume: '', // TODO
-        openInterest: '', // TODO
         serumMarketKey: serumAddresses[index],
         initialized: true,
       };

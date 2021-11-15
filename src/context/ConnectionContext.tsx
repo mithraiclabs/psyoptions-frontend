@@ -1,4 +1,4 @@
-import React, { createContext, useState } from 'react';
+import React, { createContext, useCallback, useState } from 'react';
 import { clusterApiUrl, Connection, PublicKey } from '@solana/web3.js';
 import {
   getDexProgramKeyByNetwork,
@@ -58,12 +58,12 @@ const ConnectionProvider: React.FC = ({ children }) => {
     }),
   );
 
-  const handleSetEndpoint = (newEndpoint) => {
+  const handleSetEndpoint = useCallback((newEndpoint) => {
     // Update both endpoint and connection state valuse in the same function
     // Will prevent extra rerenders of components that depend on both endpoint and connection
     setEndpoint(newEndpoint);
     setConnection(new Connection(newEndpoint.url, 'confirmed'));
-  };
+  }, []);
 
   const state: ConnectionContextType = {
     networks,

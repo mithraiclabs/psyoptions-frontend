@@ -12,7 +12,6 @@ export const useLoadOptionMarkets = (): void => {
   const upsertOptions = useUpsertOptions();
 
   useEffect(() => {
-    // TODO [OPTIMIZE] this is firing 6 times when it should only be once at load
     (async () => {
       const options = (await program?.account.optionMarket.all()) as
         | ProgramAccount<OptionMarket>[]

@@ -21,7 +21,6 @@ const Sel: React.FC<{
   options: Option[];
   formControlOptions?: FormControlProps;
 }> = ({ disabled, label, value, onChange, options, formControlOptions }) => {
-  console.log('YOYOY ', label, value?.toString());
   return (
     <FormControl disabled={disabled} {...formControlOptions}>
       <InputLabel id={`${label}-label`}>{label}</InputLabel>
@@ -45,3 +44,44 @@ const Sel: React.FC<{
 };
 
 export default Sel;
+
+export const SelectBN: React.VFC<{
+  disabled?: boolean;
+  formControlOptions?: FormControlProps;
+  label: string;
+  onChange: (e: React.ChangeEvent<{ name: undefined; value: string }>) => void;
+  options: BN[];
+  formatOption?: (val: BN) => string;
+  renderValue: (val: BN) => React.ReactNode;
+  value: BN;
+}> = ({
+  disabled,
+  formControlOptions,
+  formatOption,
+  label,
+  onChange,
+  options,
+  renderValue,
+  value,
+}) => {
+  return (
+    <FormControl disabled={disabled} {...formControlOptions}>
+      <InputLabel id={`${label}-label`}>{label}</InputLabel>
+      <Select
+        id={`${label}-id`}
+        labelId={`${label}-label`}
+        onChange={onChange}
+        renderValue={renderValue}
+        value={value}
+      >
+        {options.map((option) => (
+          <MenuItem key={option.toString()} value={option.toString()}>
+            <NoSsr>
+              {formatOption ? formatOption(option) : option.toString()}
+            </NoSsr>
+          </MenuItem>
+        ))}
+      </Select>
+    </FormControl>
+  );
+};

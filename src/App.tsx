@@ -6,6 +6,7 @@ import {
 import React, { useEffect } from 'react';
 import { HashRouter } from 'react-router-dom';
 import { RecoilRoot } from 'recoil';
+import { WalletKitProvider } from '@gokiprotocol/walletkit';
 
 import Store from './context/store';
 import useOptionsMarkets from './hooks/useOptionsMarkets';
@@ -46,11 +47,19 @@ const App = (): JSX.Element | null => {
       <StylesProvider injectFirst>
         <ThemeProvider theme={theme}>
           <HashRouter basename={'/'}>
-            <Store>
-              <AppWithStore>
-                <Routes />
-              </AppWithStore>
-            </Store>
+            <WalletKitProvider
+              key="WalletKitProvider"
+              defaultNetwork="mainnet-beta"
+              app={{
+                name: 'PsyOptions',
+              }}
+            >
+              <Store>
+                <AppWithStore>
+                  <Routes />
+                </AppWithStore>
+              </Store>
+            </WalletKitProvider>
           </HashRouter>
         </ThemeProvider>
       </StylesProvider>

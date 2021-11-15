@@ -66,8 +66,6 @@ const BuySellDialog: React.VFC<{
   precision: number;
   type: string;
   optionKey: PublicKey;
-  optionMintKey: PublicKey;
-  writerTokenMintKey: PublicKey;
   serumAddress: string;
   date: Moment;
   markPrice: number;
@@ -83,8 +81,6 @@ const BuySellDialog: React.VFC<{
   round,
   precision,
   type,
-  optionMintKey,
-  writerTokenMintKey,
   serumAddress,
   markPrice,
   setLimitPrice,
@@ -152,8 +148,9 @@ const BuySellDialog: React.VFC<{
   }, [amountPerContract, orderSize, openPositionSize]);
 
   useEffect(() => {
-    const newOptionAccounts = ownedTokenAccounts[`${optionMintKey}`] || [];
-    const newWriterAccounts = ownedTokenAccounts[`${writerTokenMintKey}`] || [];
+    const newOptionAccounts = ownedTokenAccounts[`${option?.optionMint}`] || [];
+    const newWriterAccounts =
+      ownedTokenAccounts[`${option?.writerTokenMint}`] || [];
     const newUAssetAccounts =
       ownedTokenAccounts[_underlyingMint?.toString() ?? ''] || [];
     const newQAssetAccounts =
@@ -179,13 +176,13 @@ const BuySellDialog: React.VFC<{
     setUAssetBalance(tempBalance);
   }, [
     ownedTokenAccounts,
-    optionMintKey,
-    writerTokenMintKey,
     balance,
     _underlyingMint,
     _quoteMint,
     quoteMintDecimals,
     underlyingMintDecimals,
+    option?.optionMint,
+    option?.writerTokenMint,
   ]);
 
   const formatStrike = (sp: BigNumber) => {

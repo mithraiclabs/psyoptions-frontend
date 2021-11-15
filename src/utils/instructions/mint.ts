@@ -5,10 +5,10 @@ import {
   instructions,
   feeAmountPerContract,
   OptionMarketWithKey,
+  getOrAddAssociatedTokenAccountTx,
 } from '@mithraic-labs/psy-american';
 import {
   Account,
-  Connection,
   PublicKey,
   Signer,
   Transaction,
@@ -16,7 +16,7 @@ import {
 } from '@solana/web3.js';
 import BigNumber from 'bignumber.js';
 import BN from 'bn.js';
-import { Program } from '@project-serum/anchor';
+import { Program, Provider } from '@project-serum/anchor';
 import {
   Asset,
   CreateMissingMintAccountsRes,
@@ -28,7 +28,11 @@ import {
 } from '../../types';
 import { truncatePublicKey } from '../format';
 import { initializeTokenAccountTx, WRAPPED_SOL_ADDRESS } from '../token';
-import { createAssociatedTokenAccountInstruction } from './token';
+import {
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  Token,
+  TOKEN_PROGRAM_ID,
+} from '@solana/spl-token';
 
 /**
  * Check that all the necessary accounts exist. If they're not provided then
@@ -36,7 +40,6 @@ import { createAssociatedTokenAccountInstruction } from './token';
  *
  */
 export const createMissingMintAccounts = async ({
-  connection,
   option,
   optionUnderlyingSize,
   owner,
@@ -46,6 +49,7 @@ export const createMissingMintAccounts = async ({
   mintedOptionDestinationKey,
   writerTokenDestinationKey,
   numberOfContractsToMint = 1,
+  provider,
 }: {
   option: OptionMarketWithKey;
   optionUnderlyingSize: BigNumber;
@@ -56,7 +60,7 @@ export const createMissingMintAccounts = async ({
   mintedOptionDestinationKey?: PublicKey;
   writerTokenDestinationKey?: PublicKey;
   numberOfContractsToMint: number;
-  connection: Connection;
+  provider: Provider;
   // TODO create an optional return type
 }): Promise<Result<CreateMissingMintAccountsRes, InstructionErrorResponse>> => {
   const tx = new Transaction();
@@ -138,27 +142,46 @@ export const createMissingMintAccounts = async ({
 
   if (!_mintedOptionDestinationKey) {
     // Create token account for minted option if the user doesn't have one yet
-    const [instruction, newTokenAccountKey] =
-      await createAssociatedTokenAccountInstruction({
-        payer: owner,
-        owner,
-        mintPublicKey: option.optionMint,
-      });
-
-    tx.add(instruction);
-    _mintedOptionDestinationKey = newTokenAccountKey;
+    const optionTokenDestKey = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      option.optionMint,
+      owner,
+    );
+    const instruction = await getOrAddAssociatedTokenAccountTx(
+      optionTokenDestKey,
+      option.optionMint,
+      provider,
+      owner,
+    );
+    _mintedOptionDestinationKey = optionTokenDestKey;
+    if (instruction) {
+      tx.add(instruction);
+    }
+    _mintedOptionDestinationKey = optionTokenDestKey;
+    if (instruction) {
+      tx.add(instruction);
+    }
   }
 
   if (!_writerTokenDestinationKey) {
     // Create token account for minted Writer Token if the user doesn't have one yet
-    const [instruction, newTokenAccountKey] =
-      await createAssociatedTokenAccountInstruction({
-        payer: owner,
-        owner,
-        mintPublicKey: option.writerTokenMint,
-      });
-    tx.add(instruction);
-    _writerTokenDestinationKey = newTokenAccountKey;
+    const writerTokenDestKey = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      option.writerTokenMint,
+      owner,
+    );
+    const instruction = await getOrAddAssociatedTokenAccountTx(
+      writerTokenDestKey,
+      option.writerTokenMint,
+      provider,
+      owner,
+    );
+    _writerTokenDestinationKey = writerTokenDestKey;
+    if (instruction) {
+      tx.add(instruction);
+    }
   }
 
   return {
@@ -278,7 +301,7 @@ export const createMissingAccountsAndMint = async ({
     writerTokenDestinationKey,
     numberOfContractsToMint,
     optionUnderlyingSize,
-    connection: program.provider.connection,
+    provider: program.provider,
   });
   if (error || !response) {
     return { error };

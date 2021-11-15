@@ -22,7 +22,6 @@ import useSerum from '../../hooks/useSerum';
 import { MarketDataProvider } from '../../context/MarketDataContext';
 import Page from '../pages/Page';
 import BuySellDialog from '../BuySellDialog';
-import Select from '../Select';
 import { ContractSizeSelector } from '../ContractSizeSelector';
 import theme from '../../utils/theme';
 import Loading from '../Loading';
@@ -34,19 +33,15 @@ import { useSerumPriceByAssets } from '../../hooks/Serum/useSerumPriceByAssets';
 import { CallOrPut, SerumMarketAndProgramId } from '../../types';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import {
-  expirationUnixTimestamp,
   quoteMint,
   selectExpirationAsDate,
-  selectFutureExpirationsByUnderlyingAndQuote,
   selectMintsOfFutureOptions,
-  selectUnderlyingAmountPerOptionByExpirationUnderlyingQuote,
-  underlyingAmountPerContract,
+  underlyingAmountPerContractBN,
   underlyingMint,
 } from '../../recoil';
 import { SelectAsset } from '../SelectAsset';
-import { BN } from '@project-serum/anchor';
-import { useTokenMintInfo } from '../../hooks/useTokenMintInfo';
 import { useOptionsChainFromMarketsState } from '../../hooks/useOptionChainsFromMarketsState';
+import { SelectExpiration } from './SelectExpiration';
 
 const rowTemplate = {
   call: {
@@ -70,7 +65,7 @@ const rowTemplate = {
 };
 
 // TODO move Serum market storage to Recoil
-const Markets: React.VFC = () => {
+const Markets: React.VFC = (props) => {
   const { uAsset, qAsset, assetListLoading } = useAssetList();
   const chains = useOptionsChainFromMarketsState();
   const { marketsLoading } = useOptionsMarkets();
@@ -78,18 +73,7 @@ const Markets: React.VFC = () => {
   const [_quoteMint, setQuoteMint] = useRecoilState(quoteMint);
   const mints = useRecoilValue(selectMintsOfFutureOptions);
   const expirationDateString = useRecoilValue(selectExpirationAsDate);
-  const [_expirationUnixTimestamp, setExpiration] = useRecoilState(
-    expirationUnixTimestamp,
-  );
-  const expirations = useRecoilValue(
-    selectFutureExpirationsByUnderlyingAndQuote,
-  );
-  const [contractSize, setContractSize] = useRecoilState(
-    underlyingAmountPerContract,
-  );
-  const contractSizes = useRecoilValue(
-    selectUnderlyingAmountPerOptionByExpirationUnderlyingQuote,
-  );
+  const contractSize = useRecoilValue(underlyingAmountPerContractBN);
   const { serumMarkets, fetchMultipleSerumMarkets } = useSerum();
   const [round, setRound] = useState(true);
   const [buySellDialogOpen, setBuySellDialogOpen] = useState(false);
@@ -108,7 +92,6 @@ const Markets: React.VFC = () => {
     () => moment(expirationDateString),
     [expirationDateString],
   );
-  const underlyingMintInfo = useTokenMintInfo(_underlyingMint);
 
   const markPrice = useSerumPriceByAssets(
     uAsset?.mintAddress ?? null,
@@ -244,24 +227,7 @@ const Markets: React.VFC = () => {
               justifyContent="space-between"
             >
               <Box p={[2, 2, 0]} width={['100%', '100%', '300px']}>
-                <Select
-                  formControlOptions={{
-                    variant: 'filled',
-                    style: {
-                      minWidth: '100%',
-                    },
-                  }}
-                  label="Expiration Date"
-                  value={_expirationUnixTimestamp}
-                  onChange={(e) => setExpiration(e.target.value as BN)}
-                  options={expirations.map((e) => {
-                    const _date = moment(e.toNumber() * 1000);
-                    return {
-                      value: e,
-                      text: `${_date.format('ll')} | 23:59:59 UTC`,
-                    };
-                  })}
-                />
+                <SelectExpiration />
               </Box>
               <Box
                 pt={[0, 0, 2]}
@@ -269,12 +235,7 @@ const Markets: React.VFC = () => {
                 px={2}
                 width={['100%', '100%', '200px']}
               >
-                <ContractSizeSelector
-                  decimals={underlyingMintInfo?.decimals ?? 0}
-                  onChange={setContractSize}
-                  value={contractSize}
-                  options={contractSizes}
-                />
+                <ContractSizeSelector />
               </Box>
               <Box px={[0, 0, 2]} py={[2, 2, 0]}>
                 <Balances />

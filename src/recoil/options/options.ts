@@ -36,23 +36,35 @@ export const quoteMint = atom<PublicKey | null>({
   default: null,
 });
 
-export const expirationUnixTimestamp = atom<BN>({
+export const expirationUnixTimestamp = atom<string>({
   key: 'expirationUnixTimestamp',
-  default: defaultExpiration,
+  default: defaultExpiration.toString(),
 });
 
 /**
  * aka contract size
  */
-export const underlyingAmountPerContract = atom<BN>({
+export const underlyingAmountPerContract = atom<string>({
   key: 'underlyingAmountPerContract',
-  default: new BN(0.01),
+  default: new BN(0.01).toString(),
+});
+
+export const expirationUnixTimestampBN = selector({
+  key: 'expirationUnixTimestampBN',
+  get: ({ get }) => new BN(get(expirationUnixTimestamp)),
+  set: ({ set }, val: BN) => set(expirationUnixTimestamp, val.toString()),
+});
+
+export const underlyingAmountPerContractBN = selector({
+  key: 'underlyingAmountPerContractBN',
+  get: ({ get }) => new BN(get(underlyingAmountPerContract)),
+  set: ({ set }, val: BN) => set(underlyingAmountPerContract, val.toString()),
 });
 
 export const selectExpirationAsDate = selector({
   key: 'selectExpirationAsDate',
   get: ({ get }) => {
-    const expiration = get(expirationUnixTimestamp);
+    const expiration = get(expirationUnixTimestampBN);
     const date = new Date(expiration.toNumber() * 1000);
     return date.toISOString();
   },
@@ -123,7 +135,7 @@ export const selectUnderlyingAmountPerOptionByExpirationUnderlyingQuote =
     get: ({ get }) => {
       const _underlyingMint = get(underlyingMint);
       const _quoteMint = get(quoteMint);
-      const _expirationUnixTimestamp = get(expirationUnixTimestamp);
+      const _expirationUnixTimestamp = get(expirationUnixTimestampBN);
       const _optionsIds = get(optionsIds);
       const expirations = _optionsIds.reduce((acc, publicKeyStr) => {
         const option = get(optionsMap(publicKeyStr));
@@ -152,8 +164,8 @@ export const selectOptionsByMarketsPageParams = selector({
   get: ({ get }) => {
     const _underlyingMint = get(underlyingMint);
     const _quoteMint = get(quoteMint);
-    const _expiration = get(expirationUnixTimestamp);
-    const _underlyingAmountPerContract = get(underlyingAmountPerContract);
+    const _expiration = get(expirationUnixTimestampBN);
+    const _underlyingAmountPerContract = get(underlyingAmountPerContractBN);
 
     const _optionsIds = get(optionsIds);
     const options = _optionsIds
@@ -243,4 +255,5 @@ export const useUpsertOptions = () =>
         }
         // TODO find expiration based on the underlying and quote
       },
+    [],
   );

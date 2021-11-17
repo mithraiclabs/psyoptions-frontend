@@ -2,7 +2,7 @@
 
 1. Clone the repo
 
-`git clone git@github.com:mithraiclabs/psyoptions-frontend.git`
+`git clone https://github.com/mithraiclabs/psyoptions-frontend.git`
 
 2. Copy `.env-example` and rename it `.env.local`.
 

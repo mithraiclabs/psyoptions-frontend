@@ -8,8 +8,6 @@
 
 OR run `touch .env.local` and add the following lines to it and fill in the blanks:
 
-Please add environment variables into the CodePipeline Build configuration in order for them to be accessible
-
 ```
 REACT_APP_LOCAL_PROGRAM_ID=R2y9ip6mxmWUj4pt54jP2hz2dgvMozy9VTSwMWE7evs
 REACT_APP_DEVNET_PROGRAM_ID=R2y9ip6mxmWUj4pt54jP2hz2dgvMozy9VTSwMWE7evs
@@ -22,6 +20,11 @@ FRONTEND_REPO=
 DEX_REPO=
 KEY_FILE=
 WALLET_ADDRESS=
+```
+To use mainnet locally add this
+
+```
+REACT_APP_MAINNET_PROGRAM_ID=R2y9ip6mxmWUj4pt54jP2hz2dgvMozy9VTSwMWE7evs
 ```
 
 3. Install dependencies

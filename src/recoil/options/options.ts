@@ -11,6 +11,7 @@ import {
 } from 'recoil';
 
 const defaultExpiration = new BN(0);
+const defaultUnderlying = new BN(0);
 
 /**
  * Store each option by PublicKey string.
@@ -46,7 +47,7 @@ export const expirationUnixTimestamp = atom<BN>({
  */
 export const underlyingAmountPerContract = atom<BN>({
   key: 'underlyingAmountPerContract',
-  default: new BN(1),
+  default: new BN(0),
 });
 
 export const selectExpirationAsDate = selector({
@@ -241,7 +242,48 @@ export const useUpsertOptions = () =>
           _quoteMint = new PublicKey(mostUsedQuote);
           set(quoteMint, _quoteMint);
         }
-        // TODO find expiration based on the underlying and quote
+        const nowInSeconds = Date.now() / 1000;
+        const filteredOptionAccounts = _optionAccounts.filter(
+          (optionAccount) =>
+            optionAccount.account.expirationUnixTimestamp.toNumber() >
+              nowInSeconds &&
+            _underlyingMint &&
+            optionAccount.account.underlyingAssetMint.equals(_underlyingMint) &&
+            _quoteMint &&
+            optionAccount.account.quoteAssetMint.equals(_quoteMint),
+        );
+        let expiration = get(expirationUnixTimestamp);
+        if (expiration.eq(defaultExpiration)) {
+          // set expiration
+          const expCount = filteredOptionAccounts.reduce(
+            (acc, optionAccount) => {
+              const expirationString =
+                optionAccount.account.expirationUnixTimestamp.toString();
+              acc[expirationString] = (acc[expirationString] ?? 0) + 1;
+              return acc;
+            },
+            {} as Record<string, number>,
+          );
+          const highestExpString = Object.keys(expCount).reduce((acc, key) => {
+            if ((expCount[acc] ?? 0) < expCount[key]) {
+              return key;
+            }
+            return acc;
+          }, '');
+          expiration = new BN(highestExpString);
+          set(expirationUnixTimestamp, expiration);
+        }
+        const underlyingAmountSize = get(underlyingAmountPerContract);
+        if (underlyingAmountSize.eq(defaultUnderlying)) {
+          const firstOptionAccount = filteredOptionAccounts.find(
+            (optionAccount) =>
+              optionAccount.account.expirationUnixTimestamp.eq(expiration),
+          );
+          set(
+            underlyingAmountPerContract,
+            firstOptionAccount?.account.underlyingAmountPerContract,
+          );
+        }
       },
     [],
   );

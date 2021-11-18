@@ -1,10 +1,10 @@
 import { getAllOptionAccounts, serumUtils } from '@mithraic-labs/psy-american';
-import { OpenOrders } from '@mithraic-labs/serum';
 import { useState, useEffect } from 'react';
 import { useAmericanPsyOptionsProgram } from './useAmericanPsyOptionsProgram';
 import useConnection from './useConnection';
-import { useConnectedWallet } from "@saberhq/use-solana";
+import { useConnectedWallet } from '@saberhq/use-solana';
 import * as Sentry from '@sentry/react';
+import { OpenOrders } from '@project-serum/serum';
 
 /**
  * Get open orders for a user for option market keys
@@ -15,7 +15,7 @@ export const useOpenOrdersForOptionMarkets = (): {
   openOrders: OpenOrders[];
   loadingOpenOrders: boolean;
 } => {
-  const [openOrders, setOpenOrders] = useState([] as OpenOrders[]);
+  const [openOrders, setOpenOrders] = useState<OpenOrders[]>([]);
   const [loadingOpenOrders, setLoadingOpenOrders] = useState(false);
   const program = useAmericanPsyOptionsProgram();
   const { dexProgramId } = useConnection();
@@ -28,16 +28,15 @@ export const useOpenOrdersForOptionMarkets = (): {
 
       try {
         const optionMarketWithKeys = await getAllOptionAccounts(program);
-        const keys = optionMarketWithKeys.map(marketInfo => marketInfo.key);
-  
+        const keys = optionMarketWithKeys.map((marketInfo) => marketInfo.key);
+
         const orders = await serumUtils.findOpenOrdersForOptionMarkets(
           program,
           dexProgramId,
           keys,
         );
-        
-        // #TODO: remove as any
-        setOpenOrders(orders as any);
+
+        setOpenOrders(orders);
       } catch (err) {
         console.error(err);
         Sentry.captureException(err);

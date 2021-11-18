@@ -51,5 +51,5 @@ const disallowedCountries = [
 export const DISALLOWED_COUNTRIES =
   process.env.NODE_ENV !== 'production'
     ? []
-    // ? disallowedCountries // test
+    // ? disallowedCountries // uncomment to test
     : disallowedCountries;

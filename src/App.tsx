@@ -14,7 +14,8 @@ import {
 } from './context/ScreenSizeContext';
 import { Routes } from "./routes";
 import { HashRouter } from "react-router-dom";
-import "./App.less";
+import { RecoilRoot } from 'recoil';
+import './App.less';
 
 const AppWithStore: React.FC = ({ children }) => {
   const { packagedMarkets } = useOptionsMarkets();
@@ -36,15 +37,19 @@ const AppWithStore: React.FC = ({ children }) => {
 const App = (): JSX.Element | null => {
 
   return (
-    <StylesProvider injectFirst>
-      <ThemeProvider theme={theme}>
-        <HashRouter basename={"/"}>
-          <Store>
-            <AppWithStore><Routes /></AppWithStore>
-          </Store>
-        </HashRouter>
-      </ThemeProvider>
-    </StylesProvider>
+    <RecoilRoot>
+      <StylesProvider injectFirst>
+        <ThemeProvider theme={theme}>
+          <HashRouter basename={'/'}>
+            <Store>
+              <AppWithStore>
+                  <Routes />
+              </AppWithStore>
+            </Store>
+          </HashRouter>
+        </ThemeProvider>
+      </StylesProvider>
+    </RecoilRoot>
   );
 };
 export default App;

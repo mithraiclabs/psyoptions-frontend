@@ -1,17 +1,31 @@
 import React, { createContext, useState } from 'react';
 import { clusterApiUrl, Connection, PublicKey } from '@solana/web3.js';
-
 import {
   getDexProgramKeyByNetwork,
   getGraphQLUrlByNetwork,
   Network,
   networks,
 } from '../utils/networkInfo';
+import {
+  useRecoilState
+} from 'recoil';
+import {
+  DISALLOWED_COUNTRIES,
+  useCountry
+} from '../hooks/useCountry';
+import { ClusterName } from '../types';
+import {
+  atom
+} from 'recoil';
 
-// Default to first network that has a defined program id
 const DEFAULT_NETWORK = networks.find(
-  (network) => network.programId !== undefined,
+  (network) => network.programId !== undefined
 );
+
+export const activeNetwork = atom({
+  key: 'activeNetwork',
+  default: DEFAULT_NETWORK
+});
 
 export type ConnectionContextType = {
   networks: Network[];
@@ -22,6 +36,7 @@ export type ConnectionContextType = {
   dexProgramId?: PublicKey;
   graphQLUrl?: string;
 };
+
 const ConnectionContext = createContext<ConnectionContextType>({
   connection: new Connection(clusterApiUrl('devnet')),
   setConnection: () => {},
@@ -29,7 +44,18 @@ const ConnectionContext = createContext<ConnectionContextType>({
 });
 
 const ConnectionProvider: React.FC = ({ children }) => {
-  const [endpoint, setEndpoint] = useState(DEFAULT_NETWORK);
+  const countryCode = useCountry();
+  const isDisallowed = DISALLOWED_COUNTRIES.includes(countryCode ?? '');
+  const [endpoint, setEndpoint] = useRecoilState(activeNetwork);
+  setTimeout(() => {
+    setEndpoint(
+      (isDisallowed) ? networks.find(
+        (network) => network.name === ClusterName.devnet
+      ) : networks.find(
+        (network) => network.programId !== undefined
+      )
+    );
+  }, 0);
 
   const [connection, setConnection] = useState(
     new Connection(endpoint?.url, {

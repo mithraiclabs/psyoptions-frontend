@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Redirect } from 'react-router-dom';
+// import { Redirect } from 'react-router-dom';
 import { makeStyles } from '@material-ui/core/styles';
 import { ConnectWalletButton } from '@gokiprotocol/walletkit';
 import { createLocalStorageStateHook } from 'use-local-storage-state';
-import { DISALLOWED_COUNTRIES, useCountry } from '../../hooks/useCountry';
+// import { DISALLOWED_COUNTRIES, useCountry } from '../../hooks/useCountry';
 import Disclaimer from '../Disclaimer';
 
+// import useConnection from '../../hooks/useConnection';
 export const useDisclaimerState = createLocalStorageStateHook('hasAcceptedDisclaimer', false);
 
 const useStyles = makeStyles(() => ({
@@ -29,19 +30,20 @@ const useStyles = makeStyles(() => ({
 
 const GokiButton: React.VFC = () => {
   const styles = useStyles();
-  const countryCode = useCountry();
-  const [isProhibited, setIsProhibited] = useState(false);
 
-  const [
-    hasAcceptedDisclaimer
-    // , setHasAcceptedDisclaimer
-  ] = useDisclaimerState();
+  // UPDATE // THE GEO RESTRICION NOW HAPPENS ON A NETWORK BASIS
+            // Will remove this code once fully tested
+
+  // const countryCode = useCountry();
+  // const [isProhibited, setIsProhibited] = useState(false);
+
+  const [hasAcceptedDisclaimer] = useDisclaimerState();
   const [showDisclaimer, setDisclaimerVisible] = useState(false);
 
   const handleGeoCheck = () => {
-    if (DISALLOWED_COUNTRIES.includes(countryCode ?? '')) {
-      return setIsProhibited(true);
-    }
+    // if (DISALLOWED_COUNTRIES.includes(countryCode ?? '')) {
+    //   return setIsProhibited(true);
+    // }
     if (hasAcceptedDisclaimer) {
       let element: HTMLElement = document.querySelector('#temp-solution-2m00n') as HTMLElement;
       return element.click();
@@ -60,7 +62,7 @@ const GokiButton: React.VFC = () => {
         (showDisclaimer) ? <Disclaimer /> : null
       }
       {
-        (isProhibited) ? <Redirect to='/prohibited-jurisdiction' /> : null
+        // (isProhibited) ? <Redirect to='/prohibited-jurisdiction' /> : null
       }
     </>
   );

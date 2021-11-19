@@ -6,18 +6,24 @@ import Card from '@material-ui/core/Card';
 import Popper from '@material-ui/core/Popper';
 import MenuItem from '@material-ui/core/MenuItem';
 import MenuList from '@material-ui/core/MenuList';
-
 import useConnection from '../hooks/useConnection';
 import useAssetList from '../hooks/useAssetList';
 import useOptionsMarkets from '../hooks/useOptionsMarkets';
 import useSerum from '../hooks/useSerum';
 import theme from '../utils/theme';
 import { Network } from '../utils/networkInfo';
+import { ClusterName } from '../types';
+import { DISALLOWED_COUNTRIES, useCountry } from '../hooks/useCountry';
 
 const NetworkMenu = () => {
   const { networks, endpoint, setEndpoint } = useConnection();
-  const { setUAsset, setQAsset, setSupportedAssets, assetListLoading } =
-    useAssetList();
+
+  const {
+    setUAsset,
+    setQAsset,
+    setSupportedAssets,
+    assetListLoading
+  } = useAssetList();
   const { setMarkets, marketsLoading } = useOptionsMarkets();
   const { setSerumMarkets } = useSerum();
 
@@ -54,10 +60,12 @@ const NetworkMenu = () => {
     setSerumMarkets({});
   };
 
+  const countryCode = useCountry();
+  const isDisallowed = DISALLOWED_COUNTRIES.includes(countryCode ?? '');
   return (
     <Box style={{ position: 'relative' }} ml={2}>
       <Button
-        color="primary"
+        color='primary'
         onClick={() => {
           if (open === false && !loading) {
             setOpen(true);
@@ -65,10 +73,9 @@ const NetworkMenu = () => {
             setOpen(false);
           }
         }}
-        variant="outlined"
+        variant='outlined'
         innerRef={anchorRef}
-        disabled={loading}
-      >
+        disabled={loading}>
         {endpoint.name}
       </Button>
       <Popper
@@ -77,7 +84,7 @@ const NetworkMenu = () => {
         role={undefined}
         transition
         disablePortal
-        placement="bottom-end"
+        placement='bottom-end'
         style={{
           position: 'absolute',
           inset: 'initial',
@@ -86,36 +93,36 @@ const NetworkMenu = () => {
           marginTop: '16px',
           zIndex: 20,
           width: 'fit-content',
-        }}
-      >
+        }}>
         <Card
           style={{
             background: theme.palette?.background?.light,
           }}
-          elevation={12}
-        >
+          elevation={12}>
           <ClickAwayListener onClickAway={handleClose}>
             <MenuList
+              id='menu-list-grow'
               autoFocusItem={open}
-              id="menu-list-grow"
-              onKeyDown={handleListKeyDown}
-            >
-              {networks
-                .filter((n) => n.programId !== undefined)
-                .map((item) => (
-                  <MenuItem
-                    onClick={(event) => {
-                      handleSelectNetwork(item);
-                      handleClose(event);
-                    }}
-                    key={item.url}
-                  >
-                    <Box>
-                      <Box>{item.name}</Box>
-                      <Box fontSize={10}>{item.url}</Box>
-                    </Box>
-                  </MenuItem>
-                ))}
+              onKeyDown={handleListKeyDown}>
+            {
+              networks
+              .filter(
+                (n) => isDisallowed ? n.name !== ClusterName.mainnet && n.programId !== undefined : n.programId !== undefined
+              )
+              .map((item) => (
+                <MenuItem
+                  key={item.url}
+                  onClick={(event) => {
+                    handleSelectNetwork(item);
+                    handleClose(event);
+                  }}>
+                <Box>
+                  <Box>{item.name}</Box>
+                  <Box fontSize={10}>{item.url}</Box>
+                </Box>
+                </MenuItem>
+              ))
+            }
             </MenuList>
           </ClickAwayListener>
         </Card>

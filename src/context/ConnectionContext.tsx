@@ -10,6 +10,7 @@ import { useRecoilState } from 'recoil';
 import { DISALLOWED_COUNTRIES, useCountry } from '../hooks/useCountry';
 import { ClusterName } from '../types';
 import { atom } from 'recoil';
+import { useResetOptionsState } from '../recoil';
 
 // Default to first network that has a defined program id
 const DEFAULT_NETWORK =
@@ -50,6 +51,7 @@ const ConnectionProvider: React.FC = ({ children }) => {
         networks[1],
     );
   }, 0);
+  const resetOptionState = useResetOptionsState();
 
   const [connection, setConnection] = useState(
     new Connection(endpoint.url, {
@@ -58,12 +60,16 @@ const ConnectionProvider: React.FC = ({ children }) => {
     }),
   );
 
-  const handleSetEndpoint = useCallback((newEndpoint) => {
-    // Update both endpoint and connection state valuse in the same function
-    // Will prevent extra rerenders of components that depend on both endpoint and connection
-    setEndpoint(newEndpoint);
-    setConnection(new Connection(newEndpoint.url, 'confirmed'));
-  }, []);
+  const handleSetEndpoint = useCallback(
+    (newEndpoint) => {
+      resetOptionState();
+      // Update both endpoint and connection state valuse in the same function
+      // Will prevent extra rerenders of components that depend on both endpoint and connection
+      setEndpoint(newEndpoint);
+      setConnection(new Connection(newEndpoint.url, 'confirmed'));
+    },
+    [resetOptionState, setEndpoint],
+  );
 
   const state: ConnectionContextType = {
     networks,

@@ -116,7 +116,9 @@ export const selectFutureExpirationsByUnderlyingAndQuote = selector({
 
 /**
  * select underlying amount for option based on the selecting underlying mint,
- * quote mint, and expiration
+ * quote mint, and expiration.
+ *
+ * Sorts the sizes in descending order.
  */
 export const selectUnderlyingAmountPerOptionByExpirationUnderlyingQuote =
   selector({
@@ -144,7 +146,9 @@ export const selectUnderlyingAmountPerOptionByExpirationUnderlyingQuote =
         return acc;
       }, [] as BN[]);
 
-      return _uniqby(expirations, (exp) => exp.toNumber());
+      return _uniqby(expirations, (exp) => exp.toString()).sort((a, b) =>
+        a.toString() > b.toString() ? 1 : -1,
+      );
     },
   });
 
@@ -179,6 +183,26 @@ export const selectOptionsByMarketsPageParams = selector({
     return options as OptionMarketWithKey[];
   },
 });
+
+/**
+ * Reset all of the options state.
+ *
+ * Unfortunately cannot use useResetRecoilState on the atomFamily :/
+ */
+export const useResetOptionsState = () =>
+  useRecoilTransaction_UNSTABLE(
+    ({ get, reset }) =>
+      () => {
+        const _optionIds = get(optionsIds);
+        _optionIds.forEach((id) => reset(optionsMap(id)));
+        reset(optionsIds);
+        reset(underlyingMint);
+        reset(quoteMint);
+        reset(expirationUnixTimestamp);
+        reset(underlyingAmountPerContract);
+      },
+    [],
+  );
 
 /**
  * Upserts Options into the optionsMap atomFamily. Also initializes

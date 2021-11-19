@@ -4,6 +4,7 @@ import MenuItem from '@material-ui/core/MenuItem';
 import NoSsr from '@material-ui/core/NoSsr';
 import Select from '@material-ui/core/Select';
 import { BN } from '@project-serum/anchor';
+import BigNumber from 'bignumber.js';
 import React, { useCallback, useMemo } from 'react';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { useTokenMintInfo } from '../hooks/useTokenMintInfo';
@@ -12,6 +13,8 @@ import {
   underlyingAmountPerContract,
   underlyingMint,
 } from '../recoil';
+
+const BIGNUM_TEN = new BigNumber(10);
 
 /**
  * Component for selecting supported contract sizes
@@ -28,7 +31,12 @@ export const ContractSizeSelector: React.VFC = () => {
   const options = useMemo(
     () =>
       contractSizes.map((s) => {
-        const size = s.toNumber() * 10 ** -(underlyingMintInfo?.decimals ?? 0);
+        const sizeBigNum = new BigNumber(s.toString());
+        const size = sizeBigNum.multipliedBy(
+          BIGNUM_TEN.pow(
+            new BigNumber(underlyingMintInfo?.decimals ?? 0).negated(),
+          ),
+        );
         return {
           text: size.toString(),
           value: s,

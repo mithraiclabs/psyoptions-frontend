@@ -4,6 +4,7 @@ import { useRecoilValue } from 'recoil';
 import {
   quoteMint,
   selectOptionsByMarketsPageParams,
+  underlyingAmountPerContract,
   underlyingMint,
 } from '../recoil';
 import { CallOrPut, OptionType } from '../types';
@@ -30,6 +31,9 @@ export const useOptionsChainFromMarketsState = (): ChainRow[] => {
   const normalizeUnderlyingAmountBN =
     useNormalizeAmountOfMintBN(_underlyingMint);
   const normalizeQuoteAmountBN = useNormalizeAmountOfMintBN(_quoteMint);
+  const _underlyingAmountPerContract = useRecoilValue(
+    underlyingAmountPerContract,
+  );
   useLoadOptionsMintInfo(options);
   useLoadSerumDataByMarketAddresses(serumAddresses);
 
@@ -39,6 +43,9 @@ export const useOptionsChainFromMarketsState = (): ChainRow[] => {
     }
     const chainObject = options.reduce((acc, option, index) => {
       const isCall = option.underlyingAssetMint.equals(_underlyingMint);
+      const normalizedContractSize = normalizeUnderlyingAmountBN(
+        _underlyingAmountPerContract,
+      );
       let normalizedUnderlyingAmount = normalizeUnderlyingAmountBN(
         option.underlyingAmountPerContract,
       );
@@ -54,9 +61,11 @@ export const useOptionsChainFromMarketsState = (): ChainRow[] => {
         );
       }
 
-      const strike = normalizedUnderlyingAmount.multipliedBy(
-        normalizedQuoteAmount,
-      );
+      // Must square and divide by the normalized contract size
+      // in order to get the appropriate strike price
+      const strike = normalizedUnderlyingAmount
+        .multipliedBy(normalizedQuoteAmount)
+        .div(normalizedContractSize.pow(new BigNumber(2)));
       const key = `${option.expirationUnixTimestamp}-${strike.toNumber()}`;
 
       const callOrPutRow = {
@@ -81,6 +90,7 @@ export const useOptionsChainFromMarketsState = (): ChainRow[] => {
       rowA.strike.minus(rowB.strike).toNumber(),
     );
   }, [
+    _underlyingAmountPerContract,
     _underlyingMint,
     normalizeQuoteAmountBN,
     normalizeUnderlyingAmountBN,

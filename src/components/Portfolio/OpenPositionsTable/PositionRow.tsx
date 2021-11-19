@@ -1,5 +1,5 @@
 import React, { Fragment, useCallback, useState } from 'react';
-import clsx from "clsx";
+import clsx from 'clsx';
 import KeyboardArrowDown from '@material-ui/icons/KeyboardArrowDown';
 import KeyboardArrowUp from '@material-ui/icons/KeyboardArrowUp';
 import {
@@ -27,41 +27,41 @@ import { TCell, TMobileCell } from '../../StyledComponents/Table/TableStyles';
 const useStyles = makeStyles((theme) => ({
   root: {},
   row: {
-    display: "flex",
-    flexDirection: "row",
-    alignItems: "center",
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   minRow: {
-    display: "flex",
-    flexDirection: "row",
-    alignItems: "center",
-    width: "min-content"
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: 'min-content',
   },
   rowWrap: {
-    display: "flex",
-    flexDirection: "row",
-    alignItems: "center",
-    flexFlow: "wrap"
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexFlow: 'wrap',
   },
   column: {
-    display: "flex",
-    flexDirection: "column",
+    display: 'flex',
+    flexDirection: 'column',
   },
   avatar: {
     width: 24,
     height: 24,
   },
   centerText: {
-    textAlign: "center",
+    textAlign: 'center',
   },
   errorColor: {
     color: theme.palette.error.main,
   },
   tabletFont: {
-    fontSize: "14px !important",
+    fontSize: '14px !important',
   },
   mobileFont: {
-    fontSize: "10px !important",
+    fontSize: '10px !important',
   },
 }));
 
@@ -150,151 +150,170 @@ const PositionRow: React.VFC<{
         price={price}
         option={row.market}
       />
-      <TableRow
-        tabIndex={-1}
-        key={row.market.optionMintKey.toString()}
-      >
-        {formFactor === "desktop" ?
-        <>
-          <TCell>
-            <Box className={classes.row}>
-              <Avatar className={classes.avatar} src={uAssetImage}>
-                {uAssetSymbol.slice(0, 1)}
-              </Avatar>
-              <Box pl={1}>{uAssetSymbol}</Box>
-            </Box>
-          </TCell>
-          <TCell>
-            {optionType}
-          </TCell>
-          <TCell>
-            {strike}
-          </TCell>
-          <TCell>
-            {price ? `$${price.toFixed(2)}` : '-'}
-          </TCell>
-          <TCell>
-            {contractSize}
-          </TCell>
-          <TCell>
-            {row.size}
-          </TCell>
-          <TCell>
-            {formatExpirationTimestamp(row.expiration)}
-          </TCell>
-          <TCell>{`+$0.00`}</TCell>
-          <TCell style={{ width: "0.1%", whiteSpace: "nowrap" }}>
-            <Box className={classes.minRow}>
-              {expired ? <Box className={classes.errorColor}>Expired</Box> :
-                <Box>
-                  <Button
-                    color="primary"
-                    variant="outlined"
-                    onClick={openExerciseDialog}
-                    size="large"
+      <TableRow tabIndex={-1} key={row.market.optionMintKey.toString()}>
+        {formFactor === 'desktop' ? (
+          <>
+            <TCell>
+              <Box className={classes.row}>
+                <Avatar className={classes.avatar} src={uAssetImage}>
+                  {uAssetSymbol.slice(0, 1)}
+                </Avatar>
+                <Box pl={1}>{uAssetSymbol}</Box>
+              </Box>
+            </TCell>
+            <TCell>{optionType}</TCell>
+            <TCell>{strike}</TCell>
+            <TCell>{price ? `$${price.toFixed(2)}` : '-'}</TCell>
+            <TCell>{contractSize}</TCell>
+            <TCell>{row.size}</TCell>
+            <TCell>{formatExpirationTimestamp(row.expiration)}</TCell>
+            <TCell style={{ width: '0.1%', whiteSpace: 'nowrap' }}>
+              <Box className={classes.minRow}>
+                {expired ? (
+                  <Box className={classes.errorColor}>Expired</Box>
+                ) : (
+                  <Box>
+                    <Button
+                      color="primary"
+                      variant="outlined"
+                      onClick={openExerciseDialog}
+                      size="large"
+                    >
+                      Exercise
+                    </Button>
+                  </Box>
+                )}
+                {row.accounts.length > 1 && (
+                  <IconButton onClick={onRowClick}>
+                    {visible ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
+                  </IconButton>
+                )}
+              </Box>
+            </TCell>
+          </>
+        ) : (
+          <>
+            <TMobileCell>
+              <Box
+                className={clsx(
+                  classes.row,
+                  formFactor === 'tablet' && classes.tabletFont,
+                  formFactor === 'mobile' && classes.mobileFont,
+                )}
+              >
+                <Avatar className={classes.avatar} src={uAssetImage}>
+                  {uAssetSymbol.slice(0, 1)}
+                </Avatar>
+                <Box className={classes.rowWrap}>
+                  <Box
+                    pl={formFactor === 'mobile' ? 1 : 2}
+                    className={classes.column}
                   >
-                    Exercise
-                  </Button>
-                </Box>
-              }
-              {row.accounts.length > 1 && (
-                <IconButton onClick={onRowClick}>
-                  {visible ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
-                </IconButton>
-              )}
-            </Box>
-          </TCell>
-        </> :
-        <>
-          <TMobileCell>
-            <Box className={clsx(classes.row,
-                formFactor === "tablet" && classes.tabletFont,
-                formFactor === "mobile" && classes.mobileFont)}>
-              <Avatar className={classes.avatar} src={uAssetImage}>
-                {uAssetSymbol.slice(0, 1)}
-              </Avatar>
-              <Box className={classes.rowWrap}>
-                <Box pl={formFactor === "mobile" ? 1 : 2} className={classes.column}>
-                  <Box>{`${uAssetSymbol} | ${optionType}`}</Box>
-                  <Box>{`Strike: ${strike}`}</Box>
-                </Box>
-                <Box pl={formFactor === "mobile" ? 1 : 2} className={classes.column}>
-                  <Box>{`Size: ${contractSize}`}</Box>
-                  <Box>{`Qty: ${row.size}`}</Box>
+                    <Box>{`${uAssetSymbol} | ${optionType}`}</Box>
+                    <Box>{`Strike: ${strike}`}</Box>
+                  </Box>
+                  <Box
+                    pl={formFactor === 'mobile' ? 1 : 2}
+                    className={classes.column}
+                  >
+                    <Box>{`Size: ${contractSize}`}</Box>
+                    <Box>{`Qty: ${row.size}`}</Box>
+                  </Box>
                 </Box>
               </Box>
-            </Box>
-          </TMobileCell>
-          <TMobileCell className={clsx(
-              formFactor === "tablet" && classes.tabletFont,
-              formFactor === "mobile" && classes.mobileFont)}>
-            {formatExpirationTimestamp(row.expiration)}
-          </TMobileCell>
-          <TMobileCell className={clsx(
-              formFactor === "tablet" && classes.tabletFont,
-              formFactor === "mobile" && classes.mobileFont)}>
-            {`+$0.00`}
-          </TMobileCell>
-          <TMobileCell style={{ width: "0.1%", whiteSpace: "nowrap" }} className={clsx(
-              formFactor === "tablet" && classes.tabletFont,
-              formFactor === "mobile" && classes.mobileFont)}>
-            <Box className={formFactor === "mobile" ? classes.centerText : classes.minRow}>
-              {expired ? <Box className={classes.errorColor}>Expired</Box> :
-                <Box>
-                  <Button
-                    color="primary"
-                    variant="outlined"
-                    onClick={openExerciseDialog}
-                    size={formFactor === "mobile" ? "small" : "large"}
-                  >
-                    Exercise
-                  </Button>
-                </Box>
-              }
-              {row.accounts.length > 1 && (
-                <IconButton onClick={onRowClick}>
-                  {visible ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
-                </IconButton>
+            </TMobileCell>
+            <TMobileCell
+              className={clsx(
+                formFactor === 'tablet' && classes.tabletFont,
+                formFactor === 'mobile' && classes.mobileFont,
               )}
-            </Box>
-          </TMobileCell>
-        </>}
+            >
+              {formatExpirationTimestamp(row.expiration)}
+            </TMobileCell>
+            <TMobileCell
+              style={{ width: '0.1%', whiteSpace: 'nowrap' }}
+              className={clsx(
+                formFactor === 'tablet' && classes.tabletFont,
+                formFactor === 'mobile' && classes.mobileFont,
+              )}
+            >
+              <Box
+                className={
+                  formFactor === 'mobile' ? classes.centerText : classes.minRow
+                }
+              >
+                {expired ? (
+                  <Box className={classes.errorColor}>Expired</Box>
+                ) : (
+                  <Box>
+                    <Button
+                      color="primary"
+                      variant="outlined"
+                      onClick={openExerciseDialog}
+                      size={formFactor === 'mobile' ? 'small' : 'large'}
+                    >
+                      Exercise
+                    </Button>
+                  </Box>
+                )}
+                {row.accounts.length > 1 && (
+                  <IconButton onClick={onRowClick}>
+                    {visible ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
+                  </IconButton>
+                )}
+              </Box>
+            </TMobileCell>
+          </>
+        )}
       </TableRow>
       <TableRow>
-        <TableCell colSpan={formFactor === "mobile" ? 4 : 9} style={{ padding: 0, border: "none" }}>
+        <TableCell
+          colSpan={formFactor === 'mobile' ? 4 : 9}
+          style={{ padding: 0, border: 'none' }}
+        >
           <Collapse
             key={`${row.market.optionMintKey}Collapsible`}
             in={visible}
             timeout="auto"
             unmountOnExit
             component="tr"
-            style={{ display: "block" }}
+            style={{ display: 'block' }}
           >
             <td>
               {row.accounts.map((account) => (
                 <Box
                   key={`${account?.pubKey}`}
-                  className={clsx(classes.root,
+                  className={clsx(
+                    classes.root,
                     className,
-                    formFactor === "mobile" && classes.mobileFont,
-                    formFactor === "tablet" && classes.tabletFont)}
+                    formFactor === 'mobile' && classes.mobileFont,
+                    formFactor === 'tablet' && classes.tabletFont,
+                  )}
                   p={1}
                 >
-                  {formFactor === "desktop" && <Fragment><Box/>
-                    <Box/>
-                    <Box/>
-                    <Box/>
-                  </Fragment>}
+                  {formFactor === 'desktop' && (
+                    <Fragment>
+                      <Box />
+                      <Box />
+                      <Box />
+                      <Box />
+                    </Fragment>
+                  )}
                   <Box>
-                    {formFactor === "desktop" ? contractSize : `Size: ${contractSize}`}
+                    {formFactor === 'desktop'
+                      ? contractSize
+                      : `Size: ${contractSize}`}
                   </Box>
                   <Box>
-                  {formFactor === "desktop" ? account.amount : `Qty: ${account.amount}`}
+                    {formFactor === 'desktop'
+                      ? account.amount
+                      : `Qty: ${account.amount}`}
                   </Box>
-                  {formFactor === "desktop" && <Fragment>
-                    <Box/>
-                  </Fragment>}
-                  <Box>{`+$0.00`}</Box>
+                  {formFactor === 'desktop' && (
+                    <Fragment>
+                      <Box />
+                    </Fragment>
+                  )}
                   <Box>
                     {expired && (
                       <Box className={classes.errorColor}>Expired</Box>
@@ -305,7 +324,7 @@ const PositionRow: React.VFC<{
                           color="primary"
                           variant="outlined"
                           onClick={openExerciseDialog}
-                          size={formFactor === "mobile" ? "small" : "large"}
+                          size={formFactor === 'mobile' ? 'small' : 'large'}
                         >
                           Exercise
                         </Button>

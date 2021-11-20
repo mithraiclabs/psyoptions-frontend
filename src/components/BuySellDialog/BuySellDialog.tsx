@@ -216,7 +216,7 @@ const BuySellDialog: React.VFC<{
         orderArgs: {
           owner: wallet.publicKey,
           // For Serum, the payer is really the account of the asset being sold
-          payer: optionTokenKey,
+          payer: optionTokenKey as PublicKey,
           side: 'sell',
           // Serum-ts handles adding the SPL Token decimals via their
           //  `maket.priceNumberToLots` function
@@ -317,7 +317,7 @@ const BuySellDialog: React.VFC<{
         orderArgs: {
           owner: wallet.publicKey,
           // For Serum, the payer is really the account of the asset being sold
-          payer: serumQuoteTokenKey,
+          payer: serumQuoteTokenKey as PublicKey,
           side: 'buy',
           // Serum-ts handles adding the SPL Token decimals via their
           //  `maket.priceNumberToLots` function
@@ -623,7 +623,8 @@ const BuySellDialog: React.VFC<{
                   </Box>
                   <UnsettledFunds
                     qAssetSymbol={
-                      isCall ? quoteAsset?.symbol : underlyingAsset?.symbol
+                      (isCall ? quoteAsset?.symbol : underlyingAsset?.symbol) ??
+                      ''
                     }
                     serumMarketAddress={serumAddress}
                     qAssetDecimals={

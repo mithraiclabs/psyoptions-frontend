@@ -18,12 +18,8 @@ import { DISALLOWED_COUNTRIES, useCountry } from '../hooks/useCountry';
 const NetworkMenu = () => {
   const { networks, endpoint, setEndpoint } = useConnection();
 
-  const {
-    setUAsset,
-    setQAsset,
-    setSupportedAssets,
-    assetListLoading
-  } = useAssetList();
+  const { setUAsset, setQAsset, setSupportedAssets, assetListLoading } =
+    useAssetList();
   const { setMarkets, marketsLoading } = useOptionsMarkets();
   const { setSerumMarkets } = useSerum();
 
@@ -38,6 +34,7 @@ const NetworkMenu = () => {
   };
 
   const handleClose = (event) => {
+    // @ts-expect-error ignore
     if (anchorRef.current && anchorRef.current.contains(event.target)) {
       return;
     }
@@ -65,7 +62,7 @@ const NetworkMenu = () => {
   return (
     <Box style={{ position: 'relative' }} ml={2}>
       <Button
-        color='primary'
+        color="primary"
         onClick={() => {
           if (open === false && !loading) {
             setOpen(true);
@@ -73,9 +70,10 @@ const NetworkMenu = () => {
             setOpen(false);
           }
         }}
-        variant='outlined'
+        variant="outlined"
         innerRef={anchorRef}
-        disabled={loading}>
+        disabled={loading}
+      >
         {endpoint.name}
       </Button>
       <Popper
@@ -84,7 +82,7 @@ const NetworkMenu = () => {
         role={undefined}
         transition
         disablePortal
-        placement='bottom-end'
+        placement="bottom-end"
         style={{
           position: 'absolute',
           inset: 'initial',
@@ -93,36 +91,41 @@ const NetworkMenu = () => {
           marginTop: '16px',
           zIndex: 20,
           width: 'fit-content',
-        }}>
+        }}
+      >
         <Card
           style={{
             background: theme.palette?.background?.light,
           }}
-          elevation={12}>
+          elevation={12}
+        >
           <ClickAwayListener onClickAway={handleClose}>
             <MenuList
-              id='menu-list-grow'
+              id="menu-list-grow"
               autoFocusItem={open}
-              onKeyDown={handleListKeyDown}>
-            {
-              networks
-              .filter(
-                (n) => isDisallowed ? n.name !== ClusterName.mainnet && n.programId !== undefined : n.programId !== undefined
-              )
-              .map((item) => (
-                <MenuItem
-                  key={item.url}
-                  onClick={(event) => {
-                    handleSelectNetwork(item);
-                    handleClose(event);
-                  }}>
-                <Box>
-                  <Box>{item.name}</Box>
-                  <Box fontSize={10}>{item.url}</Box>
-                </Box>
-                </MenuItem>
-              ))
-            }
+              onKeyDown={handleListKeyDown}
+            >
+              {networks
+                .filter((n) =>
+                  isDisallowed
+                    ? n.name !== ClusterName.mainnet &&
+                      n.programId !== undefined
+                    : n.programId !== undefined,
+                )
+                .map((item) => (
+                  <MenuItem
+                    key={item.url}
+                    onClick={(event) => {
+                      handleSelectNetwork(item);
+                      handleClose(event);
+                    }}
+                  >
+                    <Box>
+                      <Box>{item.name}</Box>
+                      <Box fontSize={10}>{item.url}</Box>
+                    </Box>
+                  </MenuItem>
+                ))}
             </MenuList>
           </ClickAwayListener>
         </Card>

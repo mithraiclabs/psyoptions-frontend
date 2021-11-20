@@ -175,9 +175,10 @@ const CallPutRow: React.VFC<CallPutRowProps> = ({
   };
 
   const putChange =
-    marketTrackerData?.[row.put?.serumMarketKey?.toString() ?? '']?.change;
+    marketTrackerData?.[row.put?.serumMarketKey?.toString() ?? '']?.change ?? 0;
   const callChange =
-    marketTrackerData?.[row.call?.serumMarketKey?.toString() ?? '']?.change;
+    marketTrackerData?.[row.call?.serumMarketKey?.toString() ?? '']?.change ??
+    0;
 
   return (
     <TRow hover role="checkbox" tabIndex={-1}>

@@ -191,16 +191,6 @@ const Markets: React.VFC = () => {
             round={round}
             precision={precision}
             date={momentDate}
-            uAssetDecimals={
-              (callPutData?.type === 'call'
-                ? uAsset?.decimals
-                : qAsset?.decimals) ?? 0
-            }
-            qAssetDecimals={
-              (callPutData?.type === 'call'
-                ? qAsset?.decimals
-                : uAsset?.decimals) ?? 0
-            }
             setLimitPrice={setLimitPrice}
             limitPrice={limitPrice}
             serumAddress={callPutData.serumMarketKey?.toString() ?? ''}

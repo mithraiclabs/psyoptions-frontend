@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Box from '@material-ui/core/Box';
 import Avatar from '@material-ui/core/Avatar';
 import { LAMPORTS_PER_SOL } from '@solana/web3.js';
-import { useConnectedWallet } from "@saberhq/use-solana";
+import { useConnectedWallet } from '@saberhq/use-solana';
 import useAssetList from '../../hooks/useAssetList';
 import useOwnedTokenAccounts from '../../hooks/useOwnedTokenAccounts';
 import { getHighestAccount, WRAPPED_SOL_ADDRESS } from '../../utils/token';
@@ -21,17 +21,20 @@ const Balances: React.FC = () => {
     const uAssetAccounts = ownedTokenAccounts[uAsset?.mintAddress ?? ''] || [];
     const qAssetAccounts = ownedTokenAccounts[qAsset?.mintAddress ?? ''] || [];
     const qAssetHighestAccount = getHighestAccount(qAssetAccounts);
-    const newQAssetBalance = qAssetHighestAccount ? qAssetHighestAccount.amount / 10 ** (qAsset?.decimals ?? 0) : 0;
+    const newQAssetBalance = qAssetHighestAccount
+      ? qAssetHighestAccount.amount / 10 ** (qAsset?.decimals ?? 0)
+      : 0;
     setQAssetBalance(newQAssetBalance);
 
     const uAssetHighestAccount = getHighestAccount(uAssetAccounts);
-    let newUAssetBalance = uAssetHighestAccount ? uAssetHighestAccount.amount / 10 ** (uAsset?.decimals ?? 0) : 0;
+    let newUAssetBalance = uAssetHighestAccount
+      ? uAssetHighestAccount.amount / 10 ** (uAsset?.decimals ?? 0)
+      : 0;
     if (uAsset?.mintAddress === WRAPPED_SOL_ADDRESS) {
       // if asset is wrapped Sol, use balance of wallet account
-      newUAssetBalance = balance ? (balance / LAMPORTS_PER_SOL) : null;
+      newUAssetBalance = balance ? balance / LAMPORTS_PER_SOL : 0;
     }
     setUAssetBalance(newUAssetBalance);
-
   }, [ownedTokenAccounts, qAsset, uAsset, balance]);
 
   if (!loadingOwnedTokenAccounts && !assetListLoading && wallet?.connected) {

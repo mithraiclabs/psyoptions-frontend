@@ -60,7 +60,7 @@ const ChooseExpiration = () => {
 
   useEffect(() => {
     if (selectedDate) {
-      buildOptionsChain(selectedDate.unix(), contractSize);
+      buildOptionsChain(selectedDate.unix());
     }
   }, [buildOptionsChain, selectedDate, contractSize]);
 

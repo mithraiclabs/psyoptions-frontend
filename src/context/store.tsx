@@ -1,10 +1,10 @@
 import React, { cloneElement } from 'react';
 import { ThemeProvider } from '@material-ui/core/styles';
 
+import { GraphQLProvider } from './GraphQLProvider';
 import { ConnectionProvider } from './ConnectionContext';
 import { OwnedTokenAccountsProvider } from './OwnedTokenAccounts';
 import { WalletInfoProvider } from './WalletInfoContext';
-import { WalletKitProvider } from "@gokiprotocol/walletkit";
 import { NotificationsProvider } from './NotificationsContext';
 import { OptionsMarketsProvider } from './OptionsMarketsContext';
 import { SerumProvider } from './SerumContext';
@@ -17,7 +17,6 @@ import { SerumOrderbooksProvider } from './SerumOrderbookContext';
 import { SPLTokenMintsProvider } from './SPLTokenMintsContext';
 import { SerumOpenOrdersProvider } from './SerumOpenOrdersContext';
 import { ExpirationDateProvider } from './ExpirationDateContext';
-import { GraphQLProvider } from './GraphQLProvider';
 import { SimpleUIFormProvider } from './SimpleUIContext';
 import { ScreenSizeProvider } from './ScreenSizeContext';
 
@@ -29,15 +28,6 @@ const _providers: React.ReactElement[] = [
   <NotificationsProvider key="NotificationsProvider" />,
   <SolanaMetaProvider key="SolanaMetaProvider" />,
   <AssetListProvider key="AssetListProvider" />,
-  // eslint-disable-next-line react/no-children-prop
-  <WalletKitProvider
-    key="WalletKitProvider"
-    defaultNetwork="mainnet-beta"
-    app={{
-      name: "PsyOptions",
-    }}
-    children={<div />}
-  />,
   <WalletInfoProvider key="WalletInfoProvider" />,
   <OwnedTokenAccountsProvider key="OwnedTokenAccountsProvider" />,
   <OptionsMarketsProvider key="OptionsMarketsProvider" />,

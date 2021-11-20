@@ -9,31 +9,26 @@ import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 
 import { BN } from '@project-serum/anchor';
 import useNotifications from './useNotifications';
-import { useConnectedWallet } from "@saberhq/use-solana";
+import { useConnectedWallet } from '@saberhq/use-solana';
 import useConnection from './useConnection';
 import useAssetList from './useAssetList';
 import useSendTransaction from './useSendTransaction';
 
 import { OptionsMarketsContext } from '../context/OptionsMarketsContext';
-import { useSolanaMeta } from '../context/SolanaMetaContext';
 
 import { WRAPPED_SOL_ADDRESS } from '../utils/token';
-import {
-  createMissingMintAccounts,
-  mintInstructions,
-} from '../utils/instructions/index';
+import { mintInstructions } from '../utils/instructions/index';
 
-import { ClusterName, CreateMissingMintAccountsRes, OptionMarket } from '../types';
+import { ClusterName, OptionMarket } from '../types';
 import { getSupportedMarketsByNetwork } from '../utils/networkInfo';
 import { findMarketByAssets } from '../utils/serum';
 import { useAmericanPsyOptionsProgram } from './useAmericanPsyOptionsProgram';
 
 const useOptionsMarkets = () => {
   const program = useAmericanPsyOptionsProgram();
-  const { pushErrorNotification, pushNotification } = useNotifications();
+  const { pushErrorNotification } = useNotifications();
   const wallet = useConnectedWallet();
   const { connection, dexProgramId, endpoint } = useConnection();
-  const { splTokenAccountRentBalance } = useSolanaMeta();
   const { sendTransaction } = useSendTransaction();
   const {
     marketsByUiKey,
@@ -51,7 +46,14 @@ const useOptionsMarkets = () => {
    */
   const fetchMarketData = useCallback(async () => {
     try {
-      if (marketsLoading || !endpoint || !endpoint.programId || !program || !dexProgramId) return;
+      if (
+        marketsLoading ||
+        !endpoint ||
+        !endpoint.programId ||
+        !program ||
+        !dexProgramId
+      )
+        return;
       if (!(connection instanceof Connection)) return;
       if (!supportedAssets || supportedAssets.length === 0) return;
 
@@ -276,151 +278,85 @@ const useOptionsMarkets = () => {
     [marketsByUiKey],
   );
 
-  const getStrikePrices = useCallback(({ uAssetSymbol, qAssetSymbol, date, size }) => {
-    const keyPart = `${date}-${uAssetSymbol}-${qAssetSymbol}-${size}-`;
-    return Object.keys(marketsByUiKey)
-      .filter((key) => key.match(keyPart))
-      .map((key) => marketsByUiKey[key].strikePrice);
-  }, [marketsByUiKey]);
+  const getStrikePrices = useCallback(
+    ({ uAssetSymbol, qAssetSymbol, date, size }) => {
+      const keyPart = `${date}-${uAssetSymbol}-${qAssetSymbol}-${size}-`;
+      return Object.keys(marketsByUiKey)
+        .filter((key) => key.match(keyPart))
+        .map((key) => marketsByUiKey[key].strikePrice);
+    },
+    [marketsByUiKey],
+  );
 
   const getDates = useCallback(() => {
-    const dates = Object.values(marketsByUiKey).map((m: OptionMarket) => m.expiration);
+    const dates = Object.values(marketsByUiKey).map(
+      (m: OptionMarket) => m.expiration,
+    );
     const deduped = [...new Set(dates)];
     return deduped;
   }, [marketsByUiKey]);
 
-  const mint = useCallback(async ({
-    marketData,
-    mintedOptionDestKey, // address in user's wallet to send minted Option Token to
-    underlyingAssetSrcKey, // account in user's wallet to post uAsset collateral from
-    writerTokenDestKey, // address in user's wallet to send the minted Writer Token
-    existingTransaction: { transaction, signers }, // existing transaction and signers
-    numberOfContracts,
-  }) => {
-    if (!wallet?.publicKey || !program || !connection) {
-      return;
-    }
-    try {
-      const tx = transaction;
-
-      const { transaction: mintTx } = await mintInstructions(
-        numberOfContracts,
-        marketData,
-        wallet.publicKey,
-        new PublicKey(marketData.psyOptionsProgramId),
-        mintedOptionDestKey,
-        writerTokenDestKey,
-        underlyingAssetSrcKey,
-        program,
-      );
-
-      tx.add(mintTx);
-      // Close out the wrapped SOL account so it feels native
-      if (marketData.uAssetMint === WRAPPED_SOL_ADDRESS) {
-        tx.add(
-          Token.createCloseAccountInstruction(
-            TOKEN_PROGRAM_ID,
-            underlyingAssetSrcKey,
-            wallet.publicKey, // Send any remaining SOL to the owner
-            wallet.publicKey,
-            [],
-          ),
-        );
-      }
-
-      sendTransaction({
-        transaction: tx,
-        wallet,
-        signers,
-        connection,
-        sendingMessage: 'Processing: Mint Options Token',
-        successMessage: 'Confirmed: Mint Options Token',
-      });
-
-      return {
-        optionTokenDestKey: mintedOptionDestKey,
-        writerTokenDestKey,
-      };
-    } catch (err) {
-      console.log(err);
-      pushErrorNotification(err);
-    }
-    return {};
-  }, [
-    wallet,
-    program,
-    connection,
-    sendTransaction,
-    pushErrorNotification
-  ]);
-
-  const createAccountsAndMint = useCallback(async ({
-    date,
-    uAsset,
-    qAsset,
-    size,
-    price,
-    uAssetAccount,
-    mintedOptionAccount,
-    ownedMintedOptionAccounts,
-    mintedWriterTokenDestKey,
-    numberOfContracts,
-  }) => {
-    if (!wallet?.publicKey || !connection) {
-      return;
-    }
-
-    const uAssetSymbol = uAsset.tokenSymbol;
-    const qAssetSymbol = qAsset.tokenSymbol;
-
-    const marketData =
-      marketsByUiKey[`${date}-${uAssetSymbol}-${qAssetSymbol}-${size}-${price}`];
-
-    // Fallback to first oowned minted option account
-    const mintedOptionDestAddress =
-      mintedOptionAccount || ownedMintedOptionAccounts[0];
-
-    const writerTokenDestAddress = mintedWriterTokenDestKey;
-
-    const { response, error } = await createMissingMintAccounts({
-      owner: wallet.publicKey,
-      market: marketData,
-      uAsset,
-      uAssetTokenAccount: uAssetAccount,
-      splTokenAccountRentBalance: splTokenAccountRentBalance ?? null,
-      mintedOptionDestinationKey: mintedOptionDestAddress,
-      writerTokenDestinationKey: writerTokenDestAddress,
-      numberOfContractsToMint: numberOfContracts,
-      connection
-    });
-    if (error) {
-      pushNotification(error);
-      return {};
-    }
-    const {
-      transaction,
-      signers,
-      mintedOptionDestinationKey,
-      writerTokenDestinationKey,
-      uAssetTokenAccount,
-    } = response as CreateMissingMintAccountsRes;
-
-    return mint({
+  const mint = useCallback(
+    async ({
       marketData,
-      mintedOptionDestKey: mintedOptionDestinationKey,
-      underlyingAssetSrcKey: uAssetTokenAccount.pubKey,
-      writerTokenDestKey: writerTokenDestinationKey,
-      existingTransaction: { transaction, signers },
+      mintedOptionDestKey, // address in user's wallet to send minted Option Token to
+      underlyingAssetSrcKey, // account in user's wallet to post uAsset collateral from
+      writerTokenDestKey, // address in user's wallet to send the minted Writer Token
+      existingTransaction: { transaction, signers }, // existing transaction and signers
       numberOfContracts,
-    });
-  }, [
-    marketsByUiKey,
-    wallet?.publicKey,
-    connection,
-    splTokenAccountRentBalance,
-    pushNotification,
-    mint
-  ]);
+    }) => {
+      if (!wallet?.publicKey || !program || !connection) {
+        return;
+      }
+      try {
+        const tx = transaction;
+
+        const { transaction: mintTx } = await mintInstructions(
+          numberOfContracts,
+          marketData,
+          wallet.publicKey,
+          new PublicKey(marketData.psyOptionsProgramId),
+          mintedOptionDestKey,
+          writerTokenDestKey,
+          underlyingAssetSrcKey,
+          program,
+        );
+
+        tx.add(mintTx);
+        // Close out the wrapped SOL account so it feels native
+        if (marketData.uAssetMint === WRAPPED_SOL_ADDRESS) {
+          tx.add(
+            Token.createCloseAccountInstruction(
+              TOKEN_PROGRAM_ID,
+              underlyingAssetSrcKey,
+              wallet.publicKey, // Send any remaining SOL to the owner
+              wallet.publicKey,
+              [],
+            ),
+          );
+        }
+
+        sendTransaction({
+          transaction: tx,
+          wallet,
+          signers,
+          connection,
+          sendingMessage: 'Processing: Mint Options Token',
+          successMessage: 'Confirmed: Mint Options Token',
+        });
+
+        return {
+          optionTokenDestKey: mintedOptionDestKey,
+          writerTokenDestKey,
+        };
+      } catch (err) {
+        console.log(err);
+        pushErrorNotification(err);
+      }
+      return {};
+    },
+    [wallet, program, connection, sendTransaction, pushErrorNotification],
+  );
 
   return {
     marketsByUiKey,
@@ -434,7 +370,6 @@ const useOptionsMarkets = () => {
     getSizesWithDate,
     getDates,
     mint,
-    createAccountsAndMint,
     fetchMarketData,
     packagedMarkets,
   };

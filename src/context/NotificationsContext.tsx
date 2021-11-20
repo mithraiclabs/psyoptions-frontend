@@ -1,13 +1,35 @@
 import React, { useState, useCallback, useMemo, createContext } from 'react';
 import { PsyOptionError } from '@mithraic-labs/psyoptions';
 import TransactionError from '../utils/transactionErrors/TransactionError';
-import { NotificationSeverity } from '../types';
+import { InstructionErrorResponse, NotificationSeverity } from '../types';
 import useConnection from '../hooks/useConnection';
 
-const NotificationsContext = createContext(undefined);
+type UINotification = {
+  link?: React.ReactNode;
+  message: string;
+  severity: 'success' | 'error' | 'info' | 'warning';
+  txid?: string;
+};
+
+export type UINotificationContext = {
+  closeNotification: (index: any) => void;
+  pushErrorNotification: (
+    error: Error | InstructionErrorResponse | string,
+  ) => void;
+  pushNotification: (content: any) => void;
+  notifications: UINotification[];
+};
+
+const noop = () => {};
+const NotificationsContext = createContext<UINotificationContext>({
+  closeNotification: noop,
+  pushErrorNotification: noop,
+  pushNotification: noop,
+  notifications: [],
+});
 
 const NotificationsProvider: React.FC = ({ children }) => {
-  const [notifications, setNotifications] = useState([
+  const [notifications, setNotifications] = useState<UINotification[]>([
     // Examples of possible severity states:
     // {
     //   severity: 'success',
@@ -48,9 +70,7 @@ const NotificationsProvider: React.FC = ({ children }) => {
       const failedInstruction =
         transaction.instructions[failedInstructionIndex];
       // use the programId of the failed instruction to determine which program errored
-      if (
-        failedInstruction.programId.toString() === endpoint.programId.toString()
-      ) {
+      if (failedInstruction.programId.toString() === endpoint?.programId) {
         const parsedError = PsyOptionError[customError.Custom];
         return {
           parsedError,
@@ -83,7 +103,7 @@ const NotificationsProvider: React.FC = ({ children }) => {
    * then we just push the error's message as usual.
    */
   const pushErrorNotification = useCallback(
-    (error: Error) => {
+    (error: Error | InstructionErrorResponse | string) => {
       let content;
       // Log the error for dev debugging purposes
       console.error(error);

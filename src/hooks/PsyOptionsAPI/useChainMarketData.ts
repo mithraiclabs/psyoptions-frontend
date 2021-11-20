@@ -38,9 +38,9 @@ export const useChainMarketData = (
     () =>
       chain?.reduce((acc, chainRow) => {
         const callMarketMeta =
-          serumMarkets[chainRow?.call?.serumMarketKey?.toString()];
+          serumMarkets[chainRow?.call?.serumMarketKey?.toString() ?? ''];
         const putMarketMeta =
-          serumMarkets[chainRow?.put?.serumMarketKey?.toString()];
+          serumMarkets[chainRow?.put?.serumMarketKey?.toString() ?? ''];
         if (callMarketMeta?.serumMarket?.address) {
           acc.push(callMarketMeta.serumMarket.address.toString());
         }
@@ -48,7 +48,7 @@ export const useChainMarketData = (
           acc.push(putMarketMeta.serumMarket.address.toString());
         }
         return acc;
-      }, []) ?? '[]',
+      }, [] as string[]) ?? [],
     [chain, serumMarkets],
   );
 

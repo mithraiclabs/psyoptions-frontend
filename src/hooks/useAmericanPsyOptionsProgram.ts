@@ -14,9 +14,9 @@ export const useAmericanPsyOptionsProgram = (): Program | null => {
   const provider = useProvider();
 
   return useMemo(() => {
-    if (endpoint.programId && provider) {
+    if (endpoint?.programId && provider) {
       return new Program(PsyAmericanIdl, endpoint.programId, provider);
     }
     return null;
-  }, [endpoint.programId, provider]);
+  }, [endpoint?.programId, provider]);
 };

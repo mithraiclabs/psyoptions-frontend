@@ -12,8 +12,8 @@ import {
   MOBILE_DEVICE_MEDIA_QUERY,
   TABLET_DEVICE_MEDIA_QUERY,
 } from './context/ScreenSizeContext';
-import { Routes } from "./routes";
-import { HashRouter } from "react-router-dom";
+import { Routes } from './routes';
+import { HashRouter } from 'react-router-dom';
 import { RecoilRoot } from 'recoil';
 import './App.less';
 

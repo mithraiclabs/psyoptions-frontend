@@ -12,13 +12,12 @@ import { ClusterName } from '../types';
 import { atom } from 'recoil';
 import { useResetOptionsState } from '../recoil';
 
-// Default to first network that has a defined program id
-const DEFAULT_NETWORK =
-  networks.find((network) => network.programId !== undefined) || networks[1];
+// Default to devnet
+const DEVNET = networks[1];
 
 export const activeNetwork = atom({
   key: 'activeNetwork',
-  default: DEFAULT_NETWORK,
+  default: DEVNET,
 });
 
 export type ConnectionContextType = {
@@ -33,7 +32,7 @@ export type ConnectionContextType = {
 
 const ConnectionContext = createContext<ConnectionContextType>({
   connection: new Connection(clusterApiUrl('devnet')),
-  endpoint: networks[1], // devnet
+  endpoint: DEVNET,
   setConnection: () => {},
   setEndpoint: () => {},
   networks,
@@ -64,14 +63,11 @@ const ConnectionProvider: React.FC = ({ children }) => {
   );
 
   useEffect(() => {
-    // always set disallowed countries to devnet
-    if (isDisallowed && endpoint.name !== ClusterName.devnet) {
-      setEndpoint(
-        networks.find((network) => network.name === ClusterName.devnet) ||
-          networks[1],
-      );
+    // always set disallowed countries to devnet when on mainnet
+    if (isDisallowed && endpoint.name === ClusterName.mainnet) {
+      handleSetEndpoint(networks[1]);
     }
-  }, [endpoint.name, isDisallowed, setEndpoint]);
+  }, [endpoint.name, handleSetEndpoint, isDisallowed]);
 
   const state: ConnectionContextType = {
     networks,

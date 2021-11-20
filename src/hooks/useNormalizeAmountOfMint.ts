@@ -9,7 +9,12 @@ export const useNormalizeAmountOfMint = (
   const mintInfo = useTokenMintInfo(mint);
 
   return useCallback(
-    (num: BN) => num.toNumber() * 10 ** -(mintInfo?.decimals ?? 0),
+    (num: BN) => {
+      if (!num) {
+        return 0;
+      }
+      return num.toNumber() * 10 ** -(mintInfo?.decimals ?? 0);
+    },
     [mintInfo?.decimals],
   );
 };

@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useState } from 'react';
+import React, { createContext, useCallback, useEffect, useState } from 'react';
 import { clusterApiUrl, Connection, PublicKey } from '@solana/web3.js';
 import {
   getDexProgramKeyByNetwork,
@@ -43,14 +43,6 @@ const ConnectionProvider: React.FC = ({ children }) => {
   const countryCode = useCountry();
   const isDisallowed = DISALLOWED_COUNTRIES.includes(countryCode ?? '');
   const [endpoint, setEndpoint] = useRecoilState(activeNetwork);
-  setTimeout(() => {
-    setEndpoint(
-      (isDisallowed
-        ? networks.find((network) => network.name === ClusterName.devnet)
-        : networks.find((network) => network.programId !== undefined)) ||
-        networks[1],
-    );
-  }, 0);
   const resetOptionState = useResetOptionsState();
 
   const [connection, setConnection] = useState(
@@ -70,6 +62,16 @@ const ConnectionProvider: React.FC = ({ children }) => {
     },
     [resetOptionState, setEndpoint],
   );
+
+  useEffect(() => {
+    // always set disallowed countries to devnet
+    if (isDisallowed && endpoint.name !== ClusterName.devnet) {
+      setEndpoint(
+        networks.find((network) => network.name === ClusterName.devnet) ||
+          networks[1],
+      );
+    }
+  }, [endpoint.name, isDisallowed, setEndpoint]);
 
   const state: ConnectionContextType = {
     networks,

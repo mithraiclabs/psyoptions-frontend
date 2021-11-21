@@ -1,10 +1,20 @@
 import React from 'react';
 import Tooltip from '@material-ui/core/Tooltip';
+import BigNumber from 'bignumber.js';
 
 import { StyledSellButton } from './styles';
+import { useNormalizedContractSize } from '../../hooks/useNormalizedContractSize';
 
-const SellButton = ({
-  amountPerContract,
+const SellButton: React.VFC<{
+  parsedLimitPrice: BigNumber;
+  openPositionSize: number;
+  numberOfBids: number;
+  uAssetSymbol: string;
+  uAssetBalance: number;
+  orderType: string;
+  parsedOrderSize: number;
+  onClick: () => Promise<void>;
+}> = ({
   parsedLimitPrice,
   openPositionSize,
   numberOfBids,
@@ -14,6 +24,7 @@ const SellButton = ({
   parsedOrderSize,
   onClick,
 }) => {
+  const sizeOfContract = useNormalizedContractSize();
   let isSellDisabled = false;
   let mintSellTooltipLabel = '';
 
@@ -30,7 +41,7 @@ const SellButton = ({
       }`;
     } else {
       if (
-        openPositionSize + uAssetBalance / amountPerContract.toNumber() >=
+        openPositionSize + uAssetBalance / sizeOfContract >=
         parsedOrderSize
       ) {
         mintSellTooltipLabel = `Place ${orderType} sell order using: ${
@@ -40,7 +51,7 @@ const SellButton = ({
               } and `
             : ''
         }${
-          (parsedOrderSize - openPositionSize) * amountPerContract.toNumber()
+          (parsedOrderSize - openPositionSize) * sizeOfContract
         } ${uAssetSymbol}`;
       } else {
         mintSellTooltipLabel = `Not enough ${uAssetSymbol} to place order`;
@@ -53,7 +64,7 @@ const SellButton = ({
     <Tooltip title={mintSellTooltipLabel} placement="top">
       <StyledSellButton
         fullWidth
-        onClick={isSellDisabled ? null : onClick}
+        onClick={isSellDisabled ? undefined : onClick}
         fakeDisabled={isSellDisabled}
         disableRipple={isSellDisabled}
       >

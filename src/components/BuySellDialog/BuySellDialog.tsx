@@ -50,16 +50,12 @@ const bgLighterColor = (theme.palette.background as any).lighter;
 
 const orderTypes = ['limit', 'market'];
 
-const zero = new BigNumber(0);
-
 // TODO fix all the things
 
 const BuySellDialog: React.VFC<{
   key: string;
   open: boolean;
   onClose: () => void;
-  amountPerContract: BigNumber;
-  quoteAmountPerContract: BigNumber;
   qAssetMint: string;
   uAssetMint: string;
   strike: BigNumber;
@@ -76,8 +72,6 @@ const BuySellDialog: React.VFC<{
   open,
   optionKey,
   onClose,
-  amountPerContract = zero,
-  quoteAmountPerContract = zero,
   strike,
   round,
   precision,
@@ -140,14 +134,12 @@ const BuySellDialog: React.VFC<{
   }, [limitPrice]);
 
   const collateralRequired = useMemo(() => {
-    return amountPerContract
+    return sizeOfContract
       ? Math.max(
-          amountPerContract.multipliedBy(orderSize ?? 0).toNumber() -
-            openPositionSize * amountPerContract.toNumber(),
-          0,
+          sizeOfContract * (orderSize ?? 0) - openPositionSize * sizeOfContract,
         )
       : 'N/A';
-  }, [amountPerContract, orderSize, openPositionSize]);
+  }, [sizeOfContract, orderSize, openPositionSize]);
 
   useEffect(() => {
     const newOptionAccounts = ownedTokenAccounts[`${option?.optionMint}`] || [];
@@ -412,11 +404,7 @@ const BuySellDialog: React.VFC<{
                 : `${underlyingAsset?.symbol}/${quoteAsset?.symbol}`}
             </Box>
             <Box pt={1}>
-              Contract Size:{' '}
-              {(!isCall
-                ? quoteAmountPerContract
-                : amountPerContract
-              ).toString()}{' '}
+              Contract Size: {sizeOfContract}{' '}
               {!isCall ? quoteAsset?.symbol : underlyingAsset?.symbol}
             </Box>
             <Box pt={1}>Mark Price: {markPrice ?? '-'}</Box>
@@ -432,7 +420,7 @@ const BuySellDialog: React.VFC<{
                 <>
                   {contractsWritten}{' '}
                   <span style={{ opacity: 0.5 }}>
-                    ({contractsWritten * amountPerContract.toNumber()}{' '}
+                    ({contractsWritten * sizeOfContract}{' '}
                     {underlyingAsset?.symbol} locked)
                   </span>
                 </>
@@ -574,14 +562,17 @@ const BuySellDialog: React.VFC<{
                         </Box>
                         <Box pl={1} width="50%">
                           <SellButton
-                            amountPerContract={amountPerContract}
                             parsedLimitPrice={parsedLimitPrice}
                             openPositionSize={openPositionSize}
                             numberOfBids={orderbook?.bids?.length || 0}
-                            uAssetSymbol={underlyingAsset?.symbol}
+                            uAssetSymbol={
+                              underlyingAsset?.symbol ??
+                              _underlyingMint?.toString() ??
+                              ''
+                            }
                             uAssetBalance={uAssetBalance}
                             orderType={orderType}
-                            parsedOrderSize={orderSize}
+                            parsedOrderSize={orderSize ?? 0}
                             onClick={handlePlaceSellOrder}
                           />
                         </Box>
@@ -621,16 +612,7 @@ const BuySellDialog: React.VFC<{
                       underlyingAsset?.symbol
                     }) until the contract expires or is exercised.`}
                   </Box>
-                  <UnsettledFunds
-                    qAssetSymbol={
-                      (isCall ? quoteAsset?.symbol : underlyingAsset?.symbol) ??
-                      ''
-                    }
-                    serumMarketAddress={serumAddress}
-                    qAssetDecimals={
-                      isCall ? quoteMintDecimals : underlyingMintDecimals
-                    }
-                  />
+                  <UnsettledFunds serumMarketAddress={serumAddress} />
                 </>
               ) : !wallet?.connected ? (
                 <>

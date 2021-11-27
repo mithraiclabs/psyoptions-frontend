@@ -126,6 +126,8 @@ export const selectFutureExpirationsByUnderlyingAndQuote = selector({
  * quote mint, and expiration.
  *
  * Sorts the sizes in descending order.
+ *
+ * TODO dedupe by strike.
  */
 export const selectUnderlyingAmountPerOptionByExpirationUnderlyingQuote =
   selector({
@@ -148,7 +150,13 @@ export const selectUnderlyingAmountPerOptionByExpirationUnderlyingQuote =
           (option.quoteAssetMint.equals(_quoteMint) ||
             option.quoteAssetMint.equals(_underlyingMint))
         ) {
-          acc.push(option.underlyingAmountPerContract);
+          // Normalize whether it's a Call or Put from the current state.
+          // This prevents contract size duplication across the permutations.
+          const normalizedUnderlyingAmountPerContract =
+            option.underlyingAssetMint.equals(_underlyingMint)
+              ? option.underlyingAmountPerContract
+              : option.quoteAmountPerContract;
+          acc.push(normalizedUnderlyingAmountPerContract);
         }
         return acc;
       }, [] as BN[]);

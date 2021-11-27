@@ -71,8 +71,6 @@ export const createMissingMintAccounts = async ({
   let _writerTokenDestinationKey = writerTokenDestinationKey;
 
   if (!_uAssetTokenAccount && uAsset.mintAddress !== WRAPPED_SOL_ADDRESS) {
-    // TODO - figure out how to distinguish between "a" vs "an" in this message
-    // Not that simple because "USDC" you say "A", but for "ETH" you say an, it depends on the pronunciation
     return {
       error: {
         severity: NotificationSeverity.WARNING,
@@ -93,7 +91,7 @@ export const createMissingMintAccounts = async ({
       .add(fees)
       .mul(new BN(numberOfContractsToMint));
     const { transaction, newTokenAccount } = await initializeTokenAccountTx({
-      connection,
+      connection: provider.connection,
       payerKey: owner,
       mintPublicKey: new PublicKey(WRAPPED_SOL_ADDRESS),
       owner,
@@ -154,10 +152,6 @@ export const createMissingMintAccounts = async ({
       provider,
       owner,
     );
-    _mintedOptionDestinationKey = optionTokenDestKey;
-    if (instruction) {
-      tx.add(instruction);
-    }
     _mintedOptionDestinationKey = optionTokenDestKey;
     if (instruction) {
       tx.add(instruction);

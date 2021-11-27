@@ -209,7 +209,11 @@ const UnsettledBalancesRow: React.FC<{
   const serumMarketAddress = serumMarketKey.toString();
   const { serumMarket } = serumMarkets[serumMarketAddress] || {};
   const optionMarket = marketsBySerumKey[serumMarketAddress];
-  const { settleFunds } = useSettleFunds(serumMarketAddress, optionMarket);
+  const { settleFunds } = useSettleFunds(
+    serumMarketAddress,
+    optionMarket,
+    optionKey,
+  );
   const unsettledFunds = useUnsettledFundsForMarket(serumMarketAddress);
 
   if (

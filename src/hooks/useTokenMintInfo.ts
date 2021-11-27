@@ -17,16 +17,26 @@ export const useTokenMintInfo = (
   const { tokenMap } = useAssetList();
   const token = useMemo(
     () =>
-      mint &&
-      new Token(connection, mint, TOKEN_PROGRAM_ID, null as unknown as Signer),
+      mint && !mint.equals(PublicKey.default)
+        ? new Token(
+            connection,
+            mint,
+            TOKEN_PROGRAM_ID,
+            null as unknown as Signer,
+          )
+        : null,
     [connection, mint],
   );
   const [mintInfo, setMintInfo] = useState<MintInfo | null>(null);
 
   useEffect(() => {
-    if (!token) {
+    if (!token || !mint || mint.equals(PublicKey.default)) {
       return;
     }
+    // Flag for keeping track of when the effect has been cleaned up.
+    // This often happens when the mint changes and likely as a result
+    // of the network changing.
+    let bail = false;
     const tokenInMemory = tokenMap[mint?.toString() ?? ''];
     if (tokenInMemory) {
       // Maybe we don't need this optimization, but if the token is within
@@ -44,11 +54,19 @@ export const useTokenMintInfo = (
       try {
         // TODO cache in Recoil
         const _mintInfo = await token.getMintInfo();
-        setMintInfo(_mintInfo);
+        if (!bail) {
+          setMintInfo(_mintInfo);
+        }
       } catch (err) {
-        pushErrorNotification(err);
+        if (!bail) {
+          pushErrorNotification(err);
+        }
       }
     })();
+
+    return () => {
+      bail = true;
+    };
   }, [mint, pushErrorNotification, token, tokenMap]);
 
   return mintInfo;

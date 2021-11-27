@@ -9,7 +9,7 @@ import { useAmericanPsyOptionsProgram } from '../useAmericanPsyOptionsProgram';
  */
 export const useLoadOptionMarkets = (): void => {
   const program = useAmericanPsyOptionsProgram();
-  const upsertOptions = useUpsertOptions();
+  const upsertOptions = useUpsertOptions(true);
 
   useEffect(() => {
     (async () => {

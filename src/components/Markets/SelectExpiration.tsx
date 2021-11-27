@@ -9,7 +9,9 @@ import {
 import { SelectBN } from '../Select';
 
 const formatDate = (val: BN) =>
-  `${moment(val.toNumber() * 1000).format('ll')} | 23:59:59 UTC`;
+  `${moment(val.toNumber() * 1000)
+    .utc()
+    .format('LLL')} UTC`;
 
 export const SelectExpiration: React.VFC = () => {
   const [_expirationUnixTimestamp, setExpiration] = useRecoilState(

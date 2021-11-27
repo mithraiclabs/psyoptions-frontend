@@ -70,6 +70,9 @@ export const batchSerumMarkets = async (
   // so this should not affect perf too much
   await Promise.all(
     Object.keys(serumPrograms).map(async (key) => {
+      if (!key || key === 'undefined') {
+        return;
+      }
       const { addresses } = serumPrograms[key];
       const programId = new PublicKey(key);
       // Load all of the MarketState data
@@ -88,9 +91,11 @@ export const batchSerumMarkets = async (
         throw new Error('Markets not found');
       }
       // decode all of the markets
-      const decoded = marketInfos.map((accountInfo) =>
-        Market.getLayout(programId).decode(accountInfo?.data),
-      );
+      const decoded = marketInfos
+        .filter((a) => !!a)
+        .map((accountInfo) =>
+          Market.getLayout(programId).decode(accountInfo?.data),
+        );
 
       const mintKeys: PublicKey[] = [];
       const orderbookKeys: PublicKey[] = [];

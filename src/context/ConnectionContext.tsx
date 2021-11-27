@@ -10,7 +10,6 @@ import { useRecoilState } from 'recoil';
 import { DISALLOWED_COUNTRIES, useCountry } from '../hooks/useCountry';
 import { ClusterName } from '../types';
 import { atom } from 'recoil';
-import { useResetOptionsState } from '../recoil';
 
 // Default to devnet
 const DEVNET = networks[1];
@@ -42,7 +41,6 @@ const ConnectionProvider: React.FC = ({ children }) => {
   const countryCode = useCountry();
   const isDisallowed = DISALLOWED_COUNTRIES.includes(countryCode ?? '');
   const [endpoint, setEndpoint] = useRecoilState(activeNetwork);
-  const resetOptionState = useResetOptionsState();
 
   const [connection, setConnection] = useState(
     new Connection(endpoint.url, {
@@ -53,13 +51,12 @@ const ConnectionProvider: React.FC = ({ children }) => {
 
   const handleSetEndpoint = useCallback(
     (newEndpoint) => {
-      resetOptionState();
       // Update both endpoint and connection state valuse in the same function
       // Will prevent extra rerenders of components that depend on both endpoint and connection
       setEndpoint(newEndpoint);
       setConnection(new Connection(newEndpoint.url, 'confirmed'));
     },
-    [resetOptionState, setEndpoint],
+    [setEndpoint],
   );
 
   useEffect(() => {

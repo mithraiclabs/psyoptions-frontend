@@ -106,7 +106,9 @@ const NotificationsProvider: React.FC = ({ children }) => {
     (error: Error | InstructionErrorResponse | string) => {
       let content;
       // Log the error for dev debugging purposes
-      console.error(error);
+      if (process.env.NODE_ENV !== 'production') {
+        console.error(error);
+      }
       if (error instanceof TransactionError) {
         const { errorMessage } = parseInstructionError(error);
         content = {

@@ -6,12 +6,19 @@ import _uniqby from 'lodash.uniqby';
 import {
   atom,
   atomFamily,
+  DefaultValue,
   selector,
   useRecoilTransaction_UNSTABLE,
 } from 'recoil';
 
 const defaultExpiration = new BN(0);
 const defaultUnderlying = new BN(0);
+
+/**
+ * Assets that should not be used as the underlying asset (i.e. USDC).
+ * - Mainnet USDC
+ */
+const UNDERLYING_BLACKLIST = ['EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'];
 
 /**
  * Store each option by PublicKey string.
@@ -208,15 +215,28 @@ export const useResetOptionsState = () =>
  * Upserts Options into the optionsMap atomFamily. Also initializes
  * other state based on the results
  */
-export const useUpsertOptions = () =>
+export const useUpsertOptions = (_reset = false) =>
   useRecoilTransaction_UNSTABLE<[ProgramAccount<OptionMarket>[]]>(
-    ({ get, set }) =>
+    ({ get, set, reset }) =>
       (_optionAccounts) => {
+        const nowInSeconds = Date.now() / 1000;
+        const nowBN = new BN(nowInSeconds);
+        if (_reset) {
+          // Reset the option state prior to adding options
+          const _optionIds = get(optionsIds);
+          _optionIds.forEach((id) => reset(optionsMap(id)));
+          reset(optionsIds);
+          reset(underlyingMint);
+          reset(quoteMint);
+          reset(expirationUnixTimestamp);
+          reset(underlyingAmountPerContract);
+        }
         // loop over fetched options and insert into state in a single recoil transaction
         const optionKeys = _optionAccounts.map((optionAccount) =>
           optionAccount.publicKey.toString(),
         );
         set(optionsIds, optionKeys);
+
         const underlyingCountMap: Record<string, number> = {};
         const quoteCountMap: Record<string, number> = {};
         _optionAccounts.forEach((optionAcount) => {
@@ -225,48 +245,47 @@ export const useUpsertOptions = () =>
             ...optionAcount.account,
             key: optionAcount.publicKey,
           });
-          // count underlying and quote mints to determine most used
-          const optionUnderlyingMintString =
-            optionAcount.account.underlyingAssetMint.toString();
-          const optionQuoteMintString =
-            optionAcount.account.quoteAssetMint.toString();
-          underlyingCountMap[optionUnderlyingMintString] =
-            (underlyingCountMap[optionUnderlyingMintString] ?? 0) + 1;
-          quoteCountMap[optionQuoteMintString] =
-            (quoteCountMap[optionQuoteMintString] ?? 0) + 1;
+          if (optionAcount.account.expirationUnixTimestamp.lt(nowBN)) {
+            // count underlying and quote mints to determine most used only for future options.
+            const optionUnderlyingMintString =
+              optionAcount.account.underlyingAssetMint.toString();
+            const optionQuoteMintString =
+              optionAcount.account.quoteAssetMint.toString();
+            underlyingCountMap[optionUnderlyingMintString] =
+              (underlyingCountMap[optionUnderlyingMintString] ?? 0) + 1;
+            quoteCountMap[optionQuoteMintString] =
+              (quoteCountMap[optionQuoteMintString] ?? 0) + 1;
+          }
         });
 
         let _underlyingMint = get(underlyingMint);
         let _quoteMint = get(quoteMint);
-        if (!_underlyingMint || _underlyingMint.equals(PublicKey.default)) {
+        if (
+          !_underlyingMint ||
+          _underlyingMint instanceof DefaultValue ||
+          _underlyingMint.equals(PublicKey.default)
+        ) {
           // only overwrite underlyingMint when it is set to the default PublicKey
-          const mostUsedUnderlying = Object.entries(underlyingCountMap).reduce(
-            (acc, entry) => {
-              if (entry[1] > underlyingCountMap[acc]) {
-                return entry[0];
-              }
-              return acc;
-            },
-            Object.keys(underlyingCountMap)[0],
-          );
+          const sortedUnderlyingAssets = Object.entries(underlyingCountMap)
+            .filter((entry) => !UNDERLYING_BLACKLIST.includes(entry[0]))
+            .sort((a, b) => b[1] - a[1]);
+          const mostUsedUnderlying = sortedUnderlyingAssets[0]?.[0];
           _underlyingMint = new PublicKey(mostUsedUnderlying);
           set(underlyingMint, _underlyingMint);
         }
-        if (!_quoteMint || _quoteMint.equals(PublicKey.default)) {
+        if (
+          !_quoteMint ||
+          _quoteMint instanceof DefaultValue ||
+          _quoteMint.equals(PublicKey.default)
+        ) {
           // only overwrite quoteMint when it is set to the default PublicKey
-          const mostUsedQuote = Object.entries(quoteCountMap).reduce(
-            (acc, entry) => {
-              if (entry[1] > quoteCountMap[acc]) {
-                return entry[0];
-              }
-              return acc;
-            },
-            Object.keys(quoteCountMap)[0],
+          const sortedQuoteAssets = Object.entries(quoteCountMap).sort(
+            (a, b) => b[1] - a[1],
           );
+          const mostUsedQuote = sortedQuoteAssets[0]?.[0];
           _quoteMint = new PublicKey(mostUsedQuote);
           set(quoteMint, _quoteMint);
         }
-        const nowInSeconds = Date.now() / 1000;
         const filteredOptionAccounts = _optionAccounts.filter(
           (optionAccount) =>
             optionAccount.account.expirationUnixTimestamp.toNumber() >
@@ -277,7 +296,10 @@ export const useUpsertOptions = () =>
             optionAccount.account.quoteAssetMint.equals(_quoteMint),
         );
         let expiration = get(expirationUnixTimestamp);
-        if (expiration.eq(defaultExpiration)) {
+        if (
+          expiration instanceof DefaultValue ||
+          expiration.eq(defaultExpiration)
+        ) {
           // set expiration
           const expCount = filteredOptionAccounts.reduce(
             (acc, optionAccount) => {
@@ -298,7 +320,10 @@ export const useUpsertOptions = () =>
           set(expirationUnixTimestamp, expiration);
         }
         const underlyingAmountSize = get(underlyingAmountPerContract);
-        if (underlyingAmountSize.eq(defaultUnderlying)) {
+        if (
+          underlyingAmountSize instanceof DefaultValue ||
+          underlyingAmountSize.eq(defaultUnderlying)
+        ) {
           const firstOptionAccount = filteredOptionAccounts.find(
             (optionAccount) =>
               optionAccount.account.expirationUnixTimestamp.eq(expiration),

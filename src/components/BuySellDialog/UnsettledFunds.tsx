@@ -8,20 +8,26 @@ import { useRecoilValue } from 'recoil';
 import { quoteMint } from '../../recoil';
 import { useTokenMintInfo } from '../../hooks/useTokenMintInfo';
 import { useTokenByMint } from '../../hooks/useNetworkTokens';
+import { PublicKey } from '@solana/web3.js';
 
 /**
  * UI for showing the user their unsettled funds for an single option market.
  */
 export const UnsettledFunds: React.VFC<{
   serumMarketAddress: string;
-}> = ({ serumMarketAddress }) => {
+  optionKey: PublicKey | undefined;
+}> = ({ optionKey, serumMarketAddress }) => {
   const _quoteMint = useRecoilValue(quoteMint);
   const quoteMintInfo = useTokenMintInfo(_quoteMint);
   const quoteAsset = useTokenByMint(_quoteMint ?? '');
   const { marketsBySerumKey } = useOptionsMarkets();
   const unsettledFunds = useUnsettledFundsForMarket(serumMarketAddress);
   const optionMarket = marketsBySerumKey[serumMarketAddress];
-  const { settleFunds } = useSettleFunds(serumMarketAddress, optionMarket);
+  const { settleFunds } = useSettleFunds(
+    serumMarketAddress,
+    optionMarket,
+    optionKey,
+  );
   const [loading, setLoading] = useState(false);
   const _settleFunds = useCallback(async () => {
     setLoading(true);

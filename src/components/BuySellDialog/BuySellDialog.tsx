@@ -612,7 +612,10 @@ const BuySellDialog: React.VFC<{
                       underlyingAsset?.symbol
                     }) until the contract expires or is exercised.`}
                   </Box>
-                  <UnsettledFunds serumMarketAddress={serumAddress} />
+                  <UnsettledFunds
+                    optionKey={option?.key}
+                    serumMarketAddress={serumAddress}
+                  />
                 </>
               ) : !wallet?.connected ? (
                 <>

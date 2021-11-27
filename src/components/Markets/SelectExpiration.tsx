@@ -3,7 +3,7 @@ import moment from 'moment';
 import React, { useCallback } from 'react';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import {
-  expirationUnixTimestamp,
+  selectExpirationWithUnderlyingAmount,
   selectFutureExpirationsByUnderlyingAndQuote,
 } from '../../recoil';
 import { SelectBN } from '../Select';
@@ -15,7 +15,7 @@ const formatDate = (val: BN) =>
 
 export const SelectExpiration: React.VFC = () => {
   const [_expirationUnixTimestamp, setExpiration] = useRecoilState(
-    expirationUnixTimestamp,
+    selectExpirationWithUnderlyingAmount,
   );
   const expirations = useRecoilValue(
     selectFutureExpirationsByUnderlyingAndQuote,

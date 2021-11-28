@@ -8,7 +8,8 @@ import useConnection from './useConnection';
 import useNotifications from './useNotifications';
 import { NotificationSeverity } from '../types';
 import { useAmericanPsyOptionsProgram } from './useAmericanPsyOptionsProgram';
-import { useConnectedWallet } from "@saberhq/use-solana";
+import { useConnectedWallet } from '@saberhq/use-solana';
+import { useFetchAndUpsertOption } from '../recoil';
 
 type InitMarketParams = {
   amountPerContract: BigNumber;
@@ -43,6 +44,7 @@ export const useInitializeMarket = (): ((
   const { pushNotification, pushErrorNotification } = useNotifications();
   const { endpoint, dexProgramId } = useConnection();
   const wallet = useConnectedWallet();
+  const fetchAndUpsertOption = useFetchAndUpsertOption();
 
   return useCallback(
     async ({
@@ -97,6 +99,9 @@ export const useInitializeMarket = (): ((
           underlyingMint: underlyingMintKey,
         });
 
+        // Add the newly created option to state
+        fetchAndUpsertOption(optionMarketKey);
+
         const marketData: MarketInitRet = {
           amountPerContract,
           amountPerContractBN,
@@ -132,6 +137,7 @@ export const useInitializeMarket = (): ((
       pushErrorNotification,
       endpoint?.programId,
       pushNotification,
+      fetchAndUpsertOption,
       dexProgramId,
     ],
   );

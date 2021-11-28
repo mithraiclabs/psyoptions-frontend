@@ -1,7 +1,7 @@
 import { OptionMarket } from '@mithraic-labs/psy-american';
 import { ProgramAccount } from '@project-serum/anchor';
 import { useEffect } from 'react';
-import { useUpsertOptions } from '../../recoil';
+import { useInsertOptions } from '../../recoil';
 import { useAmericanPsyOptionsProgram } from '../useAmericanPsyOptionsProgram';
 
 /**
@@ -9,7 +9,7 @@ import { useAmericanPsyOptionsProgram } from '../useAmericanPsyOptionsProgram';
  */
 export const useLoadOptionMarkets = (): void => {
   const program = useAmericanPsyOptionsProgram();
-  const upsertOptions = useUpsertOptions(true);
+  const upsertOptions = useInsertOptions(true);
 
   useEffect(() => {
     (async () => {

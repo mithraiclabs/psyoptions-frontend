@@ -279,30 +279,10 @@ export const selectOptionsByMarketsPageParams = selector({
 });
 
 /**
- * Reset all of the options state.
- *
- * Unfortunately cannot use useResetRecoilState on the atomFamily :/
+ * Inserts Options into the optionsMap atomFamily. Also initializes
+ * other state based on the results.
  */
-export const useResetOptionsState = () =>
-  useRecoilTransaction_UNSTABLE(
-    ({ get, reset }) =>
-      () => {
-        const _optionIds = get(optionsIds);
-        _optionIds.forEach((id) => reset(optionsMap(id)));
-        reset(optionsIds);
-        reset(underlyingMint);
-        reset(quoteMint);
-        reset(expirationUnixTimestamp);
-        reset(underlyingAmountPerContract);
-      },
-    [],
-  );
-
-/**
- * Upserts Options into the optionsMap atomFamily. Also initializes
- * other state based on the results
- */
-export const useUpsertOptions = (_reset = false) =>
+export const useInsertOptions = (_reset = false) =>
   useRecoilTransaction_UNSTABLE<[ProgramAccount<OptionMarket>[]]>(
     ({ get, set, reset }) =>
       (_optionAccounts) => {
@@ -420,6 +400,17 @@ export const useUpsertOptions = (_reset = false) =>
             firstOptionAccount?.account.underlyingAmountPerContract,
           );
         }
+      },
+    [],
+  );
+
+export const useUpsertOption = () =>
+  useRecoilTransaction_UNSTABLE<[OptionMarketWithKey]>(
+    ({ set }) =>
+      (option) => {
+        const optionKeyStr = option.key.toString();
+        set(optionsIds, (curVal) => [...curVal, optionKeyStr]);
+        set(optionsMap(optionKeyStr), option);
       },
     [],
   );

@@ -13,11 +13,7 @@ import {
   TableRow,
 } from '@material-ui/core';
 import ExerciseDialog from '../ExerciseDialog';
-import useAssetList from '../../../hooks/useAssetList';
-import {
-  formatExpirationTimestamp,
-  formatExpirationTimestampDate,
-} from '../../../utils/format';
+import { formatExpirationTimestamp } from '../../../utils/format';
 import { TokenAccount } from '../../../types';
 import { usePrices } from '../../../context/PricesContext';
 import useScreenSize from '../../../hooks/useScreenSize';
@@ -114,9 +110,6 @@ const PositionRow: React.VFC<{
   const underlyingAssetSymbol = isCall
     ? optionUnderlyingAssetSymbol
     : optionQuoteAssetSymbol;
-  const quoteAssetSymbol = isCall
-    ? optionQuoteAssetSymbol
-    : optionUnderlyingAssetSymbol;
   const price = prices[underlyingAssetSymbol];
   const underlyingAssetLogo = isCall
     ? optionUnderlyingAsset?.logoURI
@@ -134,21 +127,11 @@ const PositionRow: React.VFC<{
 
   return (
     <>
-      {/* <ExerciseDialog
+      <ExerciseDialog
         open={exerciseDialogOpen}
         onClose={() => setExerciseDialogOpen(false)}
-        positionSize={size}
-        uAssetSymbol={underlyingAssetSymbol}
-        uAssetMintAddress={row?.uAssetMintAddress}
-        qAssetSymbol={quoteAssetSymbol}
-        qAssetMintAddress={row?.qAssetMintAddress}
-        optionType={optionType}
-        contractSize={contractSize}
-        strike={strike.toString()}
-        expiration={formatExpirationTimestampDate(row.expiration)}
-        price={price}
-        option={row.market}
-      /> */}
+        optionKey={optionKey}
+      />
       <TableRow tabIndex={-1} key={optionKey.toString()}>
         {formFactor === 'desktop' ? (
           <>

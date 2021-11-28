@@ -22,7 +22,6 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-// TODO handle the case where the writer has multiple underlying asset accounts
 const OpenPositionsTable: React.VFC<{
   className: string;
 }> = ({ className }) => {

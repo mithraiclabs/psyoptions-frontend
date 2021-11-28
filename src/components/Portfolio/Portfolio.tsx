@@ -186,7 +186,7 @@ const Portfolio: React.VFC = () => {
                     Bought Options
                   </Box>
                   <Box fontSize={isMobile ? '10px' : '13px'}>
-                    {positions.length} open
+                    {Object.keys(positions).length} open
                   </Box>
                 </Box>
               </Box>

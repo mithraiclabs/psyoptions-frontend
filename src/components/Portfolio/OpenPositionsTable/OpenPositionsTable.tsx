@@ -1,4 +1,4 @@
-import React, { memo, useState } from 'react';
+import React, { memo, useMemo, useState } from 'react';
 import {
   Box,
   TableContainer,
@@ -10,10 +10,11 @@ import {
 import { useConnectedWallet } from '@saberhq/use-solana';
 import OpenPositionsTableHeader from './OpenPositionsTableHeader';
 import PositionRow from './PositionRow';
-import { Position } from '../Portfolio';
 import { TCell } from '../../StyledComponents/Table/TableStyles';
 import GokiButton from '../../GokiButton';
 import CSS from 'csstype';
+import useOpenPositions from '../../../hooks/useOpenPositions';
+import { PublicKey } from '@solana/web3.js';
 
 const useStyles = makeStyles((theme) => ({
   walletButtonCell: {
@@ -23,13 +24,21 @@ const useStyles = makeStyles((theme) => ({
 
 // TODO handle the case where the writer has multiple underlying asset accounts
 const OpenPositionsTable: React.VFC<{
-  positions: Position[];
   className: string;
-}> = ({ className, positions }) => {
+}> = ({ className }) => {
+  const positions = useOpenPositions();
   const classes = useStyles();
   const wallet = useConnectedWallet();
   const [page] = useState(0);
   const [rowsPerPage] = useState(10);
+  const positionsList = useMemo(
+    () =>
+      Object.keys(positions).map((key) => ({
+        accounts: positions[key],
+        optionKey: new PublicKey(key),
+      })),
+    [positions],
+  );
 
   return (
     <Box style={{ zIndex: 1 }}>
@@ -50,13 +59,14 @@ const OpenPositionsTable: React.VFC<{
                 </TCell>
               </TableRow>
             ) : (
-              positions
+              positionsList
                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                .map((row) => (
+                .map((position) => (
                   <PositionRow
-                    key={row.market.optionMintKey.toString()}
-                    row={row}
+                    accounts={position.accounts}
+                    key={position.optionKey.toString()}
                     className={className}
+                    optionKey={position.optionKey}
                   />
                 ))
             )}

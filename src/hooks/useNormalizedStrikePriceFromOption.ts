@@ -10,9 +10,15 @@ const TWO_BIGNUM = new BigNumber(2);
 /**
  * Calculate the strike price of an option using the selected underlying
  * and quote assets.
+ *
+ * @param `optionKey`
+ * @param `overrideIsCall` is an optional paramter to specify whether
+ * the option should be treated as a Call. If not specified, the hook
+ * will use the `underlyingMint` recoil state to determine if it's a Call/Put.
  */
 export const useNormalizedStrikePriceFromOption = (
   optionKey: string,
+  overrideIsCall?: boolean,
 ): BigNumber => {
   const option = useRecoilValue(optionsMap(optionKey));
   const _underlyingMint = useRecoilValue(underlyingMint);
@@ -24,10 +30,18 @@ export const useNormalizedStrikePriceFromOption = (
   );
 
   return useMemo(() => {
-    if (!option || !_underlyingMint) {
+    // eslint-disable-next-line eqeqeq
+    if (!option) {
       return ZERO_BIGNUM;
     }
-    const isCall = option.underlyingAssetMint.equals(_underlyingMint);
+    let isCall = overrideIsCall;
+    // eslint-disable-next-line eqeqeq
+    if (isCall == undefined) {
+      // if isCall is undefined or null, fallback to checking the
+      // `underlyingMint`.
+      isCall =
+        !_underlyingMint || option.underlyingAssetMint.equals(_underlyingMint);
+    }
     const normalizedUnderlyingAmount = isCall
       ? normalizeUnderlyingAmountBN(option.underlyingAmountPerContract)
       : normalizeQuoteAmountBN(option.quoteAmountPerContract);
@@ -46,5 +60,6 @@ export const useNormalizedStrikePriceFromOption = (
     normalizeQuoteAmountBN,
     normalizeUnderlyingAmountBN,
     option,
+    overrideIsCall,
   ]);
 };

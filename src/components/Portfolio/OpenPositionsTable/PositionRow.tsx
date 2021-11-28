@@ -1,4 +1,4 @@
-import React, { Fragment, useCallback, useState } from 'react';
+import React, { Fragment, useCallback, useMemo, useState } from 'react';
 import clsx from 'clsx';
 import KeyboardArrowDown from '@material-ui/icons/KeyboardArrowDown';
 import KeyboardArrowUp from '@material-ui/icons/KeyboardArrowUp';
@@ -12,17 +12,24 @@ import {
   TableCell,
   TableRow,
 } from '@material-ui/core';
-import BigNumber from 'bignumber.js';
 import ExerciseDialog from '../ExerciseDialog';
 import useAssetList from '../../../hooks/useAssetList';
 import {
   formatExpirationTimestamp,
   formatExpirationTimestampDate,
 } from '../../../utils/format';
-import { OptionMarket, OptionType, TokenAccount } from '../../../types';
+import { TokenAccount } from '../../../types';
 import { usePrices } from '../../../context/PricesContext';
 import useScreenSize from '../../../hooks/useScreenSize';
 import { TCell, TMobileCell } from '../../StyledComponents/Table/TableStyles';
+import { PublicKey } from '@solana/web3.js';
+import { useRecoilValue } from 'recoil';
+import { optionsMap } from '../../../recoil';
+import { BN } from '@project-serum/anchor';
+import { useNormalizedStrikePriceFromOption } from '../../../hooks/useNormalizedStrikePriceFromOption';
+import { useTokenByMint } from '../../../hooks/useNetworkTokens';
+import { useOptionIsCall } from '../../../hooks/useOptionIsCall';
+import { useOptionContractSize } from '../../../hooks/useOptionContractSize';
 
 const useStyles = makeStyles((theme) => ({
   root: {},
@@ -66,53 +73,57 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const PositionRow: React.VFC<{
-  row: {
-    accounts: TokenAccount[];
-    assetPair: string;
-    expiration: number;
-    market: OptionMarket;
-    size: number;
-    strikePrice: string | undefined;
-    qAssetSymbol: string;
-    qAssetMintAddress: string;
-    uAssetSymbol: string;
-    uAssetMintAddress: string;
-    amountPerContract: BigNumber;
-    quoteAmountPerContract: BigNumber;
-  };
+  accounts: TokenAccount[];
+  optionKey: PublicKey;
   className: string;
-}> = ({ row, className }) => {
+}> = ({ accounts, className, optionKey }) => {
+  const { formFactor } = useScreenSize();
+  const option = useRecoilValue(optionsMap(optionKey.toString()));
   const classes = useStyles();
   const [visible, setVisible] = useState(false);
-  const { supportedAssets } = useAssetList();
   const { prices } = usePrices();
   const [exerciseDialogOpen, setExerciseDialogOpen] = useState(false);
-  const { formFactor } = useScreenSize();
-
-  const nowInSeconds = Date.now() / 1000;
-  const expired = row.expiration <= nowInSeconds;
-
-  const optionType = row?.uAssetSymbol?.match(/^USD/)
-    ? OptionType.PUT
-    : OptionType.CALL;
-
-  const price =
-    optionType === OptionType.CALL
-      ? prices[row?.uAssetSymbol]
-      : prices[row?.qAssetSymbol];
-
-  const strike =
-    optionType === OptionType.PUT
-      ? row.amountPerContract.dividedBy(row.quoteAmountPerContract).toString()
-      : row.market.strike.toString(10);
-
-  const contractSize =
-    optionType === OptionType.CALL
-      ? row.amountPerContract.toString()
-      : row.quoteAmountPerContract.toString();
+  const optionUnderlyingAsset = useTokenByMint(
+    option?.underlyingAssetMint ?? '',
+  );
+  const optionQuoteAsset = useTokenByMint(option?.quoteAssetMint ?? '');
+  // NOTE: since there can be MANY underlying assets in these PositionRows
+  // we make the assumption that it is a Put whenever the option's
+  // underlying asset is USDC. Otherwise it is a call.
+  const isCall = useOptionIsCall(optionKey);
+  const contractSize = useOptionContractSize(optionKey);
+  const strike = useNormalizedStrikePriceFromOption(
+    optionKey.toString(),
+    isCall,
+  );
+  const expired = useMemo(() => {
+    const nowInSeconds = Date.now() / 1000;
+    return !!option?.expirationUnixTimestamp.lt(new BN(nowInSeconds));
+  }, [option?.expirationUnixTimestamp]);
+  const size = useMemo(
+    () => accounts.reduce((acc, account) => (acc += account.amount), 0),
+    [accounts],
+  );
+  const optionUnderlyingAssetSymbol =
+    optionUnderlyingAsset?.symbol ??
+    option?.underlyingAssetMint.toString() ??
+    '';
+  const optionQuoteAssetSymbol =
+    optionQuoteAsset?.symbol ?? option?.quoteAssetMint.toString() ?? '';
+  // must normalize the underlying/quote assets based on whether the option is a call
+  const underlyingAssetSymbol = isCall
+    ? optionUnderlyingAssetSymbol
+    : optionQuoteAssetSymbol;
+  const quoteAssetSymbol = isCall
+    ? optionQuoteAssetSymbol
+    : optionUnderlyingAssetSymbol;
+  const price = prices[underlyingAssetSymbol];
+  const underlyingAssetLogo = isCall
+    ? optionUnderlyingAsset?.logoURI
+    : optionQuoteAsset?.logoURI;
 
   const onRowClick = () => {
-    if (row.accounts.length > 1) {
+    if (accounts.length > 1) {
       setVisible((vis) => !vis);
     }
   };
@@ -121,52 +132,44 @@ const PositionRow: React.VFC<{
     setExerciseDialogOpen(true);
   }, []);
 
-  const uAssetSymbol =
-    optionType === 'put' ? row?.qAssetSymbol : row?.uAssetSymbol;
-
-  const qAssetSymbol =
-    optionType === 'put' ? row?.uAssetSymbol : row?.qAssetSymbol;
-
-  const uAssetImage = supportedAssets.find(
-    (asset) =>
-      asset?.mintAddress ===
-      (optionType === 'put' ? row?.qAssetMintAddress : row?.uAssetMintAddress),
-  )?.icon;
-
   return (
     <>
-      <ExerciseDialog
+      {/* <ExerciseDialog
         open={exerciseDialogOpen}
         onClose={() => setExerciseDialogOpen(false)}
-        positionSize={row.size}
-        uAssetSymbol={uAssetSymbol}
+        positionSize={size}
+        uAssetSymbol={underlyingAssetSymbol}
         uAssetMintAddress={row?.uAssetMintAddress}
-        qAssetSymbol={qAssetSymbol}
+        qAssetSymbol={quoteAssetSymbol}
         qAssetMintAddress={row?.qAssetMintAddress}
         optionType={optionType}
         contractSize={contractSize}
-        strike={strike}
+        strike={strike.toString()}
         expiration={formatExpirationTimestampDate(row.expiration)}
         price={price}
         option={row.market}
-      />
-      <TableRow tabIndex={-1} key={row.market.optionMintKey.toString()}>
+      /> */}
+      <TableRow tabIndex={-1} key={optionKey.toString()}>
         {formFactor === 'desktop' ? (
           <>
             <TCell>
               <Box className={classes.row}>
-                <Avatar className={classes.avatar} src={uAssetImage}>
-                  {uAssetSymbol.slice(0, 1)}
+                <Avatar className={classes.avatar} src={underlyingAssetLogo}>
+                  {underlyingAssetSymbol.slice(0, 1)}
                 </Avatar>
-                <Box pl={1}>{uAssetSymbol}</Box>
+                <Box pl={1}>{underlyingAssetSymbol}</Box>
               </Box>
             </TCell>
-            <TCell>{optionType}</TCell>
-            <TCell>{strike}</TCell>
+            <TCell>{isCall ? 'Call' : 'Put'}</TCell>
+            <TCell>{strike.toString()}</TCell>
             <TCell>{price ? `$${price.toFixed(2)}` : '-'}</TCell>
-            <TCell>{contractSize}</TCell>
-            <TCell>{row.size}</TCell>
-            <TCell>{formatExpirationTimestamp(row.expiration)}</TCell>
+            <TCell>{contractSize.toString()}</TCell>
+            <TCell>{size}</TCell>
+            <TCell>
+              {formatExpirationTimestamp(
+                option?.expirationUnixTimestamp.toNumber() ?? 0,
+              )}
+            </TCell>
             <TCell style={{ width: '0.1%', whiteSpace: 'nowrap' }}>
               <Box className={classes.minRow}>
                 {expired ? (
@@ -183,7 +186,7 @@ const PositionRow: React.VFC<{
                     </Button>
                   </Box>
                 )}
-                {row.accounts.length > 1 && (
+                {accounts.length > 1 && (
                   <IconButton onClick={onRowClick}>
                     {visible ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
                   </IconButton>
@@ -201,23 +204,25 @@ const PositionRow: React.VFC<{
                   formFactor === 'mobile' && classes.mobileFont,
                 )}
               >
-                <Avatar className={classes.avatar} src={uAssetImage}>
-                  {uAssetSymbol.slice(0, 1)}
+                <Avatar className={classes.avatar} src={underlyingAssetLogo}>
+                  {underlyingAssetSymbol.slice(0, 1)}
                 </Avatar>
                 <Box className={classes.rowWrap}>
                   <Box
                     pl={formFactor === 'mobile' ? 1 : 2}
                     className={classes.column}
                   >
-                    <Box>{`${uAssetSymbol} | ${optionType}`}</Box>
-                    <Box>{`Strike: ${strike}`}</Box>
+                    <Box>{`${underlyingAssetSymbol} | ${
+                      isCall ? 'Call' : 'Put'
+                    }`}</Box>
+                    <Box>{`Strike: ${strike.toString()}`}</Box>
                   </Box>
                   <Box
                     pl={formFactor === 'mobile' ? 1 : 2}
                     className={classes.column}
                   >
-                    <Box>{`Size: ${contractSize}`}</Box>
-                    <Box>{`Qty: ${row.size}`}</Box>
+                    <Box>{`Size: ${contractSize.toString()}`}</Box>
+                    <Box>{`Qty: ${size}`}</Box>
                   </Box>
                 </Box>
               </Box>
@@ -228,7 +233,9 @@ const PositionRow: React.VFC<{
                 formFactor === 'mobile' && classes.mobileFont,
               )}
             >
-              {formatExpirationTimestamp(row.expiration)}
+              {formatExpirationTimestamp(
+                option?.expirationUnixTimestamp.toNumber() ?? 0,
+              )}
             </TMobileCell>
             <TMobileCell
               style={{ width: '0.1%', whiteSpace: 'nowrap' }}
@@ -256,7 +263,7 @@ const PositionRow: React.VFC<{
                     </Button>
                   </Box>
                 )}
-                {row.accounts.length > 1 && (
+                {accounts.length > 1 && (
                   <IconButton onClick={onRowClick}>
                     {visible ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
                   </IconButton>
@@ -272,7 +279,7 @@ const PositionRow: React.VFC<{
           style={{ padding: 0, border: 'none' }}
         >
           <Collapse
-            key={`${row.market.optionMintKey}Collapsible`}
+            key={`${option?.optionMint.toString()}Collapsible`}
             in={visible}
             timeout="auto"
             unmountOnExit
@@ -280,7 +287,7 @@ const PositionRow: React.VFC<{
             style={{ display: 'block' }}
           >
             <td>
-              {row.accounts.map((account) => (
+              {accounts.map((account) => (
                 <Box
                   key={`${account?.pubKey}`}
                   className={clsx(
@@ -301,8 +308,8 @@ const PositionRow: React.VFC<{
                   )}
                   <Box>
                     {formFactor === 'desktop'
-                      ? contractSize
-                      : `Size: ${contractSize}`}
+                      ? contractSize.toString()
+                      : `Size: ${contractSize.toString()}`}
                   </Box>
                   <Box>
                     {formFactor === 'desktop'

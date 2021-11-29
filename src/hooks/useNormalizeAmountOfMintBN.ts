@@ -8,7 +8,7 @@ const TEN_BIGNUM = new BigNumber(10);
 const ZERO_BIGNUM = new BigNumber(10);
 
 export const useNormalizeAmountOfMintBN = (
-  mint: PublicKey | null,
+  mint: PublicKey | null | undefined,
 ): ((num: BN | undefined) => BigNumber) => {
   const mintInfo = useTokenMintInfo(mint);
 

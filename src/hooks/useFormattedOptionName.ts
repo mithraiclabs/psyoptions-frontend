@@ -24,7 +24,7 @@ export const useFormattedOptionName = (optionKey: PublicKey): string => {
     const optionQuoteAssetSymbol =
       optionQuoteAsset?.symbol ?? option?.quoteAssetMint.toString() ?? '';
     return `${
-      isCall ? optionQuoteAssetSymbol : optionUnderlyingAssetSymbol
+      isCall ? optionUnderlyingAssetSymbol : optionQuoteAssetSymbol
     } | ${formatExpirationTimestampDate(
       option?.expirationUnixTimestamp.toNumber() ?? 0,
     )} | ${isCall ? 'Call' : 'Put'}`;

@@ -16,7 +16,7 @@ import CSS from 'csstype';
 import useOpenPositions from '../../../hooks/useOpenPositions';
 import { PublicKey } from '@solana/web3.js';
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles(() => ({
   walletButtonCell: {
     textAlign: '-webkit-center' as CSS.Property.TextAlign,
   },

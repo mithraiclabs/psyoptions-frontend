@@ -8,17 +8,20 @@ import Divider from '@material-ui/core/Divider';
 import { PublicKey } from '@solana/web3.js';
 import BN from 'bn.js';
 import React, { useCallback, useState } from 'react';
+import { useRecoilValue } from 'recoil';
 import { useCloseWrittenOptionPostExpiration } from '../hooks/useCloseWrittenOptionPostExpiration';
-import { useDecimalsForMint } from '../hooks/useDecimalsForMint';
-import { OptionMarket, TokenAccount } from '../types';
-import { getOptionNameByMarket } from '../utils/format';
+import { useFormattedOptionName } from '../hooks/useFormattedOptionName';
+import { useTokenByMint } from '../hooks/useNetworkTokens';
+import { useNormalizeAmountOfMintBN } from '../hooks/useNormalizeAmountOfMintBN';
+import { optionsMap } from '../recoil';
+import { TokenAccount } from '../types';
 import DialogFullscreenMobile from './DialogFullscreenMobile';
 import { PlusMinusIntegerInput } from './PlusMinusIntegerInput';
 
 export const WrittenOptionsClaimUnderlyingDialog: React.VFC<{
   dismiss: () => void;
   numLeftToClaim: number;
-  option: OptionMarket;
+  optionKey: PublicKey;
   underlyingAssetDestKey: PublicKey;
   vaultBalance: BN;
   visible: boolean;
@@ -26,19 +29,28 @@ export const WrittenOptionsClaimUnderlyingDialog: React.VFC<{
 }> = ({
   dismiss,
   numLeftToClaim,
-  option,
+  optionKey,
   underlyingAssetDestKey,
   vaultBalance,
   visible,
   writerTokenAccount,
 }) => {
-  const underlyingAssetDecimals = useDecimalsForMint(
-    option.underlyingAssetMintKey,
+  const option = useRecoilValue(optionsMap(optionKey.toString()));
+  const optionName = useFormattedOptionName(optionKey);
+  const optionUnderlyingAsset = useTokenByMint(
+    option?.underlyingAssetMint ?? '',
   );
+  const optionUnderlyingAssetSymbol =
+    optionUnderlyingAsset?.symbol ??
+    option?.underlyingAssetMint.toString() ??
+    '';
   const [loading, setLoading] = useState(false);
   const [size, setSize] = useState<number | null>(1);
+  const normalizeOptionUnderlyingAmt = useNormalizeAmountOfMintBN(
+    option?.underlyingAssetMint,
+  );
   const closeOptionPostExpiration = useCloseWrittenOptionPostExpiration(
-    option,
+    optionKey,
     underlyingAssetDestKey,
     writerTokenAccount.pubKey,
   );
@@ -49,18 +61,16 @@ export const WrittenOptionsClaimUnderlyingDialog: React.VFC<{
     dismiss();
   }, [closeOptionPostExpiration, dismiss, size]);
 
-  const underlyingSize =
-    (size ?? 0) *
-    option.amountPerContractBN.toNumber() *
-    10 ** -underlyingAssetDecimals;
+  const underlyingSize = normalizeOptionUnderlyingAmt(
+    option?.underlyingAmountPerContract,
+  ).multipliedBy(size ?? 0);
 
-  const normalizedVaultBalance =
-    vaultBalance.toNumber() * 10 ** -underlyingAssetDecimals;
+  const normalizedVaultBalance = normalizeOptionUnderlyingAmt(vaultBalance);
   const max = Math.min(writerTokenAccount.amount, numLeftToClaim);
 
   return (
     <DialogFullscreenMobile onClose={dismiss} maxWidth="lg" open={visible}>
-      <DialogTitle>Claim {option.uAssetSymbol}</DialogTitle>
+      <DialogTitle>Claim {optionUnderlyingAssetSymbol}</DialogTitle>
       <DialogContent>
         <Box
           display="flex"
@@ -69,9 +79,10 @@ export const WrittenOptionsClaimUnderlyingDialog: React.VFC<{
           width={['100%', '100%', '680px']}
         >
           <Box flexDirection="column" width={['100%', '100%', '50%']}>
-            {getOptionNameByMarket(option)}
+            {optionName}
             <Box pt={1}>
-              Vault balance: {normalizedVaultBalance} {option.uAssetSymbol}
+              Vault balance: {normalizedVaultBalance.toString()}{' '}
+              {optionUnderlyingAssetSymbol}
             </Box>
             <Box py={1}>Writer Tokens held: {writerTokenAccount.amount}</Box>
             <Divider />
@@ -85,7 +96,7 @@ export const WrittenOptionsClaimUnderlyingDialog: React.VFC<{
               value={size}
             />
             <Box pt={2} style={{ fontSize: 12 }}>
-              {`Burn ${size} Writer Tokens to claim ${underlyingSize} ${option.uAssetSymbol}`}
+              {`Burn ${size} Writer Tokens to claim ${underlyingSize} ${optionUnderlyingAssetSymbol}`}
             </Box>
           </Box>
         </Box>

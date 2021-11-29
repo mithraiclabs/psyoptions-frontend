@@ -232,14 +232,7 @@ const Portfolio: React.VFC = () => {
               )}
             />
           )}
-          {selectedTab === 3 && (
-            <WrittenOptionsTable
-              className={clsx(
-                classes.desktopColumns,
-                !isDesktop && classes.mobileColumns,
-              )}
-            />
-          )}
+          {selectedTab === 3 && <WrittenOptionsTable />}
         </Box>
       </Page>
     </PricesProvider>

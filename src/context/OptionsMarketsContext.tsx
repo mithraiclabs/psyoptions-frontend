@@ -15,16 +15,20 @@ const OptionsMarketsContext = createContext<{
   setMarketsLoading: React.Dispatch<React.SetStateAction<boolean>>;
 }>({
   marketsByUiKey: {},
-  setMarkets: null,
+  setMarkets: () => {},
   marketsBySerumKey: {},
-  setMarketsBySerumKey: null,
+  setMarketsBySerumKey: () => {},
   marketsLoading: false,
-  setMarketsLoading: null,
+  setMarketsLoading: () => {},
 });
 
 const OptionsMarketsProvider: React.FC = ({ children }) => {
-  const [marketsByUiKey, setMarkets] = useState<Record<string, OptionMarket>>({});
-  const [marketsBySerumKey, setMarketsBySerumKey] = useState<Record<string, OptionMarket>>({});
+  const [marketsByUiKey, setMarkets] = useState<Record<string, OptionMarket>>(
+    {},
+  );
+  const [marketsBySerumKey, setMarketsBySerumKey] = useState<
+    Record<string, OptionMarket>
+  >({});
   const [marketsLoading, setMarketsLoading] = useState(false);
 
   return (

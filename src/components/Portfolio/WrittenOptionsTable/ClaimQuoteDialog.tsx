@@ -10,15 +10,18 @@ import { PublicKey } from '@solana/web3.js';
 import React, { useCallback, useState } from 'react';
 import DialogFullscreenMobile from '../../DialogFullscreenMobile';
 import { PlusMinusIntegerInput } from '../../PlusMinusIntegerInput';
-import { useDecimalsForMint } from '../../../hooks/useDecimalsForMint';
 import { useExchangeWriterTokenForQuote } from '../../../hooks/useExchangeWriterTokenForQuote';
-import { OptionMarket, TokenAccount } from '../../../types';
-import { getOptionNameByMarket } from '../../../utils/format';
+import { TokenAccount } from '../../../types';
+import { useRecoilValue } from 'recoil';
+import { optionsMap } from '../../../recoil';
+import { useNormalizeAmountOfMintBN } from '../../../hooks/useNormalizeAmountOfMintBN';
+import { useTokenByMint } from '../../../hooks/useNetworkTokens';
+import { useFormattedOptionName } from '../../../hooks/useFormattedOptionName';
 
 export const ClaimQuoteDialog: React.VFC<{
   dismiss: () => void;
   numLeftToClaim: number;
-  option: OptionMarket;
+  optionKey: PublicKey;
   quoteAssetDestKey: PublicKey;
   vaultBalance: BN;
   visible: boolean;
@@ -26,19 +29,26 @@ export const ClaimQuoteDialog: React.VFC<{
 }> = ({
   dismiss,
   numLeftToClaim,
-  option,
+  optionKey,
   quoteAssetDestKey,
   vaultBalance,
   visible,
   writerTokenAccount,
 }) => {
-  const quoteAssetDecimals = useDecimalsForMint(option.quoteAssetMintKey);
+  const option = useRecoilValue(optionsMap(optionKey.toString()));
   const [loading, setLoading] = useState(false);
   const [size, setSize] = useState<number | null>(1);
+  const optionName = useFormattedOptionName(optionKey);
+  const optionQuoteAsset = useTokenByMint(option?.quoteAssetMint ?? '');
+  const optionQuoteAssetSymbol =
+    optionQuoteAsset?.symbol ?? option?.quoteAssetMint.toString() ?? '';
   const exchangeWriterTokenForQuote = useExchangeWriterTokenForQuote(
-    option,
+    optionKey,
     writerTokenAccount.pubKey,
     quoteAssetDestKey,
+  );
+  const normalzeOptionQuoteAmount = useNormalizeAmountOfMintBN(
+    option?.quoteAssetMint ?? null,
   );
   const handleClaimQuote = useCallback(async () => {
     setLoading(true);
@@ -48,18 +58,16 @@ export const ClaimQuoteDialog: React.VFC<{
     dismiss();
   }, [dismiss, exchangeWriterTokenForQuote, size]);
 
-  const quoteSize =
-    (size ?? 1) *
-    option.quoteAmountPerContractBN.toNumber() *
-    10 ** -quoteAssetDecimals;
+  const quoteSize = normalzeOptionQuoteAmount(
+    option?.quoteAmountPerContract,
+  ).multipliedBy(size ?? 1);
 
-  const normalizedVaultBalance =
-    vaultBalance.toNumber() * 10 ** -quoteAssetDecimals;
+  const normalizedVaultBalance = normalzeOptionQuoteAmount(vaultBalance);
   const max = Math.min(writerTokenAccount.amount, numLeftToClaim);
 
   return (
     <DialogFullscreenMobile onClose={dismiss} maxWidth="lg" open={visible}>
-      <DialogTitle>Claim {option.qAssetSymbol}</DialogTitle>
+      <DialogTitle>Claim {optionQuoteAssetSymbol}</DialogTitle>
       <DialogContent>
         <Box
           display="flex"
@@ -68,9 +76,10 @@ export const ClaimQuoteDialog: React.VFC<{
           width={['100%', '100%', '680px']}
         >
           <Box flexDirection="column" width={['100%', '100%', '50%']}>
-            {getOptionNameByMarket(option)}
+            {optionName}
             <Box pt={1}>
-              Vault balance: {normalizedVaultBalance} {option.qAssetSymbol}
+              Vault balance: {normalizedVaultBalance.toString()}{' '}
+              {optionQuoteAssetSymbol}
             </Box>
             <Box py={1}>Writer Tokens held: {writerTokenAccount.amount}</Box>
             <Divider />
@@ -84,9 +93,9 @@ export const ClaimQuoteDialog: React.VFC<{
               value={size}
             />
             <Box pt={2} style={{ fontSize: 12 }}>
-              {`Burn ${size ?? 0} Writer Tokens to claim ${quoteSize} ${
-                option.qAssetSymbol
-              }`}
+              {`Burn ${
+                size ?? 0
+              } Writer Tokens to claim ${quoteSize.toString()} ${optionQuoteAssetSymbol}`}
             </Box>
           </Box>
         </Box>

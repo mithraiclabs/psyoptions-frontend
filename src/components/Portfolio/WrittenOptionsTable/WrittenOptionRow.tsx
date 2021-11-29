@@ -394,9 +394,9 @@ const WrittenOptionRow: React.VFC<{
           </>
         )}
       </TableRow>
-      {/* <ClaimQuoteDialog
+      <ClaimQuoteDialog
         dismiss={() => setClaimQuoteVisible(false)}
-        option={market}
+        optionKey={optionKey}
         numLeftToClaim={
           option
             ? quoteVaultAmount.div(option.quoteAmountPerContract).toNumber()
@@ -407,7 +407,7 @@ const WrittenOptionRow: React.VFC<{
         visible={claimQuoteVisible}
         writerTokenAccount={writerTokenAccount}
       />
-      <WrittenOptionsClaimUnderlyingDialog
+      {/* <WrittenOptionsClaimUnderlyingDialog
         dismiss={() => setCloseWrittenOptionsVisible(false)}
         numLeftToClaim={
           option
@@ -421,8 +421,8 @@ const WrittenOptionRow: React.VFC<{
         vaultBalance={underlyingVaultAmount}
         visible={closeWrittenOptionsVisible}
         writerTokenAccount={writerTokenAccount}
-      />
-      <WrittenOptionsClosePositionPreExpiryDialog
+      /> */}
+      {/* <WrittenOptionsClosePositionPreExpiryDialog
         dismiss={() => setCloseWrittenOptionsPreExpiryVisible(false)}
         numLeftToClaim={
           option

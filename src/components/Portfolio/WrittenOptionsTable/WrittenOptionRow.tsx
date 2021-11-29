@@ -407,7 +407,7 @@ const WrittenOptionRow: React.VFC<{
         visible={claimQuoteVisible}
         writerTokenAccount={writerTokenAccount}
       />
-      {/* <WrittenOptionsClaimUnderlyingDialog
+      <WrittenOptionsClaimUnderlyingDialog
         dismiss={() => setCloseWrittenOptionsVisible(false)}
         numLeftToClaim={
           option
@@ -416,12 +416,12 @@ const WrittenOptionRow: React.VFC<{
                 .toNumber()
             : 0
         }
-        option={market}
+        optionKey={optionKey}
         underlyingAssetDestKey={walletUnderlyingAssetKey}
         vaultBalance={underlyingVaultAmount}
         visible={closeWrittenOptionsVisible}
         writerTokenAccount={writerTokenAccount}
-      /> */}
+      />
       <WrittenOptionsClosePositionPreExpiryDialog
         dismiss={() => setCloseWrittenOptionsPreExpiryVisible(false)}
         numLeftToClaim={

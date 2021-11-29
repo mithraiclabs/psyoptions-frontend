@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import {
   PublicKey,
   Signer,
@@ -20,9 +20,10 @@ import useNotifications from './useNotifications';
 import useSendTransaction from './useSendTransaction';
 import { initializeTokenAccountTx, WRAPPED_SOL_ADDRESS } from '../utils/token';
 import { useSolanaMeta } from '../context/SolanaMetaContext';
-import { OptionMarket } from '../types';
 import { useAmericanPsyOptionsProgram } from './useAmericanPsyOptionsProgram';
-import { uiOptionMarketToProtocolOptionMarket } from '../utils/typeConversions';
+import { useRecoilValue } from 'recoil';
+import { optionsMap } from '../recoil';
+import useOptionsMarkets from './useOptionsMarkets';
 
 /**
  * Close the Option the wallet has written in order to return the
@@ -34,25 +35,42 @@ import { uiOptionMarketToProtocolOptionMarket } from '../utils/typeConversions';
  */
 
 export const useCloseWrittenOptionPostExpiration = (
-  market: OptionMarket,
+  optionKey: PublicKey,
   underlyingAssetDestKey: PublicKey | null,
   writerTokenSourceKey: PublicKey,
 ): ((num?: number) => Promise<void>) => {
+  const option = useRecoilValue(optionsMap(optionKey.toString()));
   const program = useAmericanPsyOptionsProgram();
   const { connection } = useConnection();
   const { pushErrorNotification } = useNotifications();
   const wallet = useConnectedWallet();
   const { splTokenAccountRentBalance } = useSolanaMeta();
   const { sendSignedTransaction } = useSendTransaction();
+  // TODO get rid of the usage of `market`
+  const { marketsByUiKey } = useOptionsMarkets();
+  const market = useMemo(
+    () =>
+      Object.values(marketsByUiKey).find((_market) =>
+        _market.optionMarketKey.equals(optionKey),
+      ),
+    [marketsByUiKey, optionKey],
+  );
 
   return useCallback(
     async (contractsToClose = 1) => {
-      if (!wallet?.publicKey || !splTokenAccountRentBalance || !program) return;
+      if (
+        !wallet?.publicKey ||
+        !splTokenAccountRentBalance ||
+        !program ||
+        !option
+      ) {
+        return;
+      }
       try {
         const transaction = new Transaction();
         const signers: Signer[] = [];
         let _underlyingAssetDestKey = underlyingAssetDestKey;
-        if (market.uAssetMint === WRAPPED_SOL_ADDRESS) {
+        if (option.underlyingAssetMint.toString() === WRAPPED_SOL_ADDRESS) {
           // need to create a sol account
           const {
             transaction: initWrappedSolAcctIx,
@@ -74,8 +92,9 @@ export const useCloseWrittenOptionPostExpiration = (
 
         let closePostExpirationIx: TransactionInstruction;
         if (
+          market &&
           PSY_AMERICAN_PROGRAM_IDS[market.psyOptionsProgramId.toString()] ===
-          ProgramVersions.V1
+            ProgramVersions.V1
         ) {
           closePostExpirationIx =
             await closePostExpirationCoveredCallInstruction({
@@ -92,7 +111,7 @@ export const useCloseWrittenOptionPostExpiration = (
           closePostExpirationIx = instructions.closePostExpirationInstruction(
             program,
             new BN(contractsToClose),
-            uiOptionMarketToProtocolOptionMarket(market),
+            option,
             writerTokenSourceKey,
             _underlyingAssetDestKey,
           );
@@ -101,7 +120,7 @@ export const useCloseWrittenOptionPostExpiration = (
         transaction.add(closePostExpirationIx);
 
         // Close out the wrapped SOL account so it feels native
-        if (market.uAssetMint === WRAPPED_SOL_ADDRESS) {
+        if (option.underlyingAssetMint.toString() === WRAPPED_SOL_ADDRESS) {
           transaction.add(
             Token.createCloseAccountInstruction(
               TOKEN_PROGRAM_ID,
@@ -133,15 +152,16 @@ export const useCloseWrittenOptionPostExpiration = (
       }
     },
     [
+      wallet,
+      splTokenAccountRentBalance,
+      program,
+      option,
       underlyingAssetDestKey,
       market,
-      program,
-      writerTokenSourceKey,
       connection,
-      wallet,
-      pushErrorNotification,
       sendSignedTransaction,
-      splTokenAccountRentBalance,
+      writerTokenSourceKey,
+      pushErrorNotification,
     ],
   );
 };

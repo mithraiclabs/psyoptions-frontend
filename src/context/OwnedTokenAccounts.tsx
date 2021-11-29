@@ -106,13 +106,20 @@ export const OwnedTokenAccountsProvider: React.FC = ({ children }) => {
   );
 
   useEffect(() => {
+    let currentSubs = subscriptionsRef.current;
     // Clean up subscriptions when component unmounts
     return () => {
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-      Object.values(subscriptionsRef.current).forEach(
+      console.log(
+        'TJ ',
+        connection.removeAccountChangeListener,
+        // @ts-ignore
+        connection._accountChangeSubscriptions,
+      );
+      Object.values(currentSubs).forEach(
         connection.removeAccountChangeListener,
       );
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [connection.removeAccountChangeListener]);
 
   useEffect(() => {

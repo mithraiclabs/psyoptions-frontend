@@ -252,50 +252,6 @@ const useOptionsMarkets = () => {
     return {};
   }, [connection, fetchMarketData, supportedAssets, endpoint]); // eslint-disable-line
 
-  const getSizes = useCallback(
-    ({ uAssetSymbol, qAssetSymbol }) => {
-      const keyPart = `-${uAssetSymbol}-${qAssetSymbol}-`;
-
-      const sizes = Object.keys(marketsByUiKey)
-        .filter((key) => key.match(keyPart))
-        .map((key) => marketsByUiKey[key].size);
-
-      return [...new Set(sizes)];
-    },
-    [marketsByUiKey],
-  );
-
-  const getSizesWithDate = useCallback(
-    ({ uAssetSymbol, qAssetSymbol, date }) => {
-      const keyPart = `${date}-${uAssetSymbol}-${qAssetSymbol}-`;
-
-      const sizes = Object.keys(marketsByUiKey)
-        .filter((key) => key.match(keyPart))
-        .map((key) => marketsByUiKey[key].size);
-
-      return [...new Set(sizes)];
-    },
-    [marketsByUiKey],
-  );
-
-  const getStrikePrices = useCallback(
-    ({ uAssetSymbol, qAssetSymbol, date, size }) => {
-      const keyPart = `${date}-${uAssetSymbol}-${qAssetSymbol}-${size}-`;
-      return Object.keys(marketsByUiKey)
-        .filter((key) => key.match(keyPart))
-        .map((key) => marketsByUiKey[key].strikePrice);
-    },
-    [marketsByUiKey],
-  );
-
-  const getDates = useCallback(() => {
-    const dates = Object.values(marketsByUiKey).map(
-      (m: OptionMarket) => m.expiration,
-    );
-    const deduped = [...new Set(dates)];
-    return deduped;
-  }, [marketsByUiKey]);
-
   const mint = useCallback(
     async ({
       marketData,
@@ -365,10 +321,6 @@ const useOptionsMarkets = () => {
     marketsBySerumKey,
     setMarketsBySerumKey,
     setMarketsLoading,
-    getStrikePrices,
-    getSizes,
-    getSizesWithDate,
-    getDates,
     mint,
     fetchMarketData,
     packagedMarkets,

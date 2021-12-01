@@ -65,6 +65,13 @@ const useSerum = (): SerumHook => {
             newOrderbooks[getKeyForMarket(market)] = orderbookData;
           },
         );
+        // ensure all loading gets set to false. Even for those
+        // not able to be loaded
+        serumMarketKeys.forEach(({ serumMarketKey }) => {
+          if (!newMarkets[serumMarketKey.toString()]) {
+            newMarkets[serumMarketKey.toString()] = { loading: false };
+          }
+        });
         setSerumMarkets((_markets) => ({ ..._markets, ...newMarkets }));
         setOrderbooks((_orderbooks) => ({ ..._orderbooks, ...newOrderbooks }));
       } catch (error) {

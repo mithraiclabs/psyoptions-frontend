@@ -45,6 +45,7 @@ import { useTokenMintInfo } from '../../hooks/useTokenMintInfo';
 import moment from 'moment';
 import { useNormalizeAmountOfMintBN } from '../../hooks/useNormalizeAmountOfMintBN';
 import { useNormalizedContractSize } from '../../hooks/useNormalizedContractSize';
+import { useHistory } from 'react-router-dom';
 
 const bgLighterColor = (theme.palette.background as any).lighter;
 
@@ -81,6 +82,7 @@ const BuySellDialog: React.VFC<{
   setLimitPrice,
   limitPrice,
 }) => {
+  const history = useHistory();
   const [orderType, setOrderType] = useState('limit');
   const [orderSize, setOrderSize] = useState<number | null>(1);
   const [optionAccounts, setOptionAccounts] = useState([] as TokenAccount[]);
@@ -90,7 +92,6 @@ const BuySellDialog: React.VFC<{
   const [openPositionSize, setOpenPositionSize] = useState(0);
   const [qAssetBalance, setQAssetBalance] = useState(0);
   const [uAssetBalance, setUAssetBalance] = useState(0);
-  const [initializingSerum] = useState(false);
   const [placeOrderLoading, setPlaceOrderLoading] = useState(false);
   const { pushErrorNotification } = useNotifications();
   const wallet = useConnectedWallet();
@@ -617,31 +618,21 @@ const BuySellDialog: React.VFC<{
                     serumMarketAddress={serumAddress}
                   />
                 </>
-              ) : !wallet?.connected ? (
-                <>
-                  <Box textAlign="center" px={2} pb={2}>
-                    Connect to Initialize Serum Market
-                  </Box>
-                  <GokiButton />
-                </>
               ) : (
                 <>
                   <Box textAlign="center" px={2} pb={2}>
                     Initialize Serum Market to Place Order
                   </Box>
-                  {initializingSerum ? (
-                    <CircularProgress />
-                  ) : (
-                    <Button
-                      variant="outlined"
-                      color="primary"
-                      onClick={() => {
-                        // TODO route user to initialize page with params query param for option market
-                      }}
-                    >
-                      Initialize Serum
-                    </Button>
-                  )}
+                  <Button
+                    variant="outlined"
+                    color="primary"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      history.push('/initialize-market');
+                    }}
+                  >
+                    Initialize Serum
+                  </Button>
                 </>
               )}
             </Box>

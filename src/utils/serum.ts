@@ -74,18 +74,23 @@ export const batchSerumMarkets = async (
       const programId = new PublicKey(key);
       // Load all of the MarketState data
       const groupOfAddresses: PublicKey[][] = chunkArray(addresses, 100);
-      const getMultipleAccountsForAddresses: Promise<AccountInfo<Buffer>[]>[] = groupOfAddresses.map(addresses => {
-        return connection.getMultipleAccountsInfo(addresses);
-      });
-      const addressesAccounts = await Promise.all(getMultipleAccountsForAddresses);
+      const getMultipleAccountsForAddresses: Promise<AccountInfo<Buffer>[]>[] =
+        groupOfAddresses.map((addresses) => {
+          return connection.getMultipleAccountsInfo(addresses);
+        });
+      const addressesAccounts = await Promise.all(
+        getMultipleAccountsForAddresses,
+      );
       const marketInfos: AccountInfo<Buffer>[] = addressesAccounts.flat();
       if (!marketInfos || !marketInfos.length) {
         throw new Error('Markets not found');
       }
       // decode all of the markets
-      const decoded = marketInfos.map((accountInfo) =>
-        Market.getLayout(programId).decode(accountInfo?.data),
-      );
+      const decoded = marketInfos
+        .filter((a) => !!a)
+        .map((accountInfo) =>
+          Market.getLayout(programId).decode(accountInfo?.data),
+        );
 
       const mintKeys: PublicKey[] = [];
       const orderbookKeys: PublicKey[] = [];
@@ -101,20 +106,32 @@ export const batchSerumMarkets = async (
           orderbookKeys.push(d.asks);
         });
         const groupOfMintKeys: PublicKey[][] = chunkArray(mintKeys, 100);
-        const getMultipleAccountsForMintKeys: Promise<AccountInfo<Buffer>[]>[] = groupOfMintKeys.map(mintKeys => {
-          return connection.getMultipleAccountsInfo(mintKeys);
-        });
-        const mintKeysAccounts = await Promise.all(getMultipleAccountsForMintKeys);
+        const getMultipleAccountsForMintKeys: Promise<AccountInfo<Buffer>[]>[] =
+          groupOfMintKeys.map((mintKeys) => {
+            return connection.getMultipleAccountsInfo(mintKeys);
+          });
+        const mintKeysAccounts = await Promise.all(
+          getMultipleAccountsForMintKeys,
+        );
         mintInfos = mintKeysAccounts.flat();
 
-        const groupOfOrderbookKeys: PublicKey[][] = chunkArray(orderbookKeys, 100);
-        const getMultipleAccountsForOrderbookKeys: Promise<AccountInfo<Buffer>[]>[] = groupOfOrderbookKeys.map(orderbookKeys => {
+        const groupOfOrderbookKeys: PublicKey[][] = chunkArray(
+          orderbookKeys,
+          100,
+        );
+        const getMultipleAccountsForOrderbookKeys: Promise<
+          AccountInfo<Buffer>[]
+        >[] = groupOfOrderbookKeys.map((orderbookKeys) => {
           return connection.getMultipleAccountsInfo(orderbookKeys);
         });
-        const orderbookKeysAccounts = await Promise.all(getMultipleAccountsForOrderbookKeys);
+        const orderbookKeysAccounts = await Promise.all(
+          getMultipleAccountsForOrderbookKeys,
+        );
         orderBookInfos = orderbookKeysAccounts.flat();
       } catch (err) {
-        throw new Error('Could not load all of the SPL Token Mint & Orderbook data');
+        throw new Error(
+          'Could not load all of the SPL Token Mint & Orderbook data',
+        );
       }
 
       const mints = mintInfos?.map((mintInfo) =>

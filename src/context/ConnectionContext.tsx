@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useState, useCallback } from 'react';
 import { clusterApiUrl, Connection, PublicKey } from '@solana/web3.js';
 import {
   getDexProgramKeyByNetwork,
@@ -7,16 +7,14 @@ import {
   networks,
 } from '../utils/networkInfo';
 import { useRecoilState } from 'recoil';
-import { DISALLOWED_COUNTRIES, useCountry } from '../hooks/useCountry';
-import { ClusterName } from '../types';
 import { atom } from 'recoil';
 
-// Default to devnet
-const DEVNET = networks[1];
+// Default to MAINNET
+const MAINNET = networks[0];
 
 export const activeNetwork = atom({
   key: 'activeNetwork',
-  default: DEVNET,
+  default: MAINNET,
 });
 
 export type ConnectionContextType = {
@@ -31,22 +29,14 @@ export type ConnectionContextType = {
 
 const ConnectionContext = createContext<ConnectionContextType>({
   connection: new Connection(clusterApiUrl('devnet')),
-  endpoint: DEVNET,
+  endpoint: MAINNET,
   setConnection: () => {},
   setEndpoint: () => {},
   networks,
 });
 
 const ConnectionProvider: React.FC = ({ children }) => {
-  const countryCode = useCountry();
-  const isDisallowed = DISALLOWED_COUNTRIES.includes(countryCode ?? '');
   const [endpoint, setEndpoint] = useRecoilState(activeNetwork);
-
-  useEffect(() => {
-    if (isDisallowed) {
-      setEndpoint(DEVNET);
-    }
-  }, [isDisallowed, setEndpoint]);
 
   const [connection, setConnection] = useState(
     new Connection(endpoint.url, {
@@ -57,20 +47,13 @@ const ConnectionProvider: React.FC = ({ children }) => {
 
   const handleSetEndpoint = useCallback(
     (newEndpoint) => {
-      // Update both endpoint and connection state valuse in the same function
+      // Update both endpoint and connection state values in the same function
       // Will prevent extra rerenders of components that depend on both endpoint and connection
       setEndpoint(newEndpoint);
       setConnection(new Connection(newEndpoint.url, 'confirmed'));
     },
     [setEndpoint],
   );
-
-  useEffect(() => {
-    // always set disallowed countries to devnet when on mainnet
-    if (isDisallowed && endpoint.name === ClusterName.mainnet) {
-      handleSetEndpoint(networks[1]);
-    }
-  }, [endpoint.name, handleSetEndpoint, isDisallowed]);
 
   const state: ConnectionContextType = {
     networks,

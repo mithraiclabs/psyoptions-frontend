@@ -163,7 +163,7 @@ const StatusBar: React.VFC<{ transparent?: boolean }> = ({
             </IconButton>
           </Hidden>
         </Box>
-        <Box display="flex" style={{ alignItems: "center" }}>
+        <Box display="flex" style={{ alignItems: "center", zIndex: 99999 }}>
           <WalletStatus />
           <NoSsr>
             <NetworkMenu />

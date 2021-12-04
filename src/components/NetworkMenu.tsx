@@ -12,8 +12,6 @@ import useOptionsMarkets from '../hooks/useOptionsMarkets';
 import useSerum from '../hooks/useSerum';
 import theme from '../utils/theme';
 import { Network } from '../utils/networkInfo';
-import { ClusterName } from '../types';
-import { DISALLOWED_COUNTRIES, useCountry } from '../hooks/useCountry';
 
 const NetworkMenu = () => {
   const { networks, endpoint, setEndpoint } = useConnection();
@@ -57,8 +55,6 @@ const NetworkMenu = () => {
     setSerumMarkets({});
   };
 
-  const countryCode = useCountry();
-  const isDisallowed = DISALLOWED_COUNTRIES.includes(countryCode ?? '');
   return (
     <Box style={{ position: 'relative' }} ml={2}>
       <Button
@@ -107,10 +103,7 @@ const NetworkMenu = () => {
             >
               {networks
                 .filter((n) =>
-                  isDisallowed
-                    ? n.name !== ClusterName.mainnet &&
-                      n.programId !== undefined
-                    : n.programId !== undefined,
+                  n.programId !== undefined
                 )
                 .map((item) => (
                   <MenuItem

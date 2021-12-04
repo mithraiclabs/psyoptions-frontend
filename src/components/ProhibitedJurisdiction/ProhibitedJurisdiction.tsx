@@ -65,12 +65,12 @@ const ProhibitedJurisdiction: React.VFC = () => {
               Prohibited Jurisdiction 😭
             </h1>
             <h6>
-              Due to regulations, this website is not available to residents of Belarus, the Central
+              Due to regulations, the ability to connect your wallet and place orders is not available to residents of Belarus, the Central
               African Republic, the Democratic Republic of Congo, the Democratic
               People&lsquo;s Republic of Korea, the Crimea region of Ukraine,
               Cuba, Iran, Libya, Somalia, Sudan, South Sudan, Syria, Thailand,
               the UK, the USA, Yemen, Zimbabwe, and any other jurisdiction in
-              which accessing or using this website is prohibited.
+              which connecting your wallet and placing orders is prohibited.
             </h6>
           </Box>
         </Box>

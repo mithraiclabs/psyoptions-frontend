@@ -12,9 +12,11 @@ import useOptionsMarkets from '../hooks/useOptionsMarkets';
 import useSerum from '../hooks/useSerum';
 import theme from '../utils/theme';
 import { Network } from '../utils/networkInfo';
+import { useUpdateNetwork } from '../recoil';
 
 const NetworkMenu = () => {
-  const { networks, endpoint, setEndpoint } = useConnection();
+  const updateNetwork = useUpdateNetwork();
+  const { networks, endpoint } = useConnection();
 
   const { setUAsset, setQAsset, setSupportedAssets, assetListLoading } =
     useAssetList();
@@ -45,7 +47,7 @@ const NetworkMenu = () => {
 
   const handleSelectNetwork = (network: Network) => {
     if (loading || network.name === endpoint.name) return;
-    setEndpoint(network);
+    updateNetwork(network);
     // Reset assets, markets, and chain when changing endpoint
     // This allows us to refresh everything when changing the endpoint
     setSupportedAssets([]);
@@ -102,9 +104,7 @@ const NetworkMenu = () => {
               onKeyDown={handleListKeyDown}
             >
               {networks
-                .filter((n) =>
-                  n.programId !== undefined
-                )
+                .filter((n) => n.programId !== undefined)
                 .map((item) => (
                   <MenuItem
                     key={item.url}

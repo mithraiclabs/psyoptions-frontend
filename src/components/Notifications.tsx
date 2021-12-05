@@ -43,7 +43,7 @@ const SimpleSnackbar = ({
       justifyContent="space-between"
       color={theme.palette.primary.light}
       style={{
-        background: theme.gradients[severity],
+        background: theme.gradients?.[severity],
       }}
     >
       <Box maxWidth="90%">
@@ -87,6 +87,7 @@ const Notifications = () => {
       {notifications.map((data, i) => (
         <SimpleSnackbar
           key={i}
+          // @ts-expect-error ignore
           index={i}
           closeNotification={() => closeNotification(i)}
           {...data}

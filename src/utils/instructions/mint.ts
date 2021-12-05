@@ -4,36 +4,34 @@ import {
   ProgramVersions,
   instructions,
   feeAmountPerContract,
+  OptionMarketWithKey,
+  getOrAddAssociatedTokenAccountTx,
 } from '@mithraic-labs/psy-american';
 import {
-  Connection,
   PublicKey,
   Signer,
   Transaction,
   TransactionInstruction,
 } from '@solana/web3.js';
 import BigNumber from 'bignumber.js';
-import { BN } from 'bn.js';
-import { Program } from '@project-serum/anchor';
+import BN from 'bn.js';
+import { Program, Provider } from '@project-serum/anchor';
 import {
-  Asset,
   CreateMissingMintAccountsRes,
   InstructionErrorResponse,
   InstructionResponse,
   NotificationSeverity,
-  OptionMarket,
   Result,
-  TokenAccount,
 } from '../../types';
 import { truncatePublicKey } from '../format';
+import { initializeTokenAccountTx, WRAPPED_SOL_ADDRESS } from '../token';
 import {
-  initializeTokenAccountTx,
-  WRAPPED_SOL_ADDRESS,
-} from '../token';
-import {
-  createAssociatedTokenAccountInstruction,
-} from './token';
-import { uiOptionMarketToProtocolOptionMarket } from '../typeConversions';
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  Token,
+  TOKEN_PROGRAM_ID,
+} from '@solana/spl-token';
+
+const TEN_BIGNUM = new BigNumber(10);
 
 /**
  * Check that all the necessary accounts exist. If they're not provided then
@@ -41,88 +39,88 @@ import { uiOptionMarketToProtocolOptionMarket } from '../typeConversions';
  *
  */
 export const createMissingMintAccounts = async ({
+  option,
+  optionUnderlyingAssetSymbol,
+  optionUnderlyingDecimals,
+  optionUnderlyingSize,
   owner,
-  market,
-  uAsset,
-  uAssetTokenAccount = null,
-  splTokenAccountRentBalance = null,
+  provider,
   mintedOptionDestinationKey,
-  writerTokenDestinationKey,
   numberOfContractsToMint = 1,
-  connection,
+  splTokenAccountRentBalance = null,
+  underlyingAssetAmount,
+  underlyingAssetSource,
+  writerTokenDestinationKey,
 }: {
+  option: OptionMarketWithKey;
+  optionUnderlyingAssetSymbol: string;
+  optionUnderlyingDecimals: number;
+  optionUnderlyingSize: BigNumber;
   owner: PublicKey;
-  market: OptionMarket;
-  uAsset: Asset;
-  uAssetTokenAccount: TokenAccount | null;
+  underlyingAssetAmount: number;
+  underlyingAssetSource: PublicKey | undefined;
   splTokenAccountRentBalance: number | null;
   mintedOptionDestinationKey?: PublicKey;
   writerTokenDestinationKey?: PublicKey;
   numberOfContractsToMint: number;
-  connection: Connection;
+  provider: Provider;
   // TODO create an optional return type
 }): Promise<Result<CreateMissingMintAccountsRes, InstructionErrorResponse>> => {
   const tx = new Transaction();
-  const signers = [];
-  const uAssetSymbol = uAsset.tokenSymbol;
-  let _uAssetTokenAccount = uAssetTokenAccount;
+  const signers: Signer[] = [];
   let _mintedOptionDestinationKey = mintedOptionDestinationKey;
+  let _underlyingAssetSource = underlyingAssetSource;
   let _writerTokenDestinationKey = writerTokenDestinationKey;
 
-  if (!_uAssetTokenAccount && uAsset.mintAddress !== WRAPPED_SOL_ADDRESS) {
-    // TODO - figure out how to distinguish between "a" vs "an" in this message
-    // Not that simple because "USDC" you say "A", but for "ETH" you say an, it depends on the pronunciation
+  if (
+    !underlyingAssetSource &&
+    option.underlyingAssetMint.toString() !== WRAPPED_SOL_ADDRESS
+  ) {
     return {
       error: {
         severity: NotificationSeverity.WARNING,
-        message: `You must have one or more ${uAssetSymbol} accounts in your wallet to mint this contract`,
+        message: `You must have one or more ${optionUnderlyingAssetSymbol} accounts in your wallet to mint this contract`,
       },
     };
   }
-
-  const uAssetDecimals = new BigNumber(10).pow(uAsset.decimals);
 
   // Handle Wrapped SOL
-  if (uAsset.mintAddress === WRAPPED_SOL_ADDRESS && splTokenAccountRentBalance) {
-    const fees = feeAmountPerContract(market.amountPerContractBN);
-    const lamports = market.amountPerContractBN
+  if (
+    option.underlyingAssetMint.toString() === WRAPPED_SOL_ADDRESS &&
+    splTokenAccountRentBalance
+  ) {
+    const fees = feeAmountPerContract(option.underlyingAmountPerContract);
+    const lamports = option.underlyingAmountPerContract
       .add(fees)
       .mul(new BN(numberOfContractsToMint));
-    const { transaction, newTokenAccount } =
-      await initializeTokenAccountTx({
-        connection,
-        payerKey: owner,
-        mintPublicKey: new PublicKey(WRAPPED_SOL_ADDRESS),
-        owner,
-        rentBalance: splTokenAccountRentBalance,
-        extraLamports: lamports.toNumber(),
-      });
+    const { transaction, newTokenAccount } = await initializeTokenAccountTx({
+      connection: provider.connection,
+      payerKey: owner,
+      mintPublicKey: new PublicKey(WRAPPED_SOL_ADDRESS),
+      owner,
+      rentBalance: splTokenAccountRentBalance,
+      extraLamports: lamports.toNumber(),
+    });
     tx.add(transaction);
     signers.push(newTokenAccount);
-    _uAssetTokenAccount = {
-      pubKey: newTokenAccount.publicKey,
-      mint: new PublicKey(WRAPPED_SOL_ADDRESS),
-      amount: lamports.toNumber(),
-    };
+    _underlyingAssetSource = newTokenAccount.publicKey;
   }
 
-  if (!_uAssetTokenAccount) {
+  if (!_underlyingAssetSource) {
     return {
       error: {
         severity: NotificationSeverity.WARNING,
-        message: 'Unable to find underlying asset token account.',
+        message: `Unable to find ${optionUnderlyingAssetSymbol} token account.`,
       },
     };
   }
 
-  // TODO use amount per contract as validation so we can leave most everything as a BigNumber.
-  //  This will be easier to comprehend as it most similarly mirrors chain state.
-  const requiredUnderlyingAmount = new BigNumber(market.size).times(
+  const requiredUnderlyingAmount = optionUnderlyingSize.times(
     new BigNumber(numberOfContractsToMint),
   );
   if (
-    new BigNumber(_uAssetTokenAccount.amount)
-      .div(uAssetDecimals)
+    new BigNumber(underlyingAssetAmount)
+      .div(TEN_BIGNUM.pow(optionUnderlyingDecimals))
       .isLessThan(requiredUnderlyingAmount)
   ) {
     return {
@@ -130,8 +128,8 @@ export const createMissingMintAccounts = async ({
         severity: NotificationSeverity.WARNING,
         message: `You must have at least ${requiredUnderlyingAmount.toString(
           10,
-        )} ${uAssetSymbol} in your ${uAssetSymbol} account ${truncatePublicKey(
-          _uAssetTokenAccount.pubKey.toString(),
+        )} ${optionUnderlyingAssetSymbol} in your ${optionUnderlyingAssetSymbol} account ${truncatePublicKey(
+          _underlyingAssetSource.toString(),
         )} to mint ${numberOfContractsToMint} contract${
           numberOfContractsToMint > 1 ? 's' : ''
         }`,
@@ -141,27 +139,42 @@ export const createMissingMintAccounts = async ({
 
   if (!_mintedOptionDestinationKey) {
     // Create token account for minted option if the user doesn't have one yet
-    const [instruction, newTokenAccountKey] =
-      await createAssociatedTokenAccountInstruction({
-        payer: owner,
-        owner,
-        mintPublicKey: market.optionMintKey,
-      });
-
-    tx.add(instruction);
-    _mintedOptionDestinationKey = newTokenAccountKey;
+    const optionTokenDestKey = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      option.optionMint,
+      owner,
+    );
+    const instruction = await getOrAddAssociatedTokenAccountTx(
+      optionTokenDestKey,
+      option.optionMint,
+      provider,
+      owner,
+    );
+    _mintedOptionDestinationKey = optionTokenDestKey;
+    if (instruction) {
+      tx.add(instruction);
+    }
   }
 
   if (!_writerTokenDestinationKey) {
     // Create token account for minted Writer Token if the user doesn't have one yet
-    const [instruction, newTokenAccountKey] =
-      await createAssociatedTokenAccountInstruction({
-        payer: owner,
-        owner,
-        mintPublicKey: market.writerTokenMintKey,
-      });
-    tx.add(instruction);
-    _writerTokenDestinationKey = newTokenAccountKey;
+    const writerTokenDestKey = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      option.writerTokenMint,
+      owner,
+    );
+    const instruction = await getOrAddAssociatedTokenAccountTx(
+      writerTokenDestKey,
+      option.writerTokenMint,
+      provider,
+      owner,
+    );
+    _writerTokenDestinationKey = writerTokenDestKey;
+    if (instruction) {
+      tx.add(instruction);
+    }
   }
 
   return {
@@ -170,7 +183,7 @@ export const createMissingMintAccounts = async ({
       signers,
       mintedOptionDestinationKey: _mintedOptionDestinationKey,
       writerTokenDestinationKey: _writerTokenDestinationKey,
-      uAssetTokenAccount: _uAssetTokenAccount,
+      underlyingAssetSource: _underlyingAssetSource,
     },
   };
 };
@@ -190,7 +203,7 @@ export const createMissingMintAccounts = async ({
  */
 export const mintInstructions = async (
   numberOfContractsToMint: number,
-  market: OptionMarket,
+  option: OptionMarketWithKey,
   authorityPubkey: PublicKey,
   programId: PublicKey,
   mintedOptionDestKey: PublicKey,
@@ -210,14 +223,14 @@ export const mintInstructions = async (
     mintInstruction = await mintCoveredCallInstruction({
       authorityPubkey,
       programId,
-      optionMarketKey: market.optionMarketKey,
-      optionMintKey: market.optionMintKey,
+      optionMarketKey: option.key,
+      optionMintKey: option.optionMint,
       mintedOptionDestKey,
       writerTokenDestKey,
-      writerTokenMintKey: market.writerTokenMintKey,
-      underlyingAssetPoolKey: market.underlyingAssetPoolKey,
+      writerTokenMintKey: option.writerTokenMint,
+      underlyingAssetPoolKey: option.underlyingAssetPool,
       underlyingAssetSrcKey,
-      underlyingMintKey: market.underlyingAssetMintKey,
+      underlyingMintKey: option.underlyingAssetMint,
       fundingAccountKey: authorityPubkey,
       size: new BN(numberOfContractsToMint),
     });
@@ -228,7 +241,7 @@ export const mintInstructions = async (
       writerTokenDestKey,
       underlyingAssetSrcKey,
       new BN(numberOfContractsToMint),
-      uiOptionMarketToProtocolOptionMarket(market),
+      option,
     ));
   }
   if (mintInstruction) {
@@ -242,26 +255,32 @@ export const mintInstructions = async (
 };
 
 export const createMissingAccountsAndMint = async ({
-  optionsProgramId,
   authorityPubkey,
-  owner,
-  market,
-  uAsset,
-  uAssetTokenAccount,
-  splTokenAccountRentBalance,
   mintedOptionDestinationKey,
+  optionsProgramId,
+  option,
+  optionUnderlyingAssetSymbol,
+  optionUnderlyingDecimals,
+  optionUnderlyingSize,
+  owner,
+  splTokenAccountRentBalance,
+  underlyingAssetAmount,
+  underlyingAssetSource,
   writerTokenDestinationKey,
   numberOfContractsToMint,
   program,
 }: {
   optionsProgramId: PublicKey;
   authorityPubkey: PublicKey;
+  option: OptionMarketWithKey;
+  optionUnderlyingAssetSymbol: string;
+  optionUnderlyingDecimals: number;
+  optionUnderlyingSize: BigNumber;
   owner: PublicKey;
-  market: OptionMarket;
-  uAsset: Asset;
-  uAssetTokenAccount: TokenAccount | null;
   splTokenAccountRentBalance: number;
   mintedOptionDestinationKey?: PublicKey;
+  underlyingAssetAmount: number;
+  underlyingAssetSource: PublicKey | undefined;
   writerTokenDestinationKey?: PublicKey;
   numberOfContractsToMint: number;
   program: Program;
@@ -270,15 +289,18 @@ export const createMissingAccountsAndMint = async ({
   let signers: Signer[] = [];
 
   const { response, error } = await createMissingMintAccounts({
+    option,
+    optionUnderlyingAssetSymbol,
+    optionUnderlyingDecimals,
+    optionUnderlyingSize,
     owner,
-    market,
-    uAsset,
-    uAssetTokenAccount,
     splTokenAccountRentBalance,
     mintedOptionDestinationKey,
+    underlyingAssetAmount,
+    underlyingAssetSource,
     writerTokenDestinationKey,
     numberOfContractsToMint,
-    connection: program.provider.connection,
+    provider: program.provider,
   });
   if (error || !response) {
     return { error };
@@ -288,7 +310,7 @@ export const createMissingAccountsAndMint = async ({
     signers: createAccountsSigners,
     mintedOptionDestinationKey: _mintedOptionDestinationKey,
     writerTokenDestinationKey: _writerTokenDestinationKey,
-    uAssetTokenAccount: _uAssetTokenAccount,
+    underlyingAssetSource: _underlyingAssetSource,
   } = response;
 
   transaction.add(createAccountsTx);
@@ -296,12 +318,12 @@ export const createMissingAccountsAndMint = async ({
 
   const { transaction: mintTx } = await mintInstructions(
     numberOfContractsToMint,
-    market,
+    option,
     authorityPubkey,
     optionsProgramId,
     _mintedOptionDestinationKey,
     _writerTokenDestinationKey,
-    _uAssetTokenAccount.pubKey,
+    _underlyingAssetSource,
     program,
   );
 
@@ -313,7 +335,7 @@ export const createMissingAccountsAndMint = async ({
       signers,
       mintedOptionDestinationKey: _mintedOptionDestinationKey,
       writerTokenDestinationKey: _writerTokenDestinationKey,
-      uAssetTokenAccount: _uAssetTokenAccount,
+      underlyingAssetSource: _underlyingAssetSource,
     },
   };
 };

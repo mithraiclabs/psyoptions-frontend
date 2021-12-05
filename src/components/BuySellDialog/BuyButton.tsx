@@ -1,8 +1,18 @@
 import React from 'react';
 import Tooltip from '@material-ui/core/Tooltip';
 import { StyledBuyButton } from './styles';
+import { BigNumber } from 'bignumber.js';
 
-const BuyButton = ({
+const BuyButton: React.VFC<{
+  parsedLimitPrice: BigNumber;
+  numberOfAsks: number;
+  qAssetSymbol: string;
+  orderType: 'market' | 'limit';
+  orderCost: BigNumber;
+  parsedOrderSize: number;
+  qAssetBalance: number;
+  onClick: () => void;
+}> = ({
   parsedLimitPrice,
   numberOfAsks,
   qAssetSymbol,
@@ -24,7 +34,7 @@ const BuyButton = ({
     }
   } else {
     if (parsedLimitPrice.isGreaterThan(0)) {
-      if (qAssetBalance >= orderCost) {
+      if (orderCost.isLessThan(qAssetBalance)) {
         buyTooltipLabel = `Place buy order using ${orderCost} ${qAssetSymbol}`;
       } else {
         buyTooltipLabel = `Not enough ${qAssetSymbol} to place order`;
@@ -40,7 +50,7 @@ const BuyButton = ({
     <Tooltip title={buyTooltipLabel} placement="top">
       <StyledBuyButton
         fullWidth
-        onClick={isBuyDisabled ? null : onClick}
+        onClick={isBuyDisabled ? undefined : onClick}
         fakeDisabled={isBuyDisabled}
         disableRipple={isBuyDisabled}
       >

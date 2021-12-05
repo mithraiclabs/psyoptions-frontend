@@ -4,11 +4,13 @@ import BigNumber from 'bignumber.js';
 import { instructions } from '@mithraic-labs/psy-american';
 import * as anchor from '@project-serum/anchor';
 import { BN } from '@project-serum/anchor';
+import { useConnectedWallet } from '@saberhq/use-solana';
+import { useRecoilValue } from 'recoil';
 import useConnection from './useConnection';
 import useNotifications from './useNotifications';
 import { NotificationSeverity } from '../types';
 import { useAmericanPsyOptionsProgram } from './useAmericanPsyOptionsProgram';
-import { useConnectedWallet } from "@saberhq/use-solana";
+import { activeNetwork, useFetchAndUpsertOption } from '../recoil';
 
 type InitMarketParams = {
   amountPerContract: BigNumber;
@@ -39,10 +41,12 @@ type MarketInitRet = {
 export const useInitializeMarket = (): ((
   obj: InitMarketParams,
 ) => Promise<MarketInitRet | null>) => {
+  const endpoint = useRecoilValue(activeNetwork);
   const program = useAmericanPsyOptionsProgram();
   const { pushNotification, pushErrorNotification } = useNotifications();
-  const { endpoint, dexProgramId } = useConnection();
+  const { dexProgramId } = useConnection();
   const wallet = useConnectedWallet();
+  const fetchAndUpsertOption = useFetchAndUpsertOption();
 
   return useCallback(
     async ({
@@ -97,6 +101,9 @@ export const useInitializeMarket = (): ((
           underlyingMint: underlyingMintKey,
         });
 
+        // Add the newly created option to state
+        fetchAndUpsertOption(optionMarketKey);
+
         const marketData: MarketInitRet = {
           amountPerContract,
           amountPerContractBN,
@@ -132,6 +139,7 @@ export const useInitializeMarket = (): ((
       pushErrorNotification,
       endpoint?.programId,
       pushNotification,
+      fetchAndUpsertOption,
       dexProgramId,
     ],
   );

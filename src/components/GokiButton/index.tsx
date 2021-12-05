@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-// import { Redirect } from 'react-router-dom';
 import { makeStyles } from '@material-ui/core/styles';
 import { ConnectWalletButton } from '@gokiprotocol/walletkit';
 import { createLocalStorageStateHook } from 'use-local-storage-state';
-// import { DISALLOWED_COUNTRIES, useCountry } from '../../hooks/useCountry';
 import Disclaimer from '../Disclaimer';
+import { DISALLOWED_COUNTRIES, useCountry } from '../../hooks/useCountry';
+import { Link } from 'react-router-dom';
 
-// import useConnection from '../../hooks/useConnection';
 export const useDisclaimerState = createLocalStorageStateHook('hasAcceptedDisclaimer', false);
 
 const useStyles = makeStyles(() => ({
@@ -29,27 +28,29 @@ const useStyles = makeStyles(() => ({
 }));
 
 const GokiButton: React.VFC = () => {
+  const countryCode = useCountry();
+  const isDisallowed = DISALLOWED_COUNTRIES.includes(countryCode ?? '');
+
   const styles = useStyles();
-
-  // UPDATE // THE GEO RESTRICION NOW HAPPENS ON A NETWORK BASIS
-            // Will remove this code once fully tested
-
-  // const countryCode = useCountry();
-  // const [isProhibited, setIsProhibited] = useState(false);
 
   const [hasAcceptedDisclaimer] = useDisclaimerState();
   const [showDisclaimer, setDisclaimerVisible] = useState(false);
 
   const handleGeoCheck = () => {
-    // if (DISALLOWED_COUNTRIES.includes(countryCode ?? '')) {
-    //   return setIsProhibited(true);
-    // }
     if (hasAcceptedDisclaimer) {
       let element: HTMLElement = document.querySelector('#temp-solution-2m00n') as HTMLElement;
       return element.click();
     }
     setDisclaimerVisible(true);
   };
+
+  if (isDisallowed) {
+    return (
+      <>
+        <Link to='/prohibited-jurisdiction'>Prohibited Jurisdiction</Link>
+      </>
+    );
+  }
 
   return (
     <>
@@ -60,9 +61,6 @@ const GokiButton: React.VFC = () => {
       </div>
       {
         (showDisclaimer) ? <Disclaimer /> : null
-      }
-      {
-        // (isProhibited) ? <Redirect to='/prohibited-jurisdiction' /> : null
       }
     </>
   );

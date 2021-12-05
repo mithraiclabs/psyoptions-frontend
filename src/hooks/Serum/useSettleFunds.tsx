@@ -5,32 +5,36 @@ import {
   ProgramVersions,
   serumInstructions,
 } from '@mithraic-labs/psy-american';
+import { useConnectedWallet } from '@saberhq/use-solana';
+import { useRecoilValue } from 'recoil';
 import { createAssociatedTokenAccountInstruction } from '../../utils/instructions';
 import { getHighestAccount } from '../../utils/token';
 import useConnection from '../useConnection';
 import useNotifications from '../useNotifications';
 import useOwnedTokenAccounts from '../useOwnedTokenAccounts';
 import useSerum from '../useSerum';
-import { useConnectedWallet } from "@saberhq/use-solana";
 import useSendTransaction from '../useSendTransaction';
 import { useAmericanPsyOptionsProgram } from '../useAmericanPsyOptionsProgram';
 import { OptionMarket } from '../../types';
 import { getReferralId } from '../../utils/networkInfo';
 import { useSerumOpenOrders } from '../../context/SerumOpenOrdersContext';
+import { activeNetwork } from '../../recoil';
 
 /**
  * Returns function for settling the funds of a specific market
  */
 export const useSettleFunds = (
   serumMarketAddress: string,
-  optionMarket: OptionMarket,
+  optionMarket: OptionMarket | undefined,
+  optionKey: PublicKey | undefined,
 ): {
   makeSettleFundsTx: () => Promise<Transaction | undefined>;
   settleFunds: () => Promise<void>;
 } => {
+  const endpoint = useRecoilValue(activeNetwork);
   const program = useAmericanPsyOptionsProgram();
   const { pushErrorNotification } = useNotifications();
-  const { connection, endpoint } = useConnection();
+  const { connection, dexProgramId } = useConnection();
   const { serumMarkets } = useSerum();
   const wallet = useConnectedWallet();
   const { sendTransaction } = useSendTransaction();
@@ -43,17 +47,20 @@ export const useSettleFunds = (
     serumMarket?.baseMintAddress && serumMarket.baseMintAddress.toString();
   const quoteMintAddress =
     serumMarket?.quoteMintAddress && serumMarket.quoteMintAddress.toString();
-  const baseTokenAccounts = ownedTokenAccounts[baseMintAddress] ?? [];
-  const quoteTokenAccounts = ownedTokenAccounts[quoteMintAddress] ?? [];
+  const baseTokenAccounts = ownedTokenAccounts[baseMintAddress ?? ''] ?? [];
+  const quoteTokenAccounts = ownedTokenAccounts[quoteMintAddress ?? ''] ?? [];
   const highestBaseTokenAccount = getHighestAccount(baseTokenAccounts);
   const highestQuoteTokenAccount = getHighestAccount(quoteTokenAccounts);
 
-  const makeSettleFundsTx = useCallback(async (): Promise<Transaction | undefined> => {
-    if (!openOrders?.length || !serumMarket || !optionMarket || !wallet?.publicKey)
+  const makeSettleFundsTx = useCallback(async (): Promise<
+    Transaction | undefined
+  > => {
+    if (!openOrders?.length || !serumMarket || !wallet?.publicKey || !program) {
       return;
-    
+    }
+
     const transaction = new Transaction();
-    let signers = [];
+    let signers: Signer[] = [];
     let _baseTokenAccountKey = highestBaseTokenAccount?.pubKey;
     let _quoteTokenAccountKey = highestQuoteTokenAccount?.pubKey;
 
@@ -89,7 +96,7 @@ export const useSettleFunds = (
     let settleSigners: Signer[] = [];
     if (
       PSY_AMERICAN_PROGRAM_IDS[
-        optionMarket.psyOptionsProgramId.toString()
+        optionMarket?.psyOptionsProgramId?.toString() ?? ''
       ] === ProgramVersions.V1
     ) {
       ({ transaction: settleTx, signers: settleSigners } =
@@ -98,17 +105,16 @@ export const useSettleFunds = (
           openOrders[0],
           _baseTokenAccountKey,
           _quoteTokenAccountKey,
-          await getReferralId(
-            program,
-            endpoint,
-            serumMarket.quoteMintAddress,
-          ),
+          await getReferralId(program, endpoint, serumMarket.quoteMintAddress),
         ));
     } else {
+      if (!optionKey || !dexProgramId) {
+        return;
+      }
       const ix = await serumInstructions.settleFundsInstruction(
         program,
-        optionMarket.pubkey,
-        new PublicKey(optionMarket.serumProgramId),
+        optionKey,
+        dexProgramId,
         serumMarket.address,
         _baseTokenAccountKey,
         _quoteTokenAccountKey,
@@ -130,25 +136,29 @@ export const useSettleFunds = (
     }
     return transaction;
   }, [
-    endpoint,
-    serumMarket,
     openOrders,
+    serumMarket,
+    wallet?.publicKey,
     program,
     highestBaseTokenAccount?.pubKey,
     highestQuoteTokenAccount?.pubKey,
+    optionMarket?.psyOptionsProgramId,
     connection,
-    optionMarket,
-    wallet?.publicKey,
     subscribeToTokenAccount,
+    endpoint,
+    optionKey,
+    dexProgramId,
   ]);
 
   const settleFunds = useCallback(async () => {
-    if (!wallet)
+    if (!wallet) {
       return;
+    }
     try {
       const transaction = await makeSettleFundsTx();
-      if (!transaction)
+      if (!transaction) {
         return;
+      }
       await sendTransaction({
         transaction,
         wallet,

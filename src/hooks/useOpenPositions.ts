@@ -1,29 +1,30 @@
 import { useMemo } from 'react';
+import { useRecoilValue } from 'recoil';
+import { selectAllOptions } from '../recoil';
 import { TokenAccount } from '../types';
-import useOptionsMarkets from './useOptionsMarkets';
 import useOwnedTokenAccounts from './useOwnedTokenAccounts';
 
 /**
- * Get object of open positions keyed by the market key
+ * Get object of open positions keyed by the option key.
  *
- * Note that the market key will contain an array of token accounts
+ * Note that the option key will contain an array of token accounts
  */
 const useOpenPositions = (): Record<string, TokenAccount[]> => {
-  const { marketsByUiKey } = useOptionsMarkets();
+  const options = useRecoilValue(selectAllOptions);
   const { ownedTokenAccounts } = useOwnedTokenAccounts();
 
   return useMemo(() => {
-    const positions = Object.keys(marketsByUiKey).reduce((acc, marketKey) => {
+    const positions = options.reduce((acc, option) => {
       const accountsWithHoldings = ownedTokenAccounts[
-        marketsByUiKey[marketKey].optionMintKey.toString()
+        option.optionMint.toString()
       ]?.filter((optionTokenAcct) => optionTokenAcct.amount > 0);
       if (accountsWithHoldings?.length) {
-        acc[marketKey] = accountsWithHoldings;
+        acc[option.key.toString()] = accountsWithHoldings;
       }
       return acc;
     }, {});
     return positions;
-  }, [marketsByUiKey, ownedTokenAccounts]);
+  }, [options, ownedTokenAccounts]);
 };
 
 export default useOpenPositions;

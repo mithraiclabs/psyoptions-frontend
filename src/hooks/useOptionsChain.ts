@@ -5,7 +5,8 @@ import useOptionsMarkets from './useOptionsMarkets';
 import { OptionsChainContext } from '../context/OptionsChainContext';
 import useAssetList from './useAssetList';
 import useNotifications from './useNotifications';
-import { ChainRow, OptionMarket, OptionRow } from '../types';
+import { ChainRow, OptionMarket } from '../types';
+import { useNormalizedContractSize } from './useNormalizedContractSize';
 
 const callOrPutTemplate = {
   key: '',
@@ -17,10 +18,15 @@ const callOrPutTemplate = {
   size: '',
   initialized: false,
 };
+
+/**
+ * @deprecated
+ */
 const useOptionsChain = () => {
   const { pushNotification } = useNotifications();
   const { marketsByUiKey, marketsLoading } = useOptionsMarkets();
   const { uAsset, qAsset } = useAssetList();
+  const contractSize = useNormalizedContractSize();
   const { chains, setChains } = useContext(OptionsChainContext);
 
   /**
@@ -30,7 +36,7 @@ const useOptionsChain = () => {
    * @param {number} dateTimestamp - Expiration as unix timestamp in seconds
    */
   const buildOptionsChain = useCallback(
-    (dateTimestamp: number, contractSize?: number) => {
+    (dateTimestamp: number) => {
       try {
         if (marketsLoading) return;
 
@@ -117,14 +123,14 @@ const useOptionsChain = () => {
                       ...call,
                       initialized: true,
                     }
-                  : (callOrPutTemplate as OptionRow),
+                  : callOrPutTemplate,
                 put: put
                   ? {
                       ...callOrPutTemplate,
                       ...put,
                       initialized: true,
                     }
-                  : (callOrPutTemplate as OptionRow),
+                  : callOrPutTemplate,
                 key: `${callKeyPart}-${size}-${strike}`,
               };
 
@@ -143,10 +149,11 @@ const useOptionsChain = () => {
       }
     },
     [
-      marketsByUiKey,
+      contractSize,
       marketsLoading,
       uAsset?.tokenSymbol,
       qAsset?.tokenSymbol,
+      marketsByUiKey,
       setChains,
       pushNotification,
     ],

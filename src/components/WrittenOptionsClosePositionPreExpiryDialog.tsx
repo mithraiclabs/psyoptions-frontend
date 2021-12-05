@@ -8,17 +8,20 @@ import Divider from '@material-ui/core/Divider';
 import { PublicKey } from '@solana/web3.js';
 import BN from 'bn.js';
 import React, { useCallback, useState } from 'react';
+import { useRecoilValue } from 'recoil';
 import { useClosePosition } from '../hooks/useClosePosition';
-import { useDecimalsForMint } from '../hooks/useDecimalsForMint';
-import { OptionMarket, TokenAccount } from '../types';
-import { getOptionNameByMarket } from '../utils/format';
+import { useFormattedOptionName } from '../hooks/useFormattedOptionName';
+import { useTokenByMint } from '../hooks/useNetworkTokens';
+import { useNormalizeAmountOfMintBN } from '../hooks/useNormalizeAmountOfMintBN';
+import { optionsMap } from '../recoil';
+import { TokenAccount } from '../types';
 import DialogFullscreenMobile from './DialogFullscreenMobile';
 import { PlusMinusIntegerInput } from './PlusMinusIntegerInput';
 
 export const WrittenOptionsClosePositionPreExpiryDialog: React.VFC<{
   dismiss: () => void;
   numLeftToClaim: number;
-  option: OptionMarket;
+  optionKey: PublicKey;
   optionTokenAccount: TokenAccount;
   underlyingAssetDestKey: PublicKey;
   vaultBalance: BN;
@@ -27,20 +30,29 @@ export const WrittenOptionsClosePositionPreExpiryDialog: React.VFC<{
 }> = ({
   dismiss,
   numLeftToClaim,
-  option,
+  optionKey,
   optionTokenAccount,
   underlyingAssetDestKey,
   vaultBalance,
   visible,
   writerTokenAccount,
 }) => {
-  const underlyingAssetDecimals = useDecimalsForMint(
-    option.underlyingAssetMintKey,
+  const option = useRecoilValue(optionsMap(optionKey.toString()));
+  const optionName = useFormattedOptionName(optionKey);
+  const normalizeOptionUnderlyingAmt = useNormalizeAmountOfMintBN(
+    option?.underlyingAssetMint,
   );
+  const optionUnderlyingAsset = useTokenByMint(
+    option?.underlyingAssetMint ?? '',
+  );
+  const optionUnderlyingAssetSymbol =
+    optionUnderlyingAsset?.symbol ??
+    option?.underlyingAssetMint.toString() ??
+    '';
   const [loading, setLoading] = useState(false);
   const [size, setSize] = useState<number | null>(1);
   const closeWrittenOptionPreExpiry = useClosePosition(
-    option,
+    optionKey,
     optionTokenAccount.pubKey,
     underlyingAssetDestKey,
     writerTokenAccount.pubKey,
@@ -52,13 +64,11 @@ export const WrittenOptionsClosePositionPreExpiryDialog: React.VFC<{
     dismiss();
   }, [closeWrittenOptionPreExpiry, dismiss, size]);
 
-  const underlyingSize =
-    (size ?? 0) *
-    option.amountPerContractBN.toNumber() *
-    10 ** -underlyingAssetDecimals;
+  const underlyingSize = normalizeOptionUnderlyingAmt(
+    option?.underlyingAmountPerContract,
+  ).multipliedBy(size ?? 0);
 
-  const normalizedVaultBalance =
-    vaultBalance.toNumber() * 10 ** -underlyingAssetDecimals;
+  const normalizedVaultBalance = normalizeOptionUnderlyingAmt(vaultBalance);
   const max = Math.min(
     optionTokenAccount.amount,
     writerTokenAccount.amount,
@@ -67,7 +77,7 @@ export const WrittenOptionsClosePositionPreExpiryDialog: React.VFC<{
 
   return (
     <DialogFullscreenMobile onClose={dismiss} maxWidth="lg" open={visible}>
-      <DialogTitle>Claim {option.uAssetSymbol}</DialogTitle>
+      <DialogTitle>Claim {optionUnderlyingAssetSymbol}</DialogTitle>
       <DialogContent>
         <Box
           display="flex"
@@ -76,9 +86,10 @@ export const WrittenOptionsClosePositionPreExpiryDialog: React.VFC<{
           width={['100%', '100%', '680px']}
         >
           <Box flexDirection="column" width={['100%', '100%', '50%']}>
-            {getOptionNameByMarket(option)}
+            {optionName}
             <Box pt={1}>
-              Vault balance: {normalizedVaultBalance} {option.uAssetSymbol}
+              Vault balance: {normalizedVaultBalance.toString()}{' '}
+              {optionUnderlyingAssetSymbol}
             </Box>
             <Box pt={1}>Writer Tokens held: {writerTokenAccount.amount}</Box>
             <Box py={1}>Option Tokens held: {optionTokenAccount.amount}</Box>
@@ -93,7 +104,7 @@ export const WrittenOptionsClosePositionPreExpiryDialog: React.VFC<{
               value={size}
             />
             <Box pt={2} style={{ fontSize: 12 }}>
-              {`Burn ${size} Writer Tokens and Option Tokens to claim ${underlyingSize} ${option.uAssetSymbol}`}
+              {`Burn ${size} Writer Tokens and Option Tokens to claim ${underlyingSize} ${optionUnderlyingAssetSymbol}`}
             </Box>
           </Box>
         </Box>

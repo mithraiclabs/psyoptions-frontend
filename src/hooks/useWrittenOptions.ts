@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
+import { useRecoilValue } from 'recoil';
+import { selectAllOptions } from '../recoil';
 import { TokenAccount } from '../types';
-import useOptionsMarkets from './useOptionsMarkets';
 import useOwnedTokenAccounts from './useOwnedTokenAccounts';
 
 /**
@@ -18,21 +19,19 @@ import useOwnedTokenAccounts from './useOwnedTokenAccounts';
  * }
  */
 export const useWrittenOptions = (): Record<string, TokenAccount[]> => {
-  const { marketsByUiKey } = useOptionsMarkets();
+  const options = useRecoilValue(selectAllOptions);
   const { ownedTokenAccounts } = useOwnedTokenAccounts();
 
   return useMemo(() => {
-    const positions = Object.keys(marketsByUiKey).reduce((acc, marketKey) => {
-      const writerTokenMintAddress =
-      marketsByUiKey[marketKey].writerTokenMintKey.toString();
+    const positions = options.reduce((acc, option) => {
       const accountsWithHoldings = ownedTokenAccounts[
-        writerTokenMintAddress
+        option.writerTokenMint.toString()
       ]?.filter((writerTokenAcct) => writerTokenAcct.amount > 0);
       if (accountsWithHoldings?.length) {
-        acc[marketKey] = accountsWithHoldings;
+        acc[option.key.toString()] = accountsWithHoldings;
       }
       return acc;
     }, {} as Record<string, TokenAccount[]>);
     return positions;
-  }, [marketsByUiKey, ownedTokenAccounts]);
+  }, [options, ownedTokenAccounts]);
 };

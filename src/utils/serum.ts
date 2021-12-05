@@ -70,18 +70,23 @@ export const batchSerumMarkets = async (
   // so this should not affect perf too much
   await Promise.all(
     Object.keys(serumPrograms).map(async (key) => {
+      if (!key || key === 'undefined') {
+        return;
+      }
       const { addresses } = serumPrograms[key];
       const programId = new PublicKey(key);
       // Load all of the MarketState data
       const groupOfAddresses: PublicKey[][] = chunkArray(addresses, 100);
-      const getMultipleAccountsForAddresses: Promise<AccountInfo<Buffer>[]>[] =
-        groupOfAddresses.map((addresses) => {
-          return connection.getMultipleAccountsInfo(addresses);
-        });
+      const getMultipleAccountsForAddresses: Promise<
+        (AccountInfo<Buffer> | null)[]
+      >[] = groupOfAddresses.map((addresses) => {
+        return connection.getMultipleAccountsInfo(addresses);
+      });
       const addressesAccounts = await Promise.all(
         getMultipleAccountsForAddresses,
       );
-      const marketInfos: AccountInfo<Buffer>[] = addressesAccounts.flat();
+      const marketInfos: (AccountInfo<Buffer> | null)[] =
+        addressesAccounts.flat();
       if (!marketInfos || !marketInfos.length) {
         throw new Error('Markets not found');
       }
@@ -94,8 +99,8 @@ export const batchSerumMarkets = async (
 
       const mintKeys: PublicKey[] = [];
       const orderbookKeys: PublicKey[] = [];
-      let mintInfos: AccountInfo<Buffer>[];
-      let orderBookInfos: AccountInfo<Buffer>[];
+      let mintInfos: (AccountInfo<Buffer> | null)[];
+      let orderBookInfos: (AccountInfo<Buffer> | null)[];
 
       try {
         // Load all of the SPL Token Mint data and orderbook data for the markets
@@ -106,10 +111,11 @@ export const batchSerumMarkets = async (
           orderbookKeys.push(d.asks);
         });
         const groupOfMintKeys: PublicKey[][] = chunkArray(mintKeys, 100);
-        const getMultipleAccountsForMintKeys: Promise<AccountInfo<Buffer>[]>[] =
-          groupOfMintKeys.map((mintKeys) => {
-            return connection.getMultipleAccountsInfo(mintKeys);
-          });
+        const getMultipleAccountsForMintKeys: Promise<
+          (AccountInfo<Buffer> | null)[]
+        >[] = groupOfMintKeys.map((mintKeys) => {
+          return connection.getMultipleAccountsInfo(mintKeys);
+        });
         const mintKeysAccounts = await Promise.all(
           getMultipleAccountsForMintKeys,
         );
@@ -120,7 +126,7 @@ export const batchSerumMarkets = async (
           100,
         );
         const getMultipleAccountsForOrderbookKeys: Promise<
-          AccountInfo<Buffer>[]
+          (AccountInfo<Buffer> | null)[]
         >[] = groupOfOrderbookKeys.map((orderbookKeys) => {
           return connection.getMultipleAccountsInfo(orderbookKeys);
         });

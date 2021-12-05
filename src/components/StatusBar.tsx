@@ -7,20 +7,21 @@ import IconButton from '@material-ui/core/IconButton';
 import Menu from '@material-ui/icons/Menu';
 import SwipeableDrawer from '@material-ui/core/SwipeableDrawer';
 import NoSsr from '@material-ui/core/NoSsr';
+import { useRecoilValue } from 'recoil';
 
 import WalletStatus from './WalletStatus';
 import NetworkMenu from './NetworkMenu';
 
 import theme from '../utils/theme';
 
-import useConnection from '../hooks/useConnection';
 import { isTrue } from '../utils/general';
+import { activeNetwork } from '../recoil';
 
 const { REACT_APP_INITIALIZE_PAGE_ENABLED } = process.env;
 
 const NavOptions: React.VFC = () => {
   const history = useHistory();
-  const { endpoint } = useConnection();
+  const endpoint = useRecoilValue(activeNetwork);
 
   return (
     <>
@@ -32,7 +33,12 @@ const NavOptions: React.VFC = () => {
           }}
           style={{ minWidth: 0, padding: 0 }}
         >
-          <img src="images/psyoptions-logo-light.png" width="32" height="32" alt="PsyOptions Logo" />
+          <img
+            src="images/psyoptions-logo-light.png"
+            width="32"
+            height="32"
+            alt="PsyOptions Logo"
+          />
         </Button>
       </Box>
       <Box mx={2}>
@@ -163,7 +169,7 @@ const StatusBar: React.VFC<{ transparent?: boolean }> = ({
             </IconButton>
           </Hidden>
         </Box>
-        <Box display="flex" style={{ alignItems: "center" }}>
+        <Box display="flex" style={{ alignItems: 'center', zIndex: 99999 }}>
           <WalletStatus />
           <NoSsr>
             <NetworkMenu />

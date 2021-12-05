@@ -2262,6 +2262,11 @@
     "@solana/spl-token" "^0.1.8"
     "@solana/web3.js" "^1.28.0"
 
+"@mithraic-labs/psy-token-registry@^0.0.3":
+  version "0.0.3"
+  resolved "https://registry.yarnpkg.com/@mithraic-labs/psy-token-registry/-/psy-token-registry-0.0.3.tgz#4d8be2d7a2d8555520431a99bdbf612109d40b1f"
+  integrity sha512-ES5j8I3NLTPpzAhhyB7RPpzFo8UidTlBjoT4FHcYZ9ZMYR2u/VzbiHdhNq1f09UUhGirEy8bvN3y9g6515ShJQ==
+
 "@mithraic-labs/psyoptions@^0.7.2":
   version "0.7.2"
   resolved "https://registry.yarnpkg.com/@mithraic-labs/psyoptions/-/psyoptions-0.7.2.tgz#4493c10dd635f5ddf0e9d61b58f70a0f1440e74e"
@@ -2731,9 +2736,9 @@
     dotenv "10.0.0"
 
 "@solana/web3.js@^1.12.0", "@solana/web3.js@^1.17.0", "@solana/web3.js@^1.21.0", "@solana/web3.js@^1.22.0", "@solana/web3.js@^1.28.0":
-  version "1.29.3"
-  resolved "https://registry.yarnpkg.com/@solana/web3.js/-/web3.js-1.29.3.tgz#f14e736c006ee81c8b71082dcba8530937ec8706"
-  integrity sha512-TP9z1eyS0sJAg5lvYwazOeY+q2aM3SxqA/++UCq7mq+2aBQV4iDgbJYSxTs/PlPBbwtld30w9fh0FsVNqz5ntQ==
+  version "1.30.0"
+  resolved "https://registry.yarnpkg.com/@solana/web3.js/-/web3.js-1.30.0.tgz#64c5e7e0117df2541311855c97727726c12caada"
+  integrity sha512-iiL4mprpYkiPnl512SanjKOSvbvJS9LRnEi3c28nNh/mZE+e+2wdtBkpY6+waTXQKzR+gMJQmK6aLCLTynXfgg==
   dependencies:
     "@babel/runtime" "^7.12.5"
     "@solana/buffer-layout" "^3.0.0"
@@ -2931,6 +2936,11 @@
   dependencies:
     "@babel/types" "^7.3.0"
 
+"@types/base16@^1.0.2":
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/@types/base16/-/base16-1.0.2.tgz#eb3a07db52309bfefb9ba010dfdb3c0784971f65"
+  integrity sha512-oYO/U4VD1DavwrKuCSQWdLG+5K22SLPem2OQaHmFcQuwHoVeGC+JGVRji2MUqZUAIQZHEonOeVfAX09hYiLsdg==
+
 "@types/bn.js@^4.11.5":
   version "4.11.6"
   resolved "https://registry.yarnpkg.com/@types/bn.js/-/bn.js-4.11.6.tgz#c306c70d9358aaea33cd4eda092a742b9505967c"
@@ -3063,7 +3073,21 @@
   dependencies:
     "@types/node" "*"
 
-"@types/lodash@^4.14.159":
+"@types/lodash.curry@^4.1.6":
+  version "4.1.6"
+  resolved "https://registry.yarnpkg.com/@types/lodash.curry/-/lodash.curry-4.1.6.tgz#f26c490c80c92d7cbaa2300d542e89781d44b1ff"
+  integrity sha512-x3ctCcmOYqRrihNNnQJW6fe/yZFCgnrIa6p80AiPQRO8Jis29bBdy1dEw1FwngoF/mCZa3Bx+33fUZvOEE635Q==
+  dependencies:
+    "@types/lodash" "*"
+
+"@types/lodash.uniqby@^4.7.6":
+  version "4.7.6"
+  resolved "https://registry.yarnpkg.com/@types/lodash.uniqby/-/lodash.uniqby-4.7.6.tgz#672827a701403f07904fe37f0721ae92abfa80e8"
+  integrity sha512-9wBhrm1y6asW50Joj6tsySCNUgzK2tCqL7vtKIej0E9RyeBFdcte7fxUosmFuMoOU0eHqOMK76kCCrK99jxHgg==
+  dependencies:
+    "@types/lodash" "*"
+
+"@types/lodash@*", "@types/lodash@^4.14.159":
   version "4.14.176"
   resolved "https://registry.yarnpkg.com/@types/lodash/-/lodash-4.14.176.tgz#641150fc1cda36fbfa329de603bbb175d7ee20c0"
   integrity sha512-xZmuPTa3rlZoIbtDUyJKZQimJV3bxCmzMIO2c9Pz9afyDro6kr7R79GwcB6mRhuoPmV2p1Vb66WOJH7F886WKQ==
@@ -3110,7 +3134,7 @@
   dependencies:
     "@types/retry" "*"
 
-"@types/prop-types@*":
+"@types/prop-types@*", "@types/prop-types@^15.7.3":
   version "15.7.4"
   resolved "https://registry.yarnpkg.com/@types/prop-types/-/prop-types-15.7.4.tgz#fcf7205c25dff795ee79af1e30da2c9790808f11"
   integrity sha512-rZ5drC/jWjrArrS8BR6SIr4cWpW09RNTYt9AMZo3Jwwif+iacXAqgVjm0B0Bv/S1jhDXKHqRVNCbACkJ89RAnQ==
@@ -3161,19 +3185,10 @@
   dependencies:
     "@types/react" "*"
 
-"@types/react@*", "@types/react@^17.0.30":
+"@types/react@*", "@types/react@^17.0.3", "@types/react@^17.0.30":
   version "17.0.31"
   resolved "https://registry.yarnpkg.com/@types/react/-/react-17.0.31.tgz#fe05ebf91ff3ae35bb6b13f6c1b461db8089dff8"
   integrity sha512-MQSR5EL4JZtdWRvqDgz9kXhSDDoy2zMTYyg7UhP+FZ5ttUOocWyxiqFJiI57sUG0BtaEX7WDXYQlkCYkb3X9vQ==
-  dependencies:
-    "@types/prop-types" "*"
-    "@types/scheduler" "*"
-    csstype "^3.0.2"
-
-"@types/react@^16.9.50":
-  version "16.14.18"
-  resolved "https://registry.yarnpkg.com/@types/react/-/react-16.14.18.tgz#b2bcea05ee244fde92d409f91bd888ca8e54b20f"
-  integrity sha512-eeyqd1mqoG43mI0TvNKy9QNf1Tjz3DEOsRP3rlPo35OeMIt05I+v9RR8ZvL2GuYZeF2WAcLXJZMzu6zdz3VbtQ==
   dependencies:
     "@types/prop-types" "*"
     "@types/scheduler" "*"
@@ -4223,11 +4238,16 @@ balanced-match@^1.0.0:
   integrity sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==
 
 base-x@^3.0.2, base-x@^3.0.6:
-  version "3.0.8"
-  resolved "https://registry.yarnpkg.com/base-x/-/base-x-3.0.8.tgz#1e1106c2537f0162e8b52474a557ebb09000018d"
-  integrity sha512-Rl/1AWP4J/zRrk54hhlxH4drNxPJXYUaKffODVI53/dAsV4t9fBxyxYKAVPU1XBHxYwOWP9h9H0hM2MVw4YfJA==
+  version "3.0.9"
+  resolved "https://registry.yarnpkg.com/base-x/-/base-x-3.0.9.tgz#6349aaabb58526332de9f60995e548a53fe21320"
+  integrity sha512-H7JU6iBHTal1gp56aKoaa//YUxEaAOUiydvrV/pILqIHXTtqxSkATOnDA2u+jZ/61sD+L/412+7kzXRtWukhpQ==
   dependencies:
     safe-buffer "^5.0.1"
+
+base16@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/base16/-/base16-1.0.0.tgz#e297f60d7ec1014a7a971a39ebc8a98c0b681e70"
+  integrity sha1-4pf2DX7BAUp6lxo568ipjAtoHnA=
 
 base64-js@^1.0.2, base64-js@^1.3.0, base64-js@^1.3.1, base64-js@^1.5.1:
   version "1.5.1"
@@ -4969,7 +4989,7 @@ color-string@^1.6.0:
     color-name "^1.0.0"
     simple-swizzle "^0.2.2"
 
-color@^3.0.0, color@^3.1.3:
+color@^3.0.0, color@^3.1.2, color@^3.1.3:
   version "3.2.1"
   resolved "https://registry.yarnpkg.com/color/-/color-3.2.1.tgz#3544dc198caf4490c3ecc9a790b54fe9ff45e164"
   integrity sha512-aBl7dZI9ENN6fUGC7mWpMTPNHmWUSNan9tuWN6ahh5ZLNk9baLJOnSMlrQkHcrfFgz2/RigjUVAjdx36VcemKA==
@@ -9458,6 +9478,11 @@ lodash.clonedeep@^4.5.0:
   resolved "https://registry.yarnpkg.com/lodash.clonedeep/-/lodash.clonedeep-4.5.0.tgz#e23f3f9c4f8fbdde872529c1071857a086e5ccef"
   integrity sha1-4j8/nE+Pvd6HJSnBBxhXoIblzO8=
 
+lodash.curry@^4.1.1:
+  version "4.1.1"
+  resolved "https://registry.yarnpkg.com/lodash.curry/-/lodash.curry-4.1.1.tgz#248e36072ede906501d75966200a86dab8b23170"
+  integrity sha1-JI42By7ekGUB11lmIAqG2riyMXA=
+
 lodash.debounce@^4.0.8:
   version "4.0.8"
   resolved "https://registry.yarnpkg.com/lodash.debounce/-/lodash.debounce-4.0.8.tgz#82d79bff30a67c4005ffd5e2515300ad9ca4d7af"
@@ -9502,6 +9527,11 @@ lodash.uniq@^4.5.0:
   version "4.5.0"
   resolved "https://registry.yarnpkg.com/lodash.uniq/-/lodash.uniq-4.5.0.tgz#d0225373aeb652adc1bc82e4945339a842754773"
   integrity sha1-0CJTc662Uq3BvILklFM5qEJ1R3M=
+
+lodash.uniqby@^4.7.0:
+  version "4.7.0"
+  resolved "https://registry.yarnpkg.com/lodash.uniqby/-/lodash.uniqby-4.7.0.tgz#d99c07a669e9e6d24e1362dfe266c67616af1302"
+  integrity sha1-2ZwHpmnp5tJOE2Lf4mbGdhavEwI=
 
 "lodash@>=3.5 <5", lodash@^4.17.11, lodash@^4.17.14, lodash@^4.17.15, lodash@^4.17.19, lodash@^4.17.20, lodash@^4.17.21, lodash@^4.17.5, lodash@^4.7.0:
   version "4.17.21"
@@ -10584,6 +10614,11 @@ parse-json@^5.0.0:
     error-ex "^1.3.1"
     json-parse-even-better-errors "^2.3.0"
     lines-and-columns "^1.1.6"
+
+parse-key@^0.2.1:
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/parse-key/-/parse-key-0.2.1.tgz#7bcf76595536e36075664be4d687e4bdd910208f"
+  integrity sha1-e892WVU242B1Zkvk1ofkvdkQII8=
 
 parse-node-version@^1.0.1:
   version "1.0.1"
@@ -11812,6 +11847,18 @@ react-app-polyfill@^2.0.0:
     regenerator-runtime "^0.13.7"
     whatwg-fetch "^3.4.1"
 
+react-base16-styling@^0.8.0:
+  version "0.8.0"
+  resolved "https://registry.yarnpkg.com/react-base16-styling/-/react-base16-styling-0.8.0.tgz#6251b814b4e09efab3284ae1ecdd490f2c4111eb"
+  integrity sha512-ElvciPaL4xpWh7ISX7ugkNS/dvoh7DpVMp4t93ngnEsS2LkMd8Gu+cDDOLis2rj4889CNK662UdjOfv3wvZg9w==
+  dependencies:
+    "@types/base16" "^1.0.2"
+    "@types/lodash.curry" "^4.1.6"
+    base16 "^1.0.0"
+    color "^3.1.2"
+    csstype "^3.0.2"
+    lodash.curry "^4.1.1"
+
 react-clientside-effect@^1.2.5:
   version "1.2.5"
   resolved "https://registry.yarnpkg.com/react-clientside-effect/-/react-clientside-effect-1.2.5.tgz#e2c4dc3c9ee109f642fac4f5b6e9bf5bcd2219a3"
@@ -11856,6 +11903,15 @@ react-device-detect@^2.0.1:
   dependencies:
     ua-parser-js "0.7.28"
 
+react-dock@^0.3.0:
+  version "0.3.0"
+  resolved "https://registry.yarnpkg.com/react-dock/-/react-dock-0.3.0.tgz#5d9d51cac78ee5819854c3ad180dabe50c420820"
+  integrity sha512-A0Dfy6enwb6gruxsMXAkZM6hVyJETTcuB4u/CUVPAj4ZH0/ULQacLHmIdUHfYtZYmPCfeEgOa7KyTueSPrIjFg==
+  dependencies:
+    "@types/prop-types" "^15.7.3"
+    lodash.debounce "^4.0.8"
+    prop-types "^15.7.2"
+
 react-dom@^17.0.2:
   version "17.0.2"
   resolved "https://registry.yarnpkg.com/react-dom/-/react-dom-17.0.2.tgz#ecffb6845e3ad8dbfcdc498f0d0a939736502c23"
@@ -11891,6 +11947,15 @@ react-is@^16.6.0, react-is@^16.7.0, react-is@^16.8.1:
   version "17.0.2"
   resolved "https://registry.yarnpkg.com/react-is/-/react-is-17.0.2.tgz#e691d4a8e9c789365655539ab372762b0efb54f0"
   integrity sha512-w2GsyukL62IJnlaff/nRegPQR94C/XXamvMWmSHRJ4y7Ts/4ocGRmTHvOs8PSE6pB3dWOrD/nueuU5sduBsQ4w==
+
+react-json-tree@^0.13.0:
+  version "0.13.0"
+  resolved "https://registry.yarnpkg.com/react-json-tree/-/react-json-tree-0.13.0.tgz#49b1e68e4ed7f4f918142a4b0d9af6c533c86a7d"
+  integrity sha512-FPJUQzYWi7pvBUAnMd9ENOnAUT2mXLhe01VUbPfKH9Q4gk4FQ0fpS1e1WZ3o7g6zfYJpYJeBTo1WwlMHlMlZOw==
+  dependencies:
+    "@types/prop-types" "^15.7.3"
+    prop-types "^15.7.2"
+    react-base16-styling "^0.8.0"
 
 react-refresh@^0.8.3:
   version "0.8.3"
@@ -12108,6 +12173,32 @@ readdirp@~3.6.0:
   integrity sha512-hOS089on8RduqdbhvQ5Z37A0ESjsqz6qnRcffsMU3495FuTdqSm+7bhJ29JvIOsBDEEnan5DPu9t3To9VRlMzA==
   dependencies:
     picomatch "^2.2.1"
+
+recoil-devtools-dock@^0.4.0:
+  version "0.4.0"
+  resolved "https://registry.yarnpkg.com/recoil-devtools-dock/-/recoil-devtools-dock-0.4.0.tgz#3e984e36dbe0e10912b2db9336a49b37b8799405"
+  integrity sha512-QQXV5knvRBoD3oxawCzU6lNmNBAMjnTSzu6RKluGDZmk3WJc5CWlBGw0jNN/E6zuz2QiWHWSRaSX6u0A1SuAEQ==
+  dependencies:
+    parse-key "^0.2.1"
+    react-dock "^0.3.0"
+
+recoil-devtools-log-monitor@^0.4.0:
+  version "0.4.0"
+  resolved "https://registry.yarnpkg.com/recoil-devtools-log-monitor/-/recoil-devtools-log-monitor-0.4.0.tgz#78652cdbf41fd52256e60e5e1218872fe451e1e6"
+  integrity sha512-ff70bvJ/csqcWhYEhSDI+ZimqTFExamEakMJq+xtKxF+ZoTTk9rGYlB8QqHhgG9o2qDuWsln7zI3z1fGEt34fw==
+  dependencies:
+    base16 "^1.0.0"
+    lodash.debounce "^4.0.8"
+    react-json-tree "^0.13.0"
+    recoil-devtools-themes "^0.1.2"
+
+recoil-devtools-themes@^0.1.2:
+  version "0.1.2"
+  resolved "https://registry.yarnpkg.com/recoil-devtools-themes/-/recoil-devtools-themes-0.1.2.tgz#5b6a2000153d5183417071c3a4beedd2b466b6fc"
+  integrity sha512-cawFXiUMNCw/gLImG93i4WjURBZxtuJa4bR7Y6KNvDRY2SWl2hGt+AA+r7kcs3MtdwbarR595m5yiLfUlRIyHQ==
+  dependencies:
+    "@types/base16" "^1.0.2"
+    base16 "^1.0.0"
 
 recoil@^0.5.2:
   version "0.5.2"

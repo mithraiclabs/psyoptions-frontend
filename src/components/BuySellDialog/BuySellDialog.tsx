@@ -9,12 +9,11 @@ import Done from '@material-ui/icons/Done';
 import * as Sentry from '@sentry/react';
 import { LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js';
 import BigNumber from 'bignumber.js';
-import BN from 'bn.js';
 import type { Moment } from 'moment';
 
 import theme from '../../utils/theme';
 import { WRAPPED_SOL_ADDRESS, getHighestAccount } from '../../utils/token';
-import { useConnectedWallet } from "@saberhq/use-solana";
+import { useConnectedWallet } from '@saberhq/use-solana';
 import useSerum from '../../hooks/useSerum';
 import useOwnedTokenAccounts from '../../hooks/useOwnedTokenAccounts';
 import useNotifications from '../../hooks/useNotifications';
@@ -22,7 +21,6 @@ import usePlaceSellOrder from '../../hooks/usePlaceSellOrder';
 import usePlaceBuyOrder from '../../hooks/usePlaceBuyOrder';
 import { useSerumOrderbook } from '../../hooks/Serum';
 import { useSerumFeeDiscountKey } from '../../hooks/Serum/useSerumFeeDiscountKey';
-import { useOptionMarket } from '../../hooks/useOptionMarket';
 
 import OrderBook from '../OrderBook';
 import { UnsettledFunds } from './UnsettledFunds';
@@ -37,35 +35,36 @@ import {
   calculateBreakevenForLimitOrder,
   calculateBreakevenForMarketOrder,
 } from '../../utils/calculateBreakeven';
-import { useInitializeSerumMarket } from '../../hooks/Serum/useInitializeSerumMarket';
 import { PlusMinusIntegerInput } from '../PlusMinusIntegerInput';
 import { TokenAccount } from '../../types';
 import useWalletInfo from '../../hooks/useWalletInfo';
+import { useRecoilValue } from 'recoil';
+import { optionsMap, quoteMint, underlyingMint } from '../../recoil';
+import { useTokenByMint } from '../../hooks/useNetworkTokens';
+import { useNormalizeAmountOfMintBN } from '../../hooks/useNormalizeAmountOfMintBN';
+import { useNormalizedContractSize } from '../../hooks/useNormalizedContractSize';
+import { useHistory } from 'react-router-dom';
+import { useOptionAssetValues } from '../../hooks/useOptionAssetValues';
+import { useOptionAssetMintInfos } from '../../hooks/useOptionAssetMintInfos';
+import { useFormattedOptionName } from '../../hooks/useFormattedOptionName';
 
 const bgLighterColor = (theme.palette.background as any).lighter;
 
 const orderTypes = ['limit', 'market'];
 
-const zero = new BigNumber(0);
+// TODO fix all the things
 
 const BuySellDialog: React.VFC<{
+  key: string;
   open: boolean;
   onClose: () => void;
-  heading: string;
-  amountPerContract: BigNumber;
-  quoteAmountPerContract: BigNumber;
-  uAssetSymbol: string;
-  qAssetSymbol: string;
   qAssetMint: string;
   uAssetMint: string;
-  uAssetDecimals: number;
-  qAssetDecimals: number;
   strike: BigNumber;
   round: boolean;
   precision: number;
   type: string;
-  optionMintKey: PublicKey;
-  writerTokenMintKey: PublicKey;
+  optionKey: PublicKey;
   serumAddress: string;
   date: Moment;
   markPrice: number;
@@ -73,30 +72,20 @@ const BuySellDialog: React.VFC<{
   limitPrice: string;
 }> = ({
   open,
+  optionKey,
   onClose,
-  heading,
-  amountPerContract = zero,
-  quoteAmountPerContract = zero,
-  uAssetSymbol,
-  qAssetSymbol,
-  qAssetMint,
-  uAssetMint,
-  uAssetDecimals,
-  qAssetDecimals,
   strike,
   round,
   precision,
   type,
-  optionMintKey,
-  writerTokenMintKey,
   serumAddress,
-  date,
   markPrice,
   setLimitPrice,
   limitPrice,
 }) => {
-  const [orderType, setOrderType] = useState('limit');
-  const [orderSize, setOrderSize] = useState(1);
+  const history = useHistory();
+  const [orderType, setOrderType] = useState<'market' | 'limit'>('limit');
+  const [orderSize, setOrderSize] = useState<number | null>(1);
   const [optionAccounts, setOptionAccounts] = useState([] as TokenAccount[]);
   const [writerAccounts, setWriterAccounts] = useState([] as TokenAccount[]);
   const [uAssetAccounts, setUAssetAccounts] = useState([] as TokenAccount[]);
@@ -104,53 +93,77 @@ const BuySellDialog: React.VFC<{
   const [openPositionSize, setOpenPositionSize] = useState(0);
   const [qAssetBalance, setQAssetBalance] = useState(0);
   const [uAssetBalance, setUAssetBalance] = useState(0);
-  const [initializingSerum, setInitializingSerum] = useState(false);
   const [placeOrderLoading, setPlaceOrderLoading] = useState(false);
   const { pushErrorNotification } = useNotifications();
   const wallet = useConnectedWallet();
   const { balance } = useWalletInfo();
   const placeSellOrder = usePlaceSellOrder(serumAddress);
   const placeBuyOrder = usePlaceBuyOrder(serumAddress);
-  const { serumMarkets, fetchSerumMarket } = useSerum();
+  const { serumMarkets } = useSerum();
   const { orderbook } = useSerumOrderbook(serumAddress);
-  const initializeSerumMarket = useInitializeSerumMarket();
   const { feeRates: serumFeeRates, publicKey: serumDiscountFeeKey } =
     useSerumFeeDiscountKey();
   const { ownedTokenAccounts, loadingOwnedTokenAccounts } =
     useOwnedTokenAccounts();
-  const optionMarket = useOptionMarket({
-    date: date.unix(),
-    uAssetSymbol,
-    qAssetSymbol,
-    size: amountPerContract.toString(),
-    amountPerContract,
-    quoteAmountPerContract,
+  const _underlyingMint = useRecoilValue(underlyingMint);
+  const _quoteMint = useRecoilValue(quoteMint);
+  const option = useRecoilValue(optionsMap(optionKey?.toString()));
+  const [optionUnderlyingAsset, optionQuoteAsset] =
+    useOptionAssetValues(optionKey);
+  const [optionUnderlyingMintInfo, optionQuoteMintInfo] =
+    useOptionAssetMintInfos(optionKey);
+  const optionUnderlyingAssetSymbol =
+    optionUnderlyingAsset?.symbol ??
+    option?.underlyingAssetMint.toString() ??
+    '';
+  const optionQuoteAssetSymbol =
+    optionQuoteAsset?.symbol ?? option?.quoteAssetMint.toString() ?? '';
+  const optionUnderlyingDecimals = optionUnderlyingMintInfo?.decimals ?? 0;
+  const optionQuoteDecimals = optionQuoteMintInfo?.decimals ?? 0;
+  const underlyingAsset = useTokenByMint(_underlyingMint ?? '');
+  const quoteAsset = useTokenByMint(_quoteMint ?? '');
+  const isCall =
+    _underlyingMint && option?.underlyingAssetMint.equals(_underlyingMint);
+  const optionName = useFormattedOptionName(optionKey, {
+    isCall: isCall ?? undefined,
   });
+  const normalizeOptionUnderlyingSize = useNormalizeAmountOfMintBN(
+    option?.underlyingAssetMint ?? null,
+  );
+  const optionUnderlyingSize = normalizeOptionUnderlyingSize(
+    option?.underlyingAmountPerContract,
+  );
+  const sizeOfContract = useNormalizedContractSize();
 
   const serumMarketData = useMemo(() => {
-    return serumMarkets[serumAddress]
+    return serumMarkets[serumAddress];
   }, [serumMarkets, serumAddress]);
 
   const parsedLimitPrice = useMemo(() => {
     return new BigNumber(
       Number.isNaN(parseFloat(limitPrice)) || parseFloat(limitPrice) < 0
         ? 0
-        : parseFloat(limitPrice))
+        : parseFloat(limitPrice),
+    );
   }, [limitPrice]);
 
   const collateralRequired = useMemo(() => {
-    return amountPerContract ? Math.max(
-      amountPerContract.multipliedBy(orderSize).toNumber() -
-        (openPositionSize * amountPerContract.toNumber()),
-      0,
-    ) : 'N/A';
-  }, [amountPerContract, orderSize, openPositionSize]);
+    return sizeOfContract
+      ? Math.max(
+          sizeOfContract * (orderSize ?? 0) - openPositionSize * sizeOfContract,
+        )
+      : 'N/A';
+  }, [sizeOfContract, orderSize, openPositionSize]);
 
   useEffect(() => {
-    const newOptionAccounts = ownedTokenAccounts[`${optionMintKey}`] || [];
-    const newWriterAccounts = ownedTokenAccounts[`${writerTokenMintKey}`] || [];
-    const newUAssetAccounts = ownedTokenAccounts[uAssetMint] || [];
-    const newQAssetAccounts = ownedTokenAccounts[qAssetMint] || [];
+    // TODO don't use an effect for this
+    const newOptionAccounts = ownedTokenAccounts[`${option?.optionMint}`] || [];
+    const newWriterAccounts =
+      ownedTokenAccounts[`${option?.writerTokenMint}`] || [];
+    const newUAssetAccounts =
+      ownedTokenAccounts[option?.underlyingAssetMint?.toString() ?? ''] || [];
+    const newQAssetAccounts =
+      ownedTokenAccounts[option?.quoteAssetMint?.toString() ?? ''] || [];
     setOptionAccounts(newOptionAccounts);
     setWriterAccounts(newWriterAccounts);
     setUAssetAccounts(newUAssetAccounts);
@@ -158,22 +171,29 @@ const BuySellDialog: React.VFC<{
     setOpenPositionSize(getHighestAccount(newOptionAccounts)?.amount || 0);
     setContractsWritten(getHighestAccount(newWriterAccounts)?.amount || 0);
 
-    setQAssetBalance((getHighestAccount(newQAssetAccounts)?.amount || 0) / 10 ** qAssetDecimals);
-    let tempBalance = (getHighestAccount(newUAssetAccounts)?.amount || 0) / 10 ** uAssetDecimals;
-    if (uAssetMint === WRAPPED_SOL_ADDRESS) {
+    setQAssetBalance(
+      (getHighestAccount(newQAssetAccounts)?.amount || 0) /
+        10 ** optionQuoteDecimals,
+    );
+    let tempBalance =
+      (getHighestAccount(newUAssetAccounts)?.amount || 0) /
+      10 ** optionUnderlyingDecimals;
+    if (option?.underlyingAssetMint?.toString() === WRAPPED_SOL_ADDRESS) {
       // if asset is wrapped Sol, use balance of wallet account
       tempBalance = balance ?? 0 / LAMPORTS_PER_SOL;
     }
     setUAssetBalance(tempBalance);
   }, [
     ownedTokenAccounts,
-    optionMintKey,
-    writerTokenMintKey,
-    uAssetMint,
-    qAssetMint,
-    qAssetDecimals,
-    uAssetDecimals,
     balance,
+    _underlyingMint,
+    _quoteMint,
+    option?.optionMint,
+    option?.writerTokenMint,
+    option?.underlyingAssetMint,
+    option?.quoteAssetMint,
+    optionUnderlyingDecimals,
+    optionQuoteDecimals,
   ]);
 
   const formatStrike = (sp: BigNumber) => {
@@ -181,81 +201,23 @@ const BuySellDialog: React.VFC<{
     return round ? sp.toFixed(precision) : sp.toString(10);
   };
 
-  const handleInitializeSerum = useCallback(async () => {
-    const serumProgramKey = optionMarket?.serumProgramId
-      ? new PublicKey(optionMarket.serumProgramId)
-      : null;
-    if (!optionMarket || !serumProgramKey)
-      return;
-    
-    setInitializingSerum(true);
-
-    try {
-      // TODO: make tick size and quote lot size configurable... maybe?
-      // Or should we just have sane defaults?
-      let tickSize = 0.0001;
-      if (
-        (type === 'call' && qAssetSymbol.match(/^USD/)) ||
-        (type === 'put' && uAssetSymbol.match(/^USD/))
-      ) {
-        tickSize = 0.01;
-      }
-
-      // This will likely be USDC or USDT but could be other things in some cases
-      const quoteLotSize = new BN(
-        tickSize * 10 ** (type === 'call' ? qAssetDecimals : uAssetDecimals),
-      );
-
-      const serumMarketInfo = await initializeSerumMarket({
-        optionMarketKey: optionMarket.pubkey,
-        baseMintKey: optionMintKey,
-        quoteMintKey:
-          type === 'call'
-            ? new PublicKey(qAssetMint)
-            : new PublicKey(uAssetMint),
-        quoteLotSize,
-      });
-
-      // Load the market instance into serum context state
-      // There may be a more efficient way to do this part since we have the keypair here
-      // Open to suggestions / refactoring
-      if (serumMarketInfo) {
-        await fetchSerumMarket(
-          serumMarketInfo[0],
-          new PublicKey(uAssetMint),
-          new PublicKey(qAssetMint),
-          serumProgramKey,
-        );
-      }
-    } catch (error) {
-      pushErrorNotification(error);
-    } finally {
-      setInitializingSerum(false);
-    }
-  }, [
-    optionMarket,
-    qAssetSymbol,
-    uAssetSymbol,
-    type,
-    qAssetDecimals,
-    uAssetDecimals,
-    initializeSerumMarket,
-    optionMintKey,
-    fetchSerumMarket,
-    pushErrorNotification,
-    uAssetMint,
-    qAssetMint
-  ]);
-
   const handlePlaceSellOrder = useCallback(async () => {
-    if (!serumMarketData || !serumMarketData?.serumMarket || !wallet?.publicKey || !optionMarket || !orderbook)
+    if (
+      !serumMarketData ||
+      !serumMarketData?.serumMarket ||
+      !wallet?.publicKey ||
+      !option ||
+      !orderbook
+    ) {
       return;
+    }
     setPlaceOrderLoading(true);
     try {
-      const numberOfContracts = orderSize - openPositionSize;
+      const numberOfContracts = (orderSize ?? 0) - openPositionSize;
       const optionTokenKey = getHighestAccount(optionAccounts)?.pubKey;
-      const underlyingAssetSrcKey = getHighestAccount(uAssetAccounts)?.pubKey;
-      const writerTokenDestinationKey = getHighestAccount(writerAccounts)?.pubKey;
+      const underlyingAssetAccount = getHighestAccount(uAssetAccounts);
+      const writerTokenDestinationKey =
+        getHighestAccount(writerAccounts)?.pubKey;
 
       await placeSellOrder({
         numberOfContractsToMint: numberOfContracts,
@@ -263,17 +225,17 @@ const BuySellDialog: React.VFC<{
         orderArgs: {
           owner: wallet.publicKey,
           // For Serum, the payer is really the account of the asset being sold
-          payer: optionTokenKey,
+          payer: optionTokenKey as PublicKey,
           side: 'sell',
           // Serum-ts handles adding the SPL Token decimals via their
           //  `maket.priceNumberToLots` function
           price:
             orderType === 'market'
-              ? calculatePriceWithSlippage(orderSize, orderbook.bids)
+              ? calculatePriceWithSlippage(orderSize ?? 0, orderbook.bids)
               : parsedLimitPrice.toNumber(),
           // Serum-ts handles adding the SPL Token decimals via their
           //  `maket.priceNumberToLots` function
-          size: orderSize,
+          size: orderSize ?? 0,
           // TODO create true mapping https://github.com/project-serum/serum-ts/blob/6803cb95056eb9b8beced9135d6956583ae5a222/packages/serum/src/market.ts#L1163
           orderType: orderType === 'market' ? 'ioc' : 'limit',
           // This will be null if a token with the symbol SRM does
@@ -282,21 +244,15 @@ const BuySellDialog: React.VFC<{
           // serum fee rate. Should use the taker fee even if limit order if it's likely to match an order
           feeRate: undefined,
         },
-        uAsset: {
-          tokenSymbol: uAssetSymbol,
-          mintAddress: uAssetMint,
-          decimals: uAssetDecimals,
-        },
-        optionMarket,
-        uAssetTokenAccount: underlyingAssetSrcKey ? {
-          pubKey: underlyingAssetSrcKey,
-          amount:
-            uAssetAccounts.find((asset) =>
-              asset.pubKey.equals(underlyingAssetSrcKey),
-            )?.amount || 0,
-          mint: new PublicKey(uAssetMint),
-        } : null,
+        option,
+        optionUnderlyingAssetSymbol:
+          optionUnderlyingAsset?.symbol ??
+          option.underlyingAssetMint.toString(),
+        optionUnderlyingDecimals: optionUnderlyingMintInfo?.decimals ?? 0,
+        optionUnderlyingSize,
         mintedOptionDestinationKey: optionTokenKey,
+        underlyingAssetAmount: underlyingAssetAccount?.amount ?? 0,
+        underlyingAssetSource: underlyingAssetAccount?.pubKey,
         writerTokenDestinationKey,
       });
       setPlaceOrderLoading(false);
@@ -306,55 +262,66 @@ const BuySellDialog: React.VFC<{
       pushErrorNotification(err);
     }
   }, [
-    orderSize,
+    serumMarketData,
+    wallet?.publicKey,
+    option,
     orderbook,
-    orderType,
+    orderSize,
     openPositionSize,
     optionAccounts,
     uAssetAccounts,
     writerAccounts,
     placeSellOrder,
-    serumMarketData,
-    wallet?.publicKey,
+    orderType,
     parsedLimitPrice,
     serumDiscountFeeKey,
-    uAssetSymbol,
-    uAssetMint,
-    uAssetDecimals,
-    optionMarket,
-    pushErrorNotification
+    optionUnderlyingAsset?.symbol,
+    optionUnderlyingMintInfo?.decimals,
+    optionUnderlyingSize,
+    pushErrorNotification,
   ]);
 
   const handleBuyOrder = useCallback(async () => {
-    if (!serumMarketData || !serumMarketData?.serumMarket || !wallet?.publicKey || !optionMarket || !orderbook)
+    if (
+      !serumMarketData ||
+      !serumMarketData?.serumMarket ||
+      !wallet?.publicKey ||
+      !option ||
+      !orderbook
+    )
       return;
 
     setPlaceOrderLoading(true);
 
     try {
       const serumQuoteTokenAccounts =
-        // @ts-ignore: serum market._decoded
-        ownedTokenAccounts[serumMarketData.serumMarket._decoded.quoteMint.toString()] || [];
-      const serumQuoteTokenKey = getHighestAccount(serumQuoteTokenAccounts)?.pubKey;
+        ownedTokenAccounts[
+          // @ts-ignore: serum market._decoded
+          serumMarketData.serumMarket._decoded.quoteMint.toString()
+        ] || [];
+      const serumQuoteTokenKey = getHighestAccount(
+        serumQuoteTokenAccounts,
+      )?.pubKey;
       const optionTokenKey = getHighestAccount(optionAccounts)?.pubKey;
+
       await placeBuyOrder({
-        optionMarket,
+        option,
         serumMarket: serumMarketData?.serumMarket,
         optionDestinationKey: optionTokenKey,
         orderArgs: {
           owner: wallet.publicKey,
           // For Serum, the payer is really the account of the asset being sold
-          payer: serumQuoteTokenKey,
+          payer: serumQuoteTokenKey as PublicKey,
           side: 'buy',
           // Serum-ts handles adding the SPL Token decimals via their
           //  `maket.priceNumberToLots` function
           price:
             orderType === 'market'
-              ? calculatePriceWithSlippage(orderSize, orderbook?.asks)
+              ? calculatePriceWithSlippage(orderSize ?? 0, orderbook?.asks)
               : parsedLimitPrice.toNumber(),
           // Serum-ts handles adding the SPL Token decimals via their
           //  `maket.priceNumberToLots` function
-          size: orderSize,
+          size: orderSize ?? 0,
           // TODO create true mapping https://github.com/project-serum/serum-ts/blob/6803cb95056eb9b8beced9135d6956583ae5a222/packages/serum/src/market.ts#L1163
           orderType: orderType === 'market' ? 'ioc' : 'limit',
           // This will be null if a token with the symbol SRM does
@@ -375,40 +342,41 @@ const BuySellDialog: React.VFC<{
       pushErrorNotification(err);
     }
   }, [
-    ownedTokenAccounts,
-    orderSize,
-    orderbook,
-    orderType,
-    optionAccounts,
-    placeBuyOrder,
     serumMarketData,
     wallet?.publicKey,
+    option,
+    orderbook,
+    ownedTokenAccounts,
+    optionAccounts,
+    placeBuyOrder,
+    orderType,
+    orderSize,
     parsedLimitPrice,
     serumDiscountFeeKey,
-    serumFeeRates,
-    optionMarket,
-    pushErrorNotification
+    serumFeeRates?.taker,
+    pushErrorNotification,
   ]);
 
-  const serumMarketQuoteAssetSymbol = type === 'put' ? uAssetSymbol : qAssetSymbol;
-  const serumMarketQuoteAssetBalance = type === 'put' ? uAssetBalance : qAssetBalance;
-  const breakeven: number | null = orderType === 'market' ?
-    calculateBreakevenForMarketOrder(
-      strike?.toNumber(),
-      type === 'call'
-        ? amountPerContract?.toNumber()
-        : quoteAmountPerContract?.toNumber(),
-      orderSize,
-      orderbook?.asks ?? [],
-      type === 'put',
-    ) : calculateBreakevenForLimitOrder(
-      strike?.toNumber(),
-      type === 'call'
-        ? amountPerContract?.toNumber()
-        : quoteAmountPerContract?.toNumber(),
-      parsedLimitPrice?.toNumber(),
-      type === 'put',
-    );
+  const serumMarketQuoteAssetSymbol = !isCall
+    ? optionUnderlyingAssetSymbol
+    : optionQuoteAssetSymbol;
+  const serumMarketQuoteAssetBalance = isCall ? qAssetBalance : uAssetBalance;
+
+  const breakeven: number | null =
+    orderType === 'market'
+      ? calculateBreakevenForMarketOrder(
+          strike?.toNumber() ?? 0,
+          sizeOfContract,
+          orderSize ?? 0,
+          orderbook?.asks ?? [],
+          !isCall,
+        )
+      : calculateBreakevenForLimitOrder(
+          strike?.toNumber() ?? 0,
+          sizeOfContract,
+          parsedLimitPrice.toNumber(),
+          !isCall,
+        );
 
   return (
     <DialogFullscreenMobile open={open} onClose={onClose} maxWidth={'lg'}>
@@ -421,7 +389,7 @@ const BuySellDialog: React.VFC<{
           justifyContent="space-between"
           alignItems="center"
         >
-          <h2 style={{ margin: '0' }}>{heading}</h2>
+          <h2 style={{ margin: '0' }}>{optionName}</h2>
           <Button onClick={onClose} style={{ minWidth: '40px' }}>
             <Close />
           </Button>
@@ -430,12 +398,13 @@ const BuySellDialog: React.VFC<{
           <Box p={1} width={['100%', '100%', '50%']}>
             <Box pt={1}>
               Strike: {formatStrike(strike)}{' '}
-              {type === 'call'
-                ? `${qAssetSymbol}/${uAssetSymbol}`
-                : `${uAssetSymbol}/${qAssetSymbol}`}
+              {isCall
+                ? `${quoteAsset?.symbol}/${underlyingAsset?.symbol}`
+                : `${underlyingAsset?.symbol}/${quoteAsset?.symbol}`}
             </Box>
             <Box pt={1}>
-              Contract Size: {(type === 'put' ? quoteAmountPerContract : amountPerContract).toString()} {type === 'put' ? qAssetSymbol : uAssetSymbol}
+              Contract Size: {sizeOfContract}{' '}
+              {!isCall ? quoteAsset?.symbol : underlyingAsset?.symbol}
             </Box>
             <Box pt={1}>Mark Price: {markPrice ?? '-'}</Box>
             <Box pt={1}>
@@ -450,8 +419,8 @@ const BuySellDialog: React.VFC<{
                 <>
                   {contractsWritten}{' '}
                   <span style={{ opacity: 0.5 }}>
-                    ({contractsWritten * amountPerContract.toNumber()}{' '}
-                    {uAssetSymbol} locked)
+                    ({contractsWritten * sizeOfContract}{' '}
+                    {underlyingAsset?.symbol} locked)
                   </span>
                 </>
               )}
@@ -466,7 +435,7 @@ const BuySellDialog: React.VFC<{
                 Collateral req to sell:{' '}
                 {loadingOwnedTokenAccounts
                   ? 'Loading...'
-                  : `${collateralRequired} ${uAssetSymbol}`}
+                  : `${collateralRequired} ${underlyingAsset?.symbol}`}
               </Box>
             </Box>
             <Box pb={1} pt={2}>
@@ -530,12 +499,12 @@ const BuySellDialog: React.VFC<{
               <Box pt={1}>
                 {loadingOwnedTokenAccounts
                   ? 'Loading...'
-                  : `${uAssetSymbol}: ${uAssetBalance} `}
+                  : `${underlyingAsset?.symbol}: ${uAssetBalance} `}
               </Box>
               <Box pt={1}>
                 {loadingOwnedTokenAccounts
                   ? 'Loading...'
-                  : `${qAssetSymbol}: ${qAssetBalance} `}
+                  : `${quoteAsset?.symbol}: ${qAssetBalance} `}
               </Box>
             </Box>
           </Box>
@@ -543,7 +512,11 @@ const BuySellDialog: React.VFC<{
             <Box
               display="flex"
               flexDirection="column"
-              justifyContent={serumMarketData?.serumMarket && !serumMarketData?.error ? 'flex-start' : 'center'}
+              justifyContent={
+                serumMarketData?.serumMarket && !serumMarketData?.error
+                  ? 'flex-start'
+                  : 'center'
+              }
               alignItems="center"
               width="100%"
               height="100%"
@@ -556,7 +529,7 @@ const BuySellDialog: React.VFC<{
                   <OrderBook
                     setOrderSize={setOrderSize}
                     setLimitPrice={setLimitPrice}
-                    {...orderbook}
+                    {...(orderbook ?? { asks: [], bids: [] })}
                   />
                   <Box
                     pt={3}
@@ -576,24 +549,25 @@ const BuySellDialog: React.VFC<{
                           <BuyButton
                             parsedLimitPrice={parsedLimitPrice}
                             numberOfAsks={orderbook?.asks?.length || 0}
-                            qAssetSymbol={serumMarketQuoteAssetSymbol}
+                            qAssetSymbol={serumMarketQuoteAssetSymbol ?? ''}
                             orderType={orderType}
-                            orderCost={parsedLimitPrice.multipliedBy(orderSize)}
-                            parsedOrderSize={orderSize}
+                            orderCost={parsedLimitPrice.multipliedBy(
+                              orderSize ?? 0,
+                            )}
+                            parsedOrderSize={orderSize ?? 0}
                             qAssetBalance={serumMarketQuoteAssetBalance}
                             onClick={handleBuyOrder}
                           />
                         </Box>
                         <Box pl={1} width="50%">
                           <SellButton
-                            amountPerContract={amountPerContract}
                             parsedLimitPrice={parsedLimitPrice}
                             openPositionSize={openPositionSize}
                             numberOfBids={orderbook?.bids?.length || 0}
-                            uAssetSymbol={uAssetSymbol}
-                            uAssetBalance={uAssetBalance}
+                            optionUnderlyingBalance={uAssetBalance}
+                            optionKey={optionKey}
                             orderType={orderType}
-                            parsedOrderSize={orderSize}
+                            parsedOrderSize={orderSize ?? 0}
                             onClick={handlePlaceSellOrder}
                           />
                         </Box>
@@ -604,17 +578,21 @@ const BuySellDialog: React.VFC<{
                     {orderType === 'limit' &&
                     parsedLimitPrice.isLessThanOrEqualTo(0)
                       ? `Invalid Limit Price: ${parsedLimitPrice}`
-                      : `${orderSize} ${type}${orderSize > 1 ? 's' : ''} @ ${
+                      : `${orderSize} ${type}${
+                          (orderSize ?? 0) > 1 ? 's' : ''
+                        } @ ${
                           orderType === 'limit'
-                            ? `${parsedLimitPrice} ${
-                                type === 'call' ? qAssetSymbol : uAssetSymbol
-                              } ${orderSize > 1 ? 'each' : ''}`
+                            ? `${parsedLimitPrice} ${serumMarketQuoteAssetSymbol} ${
+                                (orderSize ?? 0) > 1 ? 'each' : ''
+                              }`
                             : 'market price'
                         }`}
                   </Box>
                   <Box alignSelf="flex-start" pt={1} pb={2}>
                     Breakeven:
-                    {orderSize && breakeven && !isNaN(breakeven) ? ` $${breakeven}` : ' -'}
+                    {orderSize && breakeven && !isNaN(breakeven)
+                      ? ` $${breakeven}`
+                      : ' -'}
                   </Box>
                   <Box
                     py={2}
@@ -622,40 +600,31 @@ const BuySellDialog: React.VFC<{
                     fontSize={'14px'}
                   >
                     {`This is a ${
-                      type === 'call' ? 'covered call' : 'secured put'
-                    }. Mint/Sell will lock the required collateral (${collateralRequired} ${uAssetSymbol}) until the contract expires or is exercised.`}
+                      isCall ? 'covered call' : 'secured put'
+                    }. Mint/Sell will lock the required collateral (${collateralRequired} ${
+                      underlyingAsset?.symbol
+                    }) until the contract expires or is exercised.`}
                   </Box>
                   <UnsettledFunds
-                    qAssetSymbol={type === 'call' ? qAssetSymbol : uAssetSymbol}
+                    optionKey={option?.key}
                     serumMarketAddress={serumAddress}
-                    qAssetDecimals={
-                      type === 'call' ? qAssetDecimals : uAssetDecimals
-                    }
                   />
-                </>
-              ) : !wallet?.connected ? (
-                <>
-                  <Box textAlign="center" px={2} pb={2}>
-                    Connect to Initialize Serum Market
-                  </Box>
-                  <GokiButton />
                 </>
               ) : (
                 <>
                   <Box textAlign="center" px={2} pb={2}>
                     Initialize Serum Market to Place Order
                   </Box>
-                  {initializingSerum ? (
-                    <CircularProgress />
-                  ) : (
-                    <Button
-                      variant="outlined"
-                      color="primary"
-                      onClick={handleInitializeSerum}
-                    >
-                      Initialize Serum
-                    </Button>
-                  )}
+                  <Button
+                    variant="outlined"
+                    color="primary"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      history.push('/initialize-market');
+                    }}
+                  >
+                    Initialize Serum
+                  </Button>
                 </>
               )}
             </Box>

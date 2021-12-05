@@ -1,9 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Box,
-  TableRow,
-  makeStyles,
-} from '@material-ui/core';
+import { Box, TableRow, makeStyles } from '@material-ui/core';
 import moment from 'moment';
 import clsx from 'clsx';
 import { PublicKey } from '@solana/web3.js';
@@ -19,22 +15,22 @@ import useScreenSize from '../../hooks/useScreenSize';
 const useStyles = makeStyles((theme) => ({
   root: {},
   row: {
-    display: "flex",
-    flexDirection: "row",
-    alignItems: "center",
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   rowWrap: {
-    display: "flex",
-    flexDirection: "row",
-    alignItems: "center",
-    flexFlow: "wrap"
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexFlow: 'wrap',
   },
   uppercase: {
-    textTransform: "uppercase",
+    textTransform: 'uppercase',
   },
   column: {
-    display: "flex",
-    flexDirection: "column",
+    display: 'flex',
+    flexDirection: 'column',
   },
   successTextColor: {
     color: theme.palette.success.main,
@@ -43,10 +39,10 @@ const useStyles = makeStyles((theme) => ({
     color: theme.palette.error.main,
   },
   tabletFont: {
-    fontSize: "14px !important",
+    fontSize: '14px !important',
   },
   mobileFont: {
-    fontSize: "10px !important",
+    fontSize: '10px !important',
   },
 }));
 
@@ -88,88 +84,116 @@ const OrderRow: React.VFC<{
 
   return (
     <TableRow>
-      {formFactor === 'desktop' ?
-      <>
-        <TCell
-          className={order?.side === 'buy' ?
-            classes.successTextColor :
-            classes.errorTextColor}
-        >
-          {order?.side}
-        </TCell>
-        <TCell>{type}</TCell>
-        <TCell>{assetPair}</TCell>
-        <TCell>
-          {`${moment.utc(expiration * 1000).format('LL')} 23:59:59 UTC`}
-        </TCell>
-        <TCell>{strikePrice}</TCell>
-        <TCell>{`${contractSize} ${uAssetSymbol}`}</TCell>
-        <TCell>{order?.size}</TCell>
-        <TCell
-          className={order?.side === 'buy' ?
-            classes.successTextColor :
-            classes.errorTextColor}
-        >
-          {order?.price}
-        </TCell>
-        <TCell align="right">
-          <TxButton
-            variant="outlined"
-            color="primary"
-            onClick={cancelOrder}
-            loading={loading}
+      {formFactor === 'desktop' ? (
+        <>
+          <TCell
+            className={
+              order?.side === 'buy'
+                ? classes.successTextColor
+                : classes.errorTextColor
+            }
           >
-            {loading ? 'Canceling' : 'Cancel'}
-          </TxButton>
-        </TCell>
-      </> :
-      <>
-        <TMobileCell className={clsx(classes.rowWrap,
-          formFactor === "tablet" && classes.tabletFont,
-          formFactor === "mobile" && classes.mobileFont)}>
-          <Box pl={formFactor === "mobile" ? 1 : 2} className={classes.column}>
-            <Box className={clsx(classes.uppercase,
-                order?.side === 'buy' ?
-                classes.successTextColor :
-                classes.errorTextColor)}
+            {order?.side}
+          </TCell>
+          <TCell>{type}</TCell>
+          <TCell>{assetPair}</TCell>
+          <TCell>
+            {`${moment.utc(expiration * 1000).format('LL')} 23:59:59 UTC`}
+          </TCell>
+          <TCell>{strikePrice}</TCell>
+          <TCell>{`${contractSize} ${uAssetSymbol}`}</TCell>
+          <TCell>{order?.size}</TCell>
+          <TCell
+            className={
+              order?.side === 'buy'
+                ? classes.successTextColor
+                : classes.errorTextColor
+            }
+          >
+            {order?.price}
+          </TCell>
+          <TCell align="right">
+            <TxButton
+              variant="outlined"
+              color="primary"
+              onClick={cancelOrder}
+              loading={loading}
             >
-                {`${order?.side} ${type}`}
-            </Box>
-            <Box>{assetPair}</Box>
-          </Box>
-          <Box pl={formFactor === "mobile" ? 1 : 2} className={classes.column}>
-            <Box>{`Strike: ${strikePrice}`}</Box>
-            <Box>{`${contractSize} ${uAssetSymbol}`}</Box>
-            <Box>{`Qty: ${order?.size}`}</Box>
-          </Box>
-        </TMobileCell>
-        <TMobileCell className={clsx(
-          formFactor === "tablet" && classes.tabletFont,
-          formFactor === "mobile" && classes.mobileFont)}>
-          {`${moment.utc(expiration * 1000).format('LL')} 23:59:59 UTC`}
-        </TMobileCell>
-        <TMobileCell
-          className={clsx(order?.side === 'buy' ?
-            classes.successTextColor :
-            classes.errorTextColor,
-            formFactor === "tablet" && classes.tabletFont,
-            formFactor === "mobile" && classes.mobileFont)}
-        >
-          {order?.price}
-        </TMobileCell>
-        <TMobileCell align="right" className={clsx(
-          formFactor === "tablet" && classes.tabletFont,
-          formFactor === "mobile" && classes.mobileFont)}>
-          <TxButton
-            variant="outlined"
-            color="primary"
-            onClick={cancelOrder}
-            loading={loading}
+              {loading ? 'Canceling' : 'Cancel'}
+            </TxButton>
+          </TCell>
+        </>
+      ) : (
+        <>
+          <TMobileCell
+            className={clsx(
+              classes.rowWrap,
+              formFactor === 'tablet' && classes.tabletFont,
+              formFactor === 'mobile' && classes.mobileFont,
+            )}
           >
-            {loading ? 'Canceling' : 'Cancel'}
-          </TxButton>
-        </TMobileCell>
-      </>}
+            <Box
+              pl={formFactor === 'mobile' ? 1 : 2}
+              className={classes.column}
+            >
+              <Box
+                className={clsx(
+                  classes.uppercase,
+                  order?.side === 'buy'
+                    ? classes.successTextColor
+                    : classes.errorTextColor,
+                )}
+              >
+                {`${order?.side} ${type}`}
+              </Box>
+              <Box>{assetPair}</Box>
+            </Box>
+            <Box
+              pl={formFactor === 'mobile' ? 1 : 2}
+              className={classes.column}
+            >
+              <Box>{`Strike: ${strikePrice}`}</Box>
+              <Box>{`${contractSize} ${uAssetSymbol}`}</Box>
+              <Box>{`Qty: ${order?.size}`}</Box>
+            </Box>
+          </TMobileCell>
+          <TMobileCell
+            className={clsx(
+              formFactor === 'tablet' && classes.tabletFont,
+              formFactor === 'mobile' && classes.mobileFont,
+            )}
+          >
+            {`${moment.utc(expiration * 1000).format('LL')} 23:59:59 UTC`}
+          </TMobileCell>
+          <TMobileCell
+            className={clsx(
+              order?.side === 'buy'
+                ? classes.successTextColor
+                : classes.errorTextColor,
+              formFactor === 'tablet' && classes.tabletFont,
+              formFactor === 'mobile' && classes.mobileFont,
+            )}
+          >
+            {order?.price}
+          </TMobileCell>
+          <TMobileCell
+            align="right"
+            className={clsx(
+              formFactor === 'tablet' && classes.tabletFont,
+              formFactor === 'mobile' && classes.mobileFont,
+            )}
+          >
+            <TxButton
+              variant="outlined"
+              color="primary"
+              onClick={cancelOrder}
+              loading={loading}
+            >
+              {loading ? 'Canceling' : 'Cancel'}
+            </TxButton>
+          </TMobileCell>
+        </>
+      )}
     </TableRow>
   );
 };
@@ -194,35 +218,39 @@ const OpenOrdersRow: React.VFC<{
 }) => {
   const { marketsBySerumKey } = useOptionsMarkets();
   const [orderbooks] = useSerumOrderbooks();
-  const [actualOpenOrders, setActualOpenOrders] = useState([] as SerumBidOrAsk[]);
+  const [actualOpenOrders, setActualOpenOrders] = useState(
+    [] as SerumBidOrAsk[],
+  );
   const serumMarketAddress = serumMarketKey.toString();
   const { openOrdersBySerumMarket } = useSerumOpenOrders();
   const openOrders = openOrdersBySerumMarket[serumMarketAddress];
   const optionMarket = marketsBySerumKey[serumMarketAddress];
-  const handleCancelOrder = useCancelOrder(serumMarketAddress, optionMarket);
+  const handleCancelOrder = useCancelOrder(
+    serumMarketAddress,
+    optionMarket,
+    optionMarket?.optionMarketKey,
+  );
 
   useEffect(() => {
     if (!orderbooks[serumMarketAddress] || !openOrders) {
       setActualOpenOrders([]);
       return;
     }
-  
+
     const { bidOrderbook, askOrderbook } = orderbooks[serumMarketAddress];
     const bids = [...(bidOrderbook || [])] as SerumBidOrAsk[];
     const asks = [...(askOrderbook || [])] as SerumBidOrAsk[];
     const bidPrices = {} as any;
     const askPrices = {} as any;
-  
+
     // Some manual bugfixing:
     // If this wallet has multiple open orders of same price
     // We need to subtract the size of all orders beyond the first order from the first one
     // Seems to be a bug in the serum code that returns orderbooks
     // The first order of a given price for a wallet returns the total size the wallet has placed at that price, rather than the single order size
-  
+
     asks.forEach((order) => {
-      if (
-        openOrders.some((a) => order.openOrdersAddress.equals(a.address))
-      ) {
+      if (openOrders.some((a) => order.openOrdersAddress.equals(a.address))) {
         const askPricesArr = askPrices[`${order.price}`];
         if (askPricesArr?.length > 0) {
           askPricesArr[0].size -= order.size;
@@ -232,14 +260,12 @@ const OpenOrdersRow: React.VFC<{
         }
       }
     });
-  
+
     // We can modify the bid order sizes in-place if we reverse them first
     // The order with "incorrect size" will be at the end for bids, when reversed it will be at the beginning
     bids.reverse();
     bids.forEach((order) => {
-      if (
-        openOrders.some((a) => order.openOrdersAddress.equals(a.address))
-      ) {
+      if (openOrders.some((a) => order.openOrdersAddress.equals(a.address))) {
         const bidPricesArr = bidPrices[`${order.price}`];
         if (bidPricesArr?.length > 0) {
           bidPricesArr[0].size -= order.size;
@@ -249,7 +275,7 @@ const OpenOrdersRow: React.VFC<{
         }
       }
     });
-  
+
     const serumBidOrAsks = [
       ...Object.values(bidPrices),
       ...Object.values(askPrices),
@@ -267,7 +293,11 @@ const OpenOrdersRow: React.VFC<{
               type={type}
               expiration={expiration}
               uAssetSymbol={uAssetSymbol}
-              assetPair={type === 'put' ? `${qAssetSymbol}/${uAssetSymbol}` : `${uAssetSymbol}/${qAssetSymbol}`}
+              assetPair={
+                type === 'put'
+                  ? `${qAssetSymbol}/${uAssetSymbol}`
+                  : `${uAssetSymbol}/${qAssetSymbol}`
+              }
               strikePrice={strikePrice}
               contractSize={contractSize}
               handleCancelOrder={handleCancelOrder}

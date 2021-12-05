@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useMemo } from 'react';
 import { clusterApiUrl, Connection, PublicKey } from '@solana/web3.js';
 import {
   getDexProgramKeyByNetwork,
@@ -6,74 +6,33 @@ import {
   Network,
   networks,
 } from '../utils/networkInfo';
-import {
-  useRecoilState
-} from 'recoil';
-import {
-  DISALLOWED_COUNTRIES,
-  useCountry
-} from '../hooks/useCountry';
-import { ClusterName } from '../types';
-import {
-  atom
-} from 'recoil';
-
-const DEFAULT_NETWORK = networks.find(
-  (network) => network.programId !== undefined
-);
-
-export const activeNetwork = atom({
-  key: 'activeNetwork',
-  default: DEFAULT_NETWORK
-});
+import { useRecoilValue } from 'recoil';
+import { activeNetwork } from '../recoil';
 
 export type ConnectionContextType = {
   networks: Network[];
   connection: Connection;
-  setConnection: React.Dispatch<React.SetStateAction<Connection>>;
-  endpoint?: Network;
-  setEndpoint?: React.Dispatch<React.SetStateAction<Network>>;
   dexProgramId?: PublicKey;
   graphQLUrl?: string;
 };
 
 const ConnectionContext = createContext<ConnectionContextType>({
   connection: new Connection(clusterApiUrl('devnet')),
-  setConnection: () => {},
   networks,
 });
 
 const ConnectionProvider: React.FC = ({ children }) => {
-  const countryCode = useCountry();
-  const isDisallowed = DISALLOWED_COUNTRIES.includes(countryCode ?? '');
-  const [endpoint, setEndpoint] = useRecoilState(activeNetwork);
-
-  useEffect(() => {
-    if (isDisallowed) {
-      setEndpoint(networks.find((network) => network.name === ClusterName.devnet));
-    }
-  }, [isDisallowed]);
-
-  const [connection, setConnection] = useState(
-    new Connection(endpoint?.url, {
+  const endpoint = useRecoilValue(activeNetwork);
+  const connection = useMemo(() => {
+    return new Connection(endpoint.url, {
       commitment: 'confirmed',
       wsEndpoint: endpoint?.wsEndpoint,
-    }),
-  );
-
-  const handleSetEndpoint = (newEndpoint) => {
-    // Update both endpoint and connection state valuse in the same function
-    // Will prevent extra rerenders of components that depend on both endpoint and connection
-    setEndpoint(newEndpoint);
-    setConnection(new Connection(newEndpoint.url, 'confirmed'));
-  };
+    });
+  }, [endpoint.url, endpoint?.wsEndpoint]);
 
   const state: ConnectionContextType = {
     networks,
     connection,
-    setConnection,
-    endpoint,
-    setEndpoint: handleSetEndpoint,
     dexProgramId: getDexProgramKeyByNetwork(endpoint.name),
     graphQLUrl: getGraphQLUrlByNetwork(endpoint.name),
   };

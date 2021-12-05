@@ -11,6 +11,7 @@ import Box from '@material-ui/core/Box';
 import Paper from '@material-ui/core/Paper';
 import Button from '@material-ui/core/Button';
 import Avatar from '@material-ui/core/Avatar';
+import { useRecoilValue } from 'recoil';
 import theme from '../../utils/theme';
 import useNotifications from '../../hooks/useNotifications';
 import useConnection from '../../hooks/useConnection';
@@ -23,8 +24,9 @@ import Page from '../../components/pages/Page';
 import { TokenAccount } from '../../types';
 import { useHistory } from 'react-router-dom';
 import GokiButton from '../../components/GokiButton';
-import { useConnectedWallet } from "@saberhq/use-solana";
+import { useConnectedWallet } from '@saberhq/use-solana';
 import useWalletInfo from '../../hooks/useWalletInfo';
+import { activeNetwork } from '../../recoil';
 
 const darkBorder = `1px solid ${theme.palette.background.main}`;
 
@@ -42,7 +44,8 @@ const LoadingAirdrop: React.VFC = () => (
 
 const Faucets: React.VFC = () => {
   const history = useHistory();
-  const { connection, endpoint } = useConnection();
+  const endpoint = useRecoilValue(activeNetwork);
+  const { connection } = useConnection();
   useEffect(() => {
     if (endpoint?.name !== 'Devnet') {
       history.replace('/markets');
@@ -65,39 +68,39 @@ const Faucets: React.VFC = () => {
     return {
       ...(assets.find((a) => a.tokenSymbol === 'BTC') || {}),
       faucetAddress: process.env.REACT_APP_DEVNET_FAUCET_BTC,
-    }
+    };
   }, [assets]);
   const PSY = useMemo(() => {
     return {
       ...(assets.find((a) => a.tokenSymbol === 'PSY') || {}),
       faucetAddress: process.env.REACT_APP_DEVNET_FAUCET_PSY,
-    }
+    };
   }, [assets]);
   const USDC = useMemo(() => {
     return {
       ...(assets.find((a) => a.tokenSymbol === 'USDC') || {}),
       faucetAddress: process.env.REACT_APP_DEVNET_FAUCET_USDC,
-    }
+    };
   }, [assets]);
 
   const btcAccount = useMemo(() => {
-    return getHighestAccount(accounts[BTC?.mintAddress ?? ''] || [])
+    return getHighestAccount(accounts[BTC?.mintAddress ?? ''] || []);
   }, [accounts, BTC]);
   const psyAccount = useMemo(() => {
-    return getHighestAccount(accounts[PSY?.mintAddress ?? ''] || [])
+    return getHighestAccount(accounts[PSY?.mintAddress ?? ''] || []);
   }, [accounts, PSY]);
   const usdcAccount = useMemo(() => {
-    return getHighestAccount(accounts[USDC?.mintAddress ?? ''] || [])
+    return getHighestAccount(accounts[USDC?.mintAddress ?? ''] || []);
   }, [accounts, USDC]);
 
   const btcBalance = useMemo(() => {
-    return btcAccount ? btcAccount.amount * 10 ** -(BTC?.decimals ?? 0) : 0
+    return btcAccount ? btcAccount.amount * 10 ** -(BTC?.decimals ?? 0) : 0;
   }, [btcAccount, BTC]);
   const psyBalance = useMemo(() => {
-    return psyAccount ? psyAccount.amount * 10 ** -(PSY?.decimals ?? 0) : 0
+    return psyAccount ? psyAccount.amount * 10 ** -(PSY?.decimals ?? 0) : 0;
   }, [psyAccount, PSY]);
   const usdcBalance = useMemo(() => {
-    return usdcAccount ? usdcAccount.amount * 10 ** -(USDC?.decimals ?? 0) : 0
+    return usdcAccount ? usdcAccount.amount * 10 ** -(USDC?.decimals ?? 0) : 0;
   }, [usdcAccount, USDC]);
 
   const handleClaimSOL = useCallback(async () => {
@@ -116,63 +119,66 @@ const Faucets: React.VFC = () => {
     setLoadingSOL(false);
   }, [endpoint, wallet?.publicKey, pushErrorNotification]);
 
-  const createAccountsAndAirdrop = useCallback(async (
-    asset: any,
-    existingAccount: TokenAccount | undefined,
-    amount: number,
-    message: string,
-  ) => {
-    if (!connection || !wallet?.publicKey) {
-      return;
-    }
-    try {
-      let receivingAccountPublicKey = existingAccount?.pubKey;
-      const tx = new Transaction();
-      const mintPublicKey = new PublicKey(asset.mintAddress);
-
-      if (!existingAccount) {
-        const [ix, associatedTokenPublicKey] =
-          await createAssociatedTokenAccountInstruction({
-            payer: wallet.publicKey,
-            owner: wallet.publicKey,
-            mintPublicKey,
-          });
-        tx.add(ix);
-        receivingAccountPublicKey = associatedTokenPublicKey;
-        subscribeToTokenAccount(receivingAccountPublicKey);
+  const createAccountsAndAirdrop = useCallback(
+    async (
+      asset: any,
+      existingAccount: TokenAccount | undefined,
+      amount: number,
+      message: string,
+    ) => {
+      if (!connection || !wallet?.publicKey) {
+        return;
       }
+      try {
+        let receivingAccountPublicKey = existingAccount?.pubKey;
+        const tx = new Transaction();
+        const mintPublicKey = new PublicKey(asset.mintAddress);
 
-      const amountToDrop = new BN(amount).mul(
-        new BN(10).pow(new BN(asset.decimals)),
-      );
+        if (!existingAccount) {
+          const [ix, associatedTokenPublicKey] =
+            await createAssociatedTokenAccountInstruction({
+              payer: wallet.publicKey,
+              owner: wallet.publicKey,
+              mintPublicKey,
+            });
+          tx.add(ix);
+          receivingAccountPublicKey = associatedTokenPublicKey;
+          subscribeToTokenAccount(receivingAccountPublicKey);
+        }
 
-      const airdropIx = await buildAirdropTokensIx(
-        amountToDrop,
-        undefined as unknown as PublicKey, // admin key, not needed
-        mintPublicKey,
-        receivingAccountPublicKey as PublicKey,
-        new PublicKey(asset.faucetAddress),
-      );
-      tx.add(airdropIx);
+        const amountToDrop = new BN(amount).mul(
+          new BN(10).pow(new BN(asset.decimals)),
+        );
 
-      await sendTransaction({
-        transaction: tx,
-        wallet,
-        signers: [],
-        connection,
-        sendingMessage: `Processing: ${message}`,
-        successMessage: `Confirmed: ${message}`,
-      });
-    } catch (err) {
-      pushErrorNotification(err);
-    }
-  }, [
-    connection,
-    wallet,
-    subscribeToTokenAccount,
-    sendTransaction,
-    pushErrorNotification
-  ]);
+        const airdropIx = await buildAirdropTokensIx(
+          amountToDrop,
+          undefined as unknown as PublicKey, // admin key, not needed
+          mintPublicKey,
+          receivingAccountPublicKey as PublicKey,
+          new PublicKey(asset.faucetAddress),
+        );
+        tx.add(airdropIx);
+
+        await sendTransaction({
+          transaction: tx,
+          wallet,
+          signers: [],
+          connection,
+          sendingMessage: `Processing: ${message}`,
+          successMessage: `Confirmed: ${message}`,
+        });
+      } catch (err) {
+        pushErrorNotification(err);
+      }
+    },
+    [
+      connection,
+      wallet,
+      subscribeToTokenAccount,
+      sendTransaction,
+      pushErrorNotification,
+    ],
+  );
 
   const handleClaimBTC = useCallback(async () => {
     setLoadingBTC(true);
@@ -235,7 +241,10 @@ const Faucets: React.VFC = () => {
                   <Box px={2}>
                     Devnet SOL
                     <br />
-                    Balance: {solBalance ? (solBalance / LAMPORTS_PER_SOL).toFixed(2) : 'Loading...'}
+                    Balance:{' '}
+                    {solBalance
+                      ? (solBalance / LAMPORTS_PER_SOL).toFixed(2)
+                      : 'Loading...'}
                   </Box>
                 </Box>
                 {loadingSOL ? (

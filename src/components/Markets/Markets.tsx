@@ -11,23 +11,18 @@ import {
 } from '@material-ui/core';
 import ChevronLeft from '@material-ui/icons/ChevronLeft';
 import ChevronRight from '@material-ui/icons/ChevronRight';
-import { PublicKey } from '@solana/web3.js';
 import moment from 'moment';
 import { TCellLoading, THeadCell, TCellStrike, PageButton } from './styles';
 import Balances from './MarketsBalances';
 import MarketsUnsettledBalances from './MarketsUnsettledBalances';
 import { MarketsTableHeader } from './MarketsTableHeader';
 import useAssetList from '../../hooks/useAssetList';
-import useExpirationDate from '../../hooks/useExpirationDate';
-import useOptionsChain from '../../hooks/useOptionsChain';
 import useOptionsMarkets from '../../hooks/useOptionsMarkets';
 import useSerum from '../../hooks/useSerum';
 import { MarketDataProvider } from '../../context/MarketDataContext';
 import Page from '../pages/Page';
 import BuySellDialog from '../BuySellDialog';
-import Select from '../Select';
 import { ContractSizeSelector } from '../ContractSizeSelector';
-import SelectAsset from '../SelectAsset';
 import theme from '../../utils/theme';
 import Loading from '../Loading';
 import CallPutRow from './CallPutRow';
@@ -35,31 +30,22 @@ import OpenOrders from '../OpenOrders';
 import UnsettledBalancesTable from '../UnsettledBalancesTable';
 import { calculateStrikePrecision } from '../../utils/getStrikePrices';
 import { useSerumPriceByAssets } from '../../hooks/Serum/useSerumPriceByAssets';
-import { useBatchLoadMints } from '../../hooks/SPLToken';
 import { CallOrPut, SerumMarketAndProgramId } from '../../types';
-
-const dblsp = `${'\u00A0'}${'\u00A0'}`;
-
-const defaultSizeOptions = [
-  {
-    value: 1,
-    text: '1',
-  },
-  {
-    value: 0.1,
-    text: '0.1',
-  },
-  {
-    value: 0.01,
-    text: '0.01',
-  },
-];
+import { useRecoilState, useRecoilValue } from 'recoil';
+import {
+  quoteMint,
+  selectExpirationAsDate,
+  selectMintsOfFutureOptions,
+  underlyingAmountPerContract,
+  underlyingMint,
+} from '../../recoil';
+import { SelectAsset } from '../SelectAsset';
+import { useOptionsChainFromMarketsState } from '../../hooks/useOptionChainsFromMarketsState';
+import { SelectExpiration } from './SelectExpiration';
 
 const rowTemplate = {
   call: {
     key: '',
-    bid: '',
-    ask: '',
     change: '',
     volume: '',
     openInterest: '',
@@ -69,8 +55,6 @@ const rowTemplate = {
   },
   put: {
     key: '',
-    bid: '',
-    ask: '',
     change: '',
     volume: '',
     openInterest: '',
@@ -80,19 +64,22 @@ const rowTemplate = {
   },
 };
 
+// TODO move Serum market storage to Recoil
 const Markets: React.VFC = () => {
-  const { uAsset, qAsset, setUAsset, assetListLoading } = useAssetList();
-  const { selectedDate: date, setSelectedDate, dates } = useExpirationDate();
-  const [contractSize, setContractSize] = useState(0.01);
-  const { chains, buildOptionsChain } = useOptionsChain();
-  const { getSizes, marketsLoading } = useOptionsMarkets();
+  const { uAsset, qAsset, assetListLoading } = useAssetList();
+  const chains = useOptionsChainFromMarketsState();
+  const { marketsLoading } = useOptionsMarkets();
+  const [_underlyingMint, setUnderlyingMint] = useRecoilState(underlyingMint);
+  const [_quoteMint, setQuoteMint] = useRecoilState(quoteMint);
+  const mints = useRecoilValue(selectMintsOfFutureOptions);
+  const expirationDateString = useRecoilValue(selectExpirationAsDate);
+  const contractSize = useRecoilValue(underlyingAmountPerContract);
   const { serumMarkets, fetchMultipleSerumMarkets } = useSerum();
   const [round, setRound] = useState(true);
   const [buySellDialogOpen, setBuySellDialogOpen] = useState(false);
   const [callPutData, setCallPutData] = useState({ type: 'call' } as CallOrPut);
   const [page, setPage] = useState(0);
   const [initialMarkPrice, setInitialMarkPrice] = useState<number | null>(null);
-  const [sizeOptions, setSizeOptions] = useState(defaultSizeOptions);
   const [limitPrice, setLimitPrice] = useState('0');
   const rowsPerPage = 7;
   const [showIV, setShowIV] = useState(true);
@@ -101,27 +88,10 @@ const Markets: React.VFC = () => {
   const [showVolume, setShowVolume] = useState(true);
   const [showOI, setShowOI] = useState(true);
   const [currentColumnsCount, setColumnsCount] = useState(19); // 19 columns
-
-  useEffect(() => {
-    const availableSizes = getSizes({
-      uAssetSymbol: uAsset?.tokenSymbol,
-      qAssetSymbol: qAsset?.tokenSymbol,
-    });
-    setSizeOptions(
-      availableSizes.map((s) => ({ text: s.toString(), value: parseFloat(s) })),
-    );
-  }, [getSizes, uAsset?.tokenSymbol, qAsset?.tokenSymbol]);
-
-  // Unfortunately we need to set contract size in a useEffect because uAsset is asynchronously loaded
-  useEffect(() => {
-    if (sizeOptions.find((s) => s.value === uAsset?.defaultContractSize)) {
-      setContractSize(uAsset?.defaultContractSize ?? 1);
-    } else {
-      if (sizeOptions[0]) {
-        setContractSize(sizeOptions[0].value);
-      }
-    }
-  }, [uAsset?.defaultContractSize, sizeOptions]);
+  const momentDate = useMemo(
+    () => moment(expirationDateString),
+    [expirationDateString],
+  );
 
   const markPrice = useSerumPriceByAssets(
     uAsset?.mintAddress ?? null,
@@ -166,25 +136,6 @@ const Markets: React.VFC = () => {
     [rowsToDisplay],
   );
 
-  // batch request the option mint information for each row
-  const optionMints = useMemo(() => {
-    const tmp: PublicKey[] = [];
-    rows.forEach((row) => {
-      if (row?.call?.optionMintKey) {
-        tmp.push(row?.call?.optionMintKey);
-      }
-      if (row?.put?.optionMintKey) {
-        tmp.push(row?.put?.optionMintKey);
-      }
-    });
-    return tmp;
-  }, [rows]);
-  useBatchLoadMints(optionMints);
-
-  useEffect(() => {
-    buildOptionsChain(date?.unix() ?? 0, contractSize);
-  }, [buildOptionsChain, contractSize, date]);
-
   useEffect(() => {
     // Load serum markets when the options chain changes
     // Only if they don't already exist for the matching call/put
@@ -217,19 +168,6 @@ const Markets: React.VFC = () => {
     setBuySellDialogOpen(true);
   }, []);
 
-  const updateContractSize = useCallback(
-    (e) => setContractSize(e.target.value),
-    [],
-  );
-
-  const buySellDialogHeading = callPutData
-    ? `${callPutData.uAssetSymbol}-${
-        callPutData.qAssetSymbol
-      }${dblsp}|${dblsp}${date?.format(
-        'D MMM YYYY',
-      )}${dblsp}|${dblsp}${callPutData.type.slice(0, 1).toUpperCase()}`
-    : '--';
-
   const currentPageStart = page * rowsPerPage + 1;
   const currentPageEnd = Math.min(
     rowsPerPage * (page + 1),
@@ -243,25 +181,21 @@ const Markets: React.VFC = () => {
   return (
     <MarketDataProvider chain={chains}>
       <Page>
-        {date && <BuySellDialog
-          {...callPutData}
-          markPrice={markPrice}
-          heading={buySellDialogHeading}
-          open={buySellDialogOpen}
-          onClose={() => setBuySellDialogOpen(false)}
-          round={round}
-          precision={precision}
-          date={date}
-          uAssetDecimals={
-            callPutData?.type === 'call' ? uAsset?.decimals : qAsset?.decimals
-          }
-          qAssetDecimals={
-            callPutData?.type === 'call' ? qAsset?.decimals : uAsset?.decimals
-          }
-          setLimitPrice={setLimitPrice}
-          limitPrice={limitPrice}
-          serumAddress={callPutData.serumMarketKey?.toString() ?? ''}
-        />}
+        {momentDate && !!callPutData.key && (
+          <BuySellDialog
+            {...callPutData}
+            optionKey={callPutData.key}
+            markPrice={markPrice}
+            open={buySellDialogOpen}
+            onClose={() => setBuySellDialogOpen(false)}
+            round={round}
+            precision={precision}
+            date={momentDate}
+            setLimitPrice={setLimitPrice}
+            limitPrice={limitPrice}
+            serumAddress={callPutData.serumMarketKey?.toString() ?? ''}
+          />
+        )}
         <Box
           display="flex"
           justifyContent="center"
@@ -283,21 +217,7 @@ const Markets: React.VFC = () => {
               justifyContent="space-between"
             >
               <Box p={[2, 2, 0]} width={['100%', '100%', '300px']}>
-                <Select
-                  formControlOptions={{
-                    variant: 'filled',
-                    style: {
-                      minWidth: '100%',
-                    },
-                  }}
-                  label="Expiration Date"
-                  value={date?.toISOString() ?? ''}
-                  onChange={(e) => setSelectedDate(moment.utc(e.target.value))}
-                  options={dates.map((d) => ({
-                    value: d.toISOString(),
-                    text: `${d.format('ll')} | 23:59:59 UTC`,
-                  }))}
-                />
+                <SelectExpiration />
               </Box>
               <Box
                 pt={[0, 0, 2]}
@@ -305,11 +225,7 @@ const Markets: React.VFC = () => {
                 px={2}
                 width={['100%', '100%', '200px']}
               >
-                <ContractSizeSelector
-                  onChange={updateContractSize}
-                  value={contractSize}
-                  options={sizeOptions}
-                />
+                <ContractSizeSelector />
               </Box>
               <Box px={[0, 0, 2]} py={[2, 2, 0]}>
                 <Balances />
@@ -333,17 +249,19 @@ const Markets: React.VFC = () => {
                 <Box pr={1}>
                   <Box>
                     <SelectAsset
-                      disabled={false}
-                      selectedAsset={uAsset}
-                      onSelectAsset={(asset) => {
-                        setUAsset(asset);
-                      }}
+                      onChange={setUnderlyingMint}
+                      mints={mints}
+                      value={_underlyingMint}
                     />
                   </Box>
                 </Box>
                 <h3 style={{ margin: 0 }}>/</h3>
                 <Box pl={'4px'}>
-                  <SelectAsset disabled selectedAsset={qAsset} />
+                  <SelectAsset
+                    onChange={setQuoteMint}
+                    mints={mints}
+                    value={_quoteMint}
+                  />
                 </Box>
               </Box>
             </Box>
@@ -368,49 +286,48 @@ const Markets: React.VFC = () => {
                   setColumnsCount={setColumnsCount}
                 />
                 <TableBody>
-                  {date && rows.map((row) => {
-                    return fullPageLoading ? (
-                      <tr key={`${row.key}`}>
-                        <TCellLoading
-                          colSpan={9}
-                          style={{
-                            backgroundColor: theme.palette.background.medium,
-                          }}
-                        >
-                          <Loading />
-                        </TCellLoading>
-                        <TCellStrike />
-                        <TCellLoading
-                          colSpan={9}
-                          style={{
-                            backgroundColor: theme.palette.background.medium,
-                          }}
-                        >
-                          <Loading />
-                        </TCellLoading>
-                      </tr>
-                    ) : (
-                      <CallPutRow
-                        key={`${row.key}`}
-                        row={row}
-                        uAsset={uAsset}
-                        qAsset={qAsset}
-                        date={date}
-                        precision={precision}
-                        round={round}
-                        onClickBuySellCall={handleBuySellClick}
-                        onClickBuySellPut={handleBuySellClick}
-                        markPrice={markPrice}
-                        setLimitPrice={setLimitPrice}
-                        showIV={showIV}
-                        showPriceChange={showPriceChange}
-                        showVolume={showVolume}
-                        showLastPrice={showLastPrice}
-                        showOI={showOI}
-                        contractSize={contractSize}
-                      />
-                    );
-                  })}
+                  {momentDate &&
+                    rows.map((row) => {
+                      return fullPageLoading ? (
+                        <tr key={`${row.key}`}>
+                          <TCellLoading
+                            colSpan={9}
+                            style={{
+                              backgroundColor: theme.palette.background.medium,
+                            }}
+                          >
+                            <Loading />
+                          </TCellLoading>
+                          <TCellStrike />
+                          <TCellLoading
+                            colSpan={9}
+                            style={{
+                              backgroundColor: theme.palette.background.medium,
+                            }}
+                          >
+                            <Loading />
+                          </TCellLoading>
+                        </tr>
+                      ) : (
+                        <CallPutRow
+                          key={`${row.key}`}
+                          row={row}
+                          date={momentDate}
+                          precision={precision}
+                          round={round}
+                          onClickBuySellCall={handleBuySellClick}
+                          onClickBuySellPut={handleBuySellClick}
+                          markPrice={markPrice}
+                          setLimitPrice={setLimitPrice}
+                          showIV={showIV}
+                          showPriceChange={showPriceChange}
+                          showVolume={showVolume}
+                          showLastPrice={showLastPrice}
+                          showOI={showOI}
+                          contractSize={contractSize?.toNumber()}
+                        />
+                      );
+                    })}
                   <TableRow>
                     <THeadCell
                       colSpan={currentColumnsCount}

@@ -1,4 +1,4 @@
-import React, { memo, useState } from 'react';
+import React, { memo, useMemo, useState } from 'react';
 import {
   Avatar,
   Box,
@@ -9,17 +9,24 @@ import {
   TableRow,
 } from '@material-ui/core';
 import clsx from 'clsx';
-import { OptionType, TokenAccount } from '../../../types';
 import { formatExpirationTimestamp } from '../../../utils/format';
-import useOptionsMarkets from '../../../hooks/useOptionsMarkets';
 import useOwnedTokenAccounts from '../../../hooks/useOwnedTokenAccounts';
-import useAssetList from '../../../hooks/useAssetList';
 import { ClaimQuoteDialog } from './ClaimQuoteDialog';
 import { WrittenOptionsClaimUnderlyingDialog } from '../../WrittenOptionsClaimUnderlyingDialog';
 import { WrittenOptionsClosePositionPreExpiryDialog } from '../../WrittenOptionsClosePositionPreExpiryDialog';
 import { useOptionVaultAmounts } from '../../../hooks/useOptionVaultAmounts';
 import useScreenSize from '../../../hooks/useScreenSize';
 import { TCell, TMobileCell } from '../../StyledComponents/Table/TableStyles';
+import { PublicKey } from '@solana/web3.js';
+import useOpenPositions from '../../../hooks/useOpenPositions';
+import { useWrittenOptions } from '../../../hooks/useWrittenOptions';
+import { useRecoilValue } from 'recoil';
+import { optionsMap } from '../../../recoil';
+import { BN } from '@project-serum/anchor';
+import { useOptionIsCall } from '../../../hooks/useOptionIsCall';
+import { useNormalizedStrikePriceFromOption } from '../../../hooks/useNormalizedStrikePriceFromOption';
+import { useTokenByMint } from '../../../hooks/useNetworkTokens';
+import { useNormalizeAmountOfMintBN } from '../../../hooks/useNormalizeAmountOfMintBN';
 
 const StyledTooltip = withStyles((theme) => ({
   tooltip: {
@@ -61,10 +68,10 @@ const useStyles = makeStyles((theme) => ({
     color: theme.palette.error.main,
   },
   tabletFont: {
-    fontSize: "14px !important",
+    fontSize: '14px !important',
   },
   mobileFont: {
-    fontSize: "10px !important",
+    fontSize: '10px !important',
   },
 }));
 
@@ -74,23 +81,22 @@ const useStyles = makeStyles((theme) => ({
  * Only closes a single expired option at a time right now.
  */
 const WrittenOptionRow: React.VFC<{
-  expired: boolean;
-  marketKey: string;
-  writerTokenAccounts: TokenAccount[];
-  heldContracts: TokenAccount[];
-  className: string;
-}> = ({
-  expired,
-  marketKey,
-  writerTokenAccounts,
-  heldContracts,
-  className,
-}) => {
+  optionKey: PublicKey;
+}> = ({ optionKey }) => {
+  const option = useRecoilValue(optionsMap(optionKey.toString()));
+  const positions = useOpenPositions();
+  const writtenOptions = useWrittenOptions();
+  const heldContracts = positions[optionKey.toString()] ?? [];
+  const writerTokenAccounts = writtenOptions[optionKey.toString()] ?? [];
   const classes = useStyles();
-  const { supportedAssets } = useAssetList();
   const { formFactor } = useScreenSize();
   const { ownedTokenAccounts } = useOwnedTokenAccounts();
-  const { marketsByUiKey } = useOptionsMarkets();
+  const normalizeOptionUnderlying = useNormalizeAmountOfMintBN(
+    option?.underlyingAssetMint ?? null,
+  );
+  const normalizeOptionQuote = useNormalizeAmountOfMintBN(
+    option?.quoteAssetMint ?? null,
+  );
   const [claimQuoteVisible, setClaimQuoteVisible] = useState(false);
   const [closeWrittenOptionsVisible, setCloseWrittenOptionsVisible] =
     useState(false);
@@ -98,22 +104,53 @@ const WrittenOptionRow: React.VFC<{
     closeWrittenOptionsPreExpiryVisible,
     setCloseWrittenOptionsPreExpiryVisible,
   ] = useState(false);
-  const market = marketsByUiKey[marketKey];
-  const [quoteVaultAmount, underlyingVaultAmount] = useOptionVaultAmounts(
-    market.quoteAssetMintKey,
-    market.quoteAssetPoolKey,
-    market.underlyingAssetMintKey,
-    market.underlyingAssetPoolKey,
+  const expired = useMemo(() => {
+    const nowInSeconds = Date.now() / 1000;
+    return !!option?.expirationUnixTimestamp.lt(new BN(nowInSeconds));
+  }, [option?.expirationUnixTimestamp]);
+  const [quoteVaultAmount, underlyingVaultAmount] =
+    useOptionVaultAmounts(optionKey);
+  const optionUnderlyingAsset = useTokenByMint(
+    option?.underlyingAssetMint ?? '',
   );
+  const optionQuoteAsset = useTokenByMint(option?.quoteAssetMint ?? '');
+  const isCall = useOptionIsCall(optionKey);
+  const strike = useNormalizedStrikePriceFromOption(
+    optionKey.toString(),
+    isCall,
+  );
+  const optionUnderlyingAssetSymbol =
+    optionUnderlyingAsset?.symbol ??
+    option?.underlyingAssetMint.toString() ??
+    '';
+  const optionQuoteAssetSymbol =
+    optionQuoteAsset?.symbol ?? option?.quoteAssetMint.toString() ?? '';
+  const underlyingAssetSymbol = isCall
+    ? optionUnderlyingAssetSymbol
+    : optionQuoteAssetSymbol;
+  const quoteAssetSymbol = isCall
+    ? optionQuoteAssetSymbol
+    : optionUnderlyingAssetSymbol;
+  const underlyingAssetLogo = isCall
+    ? optionUnderlyingAsset?.logoURI
+    : optionQuoteAsset?.logoURI;
   const writerTokenAccount = writerTokenAccounts[0];
   const walletUnderlyingAssetKey =
-    ownedTokenAccounts[market.uAssetMint]?.[0]?.pubKey;
+    ownedTokenAccounts[option?.underlyingAssetMint.toString() ?? '']?.[0]
+      ?.pubKey;
   const walletQuoteAssetKey =
-    ownedTokenAccounts[market.qAssetMint]?.[0]?.pubKey;
+    ownedTokenAccounts[option?.quoteAssetMint.toString() ?? '']?.[0]?.pubKey;
   const ownedOptionTokenAccounts =
-    ownedTokenAccounts[market.optionMintKey.toString()];
+    ownedTokenAccounts[option?.optionMint.toString() ?? ''];
   const holdsContracts = !!heldContracts.length;
   const optionTokenAccount = ownedOptionTokenAccounts[0];
+  // amount of underlying without taking into account call/put
+  const normalizedOptionUnderlyingAmount = normalizeOptionUnderlying(
+    option?.underlyingAmountPerContract,
+  );
+  const normalizedUnderlyingAmount = isCall
+    ? normalizedOptionUnderlyingAmount
+    : normalizeOptionQuote(option?.quoteAmountPerContract);
 
   const handleClaimQuote = () => {
     setClaimQuoteVisible(true);
@@ -122,39 +159,15 @@ const WrittenOptionRow: React.VFC<{
   const showCloseWrittenOptionsPreExpiry = () =>
     setCloseWrittenOptionsPreExpiryVisible(true);
 
-  const optionType = market?.uAssetSymbol?.match(/^USD/)
-    ? OptionType.PUT
-    : OptionType.CALL;
-
-  const strike =
-    optionType === OptionType.PUT
-      ? market?.amountPerContract &&
-        market.amountPerContract
-          .dividedBy(market?.quoteAmountPerContract)
-          .toString()
-      : market?.strike.toString(10);
-
-  const uAssetSymbol =
-    optionType === OptionType.CALL
-      ? market?.uAssetSymbol
-      : market?.qAssetSymbol;
-
-  const uAssetImage = supportedAssets.find(
-    (asset) =>
-      asset?.tokenSymbol ===
-      (optionType === OptionType.PUT
-        ? market?.qAssetSymbol
-        : market?.uAssetSymbol),
-  )?.icon;
-
-  const lockedAmount = writerTokenAccount.amount * parseFloat(market.size);
+  const lockedAmount =
+    writerTokenAccount.amount * normalizedOptionUnderlyingAmount.toNumber();
   const lockedAmountDisplay = `${lockedAmount}`.match(/\.(.{4,})$/)
     ? `≈${lockedAmount.toFixed(3)}`
     : lockedAmount;
 
   const canClose = (ownedOptionTokenAccounts?.[0]?.amount || 0) > 0;
 
-  let ActionFragment = null;
+  let ActionFragment: React.ReactNode = null;
   if (expired) {
     ActionFragment = (
       <>
@@ -182,7 +195,7 @@ const WrittenOptionRow: React.VFC<{
                     onClick={showCloseWrittenOptions}
                     size={formFactor === 'mobile' ? 'small' : 'large'}
                   >
-                    Claim {market.uAssetSymbol}
+                    Claim {underlyingAssetSymbol}
                   </Button>
                 </Box>
               </Box>
@@ -210,7 +223,7 @@ const WrittenOptionRow: React.VFC<{
                 onClick={handleClaimQuote}
                 size={formFactor === 'mobile' ? 'small' : 'large'}
               >
-                Claim {market.qAssetSymbol}
+                Claim {quoteAssetSymbol}
               </Button>
             </Box>
           </StyledTooltip>
@@ -243,7 +256,7 @@ const WrittenOptionRow: React.VFC<{
                   onClick={showCloseWrittenOptionsPreExpiry}
                   size={formFactor === 'mobile' ? 'small' : 'large'}
                 >
-                  Claim {market.uAssetSymbol}
+                  Claim {underlyingAssetSymbol}
                 </Button>
               </Box>
             </Box>
@@ -270,7 +283,7 @@ const WrittenOptionRow: React.VFC<{
                 onClick={handleClaimQuote}
                 size={formFactor === 'mobile' ? 'small' : 'large'}
               >
-                Claim {market.qAssetSymbol}
+                Claim {quoteAssetSymbol}
               </Button>
             </Box>
           </StyledTooltip>
@@ -281,93 +294,114 @@ const WrittenOptionRow: React.VFC<{
 
   return (
     <>
-      <TableRow key={marketKey} style={{ borderBottom: "1pt solid #ff000d" }}>
-        {formFactor === "desktop" ?
+      <TableRow
+        key={optionKey.toString()}
+        style={{ borderBottom: '1pt solid #ff000d' }}
+      >
+        {formFactor === 'desktop' ? (
           <>
             <TCell>
               <Box className={classes.row}>
-                <Avatar className={classes.avatar} src={uAssetImage}>
-                  {uAssetSymbol.slice(0, 1)}
+                <Avatar className={classes.avatar} src={underlyingAssetLogo}>
+                  {underlyingAssetSymbol.slice(0, 1)}
                 </Avatar>
-                <Box pl={1}>{uAssetSymbol}</Box>
+                <Box pl={1}>{underlyingAssetSymbol}</Box>
               </Box>
             </TCell>
-            <TCell>{optionType}</TCell>
-            <TCell>{strike}</TCell>
+            <TCell>{isCall ? 'Call' : 'Put'}</TCell>
+            <TCell>{strike.toString()}</TCell>
             <TCell>{ownedOptionTokenAccounts?.[0]?.amount}</TCell>
-            <TCell>
-              {optionType === 'call'
-                ? market.amountPerContract.toString()
-                : market.quoteAmountPerContract.toString()}
-            </TCell>
+            <TCell>{normalizedUnderlyingAmount.toString()}</TCell>
             <TCell>{writerTokenAccount.amount}</TCell>
             <TCell>
               {expired ? (
                 <Box className={classes.errorColor}>Expired</Box>
               ) : (
-                formatExpirationTimestamp(market.expiration)
+                formatExpirationTimestamp(
+                  option?.expirationUnixTimestamp.toNumber() ?? 0,
+                )
               )}
             </TCell>
-            <TCell>{lockedAmountDisplay} {market.uAssetSymbol}</TCell>
+            <TCell>
+              {lockedAmountDisplay} {underlyingAssetSymbol}
+            </TCell>
             <TCell>{ActionFragment}</TCell>
-          </> : <>
+          </>
+        ) : (
+          <>
             <TMobileCell>
-              <Box className={clsx(classes.row,
-                formFactor === "tablet" && classes.tabletFont,
-                formFactor === "mobile" && classes.mobileFont)}>
-                <Avatar className={classes.avatar} src={uAssetImage}>
-                  {uAssetSymbol.slice(0, 1)}
+              <Box
+                className={clsx(
+                  classes.row,
+                  formFactor === 'tablet' && classes.tabletFont,
+                  formFactor === 'mobile' && classes.mobileFont,
+                )}
+              >
+                <Avatar className={classes.avatar} src={underlyingAssetLogo}>
+                  {underlyingAssetSymbol.slice(0, 1)}
                 </Avatar>
                 <Box className={classes.rowWrap}>
                   <Box
                     pl={formFactor === 'mobile' ? 1 : 2}
                     className={classes.column}
                   >
-                    <Box>{`${uAssetSymbol} | ${optionType}`}</Box>
-                    <Box>{`Strike: ${strike}`}</Box>
+                    <Box>{`${underlyingAssetSymbol} | ${
+                      isCall ? 'Call' : 'Put'
+                    }`}</Box>
+                    <Box>{`Strike: ${strike.toString()}`}</Box>
                     <Box>{`Available: ${ownedOptionTokenAccounts?.[0]?.amount}`}</Box>
                   </Box>
                   <Box
                     pl={formFactor === 'mobile' ? 1 : 2}
                     className={classes.column}
                   >
-                    <Box>{`Size: ${
-                      optionType === 'call'
-                        ? market.amountPerContract.toString()
-                        : market.quoteAmountPerContract.toString()
-                    }`}</Box>
+                    <Box>{`Size: ${normalizedUnderlyingAmount.toString()}`}</Box>
                     <Box>{`Written: ${writerTokenAccount.amount}`}</Box>
                   </Box>
                 </Box>
               </Box>
             </TMobileCell>
-            <TMobileCell className={clsx(
-              formFactor === "tablet" && classes.tabletFont,
-              formFactor === "mobile" && classes.mobileFont)}>
+            <TMobileCell
+              className={clsx(
+                formFactor === 'tablet' && classes.tabletFont,
+                formFactor === 'mobile' && classes.mobileFont,
+              )}
+            >
               {expired ? (
                 <Box className={classes.errorColor}>Expired</Box>
               ) : (
-                formatExpirationTimestamp(market.expiration)
+                formatExpirationTimestamp(
+                  option?.expirationUnixTimestamp.toNumber() ?? 0,
+                )
               )}
             </TMobileCell>
-            <TMobileCell className={clsx(
-              formFactor === "tablet" && classes.tabletFont,
-              formFactor === "mobile" && classes.mobileFont)}>
-              {lockedAmountDisplay} {market.uAssetSymbol}
+            <TMobileCell
+              className={clsx(
+                formFactor === 'tablet' && classes.tabletFont,
+                formFactor === 'mobile' && classes.mobileFont,
+              )}
+            >
+              {lockedAmountDisplay} {underlyingAssetSymbol}
             </TMobileCell>
-            <TMobileCell className={clsx(
-              formFactor === "tablet" && classes.tabletFont,
-              formFactor === "mobile" && classes.mobileFont)}>
+            <TMobileCell
+              className={clsx(
+                formFactor === 'tablet' && classes.tabletFont,
+                formFactor === 'mobile' && classes.mobileFont,
+              )}
+            >
               {ActionFragment}
             </TMobileCell>
-          </>}
+          </>
+        )}
       </TableRow>
       <ClaimQuoteDialog
         dismiss={() => setClaimQuoteVisible(false)}
-        option={market}
-        numLeftToClaim={quoteVaultAmount
-          .div(market.quoteAmountPerContractBN)
-          .toNumber()}
+        optionKey={optionKey}
+        numLeftToClaim={
+          option
+            ? quoteVaultAmount.div(option.quoteAmountPerContract).toNumber()
+            : 0
+        }
         quoteAssetDestKey={walletQuoteAssetKey}
         vaultBalance={quoteVaultAmount}
         visible={claimQuoteVisible}
@@ -375,10 +409,14 @@ const WrittenOptionRow: React.VFC<{
       />
       <WrittenOptionsClaimUnderlyingDialog
         dismiss={() => setCloseWrittenOptionsVisible(false)}
-        numLeftToClaim={underlyingVaultAmount
-          .div(market.amountPerContractBN)
-          .toNumber()}
-        option={market}
+        numLeftToClaim={
+          option
+            ? underlyingVaultAmount
+                .div(option.underlyingAmountPerContract)
+                .toNumber()
+            : 0
+        }
+        optionKey={optionKey}
         underlyingAssetDestKey={walletUnderlyingAssetKey}
         vaultBalance={underlyingVaultAmount}
         visible={closeWrittenOptionsVisible}
@@ -386,10 +424,14 @@ const WrittenOptionRow: React.VFC<{
       />
       <WrittenOptionsClosePositionPreExpiryDialog
         dismiss={() => setCloseWrittenOptionsPreExpiryVisible(false)}
-        numLeftToClaim={underlyingVaultAmount
-          .div(market.amountPerContractBN)
-          .toNumber()}
-        option={market}
+        numLeftToClaim={
+          option
+            ? underlyingVaultAmount
+                .div(option.underlyingAmountPerContract)
+                .toNumber()
+            : 0
+        }
+        optionKey={optionKey}
         optionTokenAccount={optionTokenAccount}
         underlyingAssetDestKey={walletUnderlyingAssetKey}
         vaultBalance={underlyingVaultAmount}

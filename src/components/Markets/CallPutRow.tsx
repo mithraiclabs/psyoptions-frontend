@@ -13,12 +13,13 @@ import { useImpliedVol } from '../../hooks/useImpliedVol';
 import Loading from '../Loading';
 import { useSubscribeSerumOrderbook } from '../../hooks/Serum';
 import { useSubscribeSPLTokenMint } from '../../hooks/SPLToken';
-import { useOptionMarket } from '../../hooks/useOptionMarket';
 import { useSerumOrderbooks } from '../../context/SerumOrderbookContext';
 import { TCell, TCellLoading, TCellStrike, TRow } from './styles';
 import { useMarketData } from '../../context/MarketDataContext';
-import { Asset, CallOrPut, OptionType } from '../../types';
+import { CallOrPut, OptionType } from '../../types';
 import { useSPLTokenMints } from '../../context/SPLTokenMintsContext';
+import { optionsMap } from '../../recoil';
+import { useRecoilValue } from 'recoil';
 
 const Empty: React.FC = ({ children }) => (
   <span style={{ opacity: '0.3' }}>{children}</span>
@@ -48,8 +49,6 @@ type CallPutRowProps = {
     call: CallOrPut;
     put: CallOrPut;
   };
-  uAsset: Asset;
-  qAsset: Asset;
   date: Moment;
   // Precision for strike price rounding with .toFixed
   precision: number;
@@ -71,8 +70,6 @@ const CallPutRow: React.VFC<CallPutRowProps> = ({
   row,
   round = false,
   precision = 2,
-  uAsset,
-  qAsset,
   date,
   markPrice,
   onClickBuySellCall,
@@ -88,31 +85,17 @@ const CallPutRow: React.VFC<CallPutRowProps> = ({
   const { serumMarkets } = useSerum();
   const [orderbooks] = useSerumOrderbooks();
   const [splTokenMints] = useSPLTokenMints();
-  const callMarket = useOptionMarket({
-    date: date.unix(),
-    uAssetSymbol: uAsset?.tokenSymbol,
-    qAssetSymbol: qAsset?.tokenSymbol,
-    size: row.call?.size,
-    amountPerContract: row.call?.amountPerContract,
-    quoteAmountPerContract: row.call?.quoteAmountPerContract,
-  });
-  const putMarket = useOptionMarket({
-    date: date.unix(),
-    uAssetSymbol: qAsset?.tokenSymbol,
-    qAssetSymbol: uAsset?.tokenSymbol,
-    size: row.put?.size,
-    amountPerContract: row.put?.amountPerContract,
-    quoteAmountPerContract: row.put?.quoteAmountPerContract,
-  });
+  const callOption = useRecoilValue(optionsMap(row.call?.key?.toString()));
+  const putOption = useRecoilValue(optionsMap(row.put?.key?.toString()));
   const marketTrackerData = useMarketData();
   const timeToExpiry = useMemo(
     () => Math.max(date.diff(moment.utc(), 'years', true), 0),
     [date],
   );
-  useSubscribeSPLTokenMint(callMarket?.optionMintKey);
-  useSubscribeSPLTokenMint(putMarket?.optionMintKey);
-  useSubscribeSerumOrderbook(row.call?.serumMarketKey?.toString() ?? '');
-  useSubscribeSerumOrderbook(row.put?.serumMarketKey?.toString() ?? '');
+  useSubscribeSPLTokenMint(callOption?.optionMint);
+  useSubscribeSPLTokenMint(putOption?.optionMint);
+  useSubscribeSerumOrderbook(row?.call?.serumMarketKey?.toString() ?? '');
+  useSubscribeSerumOrderbook(row?.put?.serumMarketKey?.toString() ?? '');
   const callOrderbook = orderbooks[row.call?.serumMarketKey?.toString() ?? ''];
   const putOrderbook = orderbooks[row.put?.serumMarketKey?.toString() ?? ''];
 
@@ -121,13 +104,11 @@ const CallPutRow: React.VFC<CallPutRowProps> = ({
   const putHighestBid = putOrderbook?.bids?.[0]?.price;
   const putLowestAsk = putOrderbook?.asks?.[0]?.price;
   const callOptionMintInfo =
-    splTokenMints[callMarket?.optionMintKey.toString() ?? ''];
+    splTokenMints[callOption?.optionMint?.toString() ?? ''];
   const putOptionMintInfo =
-    splTokenMints[putMarket?.optionMintKey.toString() ?? ''];
+    splTokenMints[putOption?.optionMint?.toString() ?? ''];
 
-  // Further optimization here would be doing this in the markets page itself
-
-  const strikeAsNumber = row.strike && row.strike.toNumber();
+  const strikeAsNumber = row.strike?.toNumber();
 
   const callBidIV = useImpliedVol({
     optionPrice: (callHighestBid || 0) / contractSize,
@@ -194,9 +175,10 @@ const CallPutRow: React.VFC<CallPutRowProps> = ({
   };
 
   const putChange =
-    marketTrackerData?.[row.put?.serumMarketKey?.toString() ?? '']?.change;
+    marketTrackerData?.[row.put?.serumMarketKey?.toString() ?? '']?.change ?? 0;
   const callChange =
-    marketTrackerData?.[row.call?.serumMarketKey?.toString() ?? '']?.change;
+    marketTrackerData?.[row.call?.serumMarketKey?.toString() ?? '']?.change ??
+    0;
 
   return (
     <TRow hover role="checkbox" tabIndex={-1}>

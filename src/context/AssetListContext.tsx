@@ -1,8 +1,9 @@
 import React, { createContext, useEffect, useMemo, useState } from 'react';
 import { PublicKey } from '@solana/web3.js';
 import { Token } from '@mithraic-labs/market-meta/dist/types';
-import useConnection from '../hooks/useConnection';
 import { getAssetsByNetwork } from '../utils/networkInfo';
+import { useRecoilValue } from 'recoil';
+import { activeNetwork } from '../recoil';
 
 type TickerPair = {
   uAssetSymbol?: string;
@@ -57,7 +58,7 @@ const AssetListContext = createContext<AssetListContext>({
 });
 
 const AssetListProvider: React.FC = ({ children }) => {
-  const { endpoint } = useConnection();
+  const endpoint = useRecoilValue(activeNetwork);
   const [supportedAssets, setSupportedAssets] = useState<Token[]>([]);
   const [tokenMap, setTokenMap] = useState<Record<string, Token>>({});
   const [uAsset, setUAsset] = useState<Token | null>(null);

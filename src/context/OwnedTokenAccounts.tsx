@@ -8,7 +8,7 @@ import React, {
 import { AccountLayout, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { PublicKey } from '@solana/web3.js';
 import useConnection from '../hooks/useConnection';
-import { useConnectedWallet } from "@saberhq/use-solana";
+import { useConnectedWallet } from '@saberhq/use-solana';
 import { TokenAccount } from '../types';
 import useNotifications from '../hooks/useNotifications';
 
@@ -106,13 +106,14 @@ export const OwnedTokenAccountsProvider: React.FC = ({ children }) => {
   );
 
   useEffect(() => {
+    let currentSubs = subscriptionsRef.current;
     // Clean up subscriptions when component unmounts
     return () => {
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-      Object.values(subscriptionsRef.current).forEach(
+      Object.values(currentSubs).forEach(
         connection.removeAccountChangeListener,
       );
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [connection.removeAccountChangeListener]);
 
   useEffect(() => {

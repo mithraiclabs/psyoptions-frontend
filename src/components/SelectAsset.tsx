@@ -1,18 +1,16 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import Dialog from '@material-ui/core/Dialog';
 import Chip from '@material-ui/core/Chip';
 import Box from '@material-ui/core/Box';
 import TextField from '@material-ui/core/TextField';
 import ListItem from '@material-ui/core/ListItem';
+import ListItemText from '@material-ui/core/ListItemText';
+import KeyboardArrowDown from '@material-ui/icons/KeyboardArrowDown';
+import { useTheme, withStyles } from '@material-ui/core/styles';
+import { PublicKey } from '@solana/web3.js';
+import { useNetworkTokens, useTokenByMint } from '../hooks/useNetworkTokens';
 import ListItemAvatar from '@material-ui/core/ListItemAvatar';
 import Avatar from '@material-ui/core/Avatar';
-import ListItemText from '@material-ui/core/ListItemText';
-import { useTheme, withStyles } from '@material-ui/core/styles';
-import KeyboardArrowDown from '@material-ui/icons/KeyboardArrowDown';
-import { debounce } from 'throttle-debounce';
-
-import { Token } from '@mithraic-labs/market-meta/dist/types';
-import useAssetList from '../hooks/useAssetList';
 
 const CustomChip = withStyles({
   disabled: {
@@ -21,44 +19,34 @@ const CustomChip = withStyles({
   },
 })(Chip);
 
-const SelectAsset: React.FC<{
-  label?: string;
-  selectedAsset: Token;
-  onSelectAsset?: (asset: Token) => void;
+export const SelectAsset: React.VFC<{
   disabled?: boolean;
-}> = ({
-  label = 'Select Asset',
-  selectedAsset,
-  onSelectAsset,
-  disabled = false,
-}) => {
+  onChange: (key: PublicKey) => void;
+  label?: string;
+  mints: PublicKey[];
+  value: PublicKey | null;
+}> = ({ disabled = false, label, mints, onChange, value }) => {
   const theme = useTheme();
-  const { supportedAssets, assetListLoading } = useAssetList();
-
+  const tokens = useNetworkTokens();
+  const asset = useTokenByMint(value ?? '');
   const [open, setOpen] = useState(false);
-  const [filterInput, setFilterInput] = useState('');
+  const [filter, setFilter] = useState('');
+  const filteredMints = useMemo(() => {
+    const lowerFilter = filter.toLowerCase();
+    return mints.filter((mint) => {
+      const token = tokens[mint.toString()];
 
-  const filteredAssetList = supportedAssets.filter((item) => {
-    const match = filterInput.toLowerCase();
-    const shouldAppear =
-      (item.tokenName.toLowerCase().match(match) ||
-        item.tokenSymbol.toLowerCase().match(match)) &&
-      !item.tokenSymbol.toLowerCase().match('usdc');
-    return shouldAppear;
-  });
-
-  const handleChangeFilterInput = debounce(200, false, (e) => {
-    setFilterInput(e.target.value);
-  });
-
-  const handleOpen = () => {
-    setFilterInput('');
-    setOpen(true);
-  };
-
-  const chipLabel = assetListLoading
-    ? 'Loading...'
-    : selectedAsset?.tokenSymbol || 'Choose Asset';
+      return !!token?.symbol.toLowerCase().match(lowerFilter);
+    });
+  }, [filter, mints, tokens]);
+  const onFilterChange: React.ChangeEventHandler<HTMLInputElement> = (e) =>
+    setFilter(e.target.value);
+  const chipLabel = asset
+    ? asset.symbol
+    : value
+    ? value.toString()
+    : 'Loading...';
+  const handleOpen = () => setOpen(true);
 
   return (
     <>
@@ -79,30 +67,34 @@ const SelectAsset: React.FC<{
               <TextField
                 label="Search"
                 variant="filled"
-                onChange={handleChangeFilterInput}
+                onChange={onFilterChange}
                 style={{
                   width: '100%',
                 }}
               />
             </Box>
             <Box my={3} height="300px" overflow="auto">
-              {filteredAssetList.map((asset) => (
-                <ListItem
-                  button
-                  onClick={() => {
-                    setOpen(false);
-                    onSelectAsset(asset);
-                  }}
-                  key={asset.mintAddress}
-                >
-                  <ListItemAvatar>
-                    <Avatar src={asset.icon} />
-                  </ListItemAvatar>
-                  <ListItemText
-                    primary={`${asset.tokenName} (${asset.tokenSymbol})`}
-                  />
-                </ListItem>
-              ))}
+              {filteredMints.map((mint) => {
+                // TODO refactor this to it's own component
+                const token = tokens[mint.toString()];
+                return (
+                  <ListItem
+                    button
+                    onClick={() => {
+                      setOpen(false);
+                      onChange(mint);
+                    }}
+                    key={mint.toString()}
+                  >
+                    {token && (
+                      <ListItemAvatar>
+                        <Avatar src={token.logoURI} />
+                      </ListItemAvatar>
+                    )}
+                    <ListItemText primary={token?.symbol ?? mint.toString()} />
+                  </ListItem>
+                );
+              })}
             </Box>
           </Box>
         </Box>
@@ -110,28 +102,24 @@ const SelectAsset: React.FC<{
       <CustomChip
         label={chipLabel}
         clickable={!disabled}
-        color={'primary'}
+        color="primary"
         variant="outlined"
         disabled={disabled}
         avatar={
-          selectedAsset ? (
+          asset ? (
             <Avatar
-              src={selectedAsset.icon}
-              alt={selectedAsset.tokenName}
+              src={asset.logoURI}
+              alt={asset.name}
               style={{
                 backgroundColor: theme.palette.primary.main,
               }}
-            >
-              {assetListLoading ? '?' : ''}
-            </Avatar>
-          ) : null
+            />
+          ) : undefined
         }
-        onClick={disabled ? null : handleOpen}
-        onDelete={disabled ? null : handleOpen}
-        deleteIcon={disabled ? null : <KeyboardArrowDown />}
+        onClick={disabled ? undefined : handleOpen}
+        onDelete={disabled ? undefined : handleOpen}
+        deleteIcon={disabled ? undefined : <KeyboardArrowDown />}
       />
     </>
   );
 };
-
-export default SelectAsset;

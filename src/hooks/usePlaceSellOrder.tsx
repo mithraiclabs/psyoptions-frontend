@@ -1,36 +1,38 @@
 import { useCallback } from 'react';
+import { PublicKey, Signer, Transaction } from '@solana/web3.js';
 import {
-  PublicKey,
-  Signer,
-  Transaction,
-} from '@solana/web3.js';
-import {
+  serumUtils,
   PSY_AMERICAN_PROGRAM_IDS,
   ProgramVersions,
   serumInstructions,
+  OptionMarketWithKey,
 } from '@mithraic-labs/psy-american';
 import { Market, OrderParams } from '@mithraic-labs/serum/lib/market';
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import { Asset, CreateMissingMintAccountsRes, OptionMarket, TokenAccount } from '../types';
+import { CreateMissingMintAccountsRes } from '../types';
 import { WRAPPED_SOL_ADDRESS } from '../utils/token';
 import useNotifications from './useNotifications';
 import useSendTransaction from './useSendTransaction';
 import useOwnedTokenAccounts from './useOwnedTokenAccounts';
 import { useSolanaMeta } from '../context/SolanaMetaContext';
 import useConnection from './useConnection';
-import { useConnectedWallet } from "@saberhq/use-solana";
+import { useConnectedWallet } from '@saberhq/use-solana';
 import { createMissingAccountsAndMint } from '../utils/instructions/index';
 import { useCreateAdHocOpenOrdersSubscription } from './Serum';
 import { useAmericanPsyOptionsProgram } from './useAmericanPsyOptionsProgram';
+import BigNumber from 'bignumber.js';
 
 type PlaceSellOrderArgs = {
   numberOfContractsToMint: number;
   serumMarket: Market;
-  orderArgs: OrderParams<PublicKey>;
-  optionMarket: OptionMarket;
-  uAsset: Asset;
-  uAssetTokenAccount: TokenAccount | null;
+  orderArgs: OrderParams<PublicKey> & { payer: PublicKey | undefined };
+  option: OptionMarketWithKey;
+  optionUnderlyingAssetSymbol: string;
+  optionUnderlyingDecimals: number;
+  optionUnderlyingSize: BigNumber;
   mintedOptionDestinationKey?: PublicKey;
+  underlyingAssetAmount: number;
+  underlyingAssetSource: PublicKey | undefined;
   writerTokenDestinationKey?: PublicKey;
 };
 
@@ -40,7 +42,7 @@ const usePlaceSellOrder = (
   const program = useAmericanPsyOptionsProgram();
   const { pushErrorNotification } = useNotifications();
   const wallet = useConnectedWallet();
-  const { connection } = useConnection();
+  const { connection, dexProgramId } = useConnection();
   const { splTokenAccountRentBalance } = useSolanaMeta();
   const { subscribeToTokenAccount } = useOwnedTokenAccounts();
   const { sendSignedTransaction } = useSendTransaction();
@@ -52,45 +54,53 @@ const usePlaceSellOrder = (
       numberOfContractsToMint,
       serumMarket,
       orderArgs,
-      optionMarket,
-      uAsset,
-      uAssetTokenAccount,
+      option,
+      optionUnderlyingAssetSymbol,
+      optionUnderlyingDecimals,
+      optionUnderlyingSize,
       mintedOptionDestinationKey,
+      underlyingAssetAmount,
+      underlyingAssetSource,
       writerTokenDestinationKey,
     }: PlaceSellOrderArgs) => {
-      if (!connection || !wallet?.publicKey) {
+      if (
+        !connection ||
+        !wallet?.publicKey ||
+        !program ||
+        !dexProgramId ||
+        !splTokenAccountRentBalance
+      ) {
         return;
       }
       try {
         const mintTX = new Transaction();
         let mintSigners: Signer[] = [];
-        let _uAssetTokenAccount = uAssetTokenAccount;
         let _optionTokenSrcKey = mintedOptionDestinationKey;
         let _writerTokenDestinationKey = writerTokenDestinationKey;
-        const optionsProgramId = new PublicKey(
-          optionMarket.psyOptionsProgramId,
-        );
+        let _underlyingAssetSource = underlyingAssetSource;
 
         // Mint and place order
         if (numberOfContractsToMint > 0) {
           // Mint missing contracs before placing order
           const { error, response } = await createMissingAccountsAndMint({
-            optionsProgramId,
+            optionsProgramId: program.programId,
             authorityPubkey: wallet.publicKey,
             owner: wallet.publicKey,
-            market: optionMarket,
-            uAsset,
-            uAssetTokenAccount: _uAssetTokenAccount,
+            option,
+            optionUnderlyingAssetSymbol,
+            optionUnderlyingDecimals,
+            optionUnderlyingSize,
             splTokenAccountRentBalance,
             numberOfContractsToMint,
             mintedOptionDestinationKey: _optionTokenSrcKey,
+            underlyingAssetAmount,
+            underlyingAssetSource,
             writerTokenDestinationKey: _writerTokenDestinationKey,
             program,
           });
           if (error) {
-            // eslint-disable-next-line no-console
             console.error(error);
-            pushErrorNotification(error);
+            pushErrorNotification(error.message);
             return;
           }
           const {
@@ -98,9 +108,9 @@ const usePlaceSellOrder = (
             signers: createAndMintSigners,
             mintedOptionDestinationKey: _mintedOptionDestinationKey,
             writerTokenDestinationKey: __writerTokenDestinationKey,
-            uAssetTokenAccount: __uAssetTokenAccount,
+            underlyingAssetSource: __underlyingAssetSource,
           } = response as CreateMissingMintAccountsRes;
-          _uAssetTokenAccount = __uAssetTokenAccount;
+          _underlyingAssetSource = __underlyingAssetSource;
           subscribeToTokenAccount(__writerTokenDestinationKey);
           subscribeToTokenAccount(_mintedOptionDestinationKey);
 
@@ -114,11 +124,11 @@ const usePlaceSellOrder = (
           _writerTokenDestinationKey = __writerTokenDestinationKey;
 
           // Close out the wrapped SOL account so it feels native
-          if (optionMarket.uAssetMint === WRAPPED_SOL_ADDRESS) {
+          if (option.underlyingAssetMint.toString() === WRAPPED_SOL_ADDRESS) {
             mintTX.add(
               Token.createCloseAccountInstruction(
                 TOKEN_PROGRAM_ID,
-                _uAssetTokenAccount.pubKey,
+                _underlyingAssetSource,
                 wallet.publicKey, // Send any remaining SOL to the owner
                 wallet.publicKey,
                 [],
@@ -137,7 +147,10 @@ const usePlaceSellOrder = (
         let placeOrderSigners: Signer[] = [];
         let openOrdersAddress: PublicKey;
         // eslint-disable-next-line
-        if (PSY_AMERICAN_PROGRAM_IDS[optionsProgramId.toString()] === ProgramVersions.V1) {
+        if (
+          PSY_AMERICAN_PROGRAM_IDS[program.programId.toString()] ===
+          ProgramVersions.V1
+        ) {
           ({
             openOrdersAddress,
             transaction: placeOrderTx,
@@ -147,16 +160,18 @@ const usePlaceSellOrder = (
             payer: _optionTokenSrcKey,
           }));
         } else {
-          if (!optionMarket.serumMarketKey) {
-            return;
-          }
-          const { openOrdersKey, tx } = await serumInstructions.newOrderInstruction(
+          const [serumMarketKey] = await serumUtils.deriveSerumMarketAddress(
             program,
-            optionMarket.pubkey,
-            new PublicKey(optionMarket.serumProgramId),
-            optionMarket.serumMarketKey,
-            { ...orderArgs, payer: _optionTokenSrcKey },
+            option.key,
           );
+          const { openOrdersKey, tx } =
+            await serumInstructions.newOrderInstruction(
+              program,
+              option.key,
+              dexProgramId,
+              serumMarketKey,
+              { ...orderArgs, payer: _optionTokenSrcKey },
+            );
           placeOrderTx = new Transaction().add(tx);
           openOrdersAddress = openOrdersKey;
         }
@@ -216,6 +231,7 @@ const usePlaceSellOrder = (
     [
       connection,
       createAdHocOpenOrdersSub,
+      dexProgramId,
       program,
       pushErrorNotification,
       sendSignedTransaction,

@@ -16,9 +16,9 @@ export const useSerumPriceByAssets = (
   const [serumMarketAddress, setSerumMarketAddress] =
     useState<PublicKey | null>(null);
   const { orderbook: underlyingOrderbook } = useSerumOrderbook(
-    serumMarketAddress?.toString(),
+    serumMarketAddress?.toString() ?? '',
   );
-  useSubscribeSerumOrderbook(serumMarketAddress?.toString());
+  useSubscribeSerumOrderbook(serumMarketAddress?.toString() ?? '');
 
   useEffect(() => {
     if (!baseMint || !quoteMint) {
@@ -42,7 +42,7 @@ export const useSerumPriceByAssets = (
         ..._markets,
         [market.address.toString()]: {
           serumMarket: market,
-          serumProgramId: dexProgramId.toString(),
+          serumProgramId: dexProgramId?.toString(),
         },
       }));
       setSerumMarketAddress(market.address);

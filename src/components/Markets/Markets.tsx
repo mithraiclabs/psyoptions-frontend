@@ -181,7 +181,7 @@ const Markets: React.VFC = () => {
   return (
     <MarketDataProvider chain={chains}>
       <Page>
-        {momentDate && (
+        {momentDate && !!callPutData.key && (
           <BuySellDialog
             {...callPutData}
             optionKey={callPutData.key}

@@ -9,9 +9,13 @@ import { useOptionIsCall } from './useOptionIsCall';
 /**
  * Format option to the following structure `BTC | 24 Sep 2021 | call`
  */
-export const useFormattedOptionName = (optionKey: PublicKey): string => {
+export const useFormattedOptionName = (
+  optionKey: PublicKey,
+  options: { isCall?: boolean } = {},
+): string => {
   const option = useRecoilValue(optionsMap(optionKey.toString()));
-  const isCall = useOptionIsCall(optionKey);
+  const _isCall = useOptionIsCall(optionKey);
+  const isCall = options.isCall ?? _isCall;
   const optionUnderlyingAsset = useTokenByMint(
     option?.underlyingAssetMint ?? '',
   );

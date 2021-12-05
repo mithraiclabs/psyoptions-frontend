@@ -9,7 +9,7 @@ import {
 } from '@mithraic-labs/psy-american';
 import { Market, OrderParams } from '@mithraic-labs/serum/lib/market';
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import { Asset, CreateMissingMintAccountsRes, TokenAccount } from '../types';
+import { CreateMissingMintAccountsRes } from '../types';
 import { WRAPPED_SOL_ADDRESS } from '../utils/token';
 import useNotifications from './useNotifications';
 import useSendTransaction from './useSendTransaction';
@@ -27,10 +27,12 @@ type PlaceSellOrderArgs = {
   serumMarket: Market;
   orderArgs: OrderParams<PublicKey> & { payer: PublicKey | undefined };
   option: OptionMarketWithKey;
+  optionUnderlyingAssetSymbol: string;
+  optionUnderlyingDecimals: number;
   optionUnderlyingSize: BigNumber;
-  uAsset: Asset;
-  uAssetTokenAccount: TokenAccount | null;
   mintedOptionDestinationKey?: PublicKey;
+  underlyingAssetAmount: number;
+  underlyingAssetSource: PublicKey | undefined;
   writerTokenDestinationKey?: PublicKey;
 };
 
@@ -53,10 +55,12 @@ const usePlaceSellOrder = (
       serumMarket,
       orderArgs,
       option,
+      optionUnderlyingAssetSymbol,
+      optionUnderlyingDecimals,
       optionUnderlyingSize,
-      uAsset,
-      uAssetTokenAccount,
       mintedOptionDestinationKey,
+      underlyingAssetAmount,
+      underlyingAssetSource,
       writerTokenDestinationKey,
     }: PlaceSellOrderArgs) => {
       if (
@@ -71,9 +75,9 @@ const usePlaceSellOrder = (
       try {
         const mintTX = new Transaction();
         let mintSigners: Signer[] = [];
-        let _uAssetTokenAccount = uAssetTokenAccount;
         let _optionTokenSrcKey = mintedOptionDestinationKey;
         let _writerTokenDestinationKey = writerTokenDestinationKey;
+        let _underlyingAssetSource = underlyingAssetSource;
 
         // Mint and place order
         if (numberOfContractsToMint > 0) {
@@ -83,19 +87,20 @@ const usePlaceSellOrder = (
             authorityPubkey: wallet.publicKey,
             owner: wallet.publicKey,
             option,
+            optionUnderlyingAssetSymbol,
+            optionUnderlyingDecimals,
             optionUnderlyingSize,
-            uAsset,
-            uAssetTokenAccount: _uAssetTokenAccount,
             splTokenAccountRentBalance,
             numberOfContractsToMint,
             mintedOptionDestinationKey: _optionTokenSrcKey,
+            underlyingAssetAmount,
+            underlyingAssetSource,
             writerTokenDestinationKey: _writerTokenDestinationKey,
             program,
           });
           if (error) {
-            // eslint-disable-next-line no-console
             console.error(error);
-            pushErrorNotification(error);
+            pushErrorNotification(error.message);
             return;
           }
           const {
@@ -103,9 +108,9 @@ const usePlaceSellOrder = (
             signers: createAndMintSigners,
             mintedOptionDestinationKey: _mintedOptionDestinationKey,
             writerTokenDestinationKey: __writerTokenDestinationKey,
-            uAssetTokenAccount: __uAssetTokenAccount,
+            underlyingAssetSource: __underlyingAssetSource,
           } = response as CreateMissingMintAccountsRes;
-          _uAssetTokenAccount = __uAssetTokenAccount;
+          _underlyingAssetSource = __underlyingAssetSource;
           subscribeToTokenAccount(__writerTokenDestinationKey);
           subscribeToTokenAccount(_mintedOptionDestinationKey);
 
@@ -123,7 +128,7 @@ const usePlaceSellOrder = (
             mintTX.add(
               Token.createCloseAccountInstruction(
                 TOKEN_PROGRAM_ID,
-                _uAssetTokenAccount.pubKey,
+                _underlyingAssetSource,
                 wallet.publicKey, // Send any remaining SOL to the owner
                 wallet.publicKey,
                 [],
@@ -220,7 +225,6 @@ const usePlaceSellOrder = (
           }`,
         });
       } catch (err) {
-        console.error('TJ ', err);
         pushErrorNotification(err);
       }
     },

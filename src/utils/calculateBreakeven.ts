@@ -13,7 +13,6 @@ export const calculateBreakevenForLimitOrder = (
   return strike + price / contractSize;
 };
 
-
 export const calculateBreakevenForMarketOrder = (
   strike: number,
   contractSize: number,

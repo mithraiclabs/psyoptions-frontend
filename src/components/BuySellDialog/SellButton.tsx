@@ -3,28 +3,43 @@ import Tooltip from '@material-ui/core/Tooltip';
 import BigNumber from 'bignumber.js';
 
 import { StyledSellButton } from './styles';
-import { useNormalizedContractSize } from '../../hooks/useNormalizedContractSize';
+import { PublicKey } from '@solana/web3.js';
+import { useRecoilValue } from 'recoil';
+import { optionsMap } from '../../recoil';
+import { useNormalizeAmountOfMintBN } from '../../hooks/useNormalizeAmountOfMintBN';
+import { useOptionAssetValues } from '../../hooks/useOptionAssetValues';
 
 const SellButton: React.VFC<{
   parsedLimitPrice: BigNumber;
   openPositionSize: number;
   numberOfBids: number;
-  uAssetSymbol: string;
-  uAssetBalance: number;
+  optionUnderlyingBalance: number;
   orderType: string;
+  optionKey: PublicKey;
   parsedOrderSize: number;
   onClick: () => Promise<void>;
 }> = ({
   parsedLimitPrice,
   openPositionSize,
   numberOfBids,
-  uAssetSymbol,
-  uAssetBalance,
+  optionUnderlyingBalance,
+  optionKey,
   orderType,
   parsedOrderSize,
   onClick,
 }) => {
-  const sizeOfContract = useNormalizedContractSize();
+  const option = useRecoilValue(optionsMap(optionKey.toString()));
+  const [optionUnderlyingAsset] = useOptionAssetValues(optionKey);
+  const optionUnderlyingAssetSymbol =
+    optionUnderlyingAsset?.symbol ??
+    option?.underlyingAssetMint.toString() ??
+    '';
+  const normalizeUnderlyingAmountBN = useNormalizeAmountOfMintBN(
+    option?.underlyingAssetMint ?? null,
+  );
+  const optionUnderlyingAmount = normalizeUnderlyingAmountBN(
+    option?.underlyingAmountPerContract,
+  );
   let isSellDisabled = false;
   let mintSellTooltipLabel = '';
 
@@ -41,7 +56,8 @@ const SellButton: React.VFC<{
       }`;
     } else {
       if (
-        openPositionSize + uAssetBalance / sizeOfContract >=
+        openPositionSize +
+          optionUnderlyingBalance / optionUnderlyingAmount.toNumber() >=
         parsedOrderSize
       ) {
         mintSellTooltipLabel = `Place ${orderType} sell order using: ${
@@ -51,10 +67,11 @@ const SellButton: React.VFC<{
               } and `
             : ''
         }${
-          (parsedOrderSize - openPositionSize) * sizeOfContract
-        } ${uAssetSymbol}`;
+          (parsedOrderSize - openPositionSize) *
+          optionUnderlyingAmount.toNumber()
+        } ${optionUnderlyingAssetSymbol}`;
       } else {
-        mintSellTooltipLabel = `Not enough ${uAssetSymbol} to place order`;
+        mintSellTooltipLabel = `Not enough ${optionUnderlyingAssetSymbol} to place order`;
         isSellDisabled = true;
       }
     }

@@ -125,7 +125,7 @@ export interface CreateNewTokenAccountResponse extends InstructionResponse {
 export interface CreateMissingMintAccountsRes extends InstructionResponse {
   mintedOptionDestinationKey: PublicKey;
   writerTokenDestinationKey: PublicKey;
-  uAssetTokenAccount: TokenAccount;
+  underlyingAssetSource: PublicKey;
 }
 
 export type LocalSerumMarket = {

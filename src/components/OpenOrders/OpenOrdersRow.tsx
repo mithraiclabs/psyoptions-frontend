@@ -228,7 +228,7 @@ const OpenOrdersRow: React.VFC<{
   const handleCancelOrder = useCancelOrder(
     serumMarketAddress,
     optionMarket,
-    optionMarket.optionMarketKey,
+    optionMarket?.optionMarketKey,
   );
 
   useEffect(() => {

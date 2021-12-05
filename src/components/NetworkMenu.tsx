@@ -6,15 +6,19 @@ import Card from '@material-ui/core/Card';
 import Popper from '@material-ui/core/Popper';
 import MenuItem from '@material-ui/core/MenuItem';
 import MenuList from '@material-ui/core/MenuList';
+import { useRecoilValue } from 'recoil';
 import useConnection from '../hooks/useConnection';
 import useAssetList from '../hooks/useAssetList';
 import useOptionsMarkets from '../hooks/useOptionsMarkets';
 import useSerum from '../hooks/useSerum';
 import theme from '../utils/theme';
 import { Network } from '../utils/networkInfo';
+import { activeNetwork, useUpdateNetwork } from '../recoil';
 
 const NetworkMenu = () => {
-  const { networks, endpoint, setEndpoint } = useConnection();
+  const updateNetwork = useUpdateNetwork();
+  const endpoint = useRecoilValue(activeNetwork);
+  const { networks } = useConnection();
 
   const { setUAsset, setQAsset, setSupportedAssets, assetListLoading } =
     useAssetList();
@@ -45,7 +49,7 @@ const NetworkMenu = () => {
 
   const handleSelectNetwork = (network: Network) => {
     if (loading || network.name === endpoint.name) return;
-    setEndpoint(network);
+    updateNetwork(network);
     // Reset assets, markets, and chain when changing endpoint
     // This allows us to refresh everything when changing the endpoint
     setSupportedAssets([]);
@@ -102,9 +106,7 @@ const NetworkMenu = () => {
               onKeyDown={handleListKeyDown}
             >
               {networks
-                .filter((n) =>
-                  n.programId !== undefined
-                )
+                .filter((n) => n.programId !== undefined)
                 .map((item) => (
                   <MenuItem
                     key={item.url}

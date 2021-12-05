@@ -5,18 +5,20 @@ import {
   ProgramVersions,
   serumInstructions,
 } from '@mithraic-labs/psy-american';
+import { useConnectedWallet } from '@saberhq/use-solana';
+import { useRecoilValue } from 'recoil';
 import { createAssociatedTokenAccountInstruction } from '../../utils/instructions';
 import { getHighestAccount } from '../../utils/token';
 import useConnection from '../useConnection';
 import useNotifications from '../useNotifications';
 import useOwnedTokenAccounts from '../useOwnedTokenAccounts';
 import useSerum from '../useSerum';
-import { useConnectedWallet } from '@saberhq/use-solana';
 import useSendTransaction from '../useSendTransaction';
 import { useAmericanPsyOptionsProgram } from '../useAmericanPsyOptionsProgram';
 import { OptionMarket } from '../../types';
 import { getReferralId } from '../../utils/networkInfo';
 import { useSerumOpenOrders } from '../../context/SerumOpenOrdersContext';
+import { activeNetwork } from '../../recoil';
 
 /**
  * Returns function for settling the funds of a specific market
@@ -29,9 +31,10 @@ export const useSettleFunds = (
   makeSettleFundsTx: () => Promise<Transaction | undefined>;
   settleFunds: () => Promise<void>;
 } => {
+  const endpoint = useRecoilValue(activeNetwork);
   const program = useAmericanPsyOptionsProgram();
   const { pushErrorNotification } = useNotifications();
-  const { connection, dexProgramId, endpoint } = useConnection();
+  const { connection, dexProgramId } = useConnection();
   const { serumMarkets } = useSerum();
   const wallet = useConnectedWallet();
   const { sendTransaction } = useSendTransaction();

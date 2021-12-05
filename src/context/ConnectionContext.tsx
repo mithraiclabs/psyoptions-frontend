@@ -1,4 +1,4 @@
-import React, { createContext, useState, useCallback } from 'react';
+import React, { createContext, useMemo } from 'react';
 import { clusterApiUrl, Connection, PublicKey } from '@solana/web3.js';
 import {
   getDexProgramKeyByNetwork,
@@ -6,61 +6,33 @@ import {
   Network,
   networks,
 } from '../utils/networkInfo';
-import { useRecoilState } from 'recoil';
-import { atom } from 'recoil';
-
-// Default to MAINNET
-const MAINNET = networks[0];
-
-export const activeNetwork = atom({
-  key: 'activeNetwork',
-  default: MAINNET,
-});
+import { useRecoilValue } from 'recoil';
+import { activeNetwork } from '../recoil';
 
 export type ConnectionContextType = {
   networks: Network[];
   connection: Connection;
-  setConnection: React.Dispatch<React.SetStateAction<Connection>>;
-  endpoint: Network;
-  setEndpoint: React.Dispatch<React.SetStateAction<Network>>;
   dexProgramId?: PublicKey;
   graphQLUrl?: string;
 };
 
 const ConnectionContext = createContext<ConnectionContextType>({
   connection: new Connection(clusterApiUrl('devnet')),
-  endpoint: MAINNET,
-  setConnection: () => {},
-  setEndpoint: () => {},
   networks,
 });
 
 const ConnectionProvider: React.FC = ({ children }) => {
-  const [endpoint, setEndpoint] = useRecoilState(activeNetwork);
-
-  const [connection, setConnection] = useState(
-    new Connection(endpoint.url, {
+  const endpoint = useRecoilValue(activeNetwork);
+  const connection = useMemo(() => {
+    return new Connection(endpoint.url, {
       commitment: 'confirmed',
       wsEndpoint: endpoint?.wsEndpoint,
-    }),
-  );
-
-  const handleSetEndpoint = useCallback(
-    (newEndpoint) => {
-      // Update both endpoint and connection state values in the same function
-      // Will prevent extra rerenders of components that depend on both endpoint and connection
-      setEndpoint(newEndpoint);
-      setConnection(new Connection(newEndpoint.url, 'confirmed'));
-    },
-    [setEndpoint],
-  );
+    });
+  }, [endpoint.url, endpoint?.wsEndpoint]);
 
   const state: ConnectionContextType = {
     networks,
     connection,
-    setConnection,
-    endpoint,
-    setEndpoint: handleSetEndpoint,
     dexProgramId: getDexProgramKeyByNetwork(endpoint.name),
     graphQLUrl: getGraphQLUrlByNetwork(endpoint.name),
   };

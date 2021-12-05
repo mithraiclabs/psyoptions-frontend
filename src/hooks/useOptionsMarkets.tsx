@@ -6,8 +6,9 @@ import {
 } from '@mithraic-labs/psy-american';
 import { Connection, PublicKey } from '@solana/web3.js';
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
-
+import { useRecoilValue } from 'recoil';
 import { BN } from '@project-serum/anchor';
+
 import useNotifications from './useNotifications';
 import { useConnectedWallet } from '@saberhq/use-solana';
 import useConnection from './useConnection';
@@ -23,12 +24,14 @@ import { ClusterName, OptionMarket } from '../types';
 import { getSupportedMarketsByNetwork } from '../utils/networkInfo';
 import { findMarketByAssets } from '../utils/serum';
 import { useAmericanPsyOptionsProgram } from './useAmericanPsyOptionsProgram';
+import { activeNetwork } from '../recoil';
 
 const useOptionsMarkets = () => {
+  const endpoint = useRecoilValue(activeNetwork);
   const program = useAmericanPsyOptionsProgram();
   const { pushErrorNotification } = useNotifications();
   const wallet = useConnectedWallet();
-  const { connection, dexProgramId, endpoint } = useConnection();
+  const { connection, dexProgramId } = useConnection();
   const { sendTransaction } = useSendTransaction();
   const {
     marketsByUiKey,

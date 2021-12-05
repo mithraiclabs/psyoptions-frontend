@@ -14,10 +14,11 @@ import { OptionMarketWithKey } from '@mithraic-labs/psy-american';
 import { BigNumber } from 'bignumber.js';
 import { BN } from 'bn.js';
 import moment from 'moment';
+import { useRecoilValue } from 'recoil';
 import { MarketExistsDialog } from './MarketExistsDialog';
 import theme from '../../utils/theme';
 import useNotifications from '../../hooks/useNotifications';
-import { useConnectedWallet } from "@saberhq/use-solana";
+import { useConnectedWallet } from '@saberhq/use-solana';
 import { useInitializeMarket } from '../../hooks/useInitializeMarket';
 import useConnection from '../../hooks/useConnection';
 import { useInitializeSerumMarket } from '../../hooks/Serum/useInitializeSerumMarket';
@@ -28,16 +29,18 @@ import { useTokenMintInfo } from '../../hooks/useTokenMintInfo';
 import { SelectAssetOrEnterMint } from '../SelectAssetOrEnterMint';
 import useAssetList from '../../hooks/useAssetList';
 import { ExpirationInput } from '../Inputs/ExpirationInput';
+import { activeNetwork } from '../../recoil';
 
 const darkBorder = `1px solid ${theme.palette.background.main}`;
 
 type OptionString = 'calls' | 'puts';
 
 export const InitOptionMarket: React.VFC = () => {
+  const endpoint = useRecoilValue(activeNetwork);
   const { pushNotification } = useNotifications();
   const wallet = useConnectedWallet();
   const initializeMarket = useInitializeMarket();
-  const { dexProgramId, endpoint } = useConnection();
+  const { dexProgramId } = useConnection();
   const initializeSerumMarket = useInitializeSerumMarket();
   const { USDCPublicKey } = useAssetList();
   const [basePrice, setBasePrice] = useState('0');

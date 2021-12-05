@@ -1,11 +1,12 @@
 import { useMemo } from 'react';
+import { PublicKey } from '@solana/web3.js';
+import { useRecoilValue } from 'recoil';
 import { ClusterEnv, Token, Tokens } from '@mithraic-labs/psy-token-registry';
 import { ClusterName } from '../types';
-import useConnection from './useConnection';
-import { PublicKey } from '@solana/web3.js';
+import { activeNetwork } from '../recoil';
 
 export const useNetworkTokens = (): ClusterEnv => {
-  const { endpoint } = useConnection();
+  const endpoint = useRecoilValue(activeNetwork);
 
   return useMemo(() => {
     switch (endpoint?.name ?? '') {

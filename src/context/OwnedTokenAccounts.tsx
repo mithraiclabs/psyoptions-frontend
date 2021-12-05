@@ -109,12 +109,6 @@ export const OwnedTokenAccountsProvider: React.FC = ({ children }) => {
     let currentSubs = subscriptionsRef.current;
     // Clean up subscriptions when component unmounts
     return () => {
-      console.log(
-        'TJ ',
-        connection.removeAccountChangeListener,
-        // @ts-ignore
-        connection._accountChangeSubscriptions,
-      );
       Object.values(currentSubs).forEach(
         connection.removeAccountChangeListener,
       );

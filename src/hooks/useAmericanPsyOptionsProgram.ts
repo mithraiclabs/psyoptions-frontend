@@ -1,7 +1,8 @@
 import { PsyAmericanIdl } from '@mithraic-labs/psy-american';
 import { Program } from '@project-serum/anchor';
 import { useMemo } from 'react';
-import useConnection from './useConnection';
+import { useRecoilValue } from 'recoil';
+import { activeNetwork } from '../recoil';
 import { useProvider } from './useProvider';
 
 /**
@@ -10,7 +11,7 @@ import { useProvider } from './useProvider';
  * @returns Program | null
  */
 export const useAmericanPsyOptionsProgram = (): Program | null => {
-  const { endpoint } = useConnection();
+  const endpoint = useRecoilValue(activeNetwork);
   const provider = useProvider();
 
   return useMemo(() => {

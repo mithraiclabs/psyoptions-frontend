@@ -9,20 +9,15 @@ import {
 import { useRecoilValue } from 'recoil';
 import { activeNetwork } from '../recoil';
 
-// Default to MAINNET
-const MAINNET = networks[0];
-
 export type ConnectionContextType = {
   networks: Network[];
   connection: Connection;
-  endpoint: Network;
   dexProgramId?: PublicKey;
   graphQLUrl?: string;
 };
 
 const ConnectionContext = createContext<ConnectionContextType>({
   connection: new Connection(clusterApiUrl('devnet')),
-  endpoint: MAINNET,
   networks,
 });
 
@@ -38,7 +33,6 @@ const ConnectionProvider: React.FC = ({ children }) => {
   const state: ConnectionContextType = {
     networks,
     connection,
-    endpoint,
     dexProgramId: getDexProgramKeyByNetwork(endpoint.name),
     graphQLUrl: getGraphQLUrlByNetwork(endpoint.name),
   };

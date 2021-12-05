@@ -6,17 +6,19 @@ import Card from '@material-ui/core/Card';
 import Popper from '@material-ui/core/Popper';
 import MenuItem from '@material-ui/core/MenuItem';
 import MenuList from '@material-ui/core/MenuList';
+import { useRecoilValue } from 'recoil';
 import useConnection from '../hooks/useConnection';
 import useAssetList from '../hooks/useAssetList';
 import useOptionsMarkets from '../hooks/useOptionsMarkets';
 import useSerum from '../hooks/useSerum';
 import theme from '../utils/theme';
 import { Network } from '../utils/networkInfo';
-import { useUpdateNetwork } from '../recoil';
+import { activeNetwork, useUpdateNetwork } from '../recoil';
 
 const NetworkMenu = () => {
   const updateNetwork = useUpdateNetwork();
-  const { networks, endpoint } = useConnection();
+  const endpoint = useRecoilValue(activeNetwork);
+  const { networks } = useConnection();
 
   const { setUAsset, setQAsset, setSupportedAssets, assetListLoading } =
     useAssetList();

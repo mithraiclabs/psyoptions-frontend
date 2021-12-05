@@ -1,8 +1,9 @@
 import React, { useState, useCallback, useMemo, createContext } from 'react';
 import { PsyOptionError } from '@mithraic-labs/psyoptions';
+import { useRecoilValue } from 'recoil';
 import TransactionError from '../utils/transactionErrors/TransactionError';
 import { InstructionErrorResponse, NotificationSeverity } from '../types';
-import useConnection from '../hooks/useConnection';
+import { activeNetwork } from '../recoil';
 
 type UINotification = {
   link?: React.ReactNode;
@@ -29,6 +30,7 @@ const NotificationsContext = createContext<UINotificationContext>({
 });
 
 const NotificationsProvider: React.FC = ({ children }) => {
+  const endpoint = useRecoilValue(activeNetwork);
   const [notifications, setNotifications] = useState<UINotification[]>([
     // Examples of possible severity states:
     // {
@@ -48,7 +50,6 @@ const NotificationsProvider: React.FC = ({ children }) => {
     //   message: 'Warning',
     // },
   ]);
-  const { endpoint } = useConnection();
 
   /**
    * Parse an instruction error and decode errors from known programs

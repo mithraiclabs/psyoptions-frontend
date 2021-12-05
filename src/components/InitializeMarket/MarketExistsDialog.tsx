@@ -11,16 +11,19 @@ import { OptionMarketWithKey } from '@mithraic-labs/psy-american';
 import { PublicKey } from '@solana/web3.js';
 import BN from 'bn.js';
 import React, { useCallback, useState } from 'react';
+import { useRecoilValue } from 'recoil';
 import { useInitializedMarkets } from '../../context/LocalStorage';
 import { useInitializeSerumMarket } from '../../hooks/Serum/useInitializeSerumMarket';
 import useAssetList from '../../hooks/useAssetList';
 import useConnection from '../../hooks/useConnection';
+import { activeNetwork } from '../../recoil';
 
 export const MarketExistsDialog: React.VFC<{
   dismiss: () => void;
   optionMarket: OptionMarketWithKey | null;
 }> = ({ dismiss, optionMarket }) => {
-  const { dexProgramId, endpoint } = useConnection();
+  const endpoint = useRecoilValue(activeNetwork);
+  const { dexProgramId } = useConnection();
   const initializeSerumMarket = useInitializeSerumMarket();
   const { USDCPublicKey, USDCToken } = useAssetList();
   const [loading, setLoading] = useState(false);

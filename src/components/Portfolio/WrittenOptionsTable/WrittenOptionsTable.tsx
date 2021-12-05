@@ -54,7 +54,10 @@ const WrittenOptionsTable: React.VFC = () => {
             ) : (
               <>
                 {writtenOptionKeys.map((optionKey) => (
-                  <WrittenOptionRow optionKey={optionKey} />
+                  <WrittenOptionRow
+                    key={optionKey.toString()}
+                    optionKey={optionKey}
+                  />
                 ))}
               </>
             )}

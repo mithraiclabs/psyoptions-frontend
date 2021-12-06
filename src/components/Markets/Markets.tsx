@@ -270,8 +270,6 @@ const Markets: React.VFC = () => {
             <TableContainer>
               <Table stickyHeader aria-label="sticky table">
                 <MarketsTableHeader
-                  uAssetSymbol={uAsset?.tokenSymbol ?? ''}
-                  qAssetSymbol={qAsset?.tokenSymbol ?? ''}
                   showIV={showIV}
                   showPriceChange={showPriceChange}
                   showVolume={showVolume}

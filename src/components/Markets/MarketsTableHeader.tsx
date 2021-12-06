@@ -1,17 +1,13 @@
 import React, { useState } from 'react';
-import {
-  Box,
-  IconButton,
-  TableHead,
-  TableRow
-} from '@material-ui/core';
+import { Box, IconButton, TableHead, TableRow } from '@material-ui/core';
 import { ColumnDisplaySelector } from './ColumnDisplaySelector';
 import InfoOutlined from '@material-ui/icons/InfoOutlined';
+import { useRecoilValue } from 'recoil';
 import { THeadCell, TCellStrike, StyledTooltip } from './styles';
+import { quoteMint, underlyingMint } from '../../recoil';
+import { useTokenByMint } from '../../hooks/useNetworkTokens';
 
 export const MarketsTableHeader: React.FC<{
-  uAssetSymbol: string;
-  qAssetSymbol: string;
   showIV: boolean;
   showPriceChange: boolean;
   showVolume: boolean;
@@ -25,8 +21,6 @@ export const MarketsTableHeader: React.FC<{
   currentColumnsCount: number;
   setColumnsCount: (num: number) => void;
 }> = ({
-  uAssetSymbol,
-  qAssetSymbol,
   showIV,
   showPriceChange,
   showVolume,
@@ -40,9 +34,16 @@ export const MarketsTableHeader: React.FC<{
   currentColumnsCount,
   setColumnsCount,
 }) => {
+  const _underlyingMint = useRecoilValue(underlyingMint);
+  const _quoteMint = useRecoilValue(quoteMint);
+  const underlyingAsset = useTokenByMint(_underlyingMint ?? '');
+  const quoteAsset = useTokenByMint(_quoteMint ?? '');
   const [showCallsTooltip, setShowCallsTooltip] = useState(false);
   const [showPutsTooltip, setShowPutsTooltip] = useState(false);
   const colWidth = (1 / currentColumnsCount) * 100;
+  const underlyingAssetSymbol =
+    underlyingAsset?.symbol ?? _underlyingMint?.toString() ?? '';
+  const quoteAssetSymbol = quoteAsset?.symbol ?? _quoteMint?.toString() ?? '';
 
   return (
     <TableHead>
@@ -52,7 +53,9 @@ export const MarketsTableHeader: React.FC<{
           style={{ borderTop: 'none', padding: '8px 20px' }}
         >
           <Box display="flex" flexDirection="row" alignItems="center">
-            <h3 style={{ margin: "0 5px 0 0" }}>{uAssetSymbol} Calls</h3>
+            <h3 style={{ margin: '0 5px 0 0' }}>
+              {underlyingAssetSymbol} Calls
+            </h3>
             <StyledTooltip
               disableTouchListener
               open={showCallsTooltip}
@@ -62,8 +65,9 @@ export const MarketsTableHeader: React.FC<{
                 <Box px={1}>
                   <Box py={1}>
                     Call options allow the buyer to swap the quote asset (
-                    {qAssetSymbol}) for the underlying asset ({uAssetSymbol}) at
-                    the given strike price, at any time before the expiration.
+                    {quoteAssetSymbol}) for the underlying asset (
+                    {underlyingAssetSymbol}) at the given strike price, at any
+                    time before the expiration.
                   </Box>
                   <Box py={1}>What this means for the buyer and seller:</Box>
                   <Box py={1}>
@@ -78,7 +82,10 @@ export const MarketsTableHeader: React.FC<{
                 </Box>
               }
             >
-              <IconButton color="inherit" onClick={() => setShowCallsTooltip(!showCallsTooltip)}>
+              <IconButton
+                color="inherit"
+                onClick={() => setShowCallsTooltip(!showCallsTooltip)}
+              >
                 <InfoOutlined />
               </IconButton>
             </StyledTooltip>
@@ -105,7 +112,9 @@ export const MarketsTableHeader: React.FC<{
           style={{ borderTop: 'none', padding: '8px 20px' }}
         >
           <Box display="flex" flexDirection="row" alignItems="center">
-            <h3 style={{ margin: "0 5px 0 0" }}>{uAssetSymbol} Puts</h3>
+            <h3 style={{ margin: '0 5px 0 0' }}>
+              {underlyingAssetSymbol} Puts
+            </h3>
             <StyledTooltip
               disableTouchListener
               open={showPutsTooltip}
@@ -115,8 +124,9 @@ export const MarketsTableHeader: React.FC<{
                 <Box px={1}>
                   <Box py={1}>
                     Put options allow the buyer to swap the underlying asset (
-                    {uAssetSymbol}) for the quote asset ({qAssetSymbol}) at the
-                    given strike price, at any time before the expiration.
+                    {underlyingAssetSymbol}) for the quote asset (
+                    {quoteAssetSymbol}) at the given strike price, at any time
+                    before the expiration.
                   </Box>
                   <Box py={1}>What this means for the buyer and seller:</Box>
                   <Box py={1}>
@@ -131,7 +141,10 @@ export const MarketsTableHeader: React.FC<{
                 </Box>
               }
             >
-              <IconButton color="inherit" onClick={() => setShowPutsTooltip(!showPutsTooltip)}>
+              <IconButton
+                color="inherit"
+                onClick={() => setShowPutsTooltip(!showPutsTooltip)}
+              >
                 <InfoOutlined />
               </IconButton>
             </StyledTooltip>
@@ -252,7 +265,7 @@ export const MarketsTableHeader: React.FC<{
             title={
               <Box
                 p={1}
-              >{`The price of the underlying asset (${uAssetSymbol}) at which the option will be exercised`}</Box>
+              >{`The price of the underlying asset (${underlyingAssetSymbol}) at which the option will be exercised`}</Box>
             }
           >
             <Box display="inline">Strike</Box>

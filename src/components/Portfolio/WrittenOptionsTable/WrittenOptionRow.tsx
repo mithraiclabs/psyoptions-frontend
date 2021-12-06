@@ -323,7 +323,7 @@ const WrittenOptionRow: React.VFC<{
               )}
             </TCell>
             <TCell>
-              {lockedAmountDisplay} {underlyingAssetSymbol}
+              {lockedAmountDisplay} {optionUnderlyingAssetSymbol}
             </TCell>
             <TCell>{ActionFragment}</TCell>
           </>

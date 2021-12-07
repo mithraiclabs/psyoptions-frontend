@@ -88,10 +88,6 @@ const getUnderlyingAmountPerOptionExpirationUnderlyingQuote = ({
   const __underlyingMint = underlyingMintOverride ?? _underlyingMint;
   const _quoteMint = get(quoteMint);
   const _optionsIds = get(optionsIds);
-  console.log(
-    'TJ getUnderlyingAmountPerOptionExpirationUnderlyingQuote ',
-    __underlyingMint?.toString(),
-  );
   const expirations = _optionsIds.reduce((acc, publicKeyStr) => {
     const option = get(optionsMap(publicKeyStr));
     if (
@@ -148,11 +144,6 @@ const setExpirationAndMaybeUnderlyingAmount = ({
       expiration: newValue,
       underlyingMintOverride: _underlyingMint,
     });
-  console.log(
-    'TJ setExpirationAndMaybeUnderlyingAmount ',
-    _underlyingAmountPerContract.toString(),
-    _underlyingAmountsPerContract.map((x) => x.toString()),
-  );
   if (!_underlyingAmountsPerContract.length) {
     return;
   }

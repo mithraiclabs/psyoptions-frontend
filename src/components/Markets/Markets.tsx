@@ -36,8 +36,8 @@ import {
   quoteMint,
   selectExpirationAsDate,
   selectMintsOfFutureOptions,
+  selectUnderlyingMintWithSideEffects,
   underlyingAmountPerContract,
-  underlyingMint,
 } from '../../recoil';
 import { SelectAsset } from '../SelectAsset';
 import { useOptionsChainFromMarketsState } from '../../hooks/useOptionChainsFromMarketsState';
@@ -69,7 +69,9 @@ const Markets: React.VFC = () => {
   const { uAsset, qAsset, assetListLoading } = useAssetList();
   const chains = useOptionsChainFromMarketsState();
   const { marketsLoading } = useOptionsMarkets();
-  const [_underlyingMint, setUnderlyingMint] = useRecoilState(underlyingMint);
+  const [_underlyingMint, setUnderlyingMint] = useRecoilState(
+    selectUnderlyingMintWithSideEffects,
+  );
   const [_quoteMint, setQuoteMint] = useRecoilState(quoteMint);
   const mints = useRecoilValue(selectMintsOfFutureOptions);
   const expirationDateString = useRecoilValue(selectExpirationAsDate);

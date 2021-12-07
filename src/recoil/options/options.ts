@@ -7,13 +7,12 @@ import {
   atom,
   atomFamily,
   DefaultValue,
-  GetRecoilValue,
   selector,
   useRecoilTransaction_UNSTABLE,
 } from 'recoil';
 
-const defaultExpiration = new BN(0);
-const defaultUnderlying = new BN(0);
+export const defaultExpiration = new BN(0);
+export const defaultUnderlying = new BN(0);
 
 /**
  * Assets that should not be used as the underlying asset (i.e. USDC).
@@ -109,142 +108,6 @@ export const selectMintsOfFutureOptions = selector({
     return _uniqby(mints, (mint) => mint.toString());
   },
 });
-
-/**
- * select future expiration dates by the underlying and quote mints
- */
-export const selectFutureExpirationsByUnderlyingAndQuote = selector({
-  key: 'selectFutureExpirationsByUnderlyingAndQuote',
-  get: ({ get }) => {
-    const nowInSeconds = Date.now() / 1000;
-    const _underlyingMint = get(underlyingMint);
-    const _quoteMint = get(quoteMint);
-
-    const _optionsIds = get(optionsIds);
-    const expirations = _optionsIds.reduce((acc, publicKeyStr) => {
-      const option = get(optionsMap(publicKeyStr));
-      if (
-        option &&
-        option.expirationUnixTimestamp.toNumber() > nowInSeconds &&
-        _underlyingMint &&
-        _quoteMint &&
-        // must check for all permutations to get Calls and Puts
-        (option.underlyingAssetMint.equals(_underlyingMint) ||
-          option.underlyingAssetMint.equals(_quoteMint)) &&
-        (option.quoteAssetMint.equals(_quoteMint) ||
-          option.quoteAssetMint.equals(_underlyingMint))
-      ) {
-        acc.push(option.expirationUnixTimestamp);
-      }
-      return acc;
-    }, [] as BN[]);
-
-    return _uniqby(expirations, (exp) => exp.toNumber()).sort((a, b) =>
-      a.sub(b).toNumber(),
-    );
-  },
-});
-
-/**
- * Utility function for reducing options to a list of underlying amounts per
- * contract (aka contract size) based on the state params.
- */
-const getUnderlyingAmountPerOptionExpirationUnderlyingQuote = ({
-  expiration,
-  get,
-}: {
-  get: GetRecoilValue;
-  expiration: BN;
-}) => {
-  const _underlyingMint = get(underlyingMint);
-  const _quoteMint = get(quoteMint);
-  const _optionsIds = get(optionsIds);
-  const expirations = _optionsIds.reduce((acc, publicKeyStr) => {
-    const option = get(optionsMap(publicKeyStr));
-    if (
-      option &&
-      option.expirationUnixTimestamp.eq(expiration) &&
-      _underlyingMint &&
-      _quoteMint &&
-      // must check for all permutations to get Calls and Puts
-      (option.underlyingAssetMint.equals(_underlyingMint) ||
-        option.underlyingAssetMint.equals(_quoteMint)) &&
-      (option.quoteAssetMint.equals(_quoteMint) ||
-        option.quoteAssetMint.equals(_underlyingMint))
-    ) {
-      // Normalize whether it's a Call or Put from the current state.
-      // This prevents contract size duplication across the permutations.
-      const normalizedUnderlyingAmountPerContract =
-        option.underlyingAssetMint.equals(_underlyingMint)
-          ? option.underlyingAmountPerContract
-          : option.quoteAmountPerContract;
-      acc.push(normalizedUnderlyingAmountPerContract);
-    }
-    return acc;
-  }, [] as BN[]);
-
-  return _uniqby(expirations, (exp) => exp.toString()).sort((a, b) =>
-    a.toString() > b.toString() ? 1 : -1,
-  );
-};
-
-export const selectExpirationWithUnderlyingAmount = selector<BN>({
-  key: 'selectExpirationWithUnderlyingAmount',
-  get: ({ get }) => get(expirationUnixTimestamp),
-  // set new expriation value and maybe update the contract size.
-  set: ({ get, set }, newValue) => {
-    set(expirationUnixTimestamp, newValue);
-    if (newValue instanceof DefaultValue) {
-      return set(underlyingAmountPerContract, defaultUnderlying);
-    }
-
-    const _underlyingAmountPerContract = get(underlyingAmountPerContract);
-    const _underlyingAmountsPerContract =
-      getUnderlyingAmountPerOptionExpirationUnderlyingQuote({
-        get,
-        expiration: newValue,
-      });
-    if (!_underlyingAmountsPerContract.length) {
-      return;
-    }
-    const index = _underlyingAmountsPerContract.findIndex((v) =>
-      v.eq(_underlyingAmountPerContract),
-    );
-    if (index !== -1) {
-      // contract size exists after updating expiration, no
-      // need to update contract size.
-      return;
-    }
-    // update to the larger size if one exists. Else decrement smaller.
-    if (_underlyingAmountsPerContract[index + 1]) {
-      set(
-        underlyingAmountPerContract,
-        _underlyingAmountsPerContract[index + 1],
-      );
-    } else {
-      set(
-        underlyingAmountPerContract,
-        _underlyingAmountsPerContract[index - 1],
-      );
-    }
-  },
-});
-
-/**
- * select underlying amount for option based on the selecting underlying mint,
- * quote mint, and expiration.
- *
- * Sorts the sizes in descending order.
- */
-export const selectUnderlyingAmountPerOptionByExpirationUnderlyingQuote =
-  selector({
-    key: 'selectUnderlyingAmountPerOptionByExpirationUnderlyingQuote',
-    get: ({ get }) =>
-      getUnderlyingAmountPerOptionExpirationUnderlyingQuote({
-        expiration: get(expirationUnixTimestamp),
-        get,
-      }),
-  });
 
 export const selectOptionsByMarketsPageParams = selector({
   key: 'selectOptionsByMarketsPageParams',

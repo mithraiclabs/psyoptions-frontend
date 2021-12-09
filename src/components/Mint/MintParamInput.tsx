@@ -25,7 +25,9 @@ export const MintParamInput: React.VFC<{
 }> = ({ onUpdateDerivedAddress }) => {
   const program = useAmericanPsyOptionsProgram();
   const { pushErrorNotification } = useNotifications();
-  const [expiration, setExpiration] = useState(moment.utc().endOf('day'));
+  const [expiration, setExpiration] = useState(
+    moment.utc().set('hour', 8).set('minute', 0).set('second', 0),
+  );
   const [underlyingMint, setUnderlyingMint] = useState<PublicKey | null>(null);
   const [quoteMint, setQuoteMint] = useState<PublicKey | null>(null);
   const underlyingDecimals = useDecimalsForMint(underlyingMint ?? '');
@@ -34,7 +36,9 @@ export const MintParamInput: React.VFC<{
   const [size, setSize] = useState('');
   const [strike, setStrike] = useState('');
   const handleSelectedDateChange = (date: Date | null) => {
-    setExpiration(moment.utc(date).endOf('day'));
+    setExpiration(
+      moment.utc(date).set('hour', 8).set('minute', 0).set('second', 0),
+    );
   };
 
   useEffect(() => {

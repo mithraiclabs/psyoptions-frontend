@@ -44,7 +44,9 @@ export const InitOptionMarket: React.VFC = () => {
   const initializeSerumMarket = useInitializeSerumMarket();
   const { USDCPublicKey } = useAssetList();
   const [basePrice, setBasePrice] = useState('0');
-  const [selectorDate, setSelectorDate] = useState(moment.utc().endOf('day'));
+  const [selectorDate, setSelectorDate] = useState(
+    moment.utc().set('hour', 8).set('minute', 0).set('second', 0),
+  );
   const [underlyingMint, setUnderlyingMint] = useState<PublicKey | null>(null);
   const [quoteMint, setQuoteMint] = useState<PublicKey | null>(USDCPublicKey);
   const [initSerumMarket, setInitSerumMarket] = useState(false);
@@ -78,7 +80,10 @@ export const InitOptionMarket: React.VFC = () => {
   };
 
   const handleSelectedDateChange = (date: Date | null) => {
-    setSelectorDate(moment.utc(date).endOf('day'));
+    // default to 08:00:00 UTC to match deribit expirations
+    setSelectorDate(
+      moment.utc(date).set('hour', 8).set('minute', 0).set('second', 0),
+    );
   };
 
   const handleChangeCallPut: React.ChangeEventHandler<HTMLInputElement> = (

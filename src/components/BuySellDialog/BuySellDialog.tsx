@@ -499,12 +499,12 @@ const BuySellDialog: React.VFC<{
               <Box pt={1}>
                 {loadingOwnedTokenAccounts
                   ? 'Loading...'
-                  : `${underlyingAsset?.symbol}: ${uAssetBalance} `}
+                  : `${optionUnderlyingAssetSymbol}: ${uAssetBalance} `}
               </Box>
               <Box pt={1}>
                 {loadingOwnedTokenAccounts
                   ? 'Loading...'
-                  : `${quoteAsset?.symbol}: ${qAssetBalance} `}
+                  : `${optionQuoteAssetSymbol}: ${qAssetBalance} `}
               </Box>
             </Box>
           </Box>

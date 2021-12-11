@@ -8,12 +8,12 @@ import { deriveOptionKeyFromParams } from '@mithraic-labs/psy-american';
 import { BN } from '@project-serum/anchor';
 import { PublicKey } from '@solana/web3.js';
 import BigNumber from 'bignumber.js';
-import moment from 'moment';
 import React, { useEffect, useState } from 'react';
 import { useAmericanPsyOptionsProgram } from '../../hooks/useAmericanPsyOptionsProgram';
 import { useDecimalsForMint } from '../../hooks/useDecimalsForMint';
 import useNotifications from '../../hooks/useNotifications';
 import { OptionType } from '../../types';
+import { getDateWithDefaultTime } from '../../utils/dates';
 import theme from '../../utils/theme';
 import { ExpirationInput } from '../Inputs/ExpirationInput';
 import { SelectAssetOrEnterMint } from '../SelectAssetOrEnterMint';
@@ -25,9 +25,7 @@ export const MintParamInput: React.VFC<{
 }> = ({ onUpdateDerivedAddress }) => {
   const program = useAmericanPsyOptionsProgram();
   const { pushErrorNotification } = useNotifications();
-  const [expiration, setExpiration] = useState(
-    moment.utc().set('hour', 8).set('minute', 0).set('second', 0),
-  );
+  const [expiration, setExpiration] = useState(getDateWithDefaultTime());
   const [underlyingMint, setUnderlyingMint] = useState<PublicKey | null>(null);
   const [quoteMint, setQuoteMint] = useState<PublicKey | null>(null);
   const underlyingDecimals = useDecimalsForMint(underlyingMint ?? '');
@@ -36,9 +34,7 @@ export const MintParamInput: React.VFC<{
   const [size, setSize] = useState('');
   const [strike, setStrike] = useState('');
   const handleSelectedDateChange = (date: Date | null) => {
-    setExpiration(
-      moment.utc(date).set('hour', 8).set('minute', 0).set('second', 0),
-    );
+    setExpiration(getDateWithDefaultTime(date));
   };
 
   useEffect(() => {

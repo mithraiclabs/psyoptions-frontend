@@ -17,3 +17,12 @@ export const getLastFridayOfMonths = (n = 10) =>
       return lastFriday;
     })
     .filter((date) => date.isSameOrAfter(moment.utc()));
+
+export const getDateWithDefaultTime = (date?: Date | null) => {
+  const now = new Date();
+  const year = date ? date.getUTCFullYear() : now.getUTCFullYear();
+  if (year >= 2022) {
+    return moment.utc(date).set('hour', 8).set('minute', 0).set('second', 0);
+  }
+  return moment.utc(date).endOf('day');
+};

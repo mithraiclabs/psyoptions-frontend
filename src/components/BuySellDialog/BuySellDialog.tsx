@@ -255,7 +255,10 @@ const BuySellDialog: React.VFC<{
         optionUnderlyingDecimals: optionUnderlyingMintInfo?.decimals ?? 0,
         optionUnderlyingSize,
         mintedOptionDestinationKey: optionTokenKey,
-        underlyingAssetAmount: underlyingAssetAccount?.amount ?? 0,
+        underlyingAssetAmount:
+          option.underlyingAssetMint.toString() === WRAPPED_SOL_ADDRESS
+            ? balance ?? 0
+            : underlyingAssetAccount?.amount ?? 0,
         underlyingAssetSource: underlyingAssetAccount?.pubKey,
         writerTokenDestinationKey,
       });
@@ -282,6 +285,7 @@ const BuySellDialog: React.VFC<{
     optionUnderlyingAsset?.symbol,
     optionUnderlyingMintInfo?.decimals,
     optionUnderlyingSize,
+    balance,
     pushErrorNotification,
   ]);
 

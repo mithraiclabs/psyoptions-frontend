@@ -13,7 +13,6 @@ import Radio from '@material-ui/core/Radio';
 import { OptionMarketWithKey } from '@mithraic-labs/psy-american';
 import { BigNumber } from 'bignumber.js';
 import { BN } from 'bn.js';
-import moment from 'moment';
 import { useRecoilValue } from 'recoil';
 import { MarketExistsDialog } from './MarketExistsDialog';
 import theme from '../../utils/theme';

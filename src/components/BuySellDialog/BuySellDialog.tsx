@@ -171,18 +171,22 @@ const BuySellDialog: React.VFC<{
     setOpenPositionSize(getHighestAccount(newOptionAccounts)?.amount || 0);
     setContractsWritten(getHighestAccount(newWriterAccounts)?.amount || 0);
 
-    setQAssetBalance(
-      (getHighestAccount(newQAssetAccounts)?.amount || 0) /
-        10 ** optionQuoteDecimals,
-    );
-    let tempBalance =
+    let _optionUnderlyingBalance =
       (getHighestAccount(newUAssetAccounts)?.amount || 0) /
       10 ** optionUnderlyingDecimals;
+    let _optionQuoteBalance =
+      (getHighestAccount(newQAssetAccounts)?.amount || 0) /
+      10 ** optionQuoteDecimals;
     if (option?.underlyingAssetMint?.toString() === WRAPPED_SOL_ADDRESS) {
       // if asset is wrapped Sol, use balance of wallet account
-      tempBalance = balance ?? 0 / LAMPORTS_PER_SOL;
+      _optionUnderlyingBalance = (balance ?? 0) / LAMPORTS_PER_SOL;
     }
-    setUAssetBalance(tempBalance);
+    if (option?.quoteAssetMint?.toString() === WRAPPED_SOL_ADDRESS) {
+      // if asset is wrapped Sol, use balance of wallet account
+      _optionQuoteBalance = (balance ?? 0) / LAMPORTS_PER_SOL;
+    }
+    setQAssetBalance(_optionQuoteBalance);
+    setUAssetBalance(_optionUnderlyingBalance);
   }, [
     ownedTokenAccounts,
     balance,

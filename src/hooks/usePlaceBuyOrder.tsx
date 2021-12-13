@@ -6,7 +6,6 @@ import {
   ProgramVersions,
   serumInstructions,
   OptionMarketWithKey,
-  serumUtils,
 } from '@mithraic-labs/psy-american';
 import { createAssociatedTokenAccountInstruction } from '../utils/instructions/token';
 import { useConnectedWallet } from '@saberhq/use-solana';

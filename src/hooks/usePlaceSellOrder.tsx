@@ -1,7 +1,6 @@
 import { useCallback } from 'react';
 import { PublicKey, Signer, Transaction } from '@solana/web3.js';
 import {
-  serumUtils,
   PSY_AMERICAN_PROGRAM_IDS,
   ProgramVersions,
   serumInstructions,

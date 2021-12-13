@@ -3,7 +3,6 @@ import { serumUtils, OptionMarketWithKey } from '@mithraic-labs/psy-american';
 import { PublicKey } from '@solana/web3.js';
 import { useEffect, useState } from 'react';
 import { useRecoilValue } from 'recoil';
-import { MarketMeta } from '@mithraic-labs/market-meta';
 import { useAmericanPsyOptionsProgram } from './useAmericanPsyOptionsProgram';
 import { getSupportedMarketsByNetwork } from '../utils/networkInfo';
 
@@ -32,7 +31,7 @@ export const useDeriveMultipleSerumMarketAddresses = (
         if (serumMarketAddress) {
           return new PublicKey(serumMarketAddress);
         }
-        const [address, bump] = await serumUtils.deriveSerumMarketAddress(
+        const [address] = await serumUtils.deriveSerumMarketAddress(
           program,
           option.key,
           _quoteMint,

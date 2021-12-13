@@ -30,7 +30,6 @@ export const useDeriveMultipleSerumMarketAddresses = (
             optionMarketWithKey.optionMarketAddress === option.key.toString(),
         )?.serumMarketAddress;
         if (serumMarketAddress) {
-          console.log('*** using package', serumMarketAddress);
           return new PublicKey(serumMarketAddress);
         }
         const [address, bump] = await serumUtils.deriveSerumMarketAddress(

@@ -31,6 +31,9 @@ export const useInitializeSerumMarket = (): ((options: {
       quoteMintKey: PublicKey;
       quoteLotSize: BN;
     }) => {
+      if (!program || !dexProgramId) {
+        return null;
+      }
       try {
         pushNotification({
           severity: NotificationSeverity.INFO,

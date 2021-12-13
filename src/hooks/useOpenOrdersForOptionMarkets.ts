@@ -3,8 +3,10 @@ import { OpenOrders } from '@mithraic-labs/serum';
 import { useState, useEffect } from 'react';
 import { useAmericanPsyOptionsProgram } from './useAmericanPsyOptionsProgram';
 import useConnection from './useConnection';
-import { useConnectedWallet } from "@saberhq/use-solana";
+import { useConnectedWallet } from '@saberhq/use-solana';
 import * as Sentry from '@sentry/react';
+import { useRecoilValue } from 'recoil';
+import { quoteMint } from '../recoil';
 
 /**
  * Get open orders for a user for option market keys
@@ -20,22 +22,26 @@ export const useOpenOrdersForOptionMarkets = (): {
   const program = useAmericanPsyOptionsProgram();
   const { dexProgramId } = useConnection();
   const wallet = useConnectedWallet();
+  const _quoteMint = useRecoilValue(quoteMint);
 
   useEffect(() => {
     (async () => {
-      if (!program || !dexProgramId || !wallet?.publicKey) return;
+      if (!program || !dexProgramId || !wallet?.publicKey || !_quoteMint) {
+        return;
+      }
       setLoadingOpenOrders(true);
 
       try {
         const optionMarketWithKeys = await getAllOptionAccounts(program);
-        const keys = optionMarketWithKeys.map(marketInfo => marketInfo.key);
-  
+        const keys = optionMarketWithKeys.map((marketInfo) => marketInfo.key);
+
         const orders = await serumUtils.findOpenOrdersForOptionMarkets(
           program,
           dexProgramId,
           keys,
+          _quoteMint,
         );
-        
+
         // #TODO: remove as any
         setOpenOrders(orders as any);
       } catch (err) {
@@ -45,7 +51,7 @@ export const useOpenOrdersForOptionMarkets = (): {
         setLoadingOpenOrders(false);
       }
     })();
-  }, [program, dexProgramId, wallet?.publicKey]);
+  }, [program, dexProgramId, wallet?.publicKey, _quoteMint]);
 
   return { openOrders, loadingOpenOrders };
 };

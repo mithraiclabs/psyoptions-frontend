@@ -65,7 +65,10 @@ export const ContractSizeSelector: React.VFC = () => {
         value={contractSize}
       >
         {options.map((option) => (
-          <MenuItem key={option.toString()} value={option.value.toString()}>
+          <MenuItem
+            key={option.text.toString()}
+            value={option.value.toString()}
+          >
             <NoSsr>{option.text}</NoSsr>
           </MenuItem>
         ))}

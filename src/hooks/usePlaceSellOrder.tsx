@@ -160,10 +160,7 @@ const usePlaceSellOrder = (
             payer: _optionTokenSrcKey,
           }));
         } else {
-          const [serumMarketKey] = await serumUtils.deriveSerumMarketAddress(
-            program,
-            option.key,
-          );
+          const serumMarketKey = serumMarket.address;
           const { openOrdersKey, tx } =
             await serumInstructions.newOrderInstruction(
               program,

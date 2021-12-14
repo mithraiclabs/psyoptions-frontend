@@ -6,7 +6,8 @@ import useConnection from './useConnection';
 import { useConnectedWallet } from '@saberhq/use-solana';
 import * as Sentry from '@sentry/react';
 import { useRecoilValue } from 'recoil';
-import { quoteMint } from '../recoil';
+import { activeNetwork, quoteMint } from '../recoil';
+import { getSupportedMarketsByNetwork } from '../utils/networkInfo';
 
 /**
  * Get open orders for a user for option market keys
@@ -20,6 +21,7 @@ export const useOpenOrdersForOptionMarkets = (): {
   const [openOrders, setOpenOrders] = useState([] as OpenOrders[]);
   const [loadingOpenOrders, setLoadingOpenOrders] = useState(false);
   const program = useAmericanPsyOptionsProgram();
+  const endpoint = useRecoilValue(activeNetwork);
   const { dexProgramId } = useConnection();
   const wallet = useConnectedWallet();
   const _quoteMint = useRecoilValue(quoteMint);
@@ -29,6 +31,7 @@ export const useOpenOrdersForOptionMarkets = (): {
       if (!program || !dexProgramId || !wallet?.publicKey || !_quoteMint) {
         return;
       }
+      const supportedMarkets = getSupportedMarketsByNetwork(endpoint.name);
       setLoadingOpenOrders(true);
 
       try {
@@ -40,6 +43,7 @@ export const useOpenOrdersForOptionMarkets = (): {
           dexProgramId,
           keys,
           _quoteMint,
+          supportedMarkets,
         );
 
         // #TODO: remove as any
@@ -51,7 +55,7 @@ export const useOpenOrdersForOptionMarkets = (): {
         setLoadingOpenOrders(false);
       }
     })();
-  }, [program, dexProgramId, wallet?.publicKey, _quoteMint]);
+  }, [program, dexProgramId, wallet?.publicKey, _quoteMint, endpoint.name]);
 
   return { openOrders, loadingOpenOrders };
 };

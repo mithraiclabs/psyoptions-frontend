@@ -12,11 +12,12 @@ import useOptionsMarkets from '../../hooks/useOptionsMarkets';
 import useScreenSize from '../../hooks/useScreenSize';
 import { useSubscribeSerumOrderbook } from '../../hooks/Serum';
 import { useRecoilValue } from 'recoil';
-import { optionsMap, quoteMint, underlyingMint } from '../../recoil';
+import { optionsMap } from '../../recoil';
 import { useTokenByMint } from '../../hooks/useNetworkTokens';
 import { useTokenMintInfo } from '../../hooks/useTokenMintInfo';
-import { useNormalizedContractSize } from '../../hooks/useNormalizedContractSize';
 import { useNormalizedStrikePriceFromOption } from '../../hooks/useNormalizedStrikePriceFromOption';
+import { useOptionIsCall } from '../../hooks/useOptionIsCall';
+import { useOptionContractSize } from '../../hooks/useOptionContractSize';
 
 const useStyles = makeStyles((theme) => ({
   root: {},
@@ -64,26 +65,36 @@ const UnsettledRow = ({
   optionKey: PublicKey;
 }) => {
   const classes = useStyles();
-  const contractSize = useNormalizedContractSize();
   const option = useRecoilValue(optionsMap(optionKey.toString()));
-  const _underlyingMint = useRecoilValue(underlyingMint);
-  const _quoteMint = useRecoilValue(quoteMint);
   const [loading, setLoading] = useState(false);
   const { formFactor } = useScreenSize();
-  const isCall =
-    _underlyingMint && option?.underlyingAssetMint.equals(_underlyingMint);
+  const contractSize = useOptionContractSize(optionKey);
+  const isCall = useOptionIsCall(optionKey);
   const isMobile = formFactor === 'mobile';
   useSubscribeSerumOrderbook(serumMarketKey.toString());
-  const underlyingAsset = useTokenByMint(_underlyingMint ?? '');
-  const quoteAsset = useTokenByMint(_quoteMint ?? '');
-  const quoteMintInfo = useTokenMintInfo(_quoteMint);
+  const optionUnderlyingAsset = useTokenByMint(
+    option?.underlyingAssetMint ?? '',
+  );
+  const optionQuoteAsset = useTokenByMint(option?.quoteAssetMint ?? '');
+  const optionUnderlyingAssetSymbol =
+    optionUnderlyingAsset?.symbol ??
+    option?.underlyingAssetMint.toString() ??
+    '';
+  const optionQuoteAssetSymbol =
+    optionQuoteAsset?.symbol ?? option?.quoteAssetMint.toString() ?? '';
+  const optionQuoteMintInfo = useTokenMintInfo(option?.quoteAssetMint);
   const strike = useNormalizedStrikePriceFromOption(optionKey.toString());
-  const underlyingAssetSymbol =
-    underlyingAsset?.symbol ?? _underlyingMint?.toString ?? '';
-  const quoteAssetSymbol = quoteAsset?.symbol ?? _quoteMint?.toString() ?? '';
-  const assetPair = `${underlyingAssetSymbol} / ${quoteAssetSymbol}`;
-  const quoteAssetDecimals =
-    quoteMintInfo?.decimals ?? quoteAsset?.decimals ?? 0;
+  const assetPair = isCall
+    ? `${optionUnderlyingAssetSymbol} / ${optionQuoteAssetSymbol}`
+    : `${optionQuoteAssetSymbol} / ${optionUnderlyingAssetSymbol}`;
+  const normalizedUnderlyingSymbol = isCall
+    ? optionUnderlyingAssetSymbol
+    : optionQuoteAssetSymbol;
+  const normalizedQuoteSymbol = isCall
+    ? optionQuoteAssetSymbol
+    : optionUnderlyingAssetSymbol;
+  const optionQuoteAssetDecimals =
+    optionQuoteMintInfo?.decimals ?? optionQuoteAsset?.decimals ?? 0;
 
   const handleSettleFunds = useCallback(async () => {
     setLoading(true);
@@ -98,14 +109,19 @@ const UnsettledRow = ({
   const unsettledAssets = useCallback(() => {
     const tokensUnsettled = new BigNumber(unsettledFunds.quoteFree.toString());
     if (
-      tokensUnsettled.dividedBy(10 ** quoteAssetDecimals).toString() === '0'
+      tokensUnsettled.dividedBy(10 ** optionQuoteAssetDecimals).toString() ===
+      '0'
     ) {
       return <Empty>{'-'}</Empty>;
     }
     return `${tokensUnsettled
-      .dividedBy(10 ** quoteAssetDecimals)
-      .toString()} ${quoteAssetSymbol}`;
-  }, [quoteAssetDecimals, quoteAssetSymbol, unsettledFunds.quoteFree]);
+      .dividedBy(10 ** optionQuoteAssetDecimals)
+      .toString()} ${normalizedQuoteSymbol}`;
+  }, [
+    normalizedQuoteSymbol,
+    optionQuoteAssetDecimals,
+    unsettledFunds.quoteFree,
+  ]);
 
   return (
     <TableRow
@@ -126,7 +142,7 @@ const UnsettledRow = ({
             {`${moment.utc(expiration * 1000).format('LL')} 23:59:59 UTC`}
           </TCell>
           <TCell>{strike.toString()}</TCell>
-          <TCell>{`${contractSize} ${underlyingAssetSymbol}`}</TCell>
+          <TCell>{`${contractSize} ${normalizedUnderlyingSymbol}`}</TCell>
           <TCell>{unsettledFunds.baseFree.toString()}</TCell>
           <TCell>{unsettledAssets()}</TCell>
           <TCell align="right">
@@ -155,7 +171,7 @@ const UnsettledRow = ({
             </Box>
             <Box pl={isMobile ? 1 : 2} className={classes.column}>
               <Box>{`Strike: ${strike.toString()}`}</Box>
-              <Box>{`${contractSize} ${underlyingAssetSymbol}`}</Box>
+              <Box>{`${contractSize} ${normalizedUnderlyingSymbol}`}</Box>
               <Box>{`Qty: ${unsettledFunds.baseFree.toString()}`}</Box>
             </Box>
           </TMobileCell>

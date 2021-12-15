@@ -19,6 +19,7 @@ import OpenOrders from '../OpenOrders';
 import UnsettledBalancesTable from '../UnsettledBalancesTable';
 import useScreenSize from '../../hooks/useScreenSize';
 import { PublicKey } from '@solana/web3.js';
+import { ExpiredOpenOrdersTable } from './ExpiredOpenOrdersTable';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -221,6 +222,34 @@ const Portfolio: React.VFC = () => {
                 </Box>
               </Box>
             </TabCustom>
+            <TabCustom
+              selected={selectedTab === 4}
+              onClick={() => setSelectedTab(4)}
+            >
+              <Box
+                display="flex"
+                flexDirection="row"
+                alignItems="center"
+                style={{ minHeight: '66px' }}
+              >
+                <Box
+                  className={isMobile ? classes.mobileTab : classes.desktopTab}
+                  textAlign="left"
+                >
+                  <Box
+                    className={
+                      isMobile
+                        ? classes.mobileTabHeader
+                        : classes.desktopTabHeader
+                    }
+                  >
+                    Expired Options
+                    <br />
+                    "OpenOrders"
+                  </Box>
+                </Box>
+              </Box>
+            </TabCustom>
           </Box>
           {selectedTab === 0 && <UnsettledBalancesTable />}
           {selectedTab === 1 && <OpenOrders />}
@@ -233,6 +262,7 @@ const Portfolio: React.VFC = () => {
             />
           )}
           {selectedTab === 3 && <WrittenOptionsTable />}
+          {selectedTab === 4 && <ExpiredOpenOrdersTable />}
         </Box>
       </Page>
     </PricesProvider>

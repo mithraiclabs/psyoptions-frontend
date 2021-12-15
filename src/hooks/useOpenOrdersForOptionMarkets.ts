@@ -35,16 +35,17 @@ export const useOpenOrdersForOptionMarkets = (): {
       setLoadingOpenOrders(true);
 
       try {
-        const optionMarketWithKeys = await getAllOptionAccounts(program);
-        const keys = optionMarketWithKeys.map((marketInfo) => marketInfo.key);
+        const options = await getAllOptionAccounts(program);
+        const optionKeys = options.map((option) => option.key);
 
-        const orders = await serumUtils.findOpenOrdersForOptionMarkets(
+        const ordersByOption = await serumUtils.findOpenOrdersForOptionMarkets(
           program,
           dexProgramId,
-          keys,
+          optionKeys,
           _quoteMint,
           supportedMarkets,
         );
+        const orders = Object.values(ordersByOption);
 
         // #TODO: remove as any
         setOpenOrders(orders as any);

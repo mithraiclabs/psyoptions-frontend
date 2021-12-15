@@ -21,6 +21,18 @@ export const selectAllOptions = selector<OptionMarketWithKey[]>({
       .filter((o) => !!o) as OptionMarketWithKey[],
 });
 
+export const selectAllExpiredOptions = selector<OptionMarketWithKey[]>({
+  key: 'selectAllExpiredOptions',
+  get: ({ get }) => {
+    const nowInSeconds = Date.now() / 1000;
+    const nowBN = new BN(nowInSeconds);
+
+    return get(selectAllOptions).filter((option) =>
+      option.expirationUnixTimestamp.lt(nowBN),
+    );
+  },
+});
+
 /**
  * Get available expirations based on the inputed assets.
  */

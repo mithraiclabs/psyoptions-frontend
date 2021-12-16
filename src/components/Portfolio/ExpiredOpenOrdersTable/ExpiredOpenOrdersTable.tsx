@@ -11,9 +11,16 @@ import { TCell } from '../../Markets/styles';
 import { ExpiredOpenOrdersTableHeader } from './ExpiredOpenOrdersTableHeader';
 import GokiButton from '../../GokiButton';
 import { useRecoilValue } from 'recoil';
-import { selectOpenOrdersForExpiredOptions } from '../../../recoil';
+import { selectOpenOrdersOptionTupleForExpiredOptions } from '../../../recoil';
+import { useCloseOpenOrders } from '../../../hooks/Serum';
+import Button from '@material-ui/core/Button';
 
 const useStyles = makeStyles((theme) => ({
+  row: {
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   walletButtonCell: {
     textAlign: '-webkit-center' as CSS.Property.TextAlign,
   },
@@ -23,8 +30,9 @@ export const ExpiredOpenOrdersTable: React.VFC = () => {
   const classes = useStyles();
   const wallet = useConnectedWallet();
   const openOrdersForExpiredOptions = useRecoilValue(
-    selectOpenOrdersForExpiredOptions,
+    selectOpenOrdersOptionTupleForExpiredOptions,
   );
+  const closeOpenOrders = useCloseOpenOrders();
 
   console.log('TJ expired open orders', openOrdersForExpiredOptions);
   // TODO get the OpenOrders for expired option markets
@@ -49,13 +57,42 @@ export const ExpiredOpenOrdersTable: React.VFC = () => {
               </TCell>
             </TableRow>
           ) : (
-            openOrdersForExpiredOptions.map((openOrders) => (
-              <TableRow key={openOrders.address.toString()}>
-                <TCell>{openOrders.address.toString()}</TCell>
-                <TCell>{openOrders.market.toString()}</TCell>
-                {/* <TCell>{openOrders.market.toString()}</TCell> */}
-              </TableRow>
-            ))
+            <>
+              {openOrdersForExpiredOptions.map(([optionKey, openOrders]) => (
+                <TableRow
+                  key={openOrders.address.toString()}
+                  style={{ borderBottom: '1pt solid #ff000d' }}
+                >
+                  <TCell>
+                    <Box display="flex">{openOrders.address.toString()}</Box>{' '}
+                  </TCell>
+                  <TCell>{openOrders.market.toString()}</TCell>
+                  <TCell>
+                    <Box>
+                      <Box
+                        display="flex"
+                        flexDirection={['column', 'column', 'row']}
+                        flexWrap="wrap"
+                        alignItems="flex-start"
+                        justifyContent="flex-start"
+                      >
+                        <Box p={1}>
+                          <Button
+                            color="primary"
+                            variant="outlined"
+                            onClick={() =>
+                              closeOpenOrders(optionKey, openOrders)
+                            }
+                          >
+                            Close OpenOrders Account
+                          </Button>
+                        </Box>
+                      </Box>
+                    </Box>
+                  </TCell>
+                </TableRow>
+              ))}
+            </>
           )}
         </TableBody>
       </TableContainer>

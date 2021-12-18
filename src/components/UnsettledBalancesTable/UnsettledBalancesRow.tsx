@@ -53,13 +53,11 @@ const Empty = ({ children }) => (
 
 const UnsettledRow = ({
   serumMarketKey,
-  expiration,
   unsettledFunds,
   settleFunds,
   optionKey,
 }: {
   serumMarketKey: PublicKey;
-  expiration: number;
   unsettledFunds: any;
   settleFunds: any;
   optionKey: PublicKey;
@@ -139,7 +137,9 @@ const UnsettledRow = ({
           <TCell>{isCall ? 'Call' : 'Put'}</TCell>
           <TCell>{assetPair}</TCell>
           <TCell>
-            {`${moment.utc(expiration * 1000).format('LL')} 23:59:59 UTC`}
+            {`${moment
+              .utc((option?.expirationUnixTimestamp.toNumber() ?? 0) * 1000)
+              .format('LL')} 23:59:59 UTC`}
           </TCell>
           <TCell>{strike.toString()}</TCell>
           <TCell>{`${contractSize} ${normalizedUnderlyingSymbol}`}</TCell>
@@ -181,7 +181,9 @@ const UnsettledRow = ({
               formFactor === 'mobile' && classes.mobileFont,
             )}
           >
-            {`${moment.utc(expiration * 1000).format('LL')} 23:59:59 UTC`}
+            {`${moment
+              .utc((option?.expirationUnixTimestamp.toNumber() ?? 0) * 1000)
+              .format('LL')} 23:59:59 UTC`}
           </TMobileCell>
           <TMobileCell
             className={clsx(
@@ -216,10 +218,9 @@ const UnsettledRow = ({
 
 // Render all unsettled balances for a given market as table rows
 const UnsettledBalancesRow: React.FC<{
-  expiration: number;
   serumMarketKey: PublicKey;
   optionKey: PublicKey;
-}> = ({ expiration, serumMarketKey, optionKey }) => {
+}> = ({ serumMarketKey, optionKey }) => {
   const { marketsBySerumKey } = useOptionsMarkets();
   const { serumMarkets } = useSerum();
   const serumMarketAddress = serumMarketKey.toString();
@@ -243,7 +244,6 @@ const UnsettledBalancesRow: React.FC<{
   return (
     <UnsettledRow
       serumMarketKey={serumMarketKey}
-      expiration={expiration}
       unsettledFunds={unsettledFunds}
       settleFunds={settleFunds}
       optionKey={optionKey}

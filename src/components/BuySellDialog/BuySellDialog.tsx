@@ -124,6 +124,8 @@ const BuySellDialog: React.VFC<{
   const quoteAsset = useTokenByMint(_quoteMint ?? '');
   const isCall =
     _underlyingMint && option?.underlyingAssetMint.equals(_underlyingMint);
+  const underlyingAssetSymbol =
+    underlyingAsset?.symbol ?? _underlyingMint?.toString() ?? '';
   const optionName = useFormattedOptionName(optionKey, {
     isCall: isCall ?? undefined,
   });
@@ -407,12 +409,11 @@ const BuySellDialog: React.VFC<{
             <Box pt={1}>
               Strike: {formatStrike(strike)}{' '}
               {isCall
-                ? `${quoteAsset?.symbol}/${underlyingAsset?.symbol}`
-                : `${underlyingAsset?.symbol}/${quoteAsset?.symbol}`}
+                ? `${optionQuoteAssetSymbol}/${optionUnderlyingAssetSymbol}`
+                : `${optionUnderlyingAssetSymbol}/${optionQuoteAssetSymbol}`}
             </Box>
             <Box pt={1}>
-              Contract Size: {sizeOfContract}{' '}
-              {!isCall ? quoteAsset?.symbol : underlyingAsset?.symbol}
+              Contract Size: {sizeOfContract} {underlyingAssetSymbol}
             </Box>
             <Box pt={1}>Mark Price: {markPrice ?? '-'}</Box>
             <Box pt={1}>
@@ -458,7 +459,7 @@ const BuySellDialog: React.VFC<{
                       size="small"
                       label={_type}
                       color="primary"
-                      onClick={() => setOrderType(_type)}
+                      onClick={() => setOrderType(_type as 'limit' | 'market')}
                       onDelete={
                         selected ? () => setOrderType(_type) : undefined
                       }
@@ -609,9 +610,7 @@ const BuySellDialog: React.VFC<{
                   >
                     {`This is a ${
                       isCall ? 'covered call' : 'secured put'
-                    }. Mint/Sell will lock the required collateral (${collateralRequired} ${
-                      underlyingAsset?.symbol
-                    }) until the contract expires or is exercised.`}
+                    }. Mint/Sell will lock the required collateral (${optionUnderlyingSize} ${optionUnderlyingAssetSymbol}) until the contract expires or is exercised.`}
                   </Box>
                   <UnsettledFunds
                     optionKey={option?.key}

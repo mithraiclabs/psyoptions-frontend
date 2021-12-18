@@ -17,9 +17,9 @@ export const ExpiredOpenOrdersTableHeader: React.VFC = () => {
         </THeadCell>
       </TableRow>
       <TableRow>
-        <THeadCell>OpenOrder Address</THeadCell>
-        <THeadCell>Serum Market Address</THeadCell>
-        <THeadCell>Action</THeadCell>
+        <THeadCell colSpan={4}>OpenOrder Address</THeadCell>
+        <THeadCell colSpan={4}>Serum Market Address</THeadCell>
+        <THeadCell colSpan={4}>Action</THeadCell>
       </TableRow>
     </TableHead>
   );

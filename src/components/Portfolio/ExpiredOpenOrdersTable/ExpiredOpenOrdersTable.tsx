@@ -34,9 +34,6 @@ export const ExpiredOpenOrdersTable: React.VFC = () => {
   );
   const closeOpenOrders = useCloseOpenOrders();
 
-  console.log('TJ expired open orders', openOrdersForExpiredOptions);
-  // TODO get the OpenOrders for expired option markets
-
   return (
     <Box style={{ zIndex: 1 }}>
       <TableContainer>
@@ -63,11 +60,11 @@ export const ExpiredOpenOrdersTable: React.VFC = () => {
                   key={openOrders.address.toString()}
                   style={{ borderBottom: '1pt solid #ff000d' }}
                 >
-                  <TCell>
+                  <TCell colSpan={4}>
                     <Box display="flex">{openOrders.address.toString()}</Box>{' '}
                   </TCell>
-                  <TCell>{openOrders.market.toString()}</TCell>
-                  <TCell>
+                  <TCell colSpan={4}>{openOrders.market.toString()}</TCell>
+                  <TCell colSpan={4}>
                     <Box>
                       <Box
                         display="flex"

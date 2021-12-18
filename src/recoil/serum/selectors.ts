@@ -16,18 +16,23 @@ export const selectOpenOrdersOptionTupleForExpiredOptions = selector<
     return expiredOptions.reduce((acc, option) => {
       const optionKey = option.key.toString();
       const openOrdersForOption = get(openOrdersByOptionKey(optionKey));
-      const openOrdersWithNoTokens = openOrdersForOption.filter(
-        (o) => o.baseTokenTotal.eq(BN_ZERO) && o.quoteTokenTotal.eq(BN_ZERO),
+      const emptyOpenOrders = openOrdersForOption.filter(
+        (openOrders) =>
+          openOrders.baseTokenTotal.eq(BN_ZERO) &&
+          openOrders.quoteTokenTotal.eq(BN_ZERO) &&
+          !openOrders.orders.find((_order) => _order.toString() !== '0'),
       );
       console.log(
         'TJ expired option open orders ',
         option.key.toString(),
         option.expirationUnixTimestamp.toString(),
-        openOrdersWithNoTokens,
+        emptyOpenOrders[0]?.address.toString(),
+        emptyOpenOrders[0]?.market.toString(),
+        emptyOpenOrders[0]?.orders.map((o) => o.toString()),
       );
-      if (openOrdersWithNoTokens.length) {
+      if (emptyOpenOrders.length) {
         const optionOpenOrdersTupleArray: [PublicKey, OpenOrders][] =
-          openOrdersWithNoTokens.map((oo) => [option.key, oo]);
+          emptyOpenOrders.map((oo) => [option.key, oo]);
         acc = [...acc, ...optionOpenOrdersTupleArray];
       }
       return acc;

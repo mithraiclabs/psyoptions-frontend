@@ -134,7 +134,7 @@ const WrittenOptionRow: React.VFC<{
   const underlyingAssetLogo = isCall
     ? optionUnderlyingAsset?.logoURI
     : optionQuoteAsset?.logoURI;
-  const writerTokenAccount = writerTokenAccounts[0];
+  const writerTokenAccount = writerTokenAccounts?.[0];
   const walletUnderlyingAssetKey =
     ownedTokenAccounts[option?.underlyingAssetMint.toString() ?? '']?.[0]
       ?.pubKey;
@@ -143,7 +143,7 @@ const WrittenOptionRow: React.VFC<{
   const ownedOptionTokenAccounts =
     ownedTokenAccounts[option?.optionMint.toString() ?? ''];
   const holdsContracts = !!heldContracts.length;
-  const optionTokenAccount = ownedOptionTokenAccounts[0];
+  const optionTokenAccount = ownedOptionTokenAccounts?.[0];
   // amount of underlying without taking into account call/put
   const normalizedOptionUnderlyingAmount = normalizeOptionUnderlying(
     option?.underlyingAmountPerContract,

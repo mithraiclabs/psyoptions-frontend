@@ -13,6 +13,3 @@ export const openOrdersByOptionKey = atomFamily<OpenOrders[], string>({
   key: 'openOrdersByOptionKey',
   default: [],
 });
-
-// Goal show OpenOrders for expired markets
-// Goal show OpenOrders with actual orders for all markets

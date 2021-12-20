@@ -1,3 +1,4 @@
+import BN from 'bn.js';
 import moment from 'moment';
 import { OptionMarket, OptionType } from '../types';
 /**
@@ -12,6 +13,17 @@ export const truncatePublicKey = (pk: string): string =>
 export const formatExpirationTimestamp = (value: number): string =>
   new Date(value * 1000).toUTCString();
 
+/**
+ * Format an option timestamp using the expiration BN
+ */
+export const formatOptionExpiration = (val: BN | undefined) => {
+  if (!val) {
+    return '';
+  }
+  return `${moment(val.toNumber() * 1000)
+    .utc()
+    .format('LLL')} UTC`;
+};
 /**
  * Take in unix seconds timestamp and return just the date
  */

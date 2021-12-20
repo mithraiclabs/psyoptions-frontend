@@ -39,8 +39,6 @@ const UnsettledBalancesTable = () => {
   const { formFactor } = useScreenSize();
   const [showTooltip, setShowTooltip] = useState(false);
 
-  console.log('TJ ', unsettledOpenOrders);
-
   return (
     <Box style={{ zIndex: 1 }}>
       <TableContainer>
@@ -136,7 +134,7 @@ const UnsettledBalancesTable = () => {
                 <UnsettledBalancesRow
                   serumMarketKey={openOrders.market}
                   optionKey={optionKey}
-                  key={`${optionKey.toString()}-unsettled`}
+                  key={`${openOrders.address.toString()}-unsettled`}
                 />
               ))
             )}

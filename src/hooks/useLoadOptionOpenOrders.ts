@@ -38,7 +38,6 @@ export const useLoadOptionOpenOrders = () => {
         _quoteMint,
         supportedMarkets,
       );
-      console.log('TJ loaded open orders ', ordersByOption);
       insertOpenOrdersByOptionKey(ordersByOption);
     })();
   }, [

@@ -8,7 +8,6 @@ import useSerum from '../../hooks/useSerum';
 import { useSettleFunds, useUnsettledFundsForMarket } from '../../hooks/Serum';
 import { TCell, TMobileCell } from '../StyledComponents/Table/TableStyles';
 import TxButton from '../TxButton';
-import useOptionsMarkets from '../../hooks/useOptionsMarkets';
 import useScreenSize from '../../hooks/useScreenSize';
 import { useSubscribeSerumOrderbook } from '../../hooks/Serum';
 import { useRecoilValue } from 'recoil';
@@ -221,16 +220,10 @@ const UnsettledBalancesRow: React.FC<{
   serumMarketKey: PublicKey;
   optionKey: PublicKey;
 }> = ({ serumMarketKey, optionKey }) => {
-  const { marketsBySerumKey } = useOptionsMarkets();
   const { serumMarkets } = useSerum();
   const serumMarketAddress = serumMarketKey.toString();
   const { serumMarket } = serumMarkets[serumMarketAddress] || {};
-  const optionMarket = marketsBySerumKey[serumMarketAddress];
-  const { settleFunds } = useSettleFunds(
-    serumMarketAddress,
-    optionMarket,
-    optionKey,
-  );
+  const { settleFunds } = useSettleFunds(serumMarketAddress, optionKey);
   const unsettledFunds = useUnsettledFundsForMarket(serumMarketAddress);
 
   if (

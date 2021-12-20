@@ -24,7 +24,7 @@ const SerumOrderbookContext = createContext<SerumOrderbookContext>([
   () => {},
 ]);
 
-export const DEFAULT_DEPTH = 20;
+export const DEFAULT_DEPTH = 40;
 
 export const SerumOrderbooksProvider: React.FC = ({ children }) => {
   const orderbookState = useState<SerumOrderbooks>({});

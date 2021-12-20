@@ -26,14 +26,6 @@ export const selectOpenOrdersOptionTupleForExpiredOptions =
             openOrders.quoteTokenTotal.eq(BN_ZERO) &&
             !openOrders.orders.find((_order) => _order.toString() !== '0'),
         );
-        console.log(
-          'TJ expired option open orders ',
-          option.key.toString(),
-          option.expirationUnixTimestamp.toString(),
-          emptyOpenOrders[0]?.address.toString(),
-          emptyOpenOrders[0]?.market.toString(),
-          emptyOpenOrders[0]?.orders.map((o) => o.toString()),
-        );
         if (emptyOpenOrders.length) {
           const optionOpenOrdersTupleArray: OpenOrdersOptionTuple =
             emptyOpenOrders.map((oo) => [option.key, oo]);
@@ -60,6 +52,27 @@ export const selectUnsettledOpenOrdersOptionTupleForAllOptions =
         if (openOrdersUnsettled.length) {
           const optionOpenOrdersTupleArray: OpenOrdersOptionTuple =
             openOrdersUnsettled.map((oo) => [option.key, oo]);
+          acc = [...acc, ...optionOpenOrdersTupleArray];
+        }
+        return acc;
+      }, [] as OpenOrdersOptionTuple);
+    },
+  });
+
+export const selectOpenOrdersOptionTupleForAllOptions =
+  selector<OpenOrdersOptionTuple>({
+    key: 'selectOpenOrdersOptionTupleForAllOptions',
+    get: ({ get }) => {
+      const options = get(selectAllOptions);
+      return options.reduce((acc, option) => {
+        const optionKey = option.key.toString();
+        const openOrdersForOption = get(openOrdersByOptionKey(optionKey));
+        const postedOpenOrders = openOrdersForOption.filter((openOrders) =>
+          openOrders.orders.find((order) => order.toString() !== '0'),
+        );
+        if (postedOpenOrders.length) {
+          const optionOpenOrdersTupleArray: OpenOrdersOptionTuple =
+            postedOpenOrders.map((oo) => [option.key, oo]);
           acc = [...acc, ...optionOpenOrdersTupleArray];
         }
         return acc;

@@ -12,41 +12,50 @@ import useConnection from '../useConnection';
 import { useSettleFunds } from './useSettleFunds';
 import useNotifications from '../useNotifications';
 import useSendTransaction from '../useSendTransaction';
-import { OptionMarket } from '../../types';
 import { useAmericanPsyOptionsProgram } from '../useAmericanPsyOptionsProgram';
 import { useSubscribeSerumOrderbook } from '../../hooks/Serum';
+import { useRecoilValue } from 'recoil';
+import { activeNetwork, optionsMap } from '../../recoil';
+import { getSupportedMarketsByNetwork } from '../../utils/networkInfo';
 
 export const useCancelOrder = (
   serumMarketAddress: string,
-  optionMarket: OptionMarket,
-  optionKey: PublicKey | undefined,
+  optionKey: PublicKey,
 ) => {
+  const option = useRecoilValue(optionsMap(optionKey.toString()));
+  const network = useRecoilValue(activeNetwork);
   const program = useAmericanPsyOptionsProgram();
-  const { connection } = useConnection();
+  const { connection, dexProgramId } = useConnection();
   const wallet = useConnectedWallet();
   const { serumMarkets } = useSerum();
   const { serumMarket } = serumMarkets[serumMarketAddress] || {};
-  const { makeSettleFundsTx } = useSettleFunds(
-    serumMarketAddress,
-    optionMarket,
-    optionKey,
-  );
+  const { makeSettleFundsTx } = useSettleFunds(serumMarketAddress, optionKey);
   const { pushErrorNotification } = useNotifications();
   const { sendSignedTransaction } = useSendTransaction();
   useSubscribeSerumOrderbook(serumMarket?.address.toString() ?? '');
 
   return useCallback(
     async (order) => {
-      if (!serumMarket || !optionMarket || !wallet?.publicKey) return;
+      if (!serumMarket || !option || !wallet?.publicKey) {
+        return;
+      }
       try {
         const settleTx = await makeSettleFundsTx();
 
-        if (!settleTx) return;
+        if (!settleTx) {
+          return;
+        }
+
+        const marketMetas = getSupportedMarketsByNetwork(network.name);
+        const optionMarketMeta = marketMetas.find(
+          (omm) => omm.optionMarketAddress === optionKey.toString(),
+        );
 
         let cancelTx: Transaction;
         if (
+          optionMarketMeta &&
           PSY_AMERICAN_PROGRAM_IDS[
-            optionMarket.psyOptionsProgramId.toString()
+            optionMarketMeta.psyOptionsProgramId.toString()
           ] === ProgramVersions.V1
         ) {
           cancelTx = await serumMarket.makeCancelOrderTransaction(
@@ -55,13 +64,13 @@ export const useCancelOrder = (
             order,
           );
         } else {
-          if (!program) {
+          if (!program || !dexProgramId) {
             return;
           }
           const ix = await serumInstructions.cancelOrderInstructionV2(
             program,
-            optionMarket.pubkey,
-            new PublicKey(optionMarket.serumProgramId),
+            option.key,
+            dexProgramId,
             serumMarket.address,
             order,
             undefined,
@@ -92,14 +101,17 @@ export const useCancelOrder = (
       }
     },
     [
-      connection,
-      makeSettleFundsTx,
-      program,
-      optionMarket,
-      pushErrorNotification,
-      sendSignedTransaction,
       serumMarket,
+      option,
       wallet,
+      makeSettleFundsTx,
+      network.name,
+      connection,
+      sendSignedTransaction,
+      optionKey,
+      program,
+      dexProgramId,
+      pushErrorNotification,
     ],
   );
 };

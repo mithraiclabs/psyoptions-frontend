@@ -22,7 +22,7 @@ export const useSerumOrderbook = (
   const { serumMarkets } = useSerum();
   const [loading, setLoading] = useState(false);
   const [orderbooks, setOrderbooks] = useSerumOrderbooks();
-  const serumMarket = serumMarkets[serumMarketAddress]?.serumMarket;
+  const serumMarket = serumMarkets[serumMarketAddress ?? '']?.serumMarket;
 
   useEffect(() => {
     if (serumMarket) {
@@ -32,7 +32,7 @@ export const useSerumOrderbook = (
         try {
           // We now batch load orderbooks, so there's likely no need to fetch again
           // if we successfully load and subscribe
-          if (!orderbooks[serumMarketAddress]) {
+          if (!orderbooks[serumMarketAddress ?? '']) {
             const {
               asks: _asks,
               bids: _bids,

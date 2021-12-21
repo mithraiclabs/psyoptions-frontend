@@ -38,6 +38,7 @@ export const useLoadOptionOpenOrders = () => {
         _quoteMint,
         supportedMarkets,
       );
+      // @ts-ignore
       insertOpenOrdersByOptionKey(ordersByOption);
     })();
   }, [

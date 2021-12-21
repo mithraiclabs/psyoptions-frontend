@@ -96,7 +96,7 @@ const usePlaceBuyOrder = (
         signers = [...signers, ...placeOrderSigners];
 
         if (openOrdersAddress) {
-          createAdHocOpenOrdersSub(openOrdersAddress);
+          createAdHocOpenOrdersSub(openOrdersAddress, option.key.toString());
         }
 
         await sendTransaction({

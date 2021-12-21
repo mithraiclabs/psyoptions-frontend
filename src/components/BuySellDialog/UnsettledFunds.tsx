@@ -3,7 +3,6 @@ import React, { useCallback, useState } from 'react';
 import BigNumber from 'bignumber.js';
 import { useSettleFunds, useUnsettledFundsForMarket } from '../../hooks/Serum';
 import TxButton from '../TxButton';
-import useOptionsMarkets from '../../hooks/useOptionsMarkets';
 import { useRecoilValue } from 'recoil';
 import { quoteMint } from '../../recoil';
 import { useTokenMintInfo } from '../../hooks/useTokenMintInfo';
@@ -20,14 +19,8 @@ export const UnsettledFunds: React.VFC<{
   const _quoteMint = useRecoilValue(quoteMint);
   const quoteMintInfo = useTokenMintInfo(_quoteMint);
   const quoteAsset = useTokenByMint(_quoteMint ?? '');
-  const { marketsBySerumKey } = useOptionsMarkets();
   const unsettledFunds = useUnsettledFundsForMarket(serumMarketAddress);
-  const optionMarket = marketsBySerumKey[serumMarketAddress];
-  const { settleFunds } = useSettleFunds(
-    serumMarketAddress,
-    optionMarket,
-    optionKey,
-  );
+  const { settleFunds } = useSettleFunds(serumMarketAddress, optionKey);
   const [loading, setLoading] = useState(false);
   const _settleFunds = useCallback(async () => {
     setLoading(true);

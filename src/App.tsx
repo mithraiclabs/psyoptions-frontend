@@ -20,6 +20,7 @@ import { Routes } from './routes';
 import { RecoilDevTool } from './recoil';
 import { useLoadOptionMarkets } from './hooks/PsyOptionsAPI/useLoadOptionMarkets';
 import './App.less';
+import { useLoadOptionOpenOrders } from './hooks/useLoadOptionOpenOrders';
 
 const AppWithStore: React.FC = ({ children }) => {
   const { packagedMarkets } = useOptionsMarkets();
@@ -28,6 +29,7 @@ const AppWithStore: React.FC = ({ children }) => {
   const tabletDevice = !useMediaQuery(TABLET_DEVICE_MEDIA_QUERY);
 
   useLoadOptionMarkets();
+  useLoadOptionOpenOrders();
 
   useEffect(() => {
     updateFormFactor(mobileDevice, tabletDevice);

@@ -15,8 +15,10 @@ import useOwnedTokenAccounts from '../useOwnedTokenAccounts';
 import useSerum from '../useSerum';
 import useSendTransaction from '../useSendTransaction';
 import { useAmericanPsyOptionsProgram } from '../useAmericanPsyOptionsProgram';
-import { OptionMarket } from '../../types';
-import { getReferralId } from '../../utils/networkInfo';
+import {
+  getReferralId,
+  getSupportedMarketsByNetwork,
+} from '../../utils/networkInfo';
 import { useSerumOpenOrders } from '../../context/SerumOpenOrdersContext';
 import { activeNetwork } from '../../recoil';
 
@@ -25,7 +27,6 @@ import { activeNetwork } from '../../recoil';
  */
 export const useSettleFunds = (
   serumMarketAddress: string,
-  optionMarket: OptionMarket | undefined,
   optionKey: PublicKey | undefined,
 ): {
   makeSettleFundsTx: () => Promise<Transaction | undefined>;
@@ -92,11 +93,17 @@ export const useSettleFunds = (
       subscribeToTokenAccount(newTokenAccountKey);
     }
 
+    const marketMetas = getSupportedMarketsByNetwork(endpoint.name);
+    const optionMarketMeta = marketMetas.find(
+      (omm) => omm.optionMarketAddress === optionKey?.toString(),
+    );
+
     let settleTx: Transaction;
     let settleSigners: Signer[] = [];
     if (
+      optionMarketMeta &&
       PSY_AMERICAN_PROGRAM_IDS[
-        optionMarket?.psyOptionsProgramId?.toString() ?? ''
+        optionMarketMeta.psyOptionsProgramId?.toString() ?? ''
       ] === ProgramVersions.V1
     ) {
       ({ transaction: settleTx, signers: settleSigners } =
@@ -142,7 +149,6 @@ export const useSettleFunds = (
     program,
     highestBaseTokenAccount?.pubKey,
     highestQuoteTokenAccount?.pubKey,
-    optionMarket?.psyOptionsProgramId,
     connection,
     subscribeToTokenAccount,
     endpoint,

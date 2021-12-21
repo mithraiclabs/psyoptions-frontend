@@ -15,10 +15,10 @@ import { useConnectedWallet } from '@saberhq/use-solana';
 import GokiButton from '../GokiButton';
 import UnsettledBalancesRow from './UnsettledBalancesRow';
 import { TCell, THeadCell } from '../StyledComponents/Table/TableStyles';
-import { useSerumOpenOrders } from '../../context/SerumOpenOrdersContext';
-import useAssetList from '../../hooks/useAssetList';
 import useScreenSize from '../../hooks/useScreenSize';
 import CSS from 'csstype';
+import { useRecoilValue } from 'recoil';
+import { selectUnsettledOpenOrdersOptionTupleForAllOptions } from '../../recoil';
 
 const useStyles = makeStyles((theme) => ({
   headCell: {
@@ -33,8 +33,9 @@ const useStyles = makeStyles((theme) => ({
 const UnsettledBalancesTable = () => {
   const classes = useStyles();
   const wallet = useConnectedWallet();
-  const { optionMarketsForOpenOrders } = useSerumOpenOrders();
-  const { qAsset } = useAssetList();
+  const unsettledOpenOrders = useRecoilValue(
+    selectUnsettledOpenOrdersOptionTupleForAllOptions,
+  );
   const { formFactor } = useScreenSize();
   const [showTooltip, setShowTooltip] = useState(false);
 
@@ -129,16 +130,13 @@ const UnsettledBalancesTable = () => {
                 </TCell>
               </TableRow>
             ) : (
-              optionMarketsForOpenOrders.map((optionMarket) =>
-                optionMarket.serumMarketKey && qAsset ? (
-                  <UnsettledBalancesRow
-                    expiration={optionMarket.expiration}
-                    serumMarketKey={optionMarket.serumMarketKey}
-                    optionKey={optionMarket.optionMarketKey}
-                    key={`${optionMarket.serumMarketKey.toString()}-unsettled`}
-                  />
-                ) : null,
-              )
+              unsettledOpenOrders.map(([optionKey, openOrders]) => (
+                <UnsettledBalancesRow
+                  serumMarketKey={openOrders.market}
+                  optionKey={optionKey}
+                  key={`${openOrders.address.toString()}-unsettled`}
+                />
+              ))
             )}
           </TableBody>
         </Table>

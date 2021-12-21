@@ -173,7 +173,7 @@ const usePlaceSellOrder = (
         }
 
         if (openOrdersAddress) {
-          createAdHocOpenOrdersSub(openOrdersAddress);
+          createAdHocOpenOrdersSub(openOrdersAddress, option.key.toString());
         }
 
         const { blockhash } = await connection.getRecentBlockhash();

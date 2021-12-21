@@ -60,6 +60,10 @@ export const useCloseOpenOrders = () => {
       });
       try {
         await program.provider.send(closeOpenOrdersTransaction);
+        pushNotification({
+          severity: NotificationSeverity.SUCCESS,
+          message: 'Processing: Successfully closed OpenOrders',
+        });
       } catch (err) {
         pushErrorNotification(err);
       }

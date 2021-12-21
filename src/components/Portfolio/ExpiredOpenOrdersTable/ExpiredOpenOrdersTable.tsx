@@ -39,59 +39,59 @@ export const ExpiredOpenOrdersTable: React.VFC = () => {
       <TableContainer>
         <Table stickyHeader aria-label="sticky table">
           <ExpiredOpenOrdersTableHeader />
-        </Table>
-        <TableBody>
-          {!wallet?.connected ? (
-            <TableRow>
-              <TCell
-                align="center"
-                colSpan={10}
-                className={classes.walletButtonCell}
-              >
-                <Box p={1}>
-                  <GokiButton />
-                </Box>
-              </TCell>
-            </TableRow>
-          ) : (
-            <>
-              {openOrdersForExpiredOptions.map(([optionKey, openOrders]) => (
-                <TableRow
-                  key={openOrders.address.toString()}
-                  style={{ borderBottom: '1pt solid #ff000d' }}
+          <TableBody>
+            {!wallet?.connected ? (
+              <TableRow>
+                <TCell
+                  align="center"
+                  colSpan={10}
+                  className={classes.walletButtonCell}
                 >
-                  <TCell colSpan={4}>
-                    <Box display="flex">{openOrders.address.toString()}</Box>{' '}
-                  </TCell>
-                  <TCell colSpan={4}>{openOrders.market.toString()}</TCell>
-                  <TCell colSpan={4}>
-                    <Box>
-                      <Box
-                        display="flex"
-                        flexDirection={['column', 'column', 'row']}
-                        flexWrap="wrap"
-                        alignItems="flex-start"
-                        justifyContent="flex-start"
-                      >
-                        <Box p={1}>
-                          <Button
-                            color="primary"
-                            variant="outlined"
-                            onClick={() =>
-                              closeOpenOrders(optionKey, openOrders)
-                            }
-                          >
-                            Close OpenOrders Account
-                          </Button>
+                  <Box p={1}>
+                    <GokiButton />
+                  </Box>
+                </TCell>
+              </TableRow>
+            ) : (
+              <>
+                {openOrdersForExpiredOptions.map(([optionKey, openOrders]) => (
+                  <TableRow
+                    key={openOrders.address.toString()}
+                    style={{ borderBottom: '1pt solid #ff000d' }}
+                  >
+                    <TCell colSpan={4}>
+                      <Box display="flex">{openOrders.address.toString()}</Box>{' '}
+                    </TCell>
+                    <TCell colSpan={4}>{openOrders.market.toString()}</TCell>
+                    <TCell colSpan={4}>
+                      <Box>
+                        <Box
+                          display="flex"
+                          flexDirection={['column', 'column', 'row']}
+                          flexWrap="wrap"
+                          alignItems="flex-start"
+                          justifyContent="flex-start"
+                        >
+                          <Box p={1}>
+                            <Button
+                              color="primary"
+                              variant="outlined"
+                              onClick={() =>
+                                closeOpenOrders(optionKey, openOrders)
+                              }
+                            >
+                              Close OpenOrders Account
+                            </Button>
+                          </Box>
                         </Box>
                       </Box>
-                    </Box>
-                  </TCell>
-                </TableRow>
-              ))}
-            </>
-          )}
-        </TableBody>
+                    </TCell>
+                  </TableRow>
+                ))}
+              </>
+            )}
+          </TableBody>
+        </Table>
       </TableContainer>
     </Box>
   );

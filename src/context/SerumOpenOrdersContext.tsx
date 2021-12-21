@@ -1,4 +1,5 @@
 import { OpenOrders } from '@mithraic-labs/serum';
+import { PublicKey } from '@solana/web3.js';
 import React, {
   createContext,
   useCallback,
@@ -53,6 +54,22 @@ export const SerumOpenOrdersProvider: React.FC = ({ children }) => {
     }
   }, [openOrders, fetchMultipleSerumMarkets]);
 
+  const removeOpenOrdersAcct = useCallback(
+    (address: PublicKey, serumMarketKey: string) => {
+      setOpenOrdersBySerumMarket((prevSerumOpenOrders) => {
+        const openOrderAddresses = prevSerumOpenOrders[serumMarketKey] || [];
+
+        return {
+          ...prevSerumOpenOrders,
+          [serumMarketKey]: openOrderAddresses.filter(
+            (openOrderAddress) => !openOrderAddress.address.equals(address),
+          ),
+        };
+      });
+    },
+    [setOpenOrdersBySerumMarket],
+  );
+
   const subscribeToPreviousOpenOrders = useCallback(() => {
     // handle subscriptions to given serum OpenOrders
     if (!dexProgramId || !connection) return;
@@ -65,11 +82,24 @@ export const SerumOpenOrdersProvider: React.FC = ({ children }) => {
           const subscription = connection.onAccountChange(
             order.address,
             (accountInfo) => {
-              const _openOrder = OpenOrders.fromAccountInfo(
-                order.address,
-                accountInfo,
-                dexProgramId,
-              );
+              let _openOrder: OpenOrders;
+              try {
+                _openOrder = OpenOrders.fromAccountInfo(
+                  order.address,
+                  accountInfo,
+                  dexProgramId,
+                );
+              } catch (error) {
+                if (
+                  (error as Error)
+                    .toString()
+                    .indexOf('Address not owned by program') >= 0
+                ) {
+                  connection.removeAccountChangeListener(subscription);
+                  removeOpenOrdersAcct(order.address, serumMarketKey);
+                  return;
+                }
+              }
               setOpenOrdersBySerumMarket((prevSerumOpenOrders) => {
                 const orders = prevSerumOpenOrders[serumMarketKey] || [];
 
@@ -102,7 +132,7 @@ export const SerumOpenOrdersProvider: React.FC = ({ children }) => {
         );
       }
     };
-  }, [connection, dexProgramId, openOrdersBySerumMarket]);
+  }, [connection, dexProgramId, openOrdersBySerumMarket, removeOpenOrdersAcct]);
 
   // grab option markets of the open orders
   useEffect(() => {

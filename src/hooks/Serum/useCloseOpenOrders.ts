@@ -7,7 +7,7 @@ import { DexInstructions, OpenOrders } from '@project-serum/serum';
 import { PublicKey, Transaction } from '@solana/web3.js';
 import { useCallback } from 'react';
 import { useRecoilValue } from 'recoil';
-import { activeNetwork } from '../../recoil';
+import { activeNetwork, useRemoveOpenOrdersByOptionKey } from '../../recoil';
 import { NotificationSeverity } from '../../types';
 import { getSupportedMarketsByNetwork } from '../../utils/networkInfo';
 import { useAmericanPsyOptionsProgram } from '../useAmericanPsyOptionsProgram';
@@ -19,6 +19,7 @@ export const useCloseOpenOrders = () => {
   const { dexProgramId } = useConnection();
   const { pushNotification, pushErrorNotification } = useNotifications();
   const network = useRecoilValue(activeNetwork);
+  const removeOpenOrdersByOptionKey = useRemoveOpenOrdersByOptionKey();
 
   return useCallback(
     async (optionKey: PublicKey, openOrders: OpenOrders) => {
@@ -60,6 +61,10 @@ export const useCloseOpenOrders = () => {
       });
       try {
         await program.provider.send(closeOpenOrdersTransaction);
+        removeOpenOrdersByOptionKey(
+          optionKey.toString(),
+          openOrders.address.toString(),
+        );
         pushNotification({
           severity: NotificationSeverity.SUCCESS,
           message: 'Processing: Successfully closed OpenOrders',
@@ -74,6 +79,7 @@ export const useCloseOpenOrders = () => {
       program,
       pushErrorNotification,
       pushNotification,
+      removeOpenOrdersByOptionKey,
     ],
   );
 };

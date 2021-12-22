@@ -21,3 +21,20 @@ export const useAddUniqueOpenOrdersByOptionKey = () =>
       },
     [],
   );
+
+/**
+ * Update the mapping of open orders by option keys to remove
+ * the specified OpenOrders account
+ */
+export const useRemoveOpenOrdersByOptionKey = () =>
+  useRecoilTransaction_UNSTABLE<[string, string]>(
+    ({ set }) =>
+      ([optionKeyStr, openOrdersStr]) => {
+        set(openOrdersByOptionKey(optionKeyStr), (curVal) =>
+          [...curVal].filter(
+            (openOrders) => openOrders.address.toString() !== openOrdersStr,
+          ),
+        );
+      },
+    [],
+  );

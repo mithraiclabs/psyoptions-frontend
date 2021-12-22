@@ -121,7 +121,6 @@ const BuySellDialog: React.VFC<{
   const optionUnderlyingDecimals = optionUnderlyingMintInfo?.decimals ?? 0;
   const optionQuoteDecimals = optionQuoteMintInfo?.decimals ?? 0;
   const underlyingAsset = useTokenByMint(_underlyingMint ?? '');
-  const quoteAsset = useTokenByMint(_quoteMint ?? '');
   const isCall =
     _underlyingMint && option?.underlyingAssetMint.equals(_underlyingMint);
   const underlyingAssetSymbol =

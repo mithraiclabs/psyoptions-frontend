@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
 import { useRecoilState, useRecoilValue } from 'recoil';
-import { lastOptionParametersByAssetPair } from '.';
 import {
   expirationUnixTimestamp,
+  lastOptionParametersByAssetPair,
   quoteMint,
   underlyingAmountPerContract,
   underlyingMint,

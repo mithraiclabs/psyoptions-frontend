@@ -73,7 +73,10 @@ export const useChainMarketData = (
   const data: Record<string, TrackerMarketData> = {};
   if (!res.fetching && res.data) {
     serumMarketAddresses.forEach((address, index) => {
-      data[address] = res.data[`market_${index}`].stats;
+      const stats = res.data[`market_${index}`]?.stats;
+      if (stats) {
+        data[address] = stats;
+      }
     });
   }
 

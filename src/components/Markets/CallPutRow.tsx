@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 
 import { styled } from '@material-ui/core';
 import Button from '@material-ui/core/Button';
@@ -175,10 +175,15 @@ const CallPutRow: React.VFC<CallPutRowProps> = ({
   };
 
   const putChange =
-    marketTrackerData?.[row.put?.serumMarketKey?.toString() ?? '']?.change ?? 0;
-  const callChange =
-    marketTrackerData?.[row.call?.serumMarketKey?.toString() ?? '']?.change ??
+    marketTrackerData?.[row.put?.serumMarketKey?.toString() ?? '']?.change24h ??
     0;
+  const callChange =
+    marketTrackerData?.[row.call?.serumMarketKey?.toString() ?? '']
+      ?.change24h ?? 0;
+
+  useEffect(() => {
+    // TODO: Request the data from Aleph
+  });
 
   return (
     <TRow hover role="checkbox" tabIndex={-1}>
@@ -255,11 +260,11 @@ const CallPutRow: React.VFC<CallPutRowProps> = ({
               onClick={() => openBuySellModal('call')}
             >
               {marketTrackerData?.[row.call?.serumMarketKey?.toString() ?? '']
-                ?.latest_price ? (
+                ?.price ? (
                 `$${
                   marketTrackerData?.[
                     row.call?.serumMarketKey?.toString() ?? ''
-                  ]?.latest_price
+                  ]?.price
                 }`
               ) : (
                 <Empty>{'—'}</Empty>
@@ -283,7 +288,7 @@ const CallPutRow: React.VFC<CallPutRowProps> = ({
               onClick={() => openBuySellModal('call')}
             >
               {marketTrackerData?.[row.call?.serumMarketKey?.toString() ?? '']
-                ?.volume || <Empty>{'—'}</Empty>}
+                ?.volBase24h || <Empty>{'—'}</Empty>}
             </TCell>
           )}
           {showOI && (
@@ -360,10 +365,10 @@ const CallPutRow: React.VFC<CallPutRowProps> = ({
               onClick={() => openBuySellModal('call')}
             >
               {marketTrackerData?.[row.put?.serumMarketKey?.toString() ?? '']
-                ?.latest_price ? (
+                ?.price ? (
                 `$${
                   marketTrackerData?.[row.put?.serumMarketKey?.toString() ?? '']
-                    ?.latest_price
+                    ?.price
                 }`
               ) : (
                 <Empty>{'—'}</Empty>
@@ -387,7 +392,7 @@ const CallPutRow: React.VFC<CallPutRowProps> = ({
               onClick={() => openBuySellModal('put')}
             >
               {marketTrackerData?.[row.put?.serumMarketKey?.toString() ?? '']
-                ?.volume || <Empty>{'—'}</Empty>}
+                ?.volBase24h || <Empty>{'—'}</Empty>}
             </TCell>
           )}
           {showOI && (

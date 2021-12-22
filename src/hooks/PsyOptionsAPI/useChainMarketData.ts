@@ -1,33 +1,43 @@
-import { useMemo } from 'react';
-import { useSubscription } from 'urql';
+import { useEffect, useMemo, useState } from 'react';
+import { useQuery } from 'urql';
 import { useSerumContext } from '../../context/SerumContext';
 import { ChainRow } from '../../types';
 
 export type TrackerMarketData = {
-  // eslint-disable-next-line camelcase
-  latest_price: number | null;
-  change: number | null;
-  id: number;
-  address: string;
-  volume: number | null;
+  price: number;
+  change24h: number;
+  volBase24h: string;
 };
 
-const subMessage = `subscription chainMarkets($serumMarketAddresses: [String!]) {
-  serum_markets(where: { address: {_in: $serumMarketAddresses } }) {
-    latest_price
-    change(args: {duration: "24 hours", percentage: true})
-    volume(args:{duration: "24 hours"})
+const queryMessage = (
+  serumAddress: string,
+) => `market(address:"${serumAddress}") {
     address
-  }
-}`;
+    isPermissioned
+    stats{
+      price
+      change24h
+      volBase24h
+    }
+  }`;
 
-const handleSubscription = (messages = [], response) => {
-  return (
-    response?.serum_markets?.reduce((acc, trackerData) => {
-      acc[trackerData.address] = trackerData;
-      return acc;
-    }, {}) ?? {}
+const batchQueryMessage = (serumAddresses: string[]) => {
+  const msg = serumAddresses.reduce(
+    (acc, cur, index) => `${acc}market_${index}: ${queryMessage(cur)}\n`,
+    '',
   );
+  if (msg.length) {
+    return `{${msg}}`;
+  }
+  return `{market(address:"fsdafas") {
+    address
+    isPermissioned
+    stats{
+      price
+      change24h
+      vol24h
+    }
+  }}`;
 };
 
 export const useChainMarketData = (
@@ -52,16 +62,20 @@ export const useChainMarketData = (
     [chain, serumMarkets],
   );
 
-  const [res] = useSubscription(
-    {
-      query: subMessage,
-      pause: !serumMarketAddresses.length,
-      variables: {
-        serumMarketAddresses,
-      },
-    },
-    handleSubscription,
-  );
+  const batchQueryMsg = batchQueryMessage(serumMarketAddresses);
+  const pause = batchQueryMsg.length <= 2;
 
-  return res.data;
+  const [res, reexecuteQuery] = useQuery({
+    query: batchQueryMsg,
+    pause,
+  });
+
+  const data: Record<string, TrackerMarketData> = {};
+  if (!res.fetching && res.data) {
+    serumMarketAddresses.forEach((address, index) => {
+      data[address] = res.data[`market_${index}`].stats;
+    });
+  }
+
+  return data;
 };

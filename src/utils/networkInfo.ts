@@ -118,7 +118,7 @@ const getDexProgramKeyByNetwork = (name: ClusterName) => {
 const getGraphQLUrlByNetwork = (name: ClusterName) => {
   switch (name) {
     case 'Mainnet':
-      return 'https://api.psyoptions.io/v1/graphql';
+      return 'https://api.serum.markets';
     case 'Devnet':
       return 'https://devnet-api.psyoptions.io/v1/graphql';
     case 'Testnet':

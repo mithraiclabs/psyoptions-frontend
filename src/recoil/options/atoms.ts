@@ -34,6 +34,17 @@ export const optionsIds = atom<string[]>({
   default: [],
 });
 
+/**
+ * Keep track of the last params selected on Markets page keyed by the
+ * selected asset pair.
+ */
+export const lastOptionParametersByAssetPair = atom<
+  Record<string, { expiration: BN; underlyingAmountPerContract: BN }>
+>({
+  key: 'lastOptionParametersByAssetPair',
+  default: {},
+});
+
 export const underlyingMint = atom<PublicKey | null>({
   key: 'underlyingMint',
   default: null,
@@ -160,6 +171,7 @@ export const useInsertOptions = (_reset = false) =>
           reset(quoteMint);
           reset(expirationUnixTimestamp);
           reset(underlyingAmountPerContract);
+          reset(lastOptionParametersByAssetPair);
         }
         // loop over fetched options and insert into state in a single recoil transaction
         const optionKeys = _optionAccounts.map((optionAccount) =>

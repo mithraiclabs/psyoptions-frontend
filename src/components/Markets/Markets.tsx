@@ -38,6 +38,7 @@ import {
   selectMintsOfFutureOptions,
   selectUnderlyingMintWithSideEffects,
   underlyingAmountPerContract,
+  useUpdateLastOptionParamsByAssetPair,
 } from '../../recoil';
 import { SelectAsset } from '../SelectAsset';
 import { useOptionsChainFromMarketsState } from '../../hooks/useOptionChainsFromMarketsState';
@@ -66,6 +67,7 @@ const rowTemplate = {
 
 // TODO move Serum market storage to Recoil
 const Markets: React.VFC = () => {
+  useUpdateLastOptionParamsByAssetPair();
   const { uAsset, qAsset, assetListLoading } = useAssetList();
   const chains = useOptionsChainFromMarketsState();
   const { marketsLoading } = useOptionsMarkets();

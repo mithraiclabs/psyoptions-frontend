@@ -5,12 +5,13 @@ import _uniqby from 'lodash.uniqby';
 import {
   defaultUnderlying,
   expirationUnixTimestamp,
+  lastOptionParametersByAssetPair,
   optionsIds,
   optionsMap,
   quoteMint,
   underlyingAmountPerContract,
   underlyingMint,
-} from './options';
+} from './atoms';
 import { PublicKey } from '@solana/web3.js';
 
 export const selectAllOptions = selector<OptionMarketWithKey[]>({
@@ -207,8 +208,23 @@ export const selectUnderlyingMintWithSideEffects = selector<PublicKey | null>({
     if (newValue instanceof DefaultValue) {
       return;
     }
-    const expiration = get(expirationUnixTimestamp);
     const _quoteMint = get(quoteMint);
+    const lastOptionParamsByAssetPair = get(lastOptionParametersByAssetPair);
+    const lastOptionParams =
+      lastOptionParamsByAssetPair[
+        `${newValue?.toString()}-${_quoteMint?.toString()}`
+      ];
+    if (lastOptionParams) {
+      // last option params exist. Default to them instead of picking new values.
+      set(expirationUnixTimestamp, lastOptionParams.expiration);
+      set(
+        underlyingAmountPerContract,
+        lastOptionParams.underlyingAmountPerContract,
+      );
+      return;
+    }
+
+    const expiration = get(expirationUnixTimestamp);
     const expirationsForPair = getExpirationsForPair({
       get,
       _quoteMint,

@@ -58,7 +58,7 @@
     "@material-ui/pickers": "^3.3.10",
     "@mithraic-labs/market-meta": "^0.0.32",
     "@mithraic-labs/psy-american": "^0.0.17",
-    "@mithraic-labs/psy-token-registry": "^0.0.3",
+    "@mithraic-labs/psy-token-registry": "^0.0.4",
     "@mithraic-labs/psyoptions": "^0.7.2",
     "@mithraic-labs/serum": "^0.0.5",
     "@project-serum/anchor": "^0.16.1",

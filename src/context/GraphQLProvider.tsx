@@ -1,11 +1,5 @@
 import React, { useMemo } from 'react';
-import { SubscriptionClient } from 'graphql-subscriptions-client';
-import {
-  createClient,
-  defaultExchanges,
-  Provider,
-  subscriptionExchange,
-} from 'urql';
+import { Client, createClient, defaultExchanges, Provider } from 'urql';
 import useConnection from '../hooks/useConnection';
 
 export const GraphQLProvider: React.FC = ({ children }) => {
@@ -13,26 +7,12 @@ export const GraphQLProvider: React.FC = ({ children }) => {
 
   const client = useMemo(() => {
     if (!graphQLUrl) {
-      return null;
+      return new Client({ url: 'https://localhost:3000' });
     }
-    const subscriptionClient = new SubscriptionClient(
-      graphQLUrl.replace('http', 'ws'),
-      {
-        reconnect: true,
-        inactivityTimeout: 30_000,
-      },
-    );
 
     return createClient({
       url: graphQLUrl,
-      exchanges: [
-        ...defaultExchanges,
-        subscriptionExchange({
-          forwardSubscription(operation) {
-            return subscriptionClient.request(operation);
-          },
-        }),
-      ],
+      exchanges: [...defaultExchanges],
     });
   }, [graphQLUrl]);
 

@@ -7,7 +7,6 @@ import {
   PsyAmericanIdl,
   serumInstructions,
 } from '@mithraic-labs/psy-american';
-import { MarketMeta } from '@mithraic-labs/market-meta';
 import { BN, Program, Provider } from '@project-serum/anchor';
 import { NodeWallet } from '@project-serum/anchor/dist/cjs/provider';
 import {
@@ -24,11 +23,10 @@ import {
   Signer,
   SystemProgram,
   Transaction,
-  LAMPORTS_PER_SOL,
 } from '@solana/web3.js';
 import * as fs from 'fs';
 import * as os from 'os';
-import { Market, OpenOrders } from '@project-serum/serum';
+import { Market } from '@project-serum/serum';
 import { Order } from '@project-serum/serum/lib/market';
 
 function readKeypair() {
@@ -53,12 +51,6 @@ const connection = new Connection(
 const wallet = new NodeWallet(readKeypair());
 const provider = new Provider(connection, wallet, { commitment: 'processed' });
 const program = new Program(PsyAmericanIdl, PSY_PROGRAM_ID, provider);
-
-// Filter devnet markets to only unexpired markets
-// TODO: Filter for only SOL markets
-const activeDevnetMarkets = MarketMeta.devnet.optionMarkets.filter(
-  (marketMeta) => marketMeta.expiration * 1000 > new Date().getTime(),
-);
 
 /**
  * WSol call option
@@ -98,12 +90,12 @@ const WrappedSolToken = new Token(
   TOKEN_PROGRAM_ID,
   wallet.payer,
 );
-const QuoteAssetToken = new Token(
-  connection,
-  quoteAssetMint,
-  TOKEN_PROGRAM_ID,
-  wallet.payer,
-);
+// const QuoteAssetToken = new Token(
+//   connection,
+//   quoteAssetMint,
+//   TOKEN_PROGRAM_ID,
+//   wallet.payer,
+// );
 const optionToken = new Token(
   program.provider.connection,
   optionTokenMint,

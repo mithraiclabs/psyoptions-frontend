@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useQuery } from 'urql';
 import { useSerumContext } from '../../context/SerumContext';
 import { ChainRow } from '../../types';
@@ -65,7 +65,7 @@ export const useChainMarketData = (
   const batchQueryMsg = batchQueryMessage(serumMarketAddresses);
   const pause = batchQueryMsg.length <= 2;
 
-  const [res, reexecuteQuery] = useQuery({
+  const [res] = useQuery({
     query: batchQueryMsg,
     pause,
   });

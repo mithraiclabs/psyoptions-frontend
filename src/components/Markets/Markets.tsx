@@ -43,6 +43,7 @@ import {
 import { SelectAsset } from '../SelectAsset';
 import { useOptionsChainFromMarketsState } from '../../hooks/useOptionChainsFromMarketsState';
 import { SelectExpiration } from './SelectExpiration';
+import { useTokenByMint } from '../../hooks/useNetworkTokens';
 
 const rowTemplate = {
   call: {
@@ -68,7 +69,7 @@ const rowTemplate = {
 // TODO move Serum market storage to Recoil
 const Markets: React.VFC = () => {
   useUpdateLastOptionParamsByAssetPair();
-  const { uAsset, qAsset, assetListLoading } = useAssetList();
+  const { assetListLoading } = useAssetList();
   const chains = useOptionsChainFromMarketsState();
   const { marketsLoading } = useOptionsMarkets();
   const [_underlyingMint, setUnderlyingMint] = useRecoilState(
@@ -78,6 +79,7 @@ const Markets: React.VFC = () => {
   const mints = useRecoilValue(selectMintsOfFutureOptions);
   const expirationDateString = useRecoilValue(selectExpirationAsDate);
   const contractSize = useRecoilValue(underlyingAmountPerContract);
+  const underlyingAsset = useTokenByMint(_underlyingMint ?? '');
   const { serumMarkets, fetchMultipleSerumMarkets } = useSerum();
   const [round, setRound] = useState(true);
   const [buySellDialogOpen, setBuySellDialogOpen] = useState(false);
@@ -96,10 +98,12 @@ const Markets: React.VFC = () => {
     () => moment(expirationDateString),
     [expirationDateString],
   );
+  const underlyingAssetSymbol =
+    underlyingAsset?.symbol ?? _underlyingMint?.toString() ?? '';
 
   const markPrice = useSerumPriceByAssets(
-    uAsset?.mintAddress ?? null,
-    qAsset?.mintAddress ?? null,
+    _underlyingMint?.toString() ?? null,
+    _quoteMint?.toString() ?? null,
   );
 
   // We have to use this `initialMarkPrice` to filter the chains, otherwise many components will
@@ -344,9 +348,9 @@ const Markets: React.VFC = () => {
                       >
                         {/* @ts-ignore: annoying MUI stuff */}
                         <Box width="33%" align="left">
-                          {!!uAsset?.tokenSymbol && !!markPrice && (
+                          {!!underlyingAssetSymbol && !!markPrice && (
                             <>
-                              {uAsset?.tokenSymbol} Market Price: $
+                              {underlyingAssetSymbol} Market Price: $
                               {markPrice && markPrice.toFixed(precision)}
                             </>
                           )}

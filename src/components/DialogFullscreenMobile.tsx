@@ -1,20 +1,33 @@
 import React from 'react';
 import Hidden from '@material-ui/core/Hidden';
-import Dialog from '@material-ui/core/Dialog';
+import Dialog, { DialogProps } from '@material-ui/core/Dialog';
 
-const DialogFullscreenMobile: React.FC<{
-  open: boolean;
-  onClose: () => void;
-  maxWidth: false | 'xs' | 'sm' | 'md' | 'lg' | 'xl';
-}> = ({ open, onClose, maxWidth, children }) => (
+const DialogFullscreenMobile: React.FC<DialogProps> = ({
+  open,
+  onClose,
+  maxWidth,
+  children,
+  ...passThruProps
+}) => (
   <>
     <Hidden smDown>
-      <Dialog open={open} onClose={onClose} maxWidth={maxWidth}>
+      <Dialog
+        open={open}
+        onClose={onClose}
+        maxWidth={maxWidth}
+        {...passThruProps}
+      >
         {children}
       </Dialog>
     </Hidden>
     <Hidden mdUp>
-      <Dialog open={open} onClose={onClose} maxWidth={maxWidth} fullScreen>
+      <Dialog
+        open={open}
+        onClose={onClose}
+        maxWidth={maxWidth}
+        fullScreen
+        {...passThruProps}
+      >
         {children}
       </Dialog>
     </Hidden>

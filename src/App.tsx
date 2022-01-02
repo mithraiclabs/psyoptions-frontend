@@ -3,7 +3,7 @@ import {
   StylesProvider,
   useMediaQuery,
 } from '@material-ui/core';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { HashRouter } from 'react-router-dom';
 import { RecoilRoot } from 'recoil';
 import { WalletKitProvider } from '@gokiprotocol/walletkit';
@@ -21,6 +21,10 @@ import { RecoilDevTool } from './recoil';
 import { useLoadOptionMarkets } from './hooks/PsyOptionsAPI/useLoadOptionMarkets';
 import './App.less';
 import { useLoadOptionOpenOrders } from './hooks/useLoadOptionOpenOrders';
+import {
+  ManualExerciseWarning,
+  ManualExerciseWarningProvider,
+} from './components/ManualExerciseWarning';
 
 const AppWithStore: React.FC = ({ children }) => {
   const { packagedMarkets } = useOptionsMarkets();
@@ -43,6 +47,8 @@ const AppWithStore: React.FC = ({ children }) => {
 };
 
 const App = (): JSX.Element | null => {
+  const manualExerciseWarningState = useState(false);
+
   return (
     <RecoilRoot>
       <RecoilDevTool />
@@ -56,11 +62,14 @@ const App = (): JSX.Element | null => {
                 name: 'PsyOptions',
               }}
             >
-              <Store>
-                <AppWithStore>
-                  <Routes />
-                </AppWithStore>
-              </Store>
+              <ManualExerciseWarningProvider value={manualExerciseWarningState}>
+                <Store>
+                  <AppWithStore>
+                    <Routes />
+                  </AppWithStore>
+                </Store>
+                <ManualExerciseWarning />
+              </ManualExerciseWarningProvider>
             </WalletKitProvider>
           </HashRouter>
         </ThemeProvider>

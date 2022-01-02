@@ -15,6 +15,7 @@ import useSendTransaction from './useSendTransaction';
 import useOwnedTokenAccounts from './useOwnedTokenAccounts';
 import { useCreateAdHocOpenOrdersSubscription } from './Serum';
 import { useAmericanPsyOptionsProgram } from './useAmericanPsyOptionsProgram';
+import { useManualExerciseWarning } from '../components/ManualExerciseWarning';
 
 type PlaceBuyOrderArgs = {
   option: OptionMarketWithKey;
@@ -32,6 +33,7 @@ const usePlaceBuyOrder = (
   const { connection, dexProgramId } = useConnection();
   const { sendTransaction } = useSendTransaction();
   const { subscribeToTokenAccount } = useOwnedTokenAccounts();
+  const [, setManualExerciseWarningVisible] = useManualExerciseWarning();
   const createAdHocOpenOrdersSub =
     useCreateAdHocOpenOrdersSubscription(serumMarketAddress);
 
@@ -45,6 +47,8 @@ const usePlaceBuyOrder = (
       if (!connection || !wallet?.publicKey || !program || !dexProgramId) {
         return;
       }
+
+      setManualExerciseWarningVisible(true);
 
       try {
         const transaction = new Transaction();
@@ -118,6 +122,7 @@ const usePlaceBuyOrder = (
       program,
       pushErrorNotification,
       sendTransaction,
+      setManualExerciseWarningVisible,
       subscribeToTokenAccount,
       wallet,
     ],

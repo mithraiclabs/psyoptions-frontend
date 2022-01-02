@@ -53,9 +53,9 @@ export const WrittenOptionsClosePositionPreExpiryDialog: React.VFC<{
   const [size, setSize] = useState<number | null>(1);
   const closeWrittenOptionPreExpiry = useClosePosition(
     optionKey,
-    optionTokenAccount.pubKey,
+    optionTokenAccount?.pubKey,
     underlyingAssetDestKey,
-    writerTokenAccount.pubKey,
+    writerTokenAccount?.pubKey,
   );
   const handleClaimUnderlying = useCallback(async () => {
     setLoading(true);

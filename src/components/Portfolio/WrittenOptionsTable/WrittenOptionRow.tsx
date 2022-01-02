@@ -422,22 +422,24 @@ const WrittenOptionRow: React.VFC<{
         visible={closeWrittenOptionsVisible}
         writerTokenAccount={writerTokenAccount}
       />
-      <WrittenOptionsClosePositionPreExpiryDialog
-        dismiss={() => setCloseWrittenOptionsPreExpiryVisible(false)}
-        numLeftToClaim={
-          option
-            ? underlyingVaultAmount
-                .div(option.underlyingAmountPerContract)
-                .toNumber()
-            : 0
-        }
-        optionKey={optionKey}
-        optionTokenAccount={optionTokenAccount}
-        underlyingAssetDestKey={walletUnderlyingAssetKey}
-        vaultBalance={underlyingVaultAmount}
-        visible={closeWrittenOptionsPreExpiryVisible}
-        writerTokenAccount={writerTokenAccount}
-      />
+      {!!(optionTokenAccount && writerTokenAccount) && (
+        <WrittenOptionsClosePositionPreExpiryDialog
+          dismiss={() => setCloseWrittenOptionsPreExpiryVisible(false)}
+          numLeftToClaim={
+            option
+              ? underlyingVaultAmount
+                  .div(option.underlyingAmountPerContract)
+                  .toNumber()
+              : 0
+          }
+          optionKey={optionKey}
+          optionTokenAccount={optionTokenAccount}
+          underlyingAssetDestKey={walletUnderlyingAssetKey}
+          vaultBalance={underlyingVaultAmount}
+          visible={closeWrittenOptionsPreExpiryVisible}
+          writerTokenAccount={writerTokenAccount}
+        />
+      )}
     </>
   );
 };

@@ -235,7 +235,7 @@ export const mintInstructions = async (
       size: new BN(numberOfContractsToMint),
     });
   } else if (program) {
-    ({ ix: mintInstruction } = await instructions.mintOptionInstruction(
+    ({ ix: mintInstruction } = await instructions.mintOptionV2Instruction(
       program,
       mintedOptionDestKey,
       writerTokenDestKey,

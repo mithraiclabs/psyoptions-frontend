@@ -10,7 +10,7 @@ import { useSubscribeSerumOrderbook } from './useSubscribeSerumOrderook';
 export const useSerumPriceByAssets = (
   baseMint: PublicKey | string | null,
   quoteMint: PublicKey | string | null,
-): number => {
+): number | null => {
   const { connection, dexProgramId } = useConnection();
   const { setSerumMarkets } = useSerum();
   const [serumMarketAddress, setSerumMarketAddress] =
@@ -21,7 +21,7 @@ export const useSerumPriceByAssets = (
   useSubscribeSerumOrderbook(serumMarketAddress?.toString() ?? '');
 
   useEffect(() => {
-    if (!baseMint || !quoteMint) {
+    if (!baseMint || !quoteMint || !dexProgramId) {
       return;
     }
     (async () => {

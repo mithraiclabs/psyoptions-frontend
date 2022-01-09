@@ -7,27 +7,31 @@ import Done from '@material-ui/icons/Done';
 import { useTheme } from '@material-ui/core/styles';
 import { useUpdateForm, useFormState } from '../../context/SimpleUIContext';
 import useAssetList from '../../hooks/useAssetList';
-import useFilteredOptionsChain from '../../hooks/useFilteredOptionsChain';
 import { StyledFilledInput, PlusMinusButton } from '../BuySellDialog/styles';
 import { SimpleUIPage } from './SimpeUIPage';
 import ChooseStrikeButton from './ChooseStrike/ChooseStrikeButton';
+import { useSerumOrderbooks } from '../../context/SerumOrderbookContext';
 
 // #TODO: Make this a global enum, i see BuySellDialog.tsx is using it
 const orderTypes = ['limit', 'market'];
 
 const OrderSettings = () => {
-  const { tokenSymbol, direction, expirationUnixTimestamp, strike } =
-    useFormState();
+  const {
+    tokenSymbol,
+    direction,
+    expirationUnixTimestamp,
+    serumMarketAddress,
+    strike,
+  } = useFormState();
   const updateForm = useUpdateForm();
   const history = useHistory();
   const theme = useTheme();
   const { qAsset } = useAssetList();
+  const [orderbooks] = useSerumOrderbooks();
   const [limitPrice, setLimitPrice] = useState('0');
   const [orderType, setOrderType] = useState('limit');
   const [orderSize, setOrderSize] = useState('1');
-  const { lowestAskHighestBidPerStrike } = useFilteredOptionsChain(
-    direction === 'down' ? 'put' : 'call',
-  );
+  const orderbook = orderbooks[serumMarketAddress?.toString() ?? ''];
 
   // If previous form state didn't exist, send user back to first page (choose asset)
   useEffect(() => {
@@ -63,10 +67,10 @@ const OrderSettings = () => {
         <Box width="100%" paddingBottom={3}>
           <ChooseStrikeButton
             strike={strike.toString(10)}
-            bid={lowestAskHighestBidPerStrike[strike.toString(10)]?.bid}
-            ask={lowestAskHighestBidPerStrike[strike.toString(10)]?.ask}
+            ask={orderbook?.asks[0]?.price}
+            bid={orderbook?.bids[0]?.price}
             selected
-            onClick={null}
+            onClick={() => {}}
             disabled
           />
         </Box>

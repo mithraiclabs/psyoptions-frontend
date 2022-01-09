@@ -6,6 +6,7 @@ import ChooseStrikeButton from './ChooseStrikeButton';
 import { SimpleUIPage } from '../SimpeUIPage';
 import { useStrikePricesBasedOnBreakeven } from '../../../hooks/BeginnerUI/useStrikePricesBasedOnBreakeven';
 import { BigNumber } from 'bignumber.js';
+import { PublicKey } from '@solana/web3.js';
 
 const ChooseStrike = () => {
   const { tokenSymbol, direction, expirationUnixTimestamp, strike } =
@@ -23,8 +24,12 @@ const ChooseStrike = () => {
     // If previous form state did exist, we need to load the markets on mount
   }, [tokenSymbol, direction, history, expirationUnixTimestamp]);
 
-  const handleMakeSelection = (strike: BigNumber) => {
+  const handleMakeSelection = (
+    strike: BigNumber,
+    serumMarketAddress: PublicKey,
+  ) => {
     updateForm('strike', strike);
+    updateForm('serumMarketAddress', serumMarketAddress);
 
     // TODO: animated transition between pages instead of a timeout
     setTimeout(() => {
@@ -80,18 +85,22 @@ const ChooseStrike = () => {
           display="flex"
           justifyContent="center"
         >
-          {optionWithAsks.map(({ ask, bid, strike: _strike }) => (
-            <Box my={1} key={_strike.toString()}>
-              <ChooseStrikeButton
-                ask={ask}
-                bid={bid}
-                disabled={false}
-                onClick={() => handleMakeSelection(_strike)}
-                selected={strike.eq(_strike)}
-                strike={_strike.toString()}
-              />
-            </Box>
-          ))}
+          {optionWithAsks.map(
+            ({ ask, bid, serumMarketAddress, strike: _strike }) => (
+              <Box my={1} key={_strike.toString()}>
+                <ChooseStrikeButton
+                  ask={ask}
+                  bid={bid}
+                  disabled={false}
+                  onClick={() =>
+                    handleMakeSelection(_strike, serumMarketAddress)
+                  }
+                  selected={strike.eq(_strike)}
+                  strike={_strike.toString()}
+                />
+              </Box>
+            ),
+          )}
         </Box>
       </Box>
     </SimpleUIPage>

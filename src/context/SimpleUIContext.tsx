@@ -17,6 +17,7 @@ type FormState = {
   orderSize: number;
   orderType: 'limit' | 'market';
   limitPrice: number | null;
+  serumMarketAddress: PublicKey | null;
   contractSize: number;
 };
 
@@ -42,6 +43,7 @@ const initialState: FormState = {
   orderType: 'limit',
   limitPrice: 0,
   contractSize: 0.01,
+  serumMarketAddress: null,
 };
 
 // Simple reducer that replaces key/value pairs of the form state

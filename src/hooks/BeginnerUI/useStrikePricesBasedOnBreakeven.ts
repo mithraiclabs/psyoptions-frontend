@@ -55,6 +55,7 @@ export const useStrikePricesBasedOnBreakeven = () => {
           option,
           ask,
           bid,
+          serumMarketAddress,
           strike,
         };
       })

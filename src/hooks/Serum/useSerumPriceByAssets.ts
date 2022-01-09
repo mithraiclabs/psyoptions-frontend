@@ -1,5 +1,7 @@
 import { PublicKey } from '@solana/web3.js';
 import { useEffect, useState } from 'react';
+import { useRecoilState } from 'recoil';
+import { priceByAssets } from '../../recoil';
 import { getPriceFromSerumOrderbook } from '../../utils/orderbook';
 import { findMarketByAssets } from '../../utils/serum';
 import useConnection from '../useConnection';
@@ -7,6 +9,12 @@ import useSerum from '../useSerum';
 import { useSerumOrderbook } from './useSerumOrderbook';
 import { useSubscribeSerumOrderbook } from './useSubscribeSerumOrderook';
 
+/**
+ * Look up price of a serum market based on the base asset and quote asset.
+ * @param baseMint
+ * @param quoteMint
+ * @returns number
+ */
 export const useSerumPriceByAssets = (
   baseMint: PublicKey | string | null,
   quoteMint: PublicKey | string | null,
@@ -15,6 +23,13 @@ export const useSerumPriceByAssets = (
   const { setSerumMarkets } = useSerum();
   const [serumMarketAddress, setSerumMarketAddress] =
     useState<PublicKey | null>(null);
+  const baseMintStr =
+    baseMint instanceof PublicKey ? baseMint.toString() : baseMint;
+  const quoteMintStr =
+    baseMint instanceof PublicKey ? baseMint.toString() : baseMint;
+  const [price, setPrice] = useRecoilState(
+    priceByAssets(`${baseMintStr}-${quoteMintStr}`),
+  );
   const { orderbook: underlyingOrderbook } = useSerumOrderbook(
     serumMarketAddress?.toString() ?? '',
   );
@@ -49,5 +64,12 @@ export const useSerumPriceByAssets = (
     })();
   }, [baseMint, connection, dexProgramId, quoteMint, setSerumMarkets]);
 
-  return getPriceFromSerumOrderbook(underlyingOrderbook);
+  useEffect(() => {
+    if (underlyingOrderbook) {
+      const _price = getPriceFromSerumOrderbook(underlyingOrderbook);
+      setPrice(_price ?? 0);
+    }
+  }, [setPrice, underlyingOrderbook]);
+
+  return price;
 };

@@ -6,13 +6,14 @@ import React, {
 } from 'react';
 import type { Dispatch } from 'react';
 import { PublicKey } from '@solana/web3.js';
+import { BigNumber } from 'bignumber.js';
 
 type FormState = {
   tokenSymbol: string;
   underlyingAssetMint: PublicKey | null;
   direction: 'up' | 'down' | '';
   expirationUnixTimestamp: number;
-  strike: number;
+  strike: BigNumber;
   orderSize: number;
   orderType: 'limit' | 'market';
   limitPrice: number | null;
@@ -36,7 +37,7 @@ const initialState: FormState = {
   tokenSymbol: '',
   direction: '',
   expirationUnixTimestamp: 0,
-  strike: 0,
+  strike: new BigNumber(0),
   orderSize: 0,
   orderType: 'limit',
   limitPrice: 0,

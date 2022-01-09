@@ -1,28 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import Box from '@material-ui/core/Box';
-import useFilteredOptionsChain from '../../../hooks/useFilteredOptionsChain';
 import { useUpdateForm, useFormState } from '../../../context/SimpleUIContext';
 import ChooseStrikeButton from './ChooseStrikeButton';
 import { SimpleUIPage } from '../SimpeUIPage';
-
-type StrikeButtonData = {
-  strike: string;
-  bid: number | null;
-  ask: number | null;
-};
+import { useStrikePricesBasedOnBreakeven } from '../../../hooks/BeginnerUI/useStrikePricesBasedOnBreakeven';
+import { BigNumber } from 'bignumber.js';
 
 const ChooseStrike = () => {
   const { tokenSymbol, direction, expirationUnixTimestamp } = useFormState();
   const updateForm = useUpdateForm();
   const history = useHistory();
-  const { lowestAskHighestBidPerStrike } = useFilteredOptionsChain(
-    direction === 'down' ? 'put' : 'call',
-  );
-  const [selectedStrike, setSelectedStrike] = useState('');
-  const [strikeButtonData, setStrikeButtonData] = useState(
-    [] as StrikeButtonData[],
-  );
+  const optionWithAsks = useStrikePricesBasedOnBreakeven();
+  const [selectedStrike, setSelectedStrike] = useState(new BigNumber(0));
 
   // If previous form state didn't exist, send user back to first page (choose asset)
   useEffect(() => {
@@ -33,15 +23,10 @@ const ChooseStrike = () => {
     // If previous form state did exist, we need to load the markets on mount
   }, [tokenSymbol, direction, history, expirationUnixTimestamp]);
 
-  // #TODO: eventually, when adding contract size input
-  // useEffect(() => {
-  //   buildOptionsChain(date.unix(), contractSize);
-  // }, [buildOptionsChain, contractSize, date]);
-
-  const handleMakeSelection = (strike: string) => {
+  const handleMakeSelection = (strike: BigNumber) => {
     if (!selectedStrike) {
       setSelectedStrike(strike);
-      updateForm('strike', Number(strike));
+      updateForm('strike', strike);
 
       // TODO: animated transition between pages instead of a timeout
       setTimeout(() => {
@@ -50,30 +35,10 @@ const ChooseStrike = () => {
     }
   };
 
-  // Map filtered chains to a Strike + Bid + Ask
-  useEffect(() => {
-    const buttonData: StrikeButtonData[] = Object.keys(
-      lowestAskHighestBidPerStrike,
-    ).map((strike) => {
-      const bidAndAskForStrike = lowestAskHighestBidPerStrike[strike];
-
-      return {
-        strike,
-        bid: bidAndAskForStrike?.bid,
-        ask: bidAndAskForStrike?.ask,
-      };
-    });
-
-    // if put, then strikes need to flip so higher strike shows at top (because we have that Low/High risk scale)
-    setStrikeButtonData(
-      direction === 'down' ? buttonData.reverse() : buttonData,
-    );
-  }, [lowestAskHighestBidPerStrike, direction]);
-
   return (
     <SimpleUIPage title={`Strike Price`}>
       <Box display="flex" flexDirection="row" width="100%">
-        {strikeButtonData.length > 1 && (
+        {optionWithAsks.length > 1 && (
           <Box
             display="flex"
             flexDirection="column"
@@ -118,16 +83,15 @@ const ChooseStrike = () => {
           display="flex"
           justifyContent="center"
         >
-          {/* #TODO: come back and choose middle 3 strikes? */}
-          {strikeButtonData.slice(0, 3).map((s) => (
-            <Box my={1} key={s.strike}>
+          {optionWithAsks.map(({ ask, bid, strike }) => (
+            <Box my={1} key={strike.toString()}>
               <ChooseStrikeButton
-                strike={s.strike}
-                bid={s.bid}
-                ask={s.ask}
-                onClick={() => handleMakeSelection(s.strike)}
-                selected={selectedStrike === s.strike}
+                ask={ask}
+                bid={bid}
                 disabled={false}
+                onClick={() => handleMakeSelection(strike)}
+                selected={selectedStrike.eq(strike)}
+                strike={strike.toString()}
               />
             </Box>
           ))}

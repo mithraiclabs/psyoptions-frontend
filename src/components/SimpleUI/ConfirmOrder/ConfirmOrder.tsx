@@ -16,7 +16,6 @@ import useNotifications from '../../../hooks/useNotifications';
 import usePlaceBuyOrder from '../../../hooks/usePlaceBuyOrder';
 import { getHighestAccount } from '../../../utils/token';
 import useOwnedTokenAccounts from '../../../hooks/useOwnedTokenAccounts';
-import useFilteredOptionsChain from '../../../hooks/useFilteredOptionsChain';
 import useSerum from '../../../hooks/useSerum';
 import { useSerumOrderbooks } from '../../../context/SerumOrderbookContext';
 import { useSerumFeeDiscountKey } from '../../../hooks/Serum/useSerumFeeDiscountKey';

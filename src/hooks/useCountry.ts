@@ -5,6 +5,9 @@ export const useCountry = (): string | null => {
 
   useEffect(() => {
     (async () => {
+      if (process.env.NODE_ENV !== 'production') {
+        return;
+      }
       const URL = 'https://countrycode.bonfida.workers.dev/';
       const response = await fetch(URL);
       const data = await response.json();
@@ -51,5 +54,5 @@ const disallowedCountries = [
 export const DISALLOWED_COUNTRIES =
   process.env.NODE_ENV !== 'production'
     ? []
-    // ? disallowedCountries // uncomment to test
-    : disallowedCountries;
+    : // ? disallowedCountries // uncomment to test
+      disallowedCountries;

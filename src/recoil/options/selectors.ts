@@ -35,6 +35,21 @@ export const selectAllExpiredOptions = selector<OptionMarketWithKey[]>({
 });
 
 /**
+ * return all non expired options.
+ */
+export const selectAllNonExpiredOptions = selector<OptionMarketWithKey[]>({
+  key: 'selectAllNonExpiredOptions',
+  get: ({ get }) => {
+    const nowInSeconds = Date.now() / 1000;
+    const nowBN = new BN(nowInSeconds);
+
+    return get(selectAllOptions).filter((option) =>
+      option.expirationUnixTimestamp.gt(nowBN),
+    );
+  },
+});
+
+/**
  * Get available expirations based on the inputed assets.
  */
 const getExpirationsForPair = ({

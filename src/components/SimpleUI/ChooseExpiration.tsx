@@ -1,17 +1,25 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
 import { useTheme } from '@material-ui/core/styles';
+import { BN } from '@project-serum/anchor';
 import moment from 'moment';
+
 import { useUpdateForm, useFormState } from '../../context/SimpleUIContext';
-import useExpirationDate from '../../hooks/useExpirationDate';
-import useOptionsChain from '../../hooks/useOptionsChain';
-
 import { SimpleUIPage } from './SimpeUIPage';
+import { useValidOptionExpirations } from '../../hooks/BeginnerUI/useValidOptionExpirations';
 
-const ChooseDateButton = ({ date, selected, onClick }) => {
+const ChooseDateButton: React.VFC<{
+  expiration: BN;
+  selected: boolean;
+  onClick: () => void;
+}> = ({ expiration, selected, onClick }) => {
   const theme = useTheme();
+  const date = useMemo(
+    () => moment.utc(expiration.toNumber() * 1000),
+    [expiration],
+  );
 
   return (
     <Button
@@ -43,13 +51,15 @@ const ChooseDateButton = ({ date, selected, onClick }) => {
   );
 };
 
+/**
+ * Only show future expirations ASSET / USDC options that have at least 3 options
+ */
 const ChooseExpiration = () => {
-  const { selectedDate, setSelectedDate, dates } = useExpirationDate();
-  const { tokenSymbol, direction, contractSize } = useFormState();
+  const { tokenSymbol, direction } = useFormState();
   const updateForm = useUpdateForm();
   const history = useHistory();
   const [selectedExpiration, setSelectedExpiration] = useState(0);
-  const { buildOptionsChain } = useOptionsChain();
+  const optionExpirations = useValidOptionExpirations();
 
   // If previous form state didn't exist, send user back to first page (choose asset)
   useEffect(() => {
@@ -58,17 +68,10 @@ const ChooseExpiration = () => {
     }
   }, [tokenSymbol, direction, history]);
 
-  useEffect(() => {
-    if (selectedDate) {
-      buildOptionsChain(selectedDate.unix());
-    }
-  }, [buildOptionsChain, selectedDate, contractSize]);
-
-  const handleMakeSelection = (d: moment.Moment) => {
+  const handleMakeSelection = (d: BN) => {
     if (!selectedExpiration) {
-      setSelectedDate(d);
-      setSelectedExpiration(d.unix());
-      updateForm('expirationUnixTimestamp', d.unix());
+      setSelectedExpiration(d.toNumber());
+      updateForm('expirationUnixTimestamp', d.toNumber());
 
       // TODO: animated transition between pages instead of a timeout
       setTimeout(() => {
@@ -87,12 +90,12 @@ const ChooseExpiration = () => {
         display="flex"
         justifyContent="center"
       >
-        {dates.slice(0, 3).map((date) => (
-          <Box my={1} key={date.unix()}>
+        {optionExpirations.map((expiration) => (
+          <Box my={1} key={expiration.toString()}>
             <ChooseDateButton
-              date={date}
-              onClick={() => handleMakeSelection(date)}
-              selected={selectedExpiration === date.unix()}
+              expiration={expiration}
+              onClick={() => handleMakeSelection(expiration)}
+              selected={selectedExpiration === expiration.toNumber()}
             />
           </Box>
         ))}

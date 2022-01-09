@@ -13,3 +13,8 @@ export const openOrdersByOptionKey = atomFamily<OpenOrders[], string>({
   key: 'openOrdersByOptionKey',
   default: [],
 });
+
+export const priceByAssets = atomFamily<number, string>({
+  key: 'priceByAssets',
+  default: 0,
+});

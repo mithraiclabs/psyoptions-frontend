@@ -9,6 +9,7 @@ import useAssetList from '../../hooks/useAssetList';
 import { useSerumPriceByAssets } from '../../hooks/Serum/useSerumPriceByAssets';
 import { useUpdateForm } from '../../context/SimpleUIContext';
 import { SimpleUIPage } from './SimpeUIPage';
+import { PublicKey } from '@solana/web3.js';
 
 type ChooseAssetButtonProps = {
   asset: Token;
@@ -26,7 +27,7 @@ const ChooseAssetButton = ({
 
   const price = useSerumPriceByAssets(
     asset.mintAddress,
-    USDCToken?.mintAddress,
+    USDCToken?.mintAddress ?? null,
   );
 
   return (
@@ -91,6 +92,7 @@ const ChooseAnAsset = () => {
     if (!selectedTokenSymbol) {
       setSelectedTokenSymbol(asset.tokenSymbol);
       updateForm('tokenSymbol', asset.tokenSymbol);
+      updateForm('underlyingAssetMint', new PublicKey(asset.mintAddress));
       setUAsset(asset);
 
       // #TODO: add contract size input to Simple UI, so can remove this

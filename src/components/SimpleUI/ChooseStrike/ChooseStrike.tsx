@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
 import Box from '@material-ui/core/Box';
 import { useUpdateForm, useFormState } from '../../../context/SimpleUIContext';
@@ -8,11 +8,11 @@ import { useStrikePricesBasedOnBreakeven } from '../../../hooks/BeginnerUI/useSt
 import { BigNumber } from 'bignumber.js';
 
 const ChooseStrike = () => {
-  const { tokenSymbol, direction, expirationUnixTimestamp } = useFormState();
+  const { tokenSymbol, direction, expirationUnixTimestamp, strike } =
+    useFormState();
   const updateForm = useUpdateForm();
   const history = useHistory();
   const optionWithAsks = useStrikePricesBasedOnBreakeven();
-  const [selectedStrike, setSelectedStrike] = useState(new BigNumber(0));
 
   // If previous form state didn't exist, send user back to first page (choose asset)
   useEffect(() => {
@@ -24,19 +24,16 @@ const ChooseStrike = () => {
   }, [tokenSymbol, direction, history, expirationUnixTimestamp]);
 
   const handleMakeSelection = (strike: BigNumber) => {
-    if (!selectedStrike) {
-      setSelectedStrike(strike);
-      updateForm('strike', strike);
+    updateForm('strike', strike);
 
-      // TODO: animated transition between pages instead of a timeout
-      setTimeout(() => {
-        history.push('/simple/order-settings');
-      }, 500);
-    }
+    // TODO: animated transition between pages instead of a timeout
+    setTimeout(() => {
+      history.push('/simple/order-settings');
+    }, 500);
   };
 
   return (
-    <SimpleUIPage title={`Strike Price`}>
+    <SimpleUIPage title="Strike Price">
       <Box display="flex" flexDirection="row" width="100%">
         {optionWithAsks.length > 1 && (
           <Box
@@ -83,15 +80,15 @@ const ChooseStrike = () => {
           display="flex"
           justifyContent="center"
         >
-          {optionWithAsks.map(({ ask, bid, strike }) => (
-            <Box my={1} key={strike.toString()}>
+          {optionWithAsks.map(({ ask, bid, strike: _strike }) => (
+            <Box my={1} key={_strike.toString()}>
               <ChooseStrikeButton
                 ask={ask}
                 bid={bid}
                 disabled={false}
-                onClick={() => handleMakeSelection(strike)}
-                selected={selectedStrike.eq(strike)}
-                strike={strike.toString()}
+                onClick={() => handleMakeSelection(_strike)}
+                selected={strike.eq(_strike)}
+                strike={_strike.toString()}
               />
             </Box>
           ))}

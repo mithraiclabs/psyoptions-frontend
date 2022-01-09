@@ -10,14 +10,7 @@ const ChooseStrikeButton: React.VFC<{
   selected: boolean;
   onClick: () => void;
   disabled: boolean;
-}> = ({
-  strike,
-  bid,
-  ask,
-  selected,
-  onClick,
-  disabled
-}) => {
+}> = ({ strike, bid, ask, selected, onClick, disabled }) => {
   const theme = useTheme();
 
   return (
@@ -35,33 +28,36 @@ const ChooseStrikeButton: React.VFC<{
       disabled={disabled}
     >
       <Box
-        width='100%'
-        display='flex'
-        flexDirection='column'
-        textAlign='left'
+        width="100%"
+        display="flex"
+        flexDirection="column"
+        textAlign="left"
         p={1}
         color={theme?.palette?.primary?.light}
         fontSize={'16px'}
       >
         <Box paddingLeft={1}>
-          <div style={{
+          <div
+            style={{
               margin: 0,
               fontSize: 20,
               fontFamily: 'Goldman',
-              fontWeight: 'bold'
+              fontWeight: 'bold',
             }}
-          >${strike}</div>
+          >
+            ${strike}
+          </div>
         </Box>
         <Box
-          width='100%'
-          display='flex'
-          flexDirection='row'
-          justifyContent='space-between'
+          width="100%"
+          display="flex"
+          flexDirection="row"
+          justifyContent="space-between"
           paddingLeft={1}
           paddingRight={1}
         >
-          <Box>{bid ? `Bid: $${bid}`: 'Bid: None'}</Box>
-          <Box>{ask ? `Ask: $${ask}`: 'Ask: None'}</Box>
+          <Box>{bid ? `Bid: $${bid.toFixed(2)}` : 'Bid: None'}</Box>
+          <Box>{ask ? `Ask: $${ask.toFixed(2)}` : 'Ask: None'}</Box>
         </Box>
       </Box>
     </Button>

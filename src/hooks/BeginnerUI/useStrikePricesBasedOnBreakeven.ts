@@ -59,7 +59,8 @@ export const useStrikePricesBasedOnBreakeven = () => {
         };
       })
       .filter(
-        ({ ask, strike }) => !!ask && (!price || price < strike.toNumber()),
+        ({ ask, bid, strike }) =>
+          !!ask && !!bid && (!price || price < strike.toNumber()),
       )
       .sort((a, b) => b.ask - a.ask);
   }, [

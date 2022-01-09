@@ -26,8 +26,11 @@ const ChooseStrike = () => {
 
   const handleMakeSelection = (
     strike: BigNumber,
+    optionKey: PublicKey,
     serumMarketAddress: PublicKey,
   ) => {
+    // TODO get rid of strike and rely on option to derive strike
+    updateForm('optionKey', optionKey);
     updateForm('strike', strike);
     updateForm('serumMarketAddress', serumMarketAddress);
 
@@ -86,14 +89,14 @@ const ChooseStrike = () => {
           justifyContent="center"
         >
           {optionWithAsks.map(
-            ({ ask, bid, serumMarketAddress, strike: _strike }) => (
+            ({ ask, bid, option, serumMarketAddress, strike: _strike }) => (
               <Box my={1} key={_strike.toString()}>
                 <ChooseStrikeButton
                   ask={ask}
                   bid={bid}
                   disabled={false}
                   onClick={() =>
-                    handleMakeSelection(_strike, serumMarketAddress)
+                    handleMakeSelection(_strike, option.key, serumMarketAddress)
                   }
                   selected={strike.eq(_strike)}
                   strike={_strike.toString()}

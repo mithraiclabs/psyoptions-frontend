@@ -16,6 +16,7 @@ type FormState = {
   strike: BigNumber;
   orderSize: number;
   orderType: 'limit' | 'market';
+  optionKey: PublicKey | null;
   limitPrice: number | null;
   serumMarketAddress: PublicKey | null;
   contractSize: number;
@@ -41,6 +42,7 @@ const initialState: FormState = {
   strike: new BigNumber(0),
   orderSize: 0,
   orderType: 'limit',
+  optionKey: null,
   limitPrice: 0,
   contractSize: 0.01,
   serumMarketAddress: null,

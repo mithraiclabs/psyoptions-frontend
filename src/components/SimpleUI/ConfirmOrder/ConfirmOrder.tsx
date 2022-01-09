@@ -11,7 +11,7 @@ import { useFormState } from '../../../context/SimpleUIContext';
 import { SimpleUIPage } from '../SimpeUIPage';
 import OrderDetails from './OrderDetails';
 import LabelledText from './LabelledText';
-import { useConnectedWallet } from "@saberhq/use-solana";
+import { useConnectedWallet } from '@saberhq/use-solana';
 import useNotifications from '../../../hooks/useNotifications';
 import usePlaceBuyOrder from '../../../hooks/usePlaceBuyOrder';
 import { getHighestAccount } from '../../../utils/token';
@@ -25,20 +25,11 @@ import {
   calculateBreakevenForLimitOrder,
   calculateBreakevenForMarketOrder,
 } from '../../../utils/calculateBreakeven';
-import useOptionsMarkets from '../../../hooks/useOptionsMarkets';
+import { PublicKey } from '@solana/web3.js';
+import { useRecoilValue } from 'recoil';
+import { optionsMap } from '../../../recoil';
 
 const ConfirmOrder = () => {
-  const countryCode = useCountry();
-  const [isProhibited, setIsProhibited] = useState(true);
-  const history = useHistory();
-  const wallet = useConnectedWallet();
-  const { pushErrorNotification } = useNotifications();
-  const [cost, setCost] = useState(null as number | null);
-  const [breakeven, setBreakeven] = useState(null as number | null);
-  const [
-    disabledButtonMessage
-    // , setDisabledButtonMessage
-  ] = useState(isProhibited ? 'Prohibited Jurisdiction' : 'Loading Market Info...');
   const {
     tokenSymbol,
     direction,
@@ -46,26 +37,36 @@ const ConfirmOrder = () => {
     strike,
     orderSize,
     orderType,
+    optionKey,
     limitPrice,
     contractSize,
+    serumMarketAddress,
   } = useFormState();
+  const countryCode = useCountry();
+  const option = useRecoilValue(optionsMap(optionKey?.toString() ?? ''));
+  const [isProhibited, setIsProhibited] = useState(true);
+  const history = useHistory();
+  const wallet = useConnectedWallet();
+  const { pushErrorNotification } = useNotifications();
+  const [cost, setCost] = useState(limitPrice);
+  const [breakeven, setBreakeven] = useState(null as number | null);
+  const [
+    disabledButtonMessage,
+    // , setDisabledButtonMessage
+  ] = useState(
+    isProhibited ? 'Prohibited Jurisdiction' : 'Loading Market Info...',
+  );
   const [placeOrderLoading, setPlaceOrderLoading] = useState(false);
-  const { lowestAskHighestBidPerStrike, optionRowForStrike } =
-    useFilteredOptionsChain(direction === 'down' ? 'put' : 'call');
-  const serumAddress = optionRowForStrike[strike]?.serumMarketKey?.toString();
-  const placeBuyOrder = usePlaceBuyOrder(serumAddress);
+  const placeBuyOrder = usePlaceBuyOrder(serumMarketAddress?.toString() ?? '');
   const { serumMarkets } = useSerum();
   const [orderbooks] = useSerumOrderbooks();
   const { feeRates: serumFeeRates, publicKey: serumDiscountFeeKey } =
     useSerumFeeDiscountKey();
   const { ownedTokenAccounts } = useOwnedTokenAccounts();
-  const { marketsBySerumKey } = useOptionsMarkets();
 
-  const optionMarket = marketsBySerumKey[serumAddress];
-
-  const serumMarketData = serumMarkets[serumAddress];
+  const serumMarketData = serumMarkets[serumMarketAddress?.toString() ?? ''];
   const serumMarket = serumMarketData?.serumMarket;
-  const orderbook = orderbooks[serumAddress];
+  const orderbook = orderbooks[serumMarketAddress?.toString() ?? ''];
 
   // If previous form state didn't exist, send user back to first page (choose asset)
   useEffect(() => {
@@ -93,37 +94,35 @@ const ConfirmOrder = () => {
   ]);
 
   useEffect(() => {
-    if (orderType === 'limit') {
-      setCost(limitPrice);
-    } else if (lowestAskHighestBidPerStrike[strike.toString(10)]?.ask) {
-      setCost(lowestAskHighestBidPerStrike[strike.toString(10)].ask);
+    if (orderType !== 'limit' && orderbook?.asks[0]?.price) {
+      setCost(orderbook?.asks[0]?.price);
     }
-  }, [limitPrice, orderType, lowestAskHighestBidPerStrike, strike]);
+  }, [orderType, strike, orderbook?.asks]);
 
   useEffect(() => {
     let newBreakevenPrice: number | null = null;
-    if (orderType === 'limit') {
+    if (orderType === 'limit' && limitPrice) {
       newBreakevenPrice = calculateBreakevenForLimitOrder(
-        strike,
+        strike.toNumber(),
         contractSize,
         limitPrice,
         direction === 'down',
       );
-    } else if (lowestAskHighestBidPerStrike[strike.toString(10)]?.ask) {
+    } else if (orderbook?.asks[0]?.price) {
       newBreakevenPrice = calculateBreakevenForMarketOrder(
-        strike,
+        strike.toNumber(),
         contractSize,
         orderSize,
         orderbook?.asks ?? [],
         direction === 'down',
       );
     }
-
-    setBreakeven(newBreakevenPrice);
+    if (newBreakevenPrice) {
+      setBreakeven(newBreakevenPrice);
+    }
   }, [
     limitPrice,
     orderType,
-    lowestAskHighestBidPerStrike,
     strike,
     contractSize,
     orderSize,
@@ -132,53 +131,56 @@ const ConfirmOrder = () => {
   ]);
 
   useEffect(() => {
-    setIsProhibited(DISALLOWED_COUNTRIES.includes(countryCode ?? ''))
+    setIsProhibited(DISALLOWED_COUNTRIES.includes(countryCode ?? ''));
   }, [countryCode]);
 
   const disabledPlaceOrder = useMemo(() => {
-    return isProhibited
-           || !serumMarket
-           || !wallet?.publicKey
-           || (orderType === "limit" && !limitPrice)
-           || !orderbook?.asks?.length;
-
+    return (
+      isProhibited ||
+      !serumMarket ||
+      !wallet?.publicKey ||
+      (orderType === 'limit' && !limitPrice) ||
+      !orderbook?.asks?.length
+    );
   }, [
     isProhibited,
     serumMarket,
     wallet?.publicKey,
     orderType,
     limitPrice,
-    orderbook?.asks
+    orderbook?.asks,
   ]);
 
   const handlePlaceOrderClicked = useCallback(async () => {
-    if (disabledPlaceOrder) return;
+    if (disabledPlaceOrder || !wallet || !serumMarket || !option) {
+      return;
+    }
 
     setPlaceOrderLoading(true);
     try {
       const serumQuoteTokenAccounts =
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore: serum market._decoded
         ownedTokenAccounts[serumMarket?._decoded?.quoteMint?.toString()] || [];
       const serumQuoteTokenKey = getHighestAccount(
         serumQuoteTokenAccounts,
       )?.pubKey;
-      const optionAccounts = ownedTokenAccounts[`${optionRowForStrike[strike]?.optionMintKey}`] || [];
+      const optionAccounts =
+        ownedTokenAccounts[option.optionMint.toString()] || [];
       const optionTokenKey = getHighestAccount(optionAccounts)?.pubKey;
 
       await placeBuyOrder({
-        optionMarket,
+        option,
         serumMarket: serumMarket,
         optionDestinationKey: optionTokenKey,
         orderArgs: {
           owner: wallet.publicKey,
           // For Serum, the payer is really the account of the asset being sold
-          payer: serumQuoteTokenKey || null,
+          payer: serumQuoteTokenKey as PublicKey,
           side: 'buy',
           // Serum-ts handles adding the SPL Token decimals via their
           //  `maket.priceNumberToLots` function
           price:
-            orderType === "limit"
+            orderType === 'limit'
               ? limitPrice!
               : calculatePriceWithSlippage(orderSize, orderbook?.asks),
           // Serum-ts handles adding the SPL Token decimals via their
@@ -191,14 +193,14 @@ const ConfirmOrder = () => {
           feeDiscountPubkey: serumDiscountFeeKey,
           // serum fee rate. Should use the taker fee even if limit order if it's likely to match an order
           feeRate:
-            orderType === 'market' || (limitPrice && limitPrice >= orderbook?.asks?.[0]?.price)
-              ? serumFeeRates?.taker
+            orderType === 'market' ||
+            (limitPrice && limitPrice >= orderbook?.asks?.[0]?.price)
+              ? (serumFeeRates?.taker ?? 0) * 2
               : undefined,
         },
       });
       setPlaceOrderLoading(false);
       history.push('/portfolio');
-      history.go(0);
     } catch (err) {
       setPlaceOrderLoading(false);
       Sentry.captureException(err);
@@ -206,21 +208,19 @@ const ConfirmOrder = () => {
     }
   }, [
     disabledPlaceOrder,
+    wallet,
     serumMarket,
     ownedTokenAccounts,
-    optionRowForStrike,
-    strike,
-    optionMarket,
-    wallet?.publicKey,
+    placeBuyOrder,
+    option,
     orderType,
     limitPrice,
     orderSize,
-    orderbook,
+    orderbook?.asks,
     serumDiscountFeeKey,
-    serumFeeRates,
-    placeBuyOrder,
-    pushErrorNotification,
+    serumFeeRates?.taker,
     history,
+    pushErrorNotification,
   ]);
 
   return (
@@ -246,7 +246,13 @@ const ConfirmOrder = () => {
           </Box>
           <Box paddingBottom={1}>
             <LabelledText
-              title={orderType === 'market' ? 'Market Price' : cost ? `$${cost.toString()}` :  '-'}
+              title={
+                orderType === 'market'
+                  ? 'Market Price'
+                  : cost
+                  ? `$${cost.toString()}`
+                  : '-'
+              }
               subtitle="Cost"
             />
           </Box>
@@ -277,19 +283,29 @@ const ConfirmOrder = () => {
                 style={{ width: '100%' }}
                 disabled={disabledPlaceOrder}
               >
-                {disabledPlaceOrder ?  ((!orderbook?.asks?.length) ? 'No Offers' : disabledButtonMessage) : 'Place Order'}
+                {disabledPlaceOrder
+                  ? !orderbook?.asks?.length
+                    ? 'No Offers'
+                    : disabledButtonMessage
+                  : 'Place Order'}
               </Button>
-              {
-                (isProhibited) ? (
-                  <div style={{marginTop: '15px'}}>
-                    <span>⚠️</span>
-                    <span style={{color: 'white', marginRight: '10px', marginLeft: '15px'}}>
-                      It appears you're located in a prohibited jurisdiction.
-                    </span>
-                    <Link to='/prohibited-jurisdiction'>Click here for more information</Link>
-                  </div>
-                ) : null
-              }
+              {isProhibited ? (
+                <div style={{ marginTop: '15px' }}>
+                  <span>⚠️</span>
+                  <span
+                    style={{
+                      color: 'white',
+                      marginRight: '10px',
+                      marginLeft: '15px',
+                    }}
+                  >
+                    It appears you're located in a prohibited jurisdiction.
+                  </span>
+                  <Link to="/prohibited-jurisdiction">
+                    Click here for more information
+                  </Link>
+                </div>
+              ) : null}
             </>
           )}
         </Box>

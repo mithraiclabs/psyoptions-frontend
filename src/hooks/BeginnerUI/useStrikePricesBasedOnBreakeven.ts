@@ -3,7 +3,6 @@ import { useMemo } from 'react';
 import { useSerumOrderbooks } from '../../context/SerumOrderbookContext';
 import { useFormState } from '../../context/SimpleUIContext';
 import { useLoadSerumDataByMarketAddresses } from '../Serum/useLoadSerumDataByMarketKeys';
-import { useSerumPriceByAssets } from '../Serum/useSerumPriceByAssets';
 import useAssetList from '../useAssetList';
 import { useDeriveMultipleSerumMarketAddresses } from '../useDeriveMultipleSerumMarketAddresses';
 import { useNormalizeAmountOfMintBN } from '../useNormalizeAmountOfMintBN';
@@ -22,7 +21,6 @@ export const useStrikePricesBasedOnBreakeven = () => {
   const normalizeUnderlyingAmountBN =
     useNormalizeAmountOfMintBN(underlyingAssetMint);
   const normalizeQuoteAmountBN = useNormalizeAmountOfMintBN(USDCPublicKey);
-  const price = useSerumPriceByAssets(underlyingAssetMint, USDCPublicKey);
   useLoadSerumDataByMarketAddresses(serumAddresses);
 
   return useMemo(() => {
@@ -59,10 +57,7 @@ export const useStrikePricesBasedOnBreakeven = () => {
           strike,
         };
       })
-      .filter(
-        ({ ask, bid, strike }) =>
-          !!ask && !!bid && (!price || price < strike.toNumber()),
-      )
+      .filter(({ ask, bid }) => !!ask && !!bid)
       .sort((a, b) => b.ask - a.ask);
   }, [
     contractSize,
@@ -71,7 +66,6 @@ export const useStrikePricesBasedOnBreakeven = () => {
     normalizeUnderlyingAmountBN,
     options,
     orderbooks,
-    price,
     serumAddresses,
   ]);
 };

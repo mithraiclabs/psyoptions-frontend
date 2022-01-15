@@ -33,7 +33,7 @@ import { getDateWithDefaultTime } from '../../utils/dates';
 
 const darkBorder = `1px solid ${theme.palette.background.main}`;
 
-type OptionString = 'calls' | 'puts';
+type OptionString = 'calls' | 'puts' | 'both';
 
 export const InitOptionMarket: React.VFC = () => {
   const endpoint = useRecoilValue(activeNetwork);
@@ -88,7 +88,7 @@ export const InitOptionMarket: React.VFC = () => {
     setCallOrPut(e.target.value as OptionString);
   };
 
-  const handleInitialize = async () => {
+  const handleInitializeInner = async (type: 'calls' | 'puts') => {
     if (!underlyingMint || !quoteMint || !endpoint?.programId) {
       pushNotification({
         severity: 'error',
@@ -112,7 +112,7 @@ export const InitOptionMarket: React.VFC = () => {
       let optionQuoteMint = quoteMint;
       let optionUnderlyingDecimals = underlyingMintInfo?.decimals ?? 0;
       let optionQuoteDecimals = quoteMintInfo?.decimals ?? 0;
-      if (callOrPut !== 'calls') {
+      if (type !== 'calls') {
         optionUnderlyingMint = quoteMint;
         optionQuoteMint = underlyingMint;
         optionUnderlyingDecimals = quoteMintInfo?.decimals ?? 0;
@@ -122,7 +122,7 @@ export const InitOptionMarket: React.VFC = () => {
       let amountsPerContract: BigNumber;
       let quoteAmountPerContract: BigNumber;
 
-      if (callOrPut === 'calls') {
+      if (type === 'calls') {
         amountsPerContract = new BigNumber(size);
         quoteAmountPerContract = strikePrice.multipliedBy(size);
       } else {
@@ -173,8 +173,8 @@ export const InitOptionMarket: React.VFC = () => {
         const tickSize = 0.01;
         // let tickSize = 0.0001;
         // if (
-        //   (callOrPut === 'calls' && qa.tokenSymbol.match(/^USD/)) ||
-        //   (callOrPut === 'puts' && ua.tokenSymbol.match(/^USD/))
+        //   (type === 'calls' && qa.tokenSymbol.match(/^USD/)) ||
+        //   (type === 'puts' && ua.tokenSymbol.match(/^USD/))
         // ) {
         //   tickSize = 0.01;
         // }
@@ -189,7 +189,7 @@ export const InitOptionMarket: React.VFC = () => {
           baseMintKey: initializedMarket.optionMintKey,
           // This needs to be the USDC, so flip the quote asset vs underlying asset
           quoteMintKey:
-            callOrPut === 'calls'
+            type === 'calls'
               ? initializedMarket.quoteAssetMintKey
               : initializedMarket.underlyingAssetMintKey,
           quoteLotSize,
@@ -237,6 +237,15 @@ export const InitOptionMarket: React.VFC = () => {
         severity: 'error',
         message: `${err}`,
       });
+    }
+  };
+
+  const handleInitialize = async () => {
+    if (callOrPut === 'calls' || callOrPut === 'both') {
+      await handleInitializeInner('calls');
+    }
+    if (callOrPut === 'puts' || callOrPut === 'both') {
+      await handleInitializeInner('puts');
     }
   };
 
@@ -305,7 +314,7 @@ export const InitOptionMarket: React.VFC = () => {
         </Box>
 
         <Box display="flex" alignItems="center" borderBottom={darkBorder}>
-          <Box width="50%" p={2}>
+          <Box width="70%" p={2}>
             <FormControl component="fieldset">
               <RadioGroup value={callOrPut} onChange={handleChangeCallPut} row>
                 <FormControlLabel
@@ -318,13 +327,20 @@ export const InitOptionMarket: React.VFC = () => {
                   control={<Radio />}
                   label="Puts"
                 />
+                <FormControlLabel
+                  value="both"
+                  control={<Radio />}
+                  label="Both"
+                />
               </RadioGroup>
             </FormControl>
           </Box>
-          <Box width="50%" p={2}>
-            {callOrPut === 'calls'
-              ? 'Initialize calls for market'
-              : 'Initialize puts for market'}
+          <Box width="30%" p={2}>
+            {callOrPut === 'both'
+              ? 'Initialize call & put options'
+              : callOrPut === 'calls'
+              ? 'Initialize call option'
+              : 'Initialize put option'}
           </Box>
         </Box>
 

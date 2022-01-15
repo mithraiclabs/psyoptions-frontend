@@ -1740,16 +1740,16 @@
   resolved "https://registry.yarnpkg.com/@gar/promisify/-/promisify-1.1.2.tgz#30aa825f11d438671d585bd44e7fd564535fc210"
   integrity sha512-82cpyJyKRoQoRi+14ibCeGPu0CwypgtBAdBhq1WfvagpCZNKqwXbKwXllYSMG91DhmG4jt9gN8eP6lGOtozuaw==
 
-"@gokiprotocol/walletkit@^1.6.4":
-  version "1.6.4"
-  resolved "https://registry.yarnpkg.com/@gokiprotocol/walletkit/-/walletkit-1.6.4.tgz#102c388622673b78c0b28f2d21ca07e9cee50fb5"
-  integrity sha512-dvAut9+eihLgVKuTmy9DKUlTgI0TFnuBInNgehCahLI+I7lRqJBxvJovX2xzjnoybHXTjE3aNHMZoqqHPQXcPg==
+"@gokiprotocol/walletkit@1.4.4":
+  version "1.4.4"
+  resolved "https://registry.yarnpkg.com/@gokiprotocol/walletkit/-/walletkit-1.4.4.tgz#d2fdb80de9357bb76ab9b62c9f3f15e26ce7c7c3"
+  integrity sha512-d33hqbhpEluqu82X+tVFlyqa8oIt55PtWONFTSOnjguGwjms/08yjFLyKhGq+TiiWvzJXkjmcs3chnAlAHjpzg==
   dependencies:
     "@reach/dialog" "^0.16.2"
-    "@react-spring/web" "^9.3.2"
-    "@types/react" "^17.0.38"
+    "@react-spring/web" "^9.3.0"
+    "@types/react" "^17.0.30"
     polished "^4.1.3"
-    react-device-detect "^2.1.2"
+    react-device-detect "^2.0.1"
     react-use-gesture "^9.1.3"
     tslib "^2.3.1"
     unstated-next "^1.1.0"
@@ -2536,7 +2536,7 @@
   resolved "https://registry.yarnpkg.com/@react-spring/types/-/types-9.4.2.tgz#f0518f6d23a0b0f699a71976483323ac84bc4ace"
   integrity sha512-GGiIscTM+CEUNV52anj3g5FqAZKL2+eRKtvBOAlC99qGBbvJ3qTLImrUR/I3lXY7PRuLgzI6kh34quA1oUxWYQ==
 
-"@react-spring/web@^9.3.2":
+"@react-spring/web@^9.3.0":
   version "9.4.2"
   resolved "https://registry.yarnpkg.com/@react-spring/web/-/web-9.4.2.tgz#ea8bb224c236d10097da463ea9e950f0939b7a5f"
   integrity sha512-sWfA9NkVuvVOpjSlMkD2zcF6X3i8NSHTeH/uHCGKsN3mYqgkhvAF+E8GASO/H4KKGNhbRvgCZiwJXOtOGyUg6A==
@@ -3206,7 +3206,7 @@
     "@types/scheduler" "*"
     csstype "^3.0.2"
 
-"@types/react@^17.0.38":
+"@types/react@^17.0.30":
   version "17.0.38"
   resolved "https://registry.yarnpkg.com/@types/react/-/react-17.0.38.tgz#f24249fefd89357d5fa71f739a686b8d7c7202bd"
   integrity sha512-SI92X1IA+FMnP3qM5m4QReluXzhcmovhZnLNm3pyeQlooi02qI7sLiepEYqT678uNiyc25XfCqxREFpy3W7YhQ==
@@ -11917,7 +11917,7 @@ react-dev-utils@^11.0.3:
     strip-ansi "6.0.0"
     text-table "0.2.0"
 
-react-device-detect@^2.1.2:
+react-device-detect@^2.0.1:
   version "2.1.2"
   resolved "https://registry.yarnpkg.com/react-device-detect/-/react-device-detect-2.1.2.tgz#60abb6fa361ec4cc839469a0c4c3e9b8ea17d6b5"
   integrity sha512-N42xttwez3ECgu4KpOL2ICesdfoz8NCBfmc1rH9FRYSjH7NmMyANPSrQ3EvAtJyj/6TzJNhrANSO38iXjCB2Ug==

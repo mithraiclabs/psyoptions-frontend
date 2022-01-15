@@ -193,7 +193,7 @@ const Markets: React.VFC = () => {
           <BuySellDialog
             {...callPutData}
             optionKey={callPutData.key}
-            markPrice={markPrice}
+            markPrice={markPrice ?? 0}
             open={buySellDialogOpen}
             onClose={() => setBuySellDialogOpen(false)}
             round={round}
@@ -235,43 +235,49 @@ const Markets: React.VFC = () => {
               >
                 <ContractSizeSelector />
               </Box>
-              <Box px={[0, 0, 2]} py={[2, 2, 0]}>
-                <Balances />
-              </Box>
-              <Box py={[2, 2, 0]}>
-                <MarketsUnsettledBalances />
-              </Box>
-            </Box>
-            <Box px={[1, 1, 0]} py={[2, 2, 1]} width={['100%', '100%', 'auto']}>
-              <Box pb={'6px'} pl="10px" fontSize={'14px'}>
-                Asset Pair:
-              </Box>
               <Box
-                fontSize="12px"
-                display="flex"
-                alignItems="center"
-                border={`1px solid ${theme.palette.background.lighter}`}
-                borderRadius={'20px'}
-                width={'fit-content'}
+                px={[1, 1, 0]}
+                py={[2, 2, 1]}
+                width={['100%', '100%', 'auto']}
               >
-                <Box pr={1}>
-                  <Box>
+                <Box pb={'6px'} pl="10px" fontSize={'14px'}>
+                  Asset Pair:
+                </Box>
+                <Box
+                  fontSize="12px"
+                  display="flex"
+                  alignItems="center"
+                  border={`1px solid ${theme.palette.background.lighter}`}
+                  borderRadius={'20px'}
+                  width={'fit-content'}
+                >
+                  <Box pr={1}>
+                    <Box>
+                      <SelectAsset
+                        onChange={setUnderlyingMint}
+                        mints={mints}
+                        value={_underlyingMint}
+                      />
+                    </Box>
+                  </Box>
+                  <h3 style={{ margin: 0 }}>/</h3>
+                  <Box pl={'4px'}>
                     <SelectAsset
-                      onChange={setUnderlyingMint}
+                      onChange={setQuoteMint}
                       mints={mints}
-                      value={_underlyingMint}
+                      value={_quoteMint}
                     />
                   </Box>
                 </Box>
-                <h3 style={{ margin: 0 }}>/</h3>
-                <Box pl={'4px'}>
-                  <SelectAsset
-                    onChange={setQuoteMint}
-                    mints={mints}
-                    value={_quoteMint}
-                  />
-                </Box>
               </Box>
+            </Box>
+            <MarketsUnsettledBalances />
+            <Box
+              alignItems={['right', 'right', 'center']}
+              px={[0, 0, 2]}
+              py={[2, 2, 0]}
+            >
+              <Balances />
             </Box>
           </Box>
           <Box position="relative">
@@ -323,7 +329,7 @@ const Markets: React.VFC = () => {
                           round={round}
                           onClickBuySellCall={handleBuySellClick}
                           onClickBuySellPut={handleBuySellClick}
-                          markPrice={markPrice}
+                          markPrice={markPrice ?? 0}
                           setLimitPrice={setLimitPrice}
                           showIV={showIV}
                           showPriceChange={showPriceChange}

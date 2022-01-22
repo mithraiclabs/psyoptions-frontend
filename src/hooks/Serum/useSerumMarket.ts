@@ -25,7 +25,7 @@ export const useSerumMarket = (
   const serumMarket = serumMarkets[serumAddress];
 
   useEffect(() => {
-    if (serumMarket) {
+    if (serumMarket || !dexProgramId) {
       // Short circuit since the market is already loaded into state.
       // This data should not change, so no need to refetch
       return;
@@ -43,6 +43,7 @@ export const useSerumMarket = (
           mintB,
           dexProgramId,
         );
+        // @ts-ignore need to update this type at some point
         setSerumMarkets((markets) => ({
           ...markets,
           [serumAddress]: {

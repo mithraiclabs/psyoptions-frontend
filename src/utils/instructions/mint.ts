@@ -6,6 +6,7 @@ import {
   feeAmountPerContract,
   OptionMarketWithKey,
   getOrAddAssociatedTokenAccountTx,
+  PsyAmerican,
 } from '@mithraic-labs/psy-american';
 import {
   PublicKey,
@@ -209,7 +210,7 @@ export const mintInstructions = async (
   mintedOptionDestKey: PublicKey,
   writerTokenDestKey: PublicKey,
   underlyingAssetSrcKey: PublicKey,
-  program?: Program,
+  program?: Program<PsyAmerican>,
 ): Promise<InstructionResponse> => {
   const transaction = new Transaction();
   let mintInstruction: TransactionInstruction | null = null;
@@ -283,7 +284,7 @@ export const createMissingAccountsAndMint = async ({
   underlyingAssetSource: PublicKey | undefined;
   writerTokenDestinationKey?: PublicKey;
   numberOfContractsToMint: number;
-  program: Program;
+  program: Program<PsyAmerican>;
 }): Promise<Result<CreateMissingMintAccountsRes, InstructionErrorResponse>> => {
   const transaction = new Transaction();
   let signers: Signer[] = [];

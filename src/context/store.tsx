@@ -11,7 +11,6 @@ import { SerumProvider } from './SerumContext';
 import { OptionsChainProvider } from './OptionsChainContext';
 import { AssetListProvider } from './AssetListContext';
 import { SolanaMetaProvider } from './SolanaMetaContext';
-import { PasswordProvider } from './PasswordContext';
 import theme from '../utils/theme';
 import { SerumOrderbooksProvider } from './SerumOrderbookContext';
 import { SPLTokenMintsProvider } from './SPLTokenMintsContext';
@@ -36,7 +35,6 @@ const _providers: React.ReactElement[] = [
   <SerumProvider key="SerumProvider" />,
   <SerumOrderbooksProvider key="SerumOrderbooksProvider" />,
   <SerumOpenOrdersProvider key="SerumOpenOrdersProvider" />,
-  <PasswordProvider key="PasswordProvider" />,
   <ExpirationDateProvider key="ExpirationDateProvider" />,
   <ScreenSizeProvider key="ScreenSizeProvider" />,
   <SimpleUIFormProvider key="SimpleUIFormProvider" />,

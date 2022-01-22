@@ -15,7 +15,7 @@ const TxButton: React.VFC<TxButtonProps> = (props) => {
     <Button
       {...props}
       disabled={disabled || loading}
-      onClick={loading ? null : onClick}
+      onClick={loading ? undefined : onClick}
     >
       <Box
         display="flex"

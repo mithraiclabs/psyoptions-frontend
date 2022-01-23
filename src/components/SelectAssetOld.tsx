@@ -94,7 +94,7 @@ const SelectAsset: React.FC<{
                   button
                   onClick={() => {
                     setOpen(false);
-                    onSelectAsset(asset);
+                    onSelectAsset && onSelectAsset(asset);
                   }}
                   key={asset.mintAddress}
                 >
@@ -127,11 +127,11 @@ const SelectAsset: React.FC<{
             >
               {assetListLoading ? '?' : ''}
             </Avatar>
-          ) : null
+          ) : undefined
         }
-        onClick={disabled ? null : handleOpen}
-        onDelete={disabled ? null : handleOpen}
-        deleteIcon={disabled ? null : <KeyboardArrowDown />}
+        onClick={disabled ? undefined : handleOpen}
+        onDelete={disabled ? undefined : handleOpen}
+        deleteIcon={disabled ? undefined : <KeyboardArrowDown />}
       />
     </>
   );

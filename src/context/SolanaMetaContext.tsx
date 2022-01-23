@@ -4,7 +4,7 @@ import useConnection from '../hooks/useConnection';
 import useNotifications from '../hooks/useNotifications';
 
 const SolanaMetaContext = createContext<{
-  splTokenAccountRentBalance?: number;
+  splTokenAccountRentBalance?: number | null;
 }>({
   splTokenAccountRentBalance: null,
 });

@@ -113,7 +113,7 @@ const useExerciseOpenPosition = (
             size: new BN(size),
           }));
         } else {
-          const ix = await instructions.exerciseOptionsInstruction(
+          const ix = await instructions.exerciseOptionsV2Instruction(
             program,
             new BN(size),
             option,

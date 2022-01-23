@@ -4,7 +4,6 @@ import Button from '@material-ui/core/Button';
 import Close from '@material-ui/icons/Close';
 import Tooltip from '@material-ui/core/Tooltip';
 import { withStyles, useTheme } from '@material-ui/core/styles';
-import { feeAmountPerContract } from '@mithraic-labs/psy-american';
 import * as Sentry from '@sentry/react';
 
 import useOwnedTokenAccounts from '../../hooks/useOwnedTokenAccounts';
@@ -13,7 +12,6 @@ import useExerciseOpenPosition from '../../hooks/useExerciseOpenPosition';
 import DialogFullscreenMobile from '../DialogFullscreenMobile';
 import { PlusMinusIntegerInput } from '../PlusMinusIntegerInput';
 import TxButton from '../TxButton';
-import { useDecimalsForMint } from '../../hooks/useDecimalsForMint';
 import { PublicKey } from '@solana/web3.js';
 import { useRecoilValue } from 'recoil';
 import { optionsMap } from '../../recoil';
@@ -21,7 +19,6 @@ import useOpenPositions from '../../hooks/useOpenPositions';
 import { useOptionIsCall } from '../../hooks/useOptionIsCall';
 import { useOptionContractSize } from '../../hooks/useOptionContractSize';
 import { useNormalizedStrikePriceFromOption } from '../../hooks/useNormalizedStrikePriceFromOption';
-import { BN } from 'bn.js';
 import { useTokenByMint } from '../../hooks/useNetworkTokens';
 import { usePrices } from '../../context/PricesContext';
 import { formatExpirationTimestamp } from '../../utils/format';
@@ -42,7 +39,6 @@ const ExerciseDialog: React.VFC<{
 }> = ({ open, onClose, optionKey }) => {
   const option = useRecoilValue(optionsMap(optionKey.toString()));
   const positions = useOpenPositions();
-  const quoteAssetDecimals = useDecimalsForMint(option?.quoteAssetMint ?? '');
   const [loading, setLoading] = useState(false);
   const { ownedTokenAccounts } = useOwnedTokenAccounts();
   const { pushNotification } = useNotifications();
@@ -122,15 +118,8 @@ const ExerciseDialog: React.VFC<{
     numContractsToExercise >= 1 && numContractsToExercise <= positionSize;
 
   const strikeNumber = strike.toNumber();
-  let exerciseCost =
+  const exerciseCost =
     strikeNumber * contractSize.toNumber() * numContractsToExercise;
-  const exerciseFees =
-    feeAmountPerContract(
-      option?.quoteAmountPerContract ?? new BN(0),
-    ).toNumber() *
-    numContractsToExercise *
-    10 ** -quoteAssetDecimals;
-  exerciseCost += exerciseFees;
   const sizeTotalToExercise = contractSize.toNumber() * numContractsToExercise;
   let exerciseCostString = exerciseCost.toString(10);
   if (exerciseCostString.match(/\..{3,}/)) {
@@ -229,11 +218,6 @@ const ExerciseDialog: React.VFC<{
                   </Button>
                 </Box>
               </Box>
-              <StyledTooltip title="Fees help fund the PsyOptions foundation">
-                <Box pt={1} style={{ fontSize: '12px' }}>
-                  {exerciseFees} {optionQuoteAssetSymbol} fee included
-                </Box>
-              </StyledTooltip>
             </Box>
             <StyledTooltip title={exerciseTooltipJsx}>
               <Box pt={1}>

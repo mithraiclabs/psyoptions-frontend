@@ -8,6 +8,7 @@ import TableBody from '@material-ui/core/TableBody';
 
 import React, { memo } from 'react';
 import theme from '../utils/theme';
+import { Order } from '../context/SerumOrderbookContext';
 
 const successColor = theme.palette.success.main;
 const errorColor = theme.palette.error.main;
@@ -41,7 +42,7 @@ const OrderBook: React.FC<{
 }> = ({ bids = [], asks = [], setLimitPrice, setOrderSize }) => {
   // Maybe we should do this zipping of the bids/asks elsewhere
   // Doing it here for quick and dirty solution, don't over-engineer right? :)
-  const rows = [];
+  const rows: { ask: Order; bid: Order; key: string | number }[] = [];
   const minRows = 4;
   // We can adjust the max rows as desired later
   const maxRows = 8;

@@ -21,7 +21,7 @@ const PricesProvider: React.FC = ({ children }) => {
     if (!assetListLoading) {
       const fetchPrices = async () => {
         const newPrices = {};
-        const newFailed = [];
+        const newFailed: string[] = [];
 
         await Promise.allSettled(
           supportedAssets.map(async (asset) => {

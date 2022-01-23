@@ -1,5 +1,4 @@
 import React from 'react';
-import { func, bool } from 'prop-types';
 import Button from '@material-ui/core/Button';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import Box from '@material-ui/core/Box';
@@ -26,11 +25,6 @@ const RefreshButton: React.FC<{
       )}
     </Button>
   );
-};
-
-RefreshButton.propTypes = {
-  loading: bool,
-  onRefresh: func.isRequired,
 };
 
 export default RefreshButton;

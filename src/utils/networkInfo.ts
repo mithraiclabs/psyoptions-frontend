@@ -11,7 +11,7 @@ import {
   Token as SPLToken,
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
-import { FEE_OWNER_KEY } from '@mithraic-labs/psy-american';
+import { FEE_OWNER_KEY, PsyAmerican } from '@mithraic-labs/psy-american';
 
 export type Network = {
   name: ClusterName;
@@ -65,7 +65,7 @@ const networks: Network[] = [
 ];
 
 export const getReferralId = async (
-  program: Program,
+  program: Program<PsyAmerican>,
   endpoint: Network,
   quoteAssetMint: PublicKey,
 ): Promise<PublicKey> => {

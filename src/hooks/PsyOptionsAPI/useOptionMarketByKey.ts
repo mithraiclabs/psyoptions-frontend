@@ -8,7 +8,7 @@ export const useOptionMarketByKey = (
   const { marketsByUiKey } = useOptionsMarkets();
 
   return useMemo(
-    () => marketsByUiKey[optionMarketUiKey],
+    () => marketsByUiKey[optionMarketUiKey ?? ''],
     [marketsByUiKey, optionMarketUiKey],
   );
 };

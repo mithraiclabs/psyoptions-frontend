@@ -41,6 +41,7 @@ export const useSerumOrderbook = (
             } = await getOrderbook(connection, serumMarket);
             setOrderbooks((prevOrderbooks) => ({
               ...prevOrderbooks,
+              // @ts-ignore
               [serumMarketAddress]: {
                 // bidOrderbook and askOrderbook are the raw orderbook objects that come back from serum-ts
                 // These are not useable for displaying orders,
@@ -74,7 +75,7 @@ export const useSerumOrderbook = (
   ]);
 
   return {
-    orderbook: orderbooks[serumMarketAddress],
+    orderbook: orderbooks[serumMarketAddress ?? ''],
     loading,
   };
 };

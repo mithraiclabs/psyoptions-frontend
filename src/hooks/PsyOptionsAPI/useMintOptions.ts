@@ -19,7 +19,7 @@ import {
 } from '../../utils/token';
 import { useAmericanPsyOptionsProgram } from '../useAmericanPsyOptionsProgram';
 import useNotifications from '../useNotifications';
-import { useConnectedWallet } from "@saberhq/use-solana";
+import { useConnectedWallet } from '@saberhq/use-solana';
 
 export const useMintOptions = (): ((
   option: OptionMarketWithKey,
@@ -32,7 +32,7 @@ export const useMintOptions = (): ((
 
   return useCallback(
     async (option, size) => {
-      if (!wallet?.publicKey || !program) {
+      if (!wallet?.publicKey || !program || !splTokenAccountRentBalance) {
         return;
       }
       try {
@@ -155,7 +155,8 @@ export const useMintOptions = (): ((
         }
 
         transaction.feePayer = wallet.publicKey;
-        const { blockhash } = await program.provider.connection.getRecentBlockhash();
+        const { blockhash } =
+          await program.provider.connection.getRecentBlockhash();
         transaction.recentBlockhash = blockhash;
 
         if (signers.length) {
@@ -166,7 +167,7 @@ export const useMintOptions = (): ((
         await program.provider.connection.sendRawTransaction(
           transaction.serialize(),
         );
-        console.log('tx here:', transaction)
+        console.log('tx here:', transaction);
 
         pushNotification({
           severity: NotificationSeverity.SUCCESS,

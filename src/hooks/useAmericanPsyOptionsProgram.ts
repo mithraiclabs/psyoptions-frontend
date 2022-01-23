@@ -1,4 +1,4 @@
-import { PsyAmericanIdl } from '@mithraic-labs/psy-american';
+import { PsyAmerican, PsyAmericanIdl } from '@mithraic-labs/psy-american';
 import { Program } from '@project-serum/anchor';
 import { useMemo } from 'react';
 import { useRecoilValue } from 'recoil';
@@ -10,13 +10,17 @@ import { useProvider } from './useProvider';
  *
  * @returns Program | null
  */
-export const useAmericanPsyOptionsProgram = (): Program | null => {
+export const useAmericanPsyOptionsProgram = (): Program<PsyAmerican> | null => {
   const endpoint = useRecoilValue(activeNetwork);
   const provider = useProvider();
 
   return useMemo(() => {
     if (endpoint?.programId && provider) {
-      return new Program(PsyAmericanIdl, endpoint.programId, provider);
+      return new Program(
+        PsyAmericanIdl,
+        endpoint.programId,
+        provider,
+      ) as Program<PsyAmerican>;
     }
     return null;
   }, [endpoint?.programId, provider]);

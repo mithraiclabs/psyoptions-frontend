@@ -7,14 +7,14 @@ import useAssetList from '../hooks/useAssetList';
 
 type DateContextValue = {
   setDates: React.Dispatch<React.SetStateAction<Moment[]>>;
-  selectedDate: Moment | undefined;
+  selectedDate: Moment | null;
   dates: Moment[];
   setSelectedDate: (date: Moment) => void;
 };
 
 const ExpirationDateContext = createContext<DateContextValue>({
   setDates: () => {},
-  selectedDate: undefined,
+  selectedDate: null,
   dates: [],
   setSelectedDate: () => {},
 });

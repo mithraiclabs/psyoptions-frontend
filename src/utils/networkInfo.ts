@@ -95,6 +95,7 @@ export const getReferralId = async (
 
 const getDexProgramKeyByNetwork = (name: ClusterName) => {
   switch (name) {
+    case 'Custom':
     case 'Mainnet':
       // TODO Don't rely on the markets for this
       return MARKETS.find(({ deprecated }) => !deprecated)?.programId;
@@ -117,6 +118,7 @@ const getDexProgramKeyByNetwork = (name: ClusterName) => {
 
 const getGraphQLUrlByNetwork = (name: ClusterName) => {
   switch (name) {
+    case 'Custom':
     case 'Mainnet':
       return 'https://api.serum.markets';
     case 'Devnet':
@@ -132,6 +134,7 @@ const getGraphQLUrlByNetwork = (name: ClusterName) => {
 
 const getSerumMarketsByNetwork = (name: ClusterName) => {
   switch (name) {
+    case ClusterName.custom:
     case networks[0].name:
       return TOKENS.mainnet;
     case networks[1].name:
@@ -158,6 +161,7 @@ const getSerumMarketsByNetwork = (name: ClusterName) => {
 
 const getSupportedMarketsByNetwork = (name: ClusterName) => {
   switch (name) {
+    case ClusterName.custom:
     case ClusterName.mainnet:
       return MarketMeta.mainnet.optionMarkets;
     case ClusterName.devnet:
@@ -173,6 +177,7 @@ const getSupportedMarketsByNetwork = (name: ClusterName) => {
 
 const getAssetsByNetwork = (name: ClusterName): Token[] => {
   switch (name) {
+    case ClusterName.custom:
     case ClusterName.mainnet:
       return MarketMeta.mainnet.tokens;
     case ClusterName.devnet:

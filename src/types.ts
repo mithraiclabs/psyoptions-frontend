@@ -9,6 +9,7 @@ export enum ClusterName {
   mainnet = 'Mainnet',
   testnet = 'Testnet',
   localhost = 'localhost',
+  custom = 'Custom',
 }
 
 export enum OptionType {

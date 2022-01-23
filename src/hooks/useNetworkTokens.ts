@@ -10,6 +10,7 @@ export const useNetworkTokens = (): ClusterEnv => {
 
   return useMemo(() => {
     switch (endpoint?.name ?? '') {
+      case ClusterName.custom:
       case ClusterName.mainnet:
         return Tokens.mainnet;
       case ClusterName.devnet:

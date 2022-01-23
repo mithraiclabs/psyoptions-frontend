@@ -6,6 +6,7 @@ import Card from '@material-ui/core/Card';
 import Popper from '@material-ui/core/Popper';
 import MenuItem from '@material-ui/core/MenuItem';
 import MenuList from '@material-ui/core/MenuList';
+import TextField from '@material-ui/core/TextField';
 import { useRecoilValue } from 'recoil';
 import useConnection from '../hooks/useConnection';
 import useAssetList from '../hooks/useAssetList';
@@ -14,11 +15,14 @@ import useSerum from '../hooks/useSerum';
 import theme from '../utils/theme';
 import { Network } from '../utils/networkInfo';
 import { activeNetwork, useUpdateNetwork } from '../recoil';
+import { ClusterName } from '../types';
+import { clusterApiUrl, PublicKey } from '@solana/web3.js';
 
 const NetworkMenu = () => {
   const updateNetwork = useUpdateNetwork();
   const endpoint = useRecoilValue(activeNetwork);
   const { networks } = useConnection();
+  const [customRPC, setCustomRPC] = useState('');
 
   const { setUAsset, setQAsset, setSupportedAssets, assetListLoading } =
     useAssetList();
@@ -39,6 +43,24 @@ const NetworkMenu = () => {
     // @ts-expect-error ignore
     if (anchorRef.current && anchorRef.current.contains(event.target)) {
       return;
+    }
+
+    setOpen(false);
+  };
+
+  const onEnterCustomRPC = () => {
+    if (endpoint.url !== customRPC) {
+      handleSelectNetwork({
+        name: ClusterName.custom,
+        url: customRPC,
+        fallbackUrl: clusterApiUrl('mainnet-beta'),
+        programId: process.env.REACT_APP_MAINNET_PROGRAM_ID,
+        serumReferrerIds: {
+          EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v: new PublicKey(
+            'CzuipkNnvG4JaTQPjgAseWLNhLZFYxMcYpd2G8hDLHco',
+          ),
+        },
+      });
     }
 
     setOpen(false);
@@ -93,13 +115,13 @@ const NetworkMenu = () => {
           width: 'fit-content',
         }}
       >
-        <Card
-          style={{
-            background: theme.palette?.background?.light,
-          }}
-          elevation={12}
-        >
-          <ClickAwayListener onClickAway={handleClose}>
+        <ClickAwayListener onClickAway={handleClose}>
+          <Card
+            style={{
+              background: theme.palette?.background?.light,
+            }}
+            elevation={12}
+          >
             <MenuList
               id="menu-list-grow"
               autoFocusItem={open}
@@ -122,8 +144,26 @@ const NetworkMenu = () => {
                   </MenuItem>
                 ))}
             </MenuList>
-          </ClickAwayListener>
-        </Card>
+            <Box m={2}>
+              <TextField
+                label="Custom RPC"
+                onChange={(e) => {
+                  setCustomRPC(e.target.value);
+                }}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    onEnterCustomRPC();
+                  }
+                }}
+                style={{
+                  width: '100%',
+                }}
+                value={customRPC}
+                variant="outlined"
+              />
+            </Box>
+          </Card>
+        </ClickAwayListener>
       </Popper>
     </Box>
   );

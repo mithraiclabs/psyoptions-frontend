@@ -98,7 +98,7 @@ const Landing: React.VFC = () => {
           mt={2}
           p={3}
         >
-          <img width="95px" height="95px" src="images/psyoptions-logo-light.png" alt="PsyOptions Logo" />
+          <img width="95px" height="95px" src="images/icon-192x192.png" alt="PsyOptions Logo" />
           <Box px={[1, 1, 3]} fontSize={['48px', '48px', '60px', '72px']}>
             <h1 className={logoH1}>PsyOptions</h1>
           </Box>

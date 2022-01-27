@@ -34,7 +34,7 @@ const NavOptions: React.VFC = () => {
           style={{ minWidth: 0, padding: 0 }}
         >
           <img
-            src="images/psyoptions-logo-light.png"
+            src="images/icon-192x192.png"
             width="32"
             height="32"
             alt="PsyOptions Logo"

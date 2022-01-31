@@ -72,7 +72,10 @@ export const selectOpenOrdersOptionTupleForAllOptions =
         );
         if (postedOpenOrders.length) {
           const optionOpenOrdersTupleArray: OpenOrdersOptionTuple =
-            postedOpenOrders.map((oo) => [option.key, oo]);
+            postedOpenOrders.map((postedOpenOrder) => [
+              option.key,
+              postedOpenOrder,
+            ]);
           acc = [...acc, ...optionOpenOrdersTupleArray];
         }
         return acc;

@@ -10,6 +10,7 @@ import {
   selector,
   useRecoilTransaction_UNSTABLE,
 } from 'recoil';
+import { openOrdersByOptionKey } from '..';
 
 export const defaultExpiration = new BN(0);
 export const defaultUnderlying = new BN(0);
@@ -166,6 +167,9 @@ export const useInsertOptions = (_reset = false) =>
           // Reset the option state prior to adding options
           const _optionIds = get(optionsIds);
           _optionIds.forEach((id) => reset(optionsMap(id)));
+          _optionIds.forEach((_optionId) =>
+            reset(openOrdersByOptionKey(_optionId)),
+          );
           reset(optionsIds);
           reset(underlyingMint);
           reset(quoteMint);

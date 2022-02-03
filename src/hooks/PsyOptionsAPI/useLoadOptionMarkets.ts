@@ -12,13 +12,15 @@ export const useLoadOptionMarkets = (): void => {
   const program = useAmericanPsyOptionsProgram();
   const upsertOptions = useInsertOptions(true);
   const prevConnection = usePrevious(program?.provider.connection);
+  const prevWallet = usePrevious(program?.provider.wallet.publicKey);
   const hasInitialized = useRef(false);
 
   useEffect(() => {
     if (
       hasInitialized.current &&
       program?.provider.connection &&
-      program?.provider.connection === prevConnection
+      program?.provider.connection === prevConnection &&
+      program?.provider.wallet.publicKey === prevWallet
     ) {
       // Do not attempt to update options state when the effect runs,
       // but the connection (aka network) has not changed. This happens

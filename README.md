@@ -4,28 +4,34 @@
 
 `git clone https://github.com/mithraiclabs/psyoptions-frontend.git`
 
-2. Copy `.env-example` and rename it `.env.local`.
+2. Copy `.env-example` and rename it `.env`.
 
-OR run `touch .env.local` and add the following lines to it and fill in the blanks:
+OR run `touch .env` and add the following lines to it and fill in the blanks:
 
 ```
 REACT_APP_LOCAL_PROGRAM_ID=R2y9ip6mxmWUj4pt54jP2hz2dgvMozy9VTSwMWE7evs
 REACT_APP_DEVNET_PROGRAM_ID=R2y9ip6mxmWUj4pt54jP2hz2dgvMozy9VTSwMWE7evs
+REACT_APP_MAINNET_PROGRAM_ID=R2y9ip6mxmWUj4pt54jP2hz2dgvMozy9VTSwMWE7evs
 REACT_APP_LOCAL_DEX_PROGRAM_ID=9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin
 REACT_APP_DEVNET_DEX_PROGRAM_ID=DESVgJVGajEgKGXhb6XmqDHGz3VjdgP7rEVESBgxmroY
-REACT_APP_INITIALIZE_PAGE_ENABLED='true'
-
-OPTIONS_REPO=
-FRONTEND_REPO=
-DEX_REPO=
-KEY_FILE=
-WALLET_ADDRESS=
+REACT_APP_MAINNET_DEX_PROGRAM_ID=9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin
+REACT_APP_DEVNET_FAUCET_USDC='E6wQSMPGqHn7dqEMeWcSVfjdkwd8ED5CncQ9BtMNGtUG'
+REACT_APP_DEVNET_FAUCET_BTC='97z3NzcDxqRMyE7F73PuHEmAbA72S7eDopjhe7GTymTk'
+REACT_APP_DEVNET_FAUCET_PSY='7jJJnHWagPPG544FtxSVp8eD52FwCsARcqqup1q3XVio'
+DEX_REPO="/Users/ExampleUser/mithraiclabs/serum-dex"
+KEY_FILE="/Users/ExampleUser/.config/solana/id.json"
+WALLET_ADDRESS="StQPVao4aR5b2VJ71bB9Gb6aKnHi4kK6oDK7JVLnMRh"
+ESLINT_NO_DEV_ERRORS=true
+TSC_COMPILE_ON_ERROR=true
 ```
 To use mainnet locally add this
 
 ```
 REACT_APP_MAINNET_PROGRAM_ID=R2y9ip6mxmWUj4pt54jP2hz2dgvMozy9VTSwMWE7evs
 ```
+
+*** Don't use Node 17 ***
+
 
 3. Install dependencies
 

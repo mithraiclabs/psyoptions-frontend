@@ -283,6 +283,7 @@ const Faucets: React.VFC = () => {
                     color="primary"
                     variant="outlined"
                     onClick={handleClaimUSDC}
+                    disabled={solBalance ? false : true}
                   >
                     Claim 100,000 USDC
                   </Button>
@@ -311,6 +312,7 @@ const Faucets: React.VFC = () => {
                     color="primary"
                     variant="outlined"
                     onClick={handleClaimBTC}
+                    disabled={solBalance ? false : true}
                   >
                     Claim 10 BTC
                   </Button>
@@ -339,6 +341,7 @@ const Faucets: React.VFC = () => {
                     color="primary"
                     variant="outlined"
                     onClick={handleClaimPSY}
+                    disabled={solBalance ? false : true}
                   >
                     Claim 1,000 PSY
                   </Button>

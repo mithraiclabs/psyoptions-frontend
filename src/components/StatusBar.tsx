@@ -118,6 +118,17 @@ const NavOptions: React.VFC = () => {
           Docs
         </Button>
       </Box>
+      <Box mx={2}>
+        <Button
+          href="https://app.psyfi.io/"
+          onClick={() => {}}
+          style={{ minWidth: 0 }}
+          target="_blank"
+          rel="noopener"
+        >
+          Vaults
+        </Button>
+      </Box>
     </>
   );
 };

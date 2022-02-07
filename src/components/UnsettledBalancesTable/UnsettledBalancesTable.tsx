@@ -19,6 +19,8 @@ import useScreenSize from '../../hooks/useScreenSize';
 import CSS from 'csstype';
 import { useRecoilValue } from 'recoil';
 import { selectUnsettledOpenOrdersOptionTupleForAllOptions } from '../../recoil';
+import { atomLoader } from '../../recoil';
+import Loading from '../Loading';
 
 const useStyles = makeStyles((theme) => ({
   headCell: {
@@ -38,6 +40,7 @@ const UnsettledBalancesTable = () => {
   );
   const { formFactor } = useScreenSize();
   const [showTooltip, setShowTooltip] = useState(false);
+  const loader = useRecoilValue(atomLoader);
 
   return (
     <Box style={{ zIndex: 1 }}>
@@ -126,6 +129,18 @@ const UnsettledBalancesTable = () => {
                 >
                   <Box p={1}>
                     <GokiButton />
+                  </Box>
+                </TCell>
+              </TableRow>
+            ) : loader ? (
+              <TableRow>
+                <TCell
+                  align="center"
+                  colSpan={10}
+                  className={classes.walletButtonCell}
+                >
+                  <Box p={1}>
+                    <Loading />
                   </Box>
                 </TCell>
               </TableRow>

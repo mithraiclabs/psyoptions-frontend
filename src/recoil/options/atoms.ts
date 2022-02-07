@@ -56,6 +56,11 @@ export const quoteMint = atom<PublicKey | null>({
   default: null,
 });
 
+export const atomLoader = atom<boolean>({
+  key: 'atomLoader',
+  default: true,
+});
+
 /**
  * Atom for storing selected expiration.
  *

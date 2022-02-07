@@ -8,6 +8,7 @@ import {
   makeStyles,
 } from '@material-ui/core';
 import { useConnectedWallet } from '@saberhq/use-solana';
+import { useRecoilValue } from 'recoil';
 import OpenPositionsTableHeader from './OpenPositionsTableHeader';
 import PositionRow from './PositionRow';
 import { TCell } from '../../StyledComponents/Table/TableStyles';
@@ -15,6 +16,8 @@ import GokiButton from '../../GokiButton';
 import CSS from 'csstype';
 import useOpenPositions from '../../../hooks/useOpenPositions';
 import { PublicKey } from '@solana/web3.js';
+import { atomLoader } from '../../../recoil';
+import Loading from '../../Loading';
 
 const useStyles = makeStyles(() => ({
   walletButtonCell: {
@@ -38,6 +41,7 @@ const OpenPositionsTable: React.VFC<{
       })),
     [positions],
   );
+  const loader = useRecoilValue(atomLoader);
 
   return (
     <Box style={{ zIndex: 1 }}>
@@ -54,6 +58,18 @@ const OpenPositionsTable: React.VFC<{
                 >
                   <Box p={1}>
                     <GokiButton />
+                  </Box>
+                </TCell>
+              </TableRow>
+            ) : loader ? (
+              <TableRow>
+                <TCell
+                  align="center"
+                  colSpan={10}
+                  className={classes.walletButtonCell}
+                >
+                  <Box p={1}>
+                    <Loading />
                   </Box>
                 </TCell>
               </TableRow>

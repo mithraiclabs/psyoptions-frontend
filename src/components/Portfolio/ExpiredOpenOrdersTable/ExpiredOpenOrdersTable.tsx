@@ -14,6 +14,8 @@ import { useRecoilValue } from 'recoil';
 import { selectOpenOrdersOptionTupleForExpiredOptions } from '../../../recoil';
 import { useCloseOpenOrders } from '../../../hooks/Serum';
 import Button from '@material-ui/core/Button';
+import { atomLoader } from '../../../recoil';
+import Loading from '../../Loading';
 
 const useStyles = makeStyles((theme) => ({
   row: {
@@ -33,6 +35,7 @@ export const ExpiredOpenOrdersTable: React.VFC = () => {
     selectOpenOrdersOptionTupleForExpiredOptions,
   );
   const closeOpenOrders = useCloseOpenOrders();
+  const loader = useRecoilValue(atomLoader);
 
   return (
     <Box style={{ zIndex: 1 }}>
@@ -49,6 +52,18 @@ export const ExpiredOpenOrdersTable: React.VFC = () => {
                 >
                   <Box p={1}>
                     <GokiButton />
+                  </Box>
+                </TCell>
+              </TableRow>
+            ) : loader ? (
+              <TableRow>
+                <TCell
+                  align="center"
+                  colSpan={10}
+                  className={classes.walletButtonCell}
+                >
+                  <Box p={1}>
+                    <Loading />
                   </Box>
                 </TCell>
               </TableRow>

@@ -16,9 +16,13 @@ import { SerumMarketAndProgramId } from '../../types';
 import useScreenSize from '../../hooks/useScreenSize';
 import CSS from 'csstype';
 import { useRecoilValue } from 'recoil';
-import { selectOpenOrdersOptionTupleForAllOptions } from '../../recoil';
+import {
+  selectOpenOrdersOptionTupleForAllOptions,
+  atomLoader,
+} from '../../recoil';
 import useSerum from '../../hooks/useSerum';
 import useConnection from '../../hooks/useConnection';
+import Loading from '../Loading';
 
 const useStyles = makeStyles((theme) => ({
   headCell: {
@@ -40,6 +44,7 @@ const OpenOrders = () => {
   const openLimitOrders = useRecoilValue(
     selectOpenOrdersOptionTupleForAllOptions,
   );
+  const loader = useRecoilValue(atomLoader);
 
   useEffect(() => {
     if (!dexProgramId) {
@@ -101,6 +106,18 @@ const OpenOrders = () => {
                 >
                   <Box p={1}>
                     <GokiButton />
+                  </Box>
+                </TCell>
+              </TableRow>
+            ) : loader ? (
+              <TableRow>
+                <TCell
+                  align="center"
+                  colSpan={10}
+                  className={classes.walletButtonCell}
+                >
+                  <Box p={1}>
+                    <Loading />
                   </Box>
                 </TCell>
               </TableRow>

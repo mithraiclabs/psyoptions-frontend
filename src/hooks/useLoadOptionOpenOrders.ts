@@ -1,11 +1,13 @@
 import { serumUtils } from '@mithraic-labs/psy-american';
 import { useEffect } from 'react';
-import { useRecoilValue } from 'recoil';
+import { useRecoilValue, useRecoilState } from 'recoil';
+import { useConnectedWallet } from '@saberhq/use-solana';
 import {
   activeNetwork,
   quoteMint,
   useAddUniqueOpenOrdersByOptionKey,
   selectAllOptions,
+  atomLoader,
 } from '../recoil';
 import { getSupportedMarketsByNetwork } from '../utils/networkInfo';
 import { useAmericanPsyOptionsProgram } from './useAmericanPsyOptionsProgram';
@@ -24,13 +26,18 @@ export const useLoadOptionOpenOrders = () => {
   const _quoteMint = useRecoilValue(quoteMint);
   const endpoint = useRecoilValue(activeNetwork);
 
+  const wallet = useConnectedWallet();
+  const [, setLoader] = useRecoilState(atomLoader);
+
   useEffect(() => {
     // TODO should clear the state when the program changes because the wallet changes
     if (!_quoteMint || !program || !dexProgramId) {
       return;
     }
+
     const supportedMarkets = getSupportedMarketsByNetwork(endpoint.name);
     (async () => {
+      setLoader(true);
       const ordersByOption = await serumUtils.findOpenOrdersForOptionMarkets(
         program,
         dexProgramId,
@@ -40,7 +47,9 @@ export const useLoadOptionOpenOrders = () => {
       );
       // @ts-ignore
       insertOpenOrdersByOptionKey(ordersByOption);
+      setLoader(false);
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     _quoteMint,
     dexProgramId,
@@ -48,5 +57,6 @@ export const useLoadOptionOpenOrders = () => {
     insertOpenOrdersByOptionKey,
     options,
     program,
+    wallet?.publicKey,
   ]);
 };

@@ -2247,10 +2247,10 @@
     prop-types "^15.7.2"
     react-is "^16.8.0 || ^17.0.0"
 
-"@mithraic-labs/market-meta@^0.0.32":
-  version "0.0.32"
-  resolved "https://registry.yarnpkg.com/@mithraic-labs/market-meta/-/market-meta-0.0.32.tgz#5eb5fc002c6eeb873330c8a811ef14148a9e02cd"
-  integrity sha512-25cshSEFUixsWW3VaKefLtzJWFljVpJUttKj8HHi1VTnquqy0Hm9Y43g271/WqD3JhQAOqiHl90dUnXbow9UEg==
+"@mithraic-labs/market-meta@^0.1.2":
+  version "0.1.2"
+  resolved "https://registry.yarnpkg.com/@mithraic-labs/market-meta/-/market-meta-0.1.2.tgz#91c4bc3de662c7a93ff0855f01988a085776668f"
+  integrity sha512-UOqUunv6UjLjVfrEN+h7FZCkxqiRXWyDPGScIUQNmqvRPzkydUNMdE78l+H6LOh/GVcSsewA0JFYwjQXC6M6HQ==
 
 "@mithraic-labs/psy-american@^0.1.4":
   version "0.1.4"
@@ -2262,10 +2262,10 @@
     "@solana/spl-token" "^0.1.8"
     "@solana/web3.js" "^1.28.0"
 
-"@mithraic-labs/psy-token-registry@^0.0.5":
-  version "0.0.5"
-  resolved "https://registry.yarnpkg.com/@mithraic-labs/psy-token-registry/-/psy-token-registry-0.0.5.tgz#555ad95b2c33049dce84af27736ea328c0b94c94"
-  integrity sha512-2Qhh2VXrWIho4pb5s6P7Gq1DCJeiA8uRFc5HZQ92Zat8TiYq4SkQvfIOBOvbqzzi+ad2v0zjDa/M+FcslDl1kw==
+"@mithraic-labs/psy-token-registry@^0.0.6":
+  version "0.0.6"
+  resolved "https://registry.yarnpkg.com/@mithraic-labs/psy-token-registry/-/psy-token-registry-0.0.6.tgz#8fd1c4fc540f63ba1a5207c6015299bc52b9deb6"
+  integrity sha512-wk1fbyrfvCcmRR6IPVUbcoaEoHMaxLjsJvhyn3HqtQDdZJDl6aRB9AedngfOPZ27zzju6wvRFDVhZ8NWxb7Skw==
 
 "@mithraic-labs/psyoptions@^0.7.2":
   version "0.7.2"

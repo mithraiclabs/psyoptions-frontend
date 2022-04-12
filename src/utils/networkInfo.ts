@@ -27,7 +27,7 @@ export type Network = {
 const networks: Network[] = [
   {
     name: ClusterName.mainnet,
-    url: 'https://psyoptions.genesysgo.net',
+    url: 'https://ssc-dao.genesysgo.net',
     fallbackUrl: clusterApiUrl('mainnet-beta'),
     programId: process.env.REACT_APP_MAINNET_PROGRAM_ID,
     serumReferrerIds: {
@@ -38,9 +38,9 @@ const networks: Network[] = [
   },
   {
     name: ClusterName.devnet,
-    url: 'https://psytrbhymqlkfrhudd.dev.genesysgo.net:8899',
+    url: clusterApiUrl('devnet'),
     fallbackUrl: clusterApiUrl('devnet'),
-    wsEndpoint: 'wss://psytrbhymqlkfrhudd.dev.genesysgo.net:8900',
+    // wsEndpoint: 'wss://psytrbhymqlkfrhudd.dev.genesysgo.net:8900',
     programId: process.env.REACT_APP_DEVNET_PROGRAM_ID,
     serumReferrerIds: {
       E6Z6zLzk8MWY3TY8E87mr88FhGowEPJTeMWzkqtL6qkF: new PublicKey(

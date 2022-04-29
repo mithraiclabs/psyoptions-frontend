@@ -60,6 +60,7 @@ const useExerciseOpenPosition = (
       try {
         const transaction = new Transaction();
         const signers: Signer[] = [];
+        let _exerciserQuoteAssetKey = exerciserQuoteAssetKey;
         let _exerciserUnderlyingAssetKey = exerciserUnderlyingAssetKey;
         if (option.underlyingAssetMint.toString() === WRAPPED_SOL_ADDRESS) {
           // need to create a sol account
@@ -90,6 +91,25 @@ const useExerciseOpenPosition = (
           _exerciserUnderlyingAssetKey = newTokenAccountKey;
         }
 
+        if (option.quoteAssetMint.toString() === WRAPPED_SOL_ADDRESS) {
+          const lamports = option.quoteAmountPerContract.mul(new BN(size));
+          const {
+            transaction: initWrappedSolAcctIx,
+            newTokenAccount: wrappedSolAccount,
+          } = await initializeTokenAccountTx({
+            // eslint-disable-line
+            connection,
+            payerKey: wallet.publicKey,
+            mintPublicKey: new PublicKey(WRAPPED_SOL_ADDRESS),
+            owner: wallet.publicKey,
+            rentBalance: splTokenAccountRentBalance,
+            extraLamports: lamports.toNumber(),
+          });
+          transaction.add(initWrappedSolAcctIx);
+          signers.push(wrappedSolAccount);
+          _exerciserQuoteAssetKey = wrappedSolAccount.publicKey;
+        }
+
         let exerciseTx: Transaction;
         if (
           market &&
@@ -102,7 +122,7 @@ const useExerciseOpenPosition = (
             programId: market.psyOptionsProgramId,
             optionMintKey: market.optionMintKey,
             optionMarketKey: market.optionMarketKey,
-            exerciserQuoteAssetKey,
+            exerciserQuoteAssetKey: _exerciserQuoteAssetKey,
             exerciserUnderlyingAssetKey: _exerciserUnderlyingAssetKey,
             exerciserQuoteAssetAuthorityKey: wallet.publicKey,
             underlyingAssetPoolKey: market.underlyingAssetPoolKey,
@@ -119,7 +139,7 @@ const useExerciseOpenPosition = (
             option,
             exerciserContractTokenKey,
             _exerciserUnderlyingAssetKey,
-            exerciserQuoteAssetKey,
+            _exerciserQuoteAssetKey,
           );
           exerciseTx = new Transaction().add(ix);
         }
@@ -131,6 +151,17 @@ const useExerciseOpenPosition = (
             Token.createCloseAccountInstruction(
               TOKEN_PROGRAM_ID,
               _exerciserUnderlyingAssetKey,
+              wallet.publicKey, // Send any remaining SOL to the owner
+              wallet.publicKey,
+              [],
+            ),
+          );
+        }
+        if (option.quoteAssetMint.toString() === WRAPPED_SOL_ADDRESS) {
+          transaction.add(
+            Token.createCloseAccountInstruction(
+              TOKEN_PROGRAM_ID,
+              _exerciserQuoteAssetKey,
               wallet.publicKey, // Send any remaining SOL to the owner
               wallet.publicKey,
               [],

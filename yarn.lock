@@ -2247,10 +2247,10 @@
     prop-types "^15.7.2"
     react-is "^16.8.0 || ^17.0.0"
 
-"@mithraic-labs/market-meta@^0.6.1":
-  version "0.6.1"
-  resolved "https://registry.yarnpkg.com/@mithraic-labs/market-meta/-/market-meta-0.6.1.tgz#b26ef047b1a1d2c2fb03945e6c75834fdfbcb138"
-  integrity sha512-gWpnRJz3w8X4jR52VQr2PIGQ2khd3HTG8kMH5ON6qMYg3PIapcQwYGCUtUXnMuOmcN1Tw9GikCR6Htq+DHJfXw==
+"@mithraic-labs/market-meta@^0.7.3":
+  version "0.7.3"
+  resolved "https://registry.yarnpkg.com/@mithraic-labs/market-meta/-/market-meta-0.7.3.tgz#052ec9fc245c94f25ec3a2017e085cc963cefae5"
+  integrity sha512-VITMsOuPbaGMbCSjWRXWzriKjdMtct7t8xr7Efzw99DvWjjzRVwT4uV8qDpgzKiNfSbqC91qoPlAc3JXz3vlJg==
 
 "@mithraic-labs/psy-american@^0.1.4":
   version "0.1.4"
@@ -2262,10 +2262,10 @@
     "@solana/spl-token" "^0.1.8"
     "@solana/web3.js" "^1.28.0"
 
-"@mithraic-labs/psy-token-registry@^0.0.6":
-  version "0.0.6"
-  resolved "https://registry.yarnpkg.com/@mithraic-labs/psy-token-registry/-/psy-token-registry-0.0.6.tgz#8fd1c4fc540f63ba1a5207c6015299bc52b9deb6"
-  integrity sha512-wk1fbyrfvCcmRR6IPVUbcoaEoHMaxLjsJvhyn3HqtQDdZJDl6aRB9AedngfOPZ27zzju6wvRFDVhZ8NWxb7Skw==
+"@mithraic-labs/psy-token-registry@^0.0.10":
+  version "0.0.10"
+  resolved "https://registry.yarnpkg.com/@mithraic-labs/psy-token-registry/-/psy-token-registry-0.0.10.tgz#953189f760aca1c018fbc119657dc9ca79bc17e6"
+  integrity sha512-ooGR5jJjpXa5lLH14iHaWyvKJlXTRtzbj4U0JYVxQCrHkHVoTO8Ok9EZg6Nmre8DflmWRswnXzvJEdZ13Y/x+g==
 
 "@mithraic-labs/psyoptions@^0.7.2":
   version "0.7.2"

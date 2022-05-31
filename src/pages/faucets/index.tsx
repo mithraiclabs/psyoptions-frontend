@@ -28,6 +28,8 @@ import { useConnectedWallet } from '@saberhq/use-solana';
 import useWalletInfo from '../../hooks/useWalletInfo';
 import { activeNetwork } from '../../recoil';
 
+const SOL_PER_AIRDROP = 1;
+
 const darkBorder = `1px solid ${theme.palette.background.main}`;
 
 const getHighestAccount = (accounts: TokenAccount[]) => {
@@ -112,7 +114,10 @@ const Faucets: React.VFC = () => {
       const conn = new Connection(endpoint.fallbackUrl, {
         commitment: 'confirmed',
       });
-      await conn.requestAirdrop(wallet.publicKey, 5 * LAMPORTS_PER_SOL);
+      await conn.requestAirdrop(
+        wallet.publicKey,
+        SOL_PER_AIRDROP * LAMPORTS_PER_SOL,
+      );
     } catch (err) {
       pushErrorNotification(err);
     }
@@ -256,7 +261,7 @@ const Faucets: React.VFC = () => {
                     variant="outlined"
                     onClick={handleClaimSOL}
                   >
-                    Claim 5 SOL
+                    Claim {SOL_PER_AIRDROP} SOL
                   </Button>
                 )}
               </Box>

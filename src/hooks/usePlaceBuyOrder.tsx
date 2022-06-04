@@ -1,4 +1,9 @@
-import { PublicKey, Signer, Transaction } from '@solana/web3.js';
+import {
+  LAMPORTS_PER_SOL,
+  PublicKey,
+  Signer,
+  Transaction,
+} from '@solana/web3.js';
 import { useCallback } from 'react';
 import { Market, OrderParams } from '@mithraic-labs/serum/lib/market';
 import {
@@ -16,6 +21,10 @@ import useOwnedTokenAccounts from './useOwnedTokenAccounts';
 import { useCreateAdHocOpenOrdersSubscription } from './Serum';
 import { useAmericanPsyOptionsProgram } from './useAmericanPsyOptionsProgram';
 import { useManualExerciseWarning } from '../components/ManualExerciseWarning';
+import { initializeTokenAccountTx, WRAPPED_SOL_ADDRESS } from '@/utils/token';
+import { useSolanaMeta } from '@/context/SolanaMetaContext';
+import { BN } from '@project-serum/anchor';
+import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 
 type PlaceBuyOrderArgs = {
   option: OptionMarketWithKey;
@@ -33,6 +42,7 @@ const usePlaceBuyOrder = (
   const { connection, dexProgramId } = useConnection();
   const { sendTransaction } = useSendTransaction();
   const { subscribeToTokenAccount } = useOwnedTokenAccounts();
+  const { splTokenAccountRentBalance } = useSolanaMeta();
   const [, setManualExerciseWarningVisible] = useManualExerciseWarning();
   const createAdHocOpenOrdersSub =
     useCreateAdHocOpenOrdersSubscription(serumMarketAddress);
@@ -44,7 +54,13 @@ const usePlaceBuyOrder = (
       orderArgs,
       optionDestinationKey,
     }: PlaceBuyOrderArgs) => {
-      if (!connection || !wallet?.publicKey || !program || !dexProgramId) {
+      if (
+        !connection ||
+        !wallet?.publicKey ||
+        !program ||
+        !dexProgramId ||
+        !splTokenAccountRentBalance
+      ) {
         return;
       }
 
@@ -66,6 +82,27 @@ const usePlaceBuyOrder = (
 
           transaction.add(createOptAccountIx);
           subscribeToTokenAccount(newPublicKey);
+        }
+
+        // Handle Wrapped SOL for bidding
+        if (serumMarket.quoteMintAddress.toString() === WRAPPED_SOL_ADDRESS) {
+          // Calculate the amount of lamports the account needs
+          // TODO: fix for JS overflow with 53bit number
+          const lamports = new BN(
+            orderArgs.price * orderArgs.size * LAMPORTS_PER_SOL,
+          );
+          const { transaction: tx, newTokenAccount } =
+            await initializeTokenAccountTx({
+              connection: program.provider.connection,
+              payerKey: wallet.publicKey,
+              mintPublicKey: new PublicKey(WRAPPED_SOL_ADDRESS),
+              owner: wallet.publicKey,
+              rentBalance: splTokenAccountRentBalance,
+              extraLamports: lamports.toNumber(),
+            });
+          transaction.add(tx);
+          signers.push(newTokenAccount);
+          orderArgs.payer = newTokenAccount.publicKey;
         }
 
         // place the buy order
@@ -102,6 +139,18 @@ const usePlaceBuyOrder = (
         if (openOrdersAddress) {
           createAdHocOpenOrdersSub(openOrdersAddress, option.key.toString());
         }
+        // Close out the wrapped SOL account so it feels native
+        if (serumMarket.quoteMintAddress.toString() === WRAPPED_SOL_ADDRESS) {
+          transaction.add(
+            Token.createCloseAccountInstruction(
+              TOKEN_PROGRAM_ID,
+              orderArgs.payer,
+              wallet.publicKey, // Send any remaining SOL to the owner
+              wallet.publicKey,
+              [],
+            ),
+          );
+        }
 
         await sendTransaction({
           transaction,
@@ -123,6 +172,7 @@ const usePlaceBuyOrder = (
       pushErrorNotification,
       sendTransaction,
       setManualExerciseWarningVisible,
+      splTokenAccountRentBalance,
       subscribeToTokenAccount,
       wallet,
     ],

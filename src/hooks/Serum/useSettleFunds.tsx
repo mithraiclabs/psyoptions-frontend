@@ -8,7 +8,7 @@ import {
 import { useConnectedWallet } from '@saberhq/use-solana';
 import { useRecoilValue } from 'recoil';
 import { createAssociatedTokenAccountInstruction } from '../../utils/instructions';
-import { getHighestAccount } from '../../utils/token';
+import { getHighestAccount, WRAPPED_SOL_ADDRESS } from '../../utils/token';
 import useConnection from '../useConnection';
 import useNotifications from '../useNotifications';
 import useOwnedTokenAccounts from '../useOwnedTokenAccounts';
@@ -21,6 +21,7 @@ import {
 } from '../../utils/networkInfo';
 import { useSerumOpenOrders } from '../../context/SerumOpenOrdersContext';
 import { activeNetwork } from '../../recoil';
+import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 
 /**
  * Returns function for settling the funds of a specific market
@@ -133,6 +134,18 @@ export const useSettleFunds = (
     }
     transaction.add(settleTx);
     signers = [...signers, ...settleSigners];
+
+    if (serumMarket.quoteMintAddress.toString() === WRAPPED_SOL_ADDRESS) {
+      transaction.add(
+        Token.createCloseAccountInstruction(
+          TOKEN_PROGRAM_ID,
+          _quoteTokenAccountKey,
+          wallet.publicKey, // Send any remaining SOL to the owner
+          wallet.publicKey,
+          [],
+        ),
+      );
+    }
 
     transaction.feePayer = wallet.publicKey;
     const { blockhash } = await connection.getRecentBlockhash();

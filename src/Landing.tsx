@@ -214,7 +214,7 @@ const Landing: React.VFC = () => {
                 color="primary"
                 variant="outlined"
                 style={{ whiteSpace: 'nowrap' }}
-                href="https://app.psyfi.io/"
+                href="https://psyfi.io/"
                 target="_blank"
               >
                 Open Vault

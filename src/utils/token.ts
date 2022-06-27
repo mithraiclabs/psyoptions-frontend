@@ -1,9 +1,9 @@
 import {
   SystemProgram,
   Transaction,
-  Account,
   Connection,
   PublicKey,
+  Keypair,
 } from '@solana/web3.js';
 import { AccountLayout, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { TokenAccount } from '../types';
@@ -25,8 +25,8 @@ export async function initializeTokenAccountTx({
   mintPublicKey: PublicKey;
   owner: PublicKey;
   rentBalance: number;
-}): Promise<{ transaction: Transaction; newTokenAccount: Account }> {
-  const newAccount = new Account();
+}): Promise<{ transaction: Transaction; newTokenAccount: Keypair }> {
+  const newAccount = new Keypair();
   const transaction = new Transaction();
 
   let _rentBalance = rentBalance;

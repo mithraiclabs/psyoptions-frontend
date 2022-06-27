@@ -1,7 +1,6 @@
 import {
   SystemProgram,
   Transaction,
-  Account,
   Connection,
   PublicKey,
   Keypair,

@@ -120,7 +120,7 @@ const NavOptions: React.VFC = () => {
       </Box>
       <Box mx={2}>
         <Button
-          href="https://app.psyfi.io/"
+          href="https://psyfi.io/"
           onClick={() => {}}
           style={{ minWidth: 0 }}
           target="_blank"

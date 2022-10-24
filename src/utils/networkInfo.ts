@@ -27,7 +27,7 @@ export type Network = {
 const networks: Network[] = [
   {
     name: ClusterName.mainnet,
-    url: 'https://ssc-dao.genesysgo.net',
+    url: 'https://rpc1.psyfi.io/fb2f6bf2e85873369a41f4ae277376aa8ea4bb9f',
     fallbackUrl: clusterApiUrl('mainnet-beta'),
     programId: process.env.REACT_APP_MAINNET_PROGRAM_ID,
     serumReferrerIds: {

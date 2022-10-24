@@ -20,6 +20,7 @@ import UnsettledBalancesTable from '../UnsettledBalancesTable';
 import useScreenSize from '../../hooks/useScreenSize';
 import { PublicKey } from '@solana/web3.js';
 import { ExpiredOpenOrdersTable } from './ExpiredOpenOrdersTable';
+import { FusionBanner } from './FusionBanner';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -102,6 +103,7 @@ const Portfolio: React.VFC = () => {
 
   return (
     <PricesProvider>
+      <FusionBanner />
       <Page>
         <Box className={classes.root}>
           <Box pb={2}>

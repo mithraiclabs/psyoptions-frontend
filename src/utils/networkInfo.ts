@@ -27,7 +27,7 @@ export type Network = {
 const networks: Network[] = [
   {
     name: ClusterName.mainnet,
-    url: 'https://rpc1.psyfi.io/0c365be8d2d5f50be883ea0afcfb2fb31452e755',
+    url: 'https://rpc1.psyfi.io/3acfe7e84a926c3353c55532307cf2ecd7bf9f5e',
     fallbackUrl: clusterApiUrl('mainnet-beta'),
     programId: process.env.REACT_APP_MAINNET_PROGRAM_ID,
     serumReferrerIds: {

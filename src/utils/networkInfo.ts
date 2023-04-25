@@ -1,6 +1,5 @@
 import { clusterApiUrl, PublicKey } from '@solana/web3.js';
 import { TOKENS } from '@project-serum/tokens';
-import { MARKETS } from '@mithraic-labs/serum';
 /* eslint-disable */
 import { MarketMeta } from '@mithraic-labs/market-meta';
 import { ClusterName } from '../types';
@@ -97,8 +96,10 @@ const getDexProgramKeyByNetwork = (name: ClusterName) => {
   switch (name) {
     case 'Custom':
     case 'Mainnet':
-      // TODO Don't rely on the markets for this
-      return MARKETS.find(({ deprecated }) => !deprecated)?.programId;
+      return new PublicKey(
+        process.env.REACT_APP_MAINNET_DEX_PROGRAM_ID ??
+          'Dex9ZPjNQmvS3HHBrNRcnX7aUvSosLH9AZWPwpXu3TJz',
+      );
     case 'Devnet':
       return new PublicKey(process.env.REACT_APP_DEVNET_DEX_PROGRAM_ID ?? '');
     case 'Testnet':
